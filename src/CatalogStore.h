@@ -4,11 +4,11 @@
 #include <QVector>
 
 class CatalogItem;
-class GlassItem;
+class MemoItem;
 class FolderItem;
 class FolderTableDef;
-class GlassTableDef;
-class Glass;
+class MemoTableDef;
+class Memo;
 
 //------------------------------------------------------------------------------
 
@@ -34,23 +34,23 @@ private:
 
 //------------------------------------------------------------------------------
 
-struct GlassesResult
+struct MemosResult
 {
     QString error;
     QStringList warnings;
-    QMap<int, QList<GlassItem*>> items;
+    QMap<int, QList<MemoItem*>> items;
 };
 
-class GlassManager
+class MemoManager
 {
 public:
-    GlassTableDef* table() const;
+    MemoTableDef* table() const;
 
-    QString create(GlassItem* item) const;
-    QString update(Glass* glass, const QString& info) const;
-    QString remove(GlassItem* item) const;
-    QString load(Glass* glass) const;
-    GlassesResult selectAll() const;
+    QString create(MemoItem* item) const;
+    QString update(Memo* memo, const QString& info) const;
+    QString remove(MemoItem* item) const;
+    QString load(Memo* memo) const;
+    MemosResult selectAll() const;
     QString countAll(int* count) const;
 };
 
@@ -66,7 +66,7 @@ void commitTran();
 void rollbackTran();
 
 FolderManager* folderManager();
-GlassManager* glassManager();
+MemoManager* memoManager();
 
 } // namespace CatalogStore
 

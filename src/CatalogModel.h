@@ -12,7 +12,7 @@ class CatalogModel : public QAbstractItemModel
 public:
     CatalogModel(Catalog* catalog) : _catalog(catalog)
     {
-        _iconGlass = QIcon(":/icon/glass_blue");
+        _iconMemo = QIcon(":/icon/memo_default");
         _iconFolder = QIcon(":/icon/folder_closed");
     }
 
@@ -90,9 +90,9 @@ public:
             // TODO different icons for opened and closed folder
             if (item->isFolder())
                 return _iconFolder;
-            if (item->asGlass()->formula())
-                return item->asGlass()->formula()->icon();
-            return _iconGlass;
+            if (item->asMemo()->type())
+                return item->asMemo()->type()->icon();
+            return _iconMemo;
         }
         return QVariant();
     }
@@ -116,7 +116,7 @@ public:
 
 private:
     Catalog* _catalog;
-    QIcon _iconFolder, _iconGlass;
+    QIcon _iconFolder, _iconMemo;
 };
 
 

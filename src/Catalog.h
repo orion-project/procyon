@@ -8,69 +8,52 @@
 
 class Catalog;
 class FolderItem;
-class GlassItem;
-class Glass;
+class MemoItem;
+class Memo;
 
 //------------------------------------------------------------------------------
 
-class DispersionFormula
+class MemoType
 {
 public:
     virtual const char* name() const = 0;
     virtual const QIcon& icon() const = 0;
-    virtual QStringList coeffNames() const { return QStringList(); }
-    virtual Glass* makeGlass() = 0;
+    virtual Memo* makeMemo() = 0;
 };
 
-class ShottFormula : public DispersionFormula
+class PlainTextMemoType : public MemoType
 {
 public:
     const char* name() const { return QT_TRANSLATE_NOOP("Formula", "Shott"); }
-    const QIcon& icon() const { static QIcon icon(":/icon/glass_green"); return icon; }
-    QStringList coeffNames() const { static QStringList c(
-        {"c_1", "c_2", "c_3", "c_4", "c_5", "c_6"}); return c; }
-    Glass* makeGlass();
+    const QIcon& icon() const { static QIcon icon(":/icon/memo_plain_text"); return icon; }
+    Memo* makeMemo();
 };
 
-class SellmeierFormula : public DispersionFormula
+class WikiTextMemoType : public MemoType
 {
 public:
     const char* name() const { return QT_TRANSLATE_NOOP("Formula", "Sellmeier"); }
-    const QIcon& icon() const { static QIcon icon(":/icon/glass_red"); return icon; }
-    QStringList coeffNames() const { static QStringList c(
-        {"b_1", "b_2", "b_3", "c_1", "c_2", "c_3"}); return c; }
-    Glass* makeGlass();
+    const QIcon& icon() const { static QIcon icon(":/icon/memo_wiki_text"); return icon; }
+    Memo* makeMemo();
 };
 
-class ReznikFormula : public DispersionFormula
+class RichTextMemoType : public MemoType
 {
 public:
     const char* name() const { return QT_TRANSLATE_NOOP("Formula", "Reznik"); }
-    const QIcon& icon() const { static QIcon icon(":/icon/glass_violet"); return icon; }
-    QStringList coeffNames() const { static QStringList c(
-        {"c_1", "c_2", "c_3", "c_4", "c_5", "c_6", "c_7", "c_8", "c_9", "c_10", "c_11"}); return c; }
-    Glass* makeGlass();
+    const QIcon& icon() const { static QIcon icon(":/icon/memo_rich_text"); return icon; }
+    Memo* makeMemo();
 };
 
-class CustomFormula : public DispersionFormula
+inline const QMap<QString, MemoType*>& memoTypes()
 {
-public:
-    const char* name() const { return QT_TRANSLATE_NOOP("Formula", "Custom"); }
-    const QIcon& icon() const { static QIcon icon(":/icon/glass_blue"); return icon; }
-    Glass* makeGlass();
-};
-
-inline const QMap<QString, DispersionFormula*>& dispersionFormulas()
-{
-    static ShottFormula shott;
-    static SellmeierFormula sellmeier;
-    static ReznikFormula reznik;
-    static CustomFormula custom;
-    static QMap<QString, DispersionFormula*> formulas {
+    static PlainTextMemoType shott;
+    static WikiTextMemoType sellmeier;
+    static RichTextMemoType reznik;
+    static QMap<QString, MemoType*> formulas {
         { shott.name(), &shott },
         { sellmeier.name(), &sellmeier },
-        { reznik.name(), &reznik },
-        //{ custom.name(), &custom }
+        { reznik.name(), &reznik }
     };
     return formulas;
 }
@@ -111,9 +94,9 @@ public:
     CatalogItem* parent() const { return _parent; }
 
     bool isFolder() const;
-    bool isGlass() const;
+    bool isMemo() const;
     FolderItem* asFolder();
-    GlassItem* asGlass();
+    MemoItem* asMemo();
 
 private:
     int _id;
@@ -122,7 +105,7 @@ private:
 
     friend class Catalog;
     friend class FolderManager;
-    friend class GlassManager;
+    friend class MemoManager;
 };
 
 //------------------------------------------------------------------------------
@@ -143,20 +126,20 @@ private:
 
 //------------------------------------------------------------------------------
 
-class GlassItem : public CatalogItem
+class MemoItem : public CatalogItem
 {
 public:
-    ~GlassItem();
+    ~MemoItem();
 
-    Glass* glass() const { return _glass; }
-    DispersionFormula* formula() { return _formula; }
+    Memo* memo() const { return _memo; }
+    MemoType* type() { return _type; }
 
 private:
-    Glass* _glass = nullptr;
-    DispersionFormula* _formula = nullptr;
+    Memo* _memo = nullptr;
+    MemoType* _type = nullptr;
 
     friend class Catalog;
-    friend class GlassManager;
+    friend class MemoManager;
 };
 
 //------------------------------------------------------------------------------
@@ -176,19 +159,19 @@ public:
     const QString& fileName() const { return _fileName; }
     const QList<CatalogItem*>& items() const { return _items; }
 
-    IntResult countGlasses() const;
+    IntResult countMemos() const;
 
     QString renameFolder(FolderItem* item, const QString& title);
     QString createFolder(FolderItem* parent, const QString& title);
     QString removeFolder(FolderItem* item);
-    QString createGlass(FolderItem* parent, Glass *glass);
-    QString updateGlass(GlassItem* item, Glass* glass);
-    QString removeGlass(GlassItem* item);
-    QString loadGlass(GlassItem* item);
+    QString createMemo(FolderItem* parent, Memo *memo);
+    QString updateMemo(MemoItem* item, Memo* memo);
+    QString removeMemo(MemoItem* item);
+    QString loadMemo(MemoItem* item);
 
 signals:
-    void glassCreated(GlassItem*);
-    void glassRemoved(GlassItem*);
+    void memoCreated(MemoItem*);
+    void memoRemoved(MemoItem*);
 
 private:
     QString _fileName;

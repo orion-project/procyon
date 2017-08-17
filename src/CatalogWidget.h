@@ -13,11 +13,11 @@ class Catalog;
 class CatalogItem;
 class CatalogModel;
 class FolderItem;
-class GlassItem;
+class MemoItem;
 
 struct SelectedItems
 {
-    GlassItem* glass;
+    MemoItem* memo;
 };
 
 class CatalogWidget : public QWidget
@@ -38,8 +38,8 @@ private:
     Catalog* _catalog;
     QTreeView* _catalogView;
     CatalogModel* _catalogModel = nullptr;
-    QMenu *_rootMenu, *_folderMenu, *_glassMenu;
-    QAction *_folderMenuHeader, *_glassMenuHeader;
+    QMenu *_rootMenu, *_folderMenu, *_memoMenu;
+    QAction *_folderMenuHeader, *_memoMenuHeader;
 
     static QAction *makeHeaderItem(QMenu* menu);
 
@@ -48,8 +48,8 @@ private:
     void createFolder();
     void renameFolder();
     void deleteFolder();
-    void createGlass();
-    void deleteGlass();
+    void createMemo();
+    void deleteMemo();
 };
 
 #endif // CATALOGWIDGET_H

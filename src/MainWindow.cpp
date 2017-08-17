@@ -2,7 +2,7 @@
 #include "Catalog.h"
 #include "CatalogWidget.h"
 #include "InfoWidget.h"
-#include "DispersionPlot.h"
+#include "MemoWindow.h"
 #include "helpers/OriDialogs.h"
 #include "helpers/OriLayouts.h"
 #include "helpers/OriWindows.h"
@@ -34,8 +34,8 @@ MainWindow::MainWindow() : QMainWindow()
 
     createMenu();
 
-    _catalogView = new CatalogWidget(_actionMakeDispPlot);
-    connect(_catalogView, &CatalogWidget::contextMenuAboutToShow, this, &MainWindow::updateMenuMaterial);
+    _catalogView = new CatalogWidget(_actionOpenMemo);
+    connect(_catalogView, &CatalogWidget::contextMenuAboutToShow, this, &MainWindow::updateMenuMemo);
 
     _infoView = new InfoWidget;
 
@@ -81,9 +81,9 @@ void MainWindow::createMenu()
     menuView->addSeparator();
     menuView->addMenu(new Ori::Widgets::StylesMenu(this));
 
-    QMenu* menuMaterial = menuBar()->addMenu(tr("&Material"));
-    connect(menuMaterial, &QMenu::aboutToShow, this, &MainWindow::updateMenuMaterial);
-    _actionMakeDispPlot = menuMaterial->addAction(QIcon(":/icon/plot"), tr("Dispersion Plot"), this, &MainWindow::makeDispersionPlot);
+    QMenu* menuMemo = menuBar()->addMenu(tr("&Memo"));
+    connect(menuMemo, &QMenu::aboutToShow, this, &MainWindow::updateMenuMemo);
+    _actionOpenMemo = menuMemo->addAction(QIcon(":/icon/plot"), tr("Open memo"), this, &MainWindow::openMemo); // TODO icon
 }
 
 void MainWindow::createDocks()
@@ -102,11 +102,11 @@ void MainWindow::createDocks()
 
 void MainWindow::createStatusBar()
 {
-    statusBar()->addWidget(_statusGlassCount = new QLabel);
+    statusBar()->addWidget(_statusMemoCount = new QLabel);
     statusBar()->addWidget(_statusFileName = new QLabel);
     statusBar()->showMessage(tr("Ready"));
 
-    _statusGlassCount->setMargin(2);
+    _statusMemoCount->setMargin(2);
     _statusFileName->setMargin(2);
 }
 
@@ -180,8 +180,8 @@ void MainWindow::openCatalogViaDialog()
 void MainWindow::catalogOpened(Catalog* catalog)
 {
     _catalog = catalog;
-    connect(_catalog, &Catalog::glassCreated, [this](){ this->updateCounter(); });
-    connect(_catalog, &Catalog::glassRemoved, [this](){ this->updateCounter(); });
+    connect(_catalog, &Catalog::memoCreated, [this](){ this->updateCounter(); });
+    connect(_catalog, &Catalog::memoRemoved, [this](){ this->updateCounter(); });
     _catalogView->setCatalog(_catalog);
     auto filePath = _catalog->fileName();
     auto fileName = QFileInfo(filePath).fileName();
@@ -198,52 +198,52 @@ void MainWindow::catalogClosed()
     _catalogView->setCatalog(nullptr);
     setWindowTitle(qApp->applicationName());
     _statusFileName->clear();
-    _statusGlassCount->clear();
+    _statusMemoCount->clear();
 }
 
 void MainWindow::updateCounter()
 {
-    auto res = _catalog->countGlasses();
+    auto res = _catalog->countMemos();
     if (res.ok())
     {
-        _statusGlassCount->setToolTip(QString());
-        _statusGlassCount->setText(tr("Materials: %1").arg(res.result()));
+        _statusMemoCount->setToolTip(QString());
+        _statusMemoCount->setText(tr("Memos: %1").arg(res.result()));
     }
     else
     {
-        _statusGlassCount->setToolTip(res.error());
-        _statusGlassCount->setText(tr("Materials: ERROR"));
+        _statusMemoCount->setToolTip(res.error());
+        _statusMemoCount->setText(tr("Memos: ERROR"));
     }
 }
 
-void MainWindow::updateMenuMaterial()
+void MainWindow::updateMenuMemo()
 {
-    bool canMakeDispPlot = false;
+    bool canOpen = false;
 
     if (_catalog)
     {
         auto selected = _catalogView->selection();
-        bool hasSelection = selected.glass;
+        bool hasSelection = selected.memo;
 
-        canMakeDispPlot = hasSelection;
+        canOpen = hasSelection;
     }
 
-    _actionMakeDispPlot->setEnabled(canMakeDispPlot);
+    _actionOpenMemo->setEnabled(canOpen);
 }
 
-PlotWindow* MainWindow::activePlot() const
+MemoWindow* MainWindow::activePlot() const
 {
     auto mdiChild = _mdiArea->currentSubWindow();
     if (!mdiChild) return nullptr;
-    return dynamic_cast<PlotWindow*>(mdiChild->widget());
+    return dynamic_cast<MemoWindow*>(mdiChild->widget());
 }
 
-void MainWindow::makeDispersionPlot()
+void MainWindow::openMemo()
 {
     auto selected = _catalogView->selection();
-    if (!selected.glass) return;
-    auto plotWindow = new DispersionPlot(_catalog);
-    auto mdiChild = _mdiArea->addSubWindow(plotWindow);
-    mdiChild->setWindowIcon(plotWindow->windowIcon());
+    if (!selected.memo) return;
+    auto memoWindow = new MemoWindow(_catalog, selected.memo);
+    auto mdiChild = _mdiArea->addSubWindow(memoWindow);
+    mdiChild->setWindowIcon(memoWindow->windowIcon());
     mdiChild->show();
 }

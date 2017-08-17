@@ -31,19 +31,19 @@ SOURCES += src/main.cpp\
         src/MainWindow.cpp \
     src/CatalogWidget.cpp \
     src/InfoWidget.cpp \
-    src/Glass.cpp \
     src/Catalog.cpp \
     src/CatalogStore.cpp \
     src/SqlHelper.cpp \
-    src/DispersionPlot.cpp
+    src/Memo.cpp \
+    src/MemoWindow.cpp
 
 HEADERS  += src/MainWindow.h \
     src/CatalogWidget.h \
     src/InfoWidget.h \
-    src/Glass.h \
     src/Catalog.h \
     src/CatalogModel.h \
     src/CatalogStore.h \
     src/SqlHelper.h \
-    src/DispersionPlot.h \
-    src/Appearance.h
+    src/Appearance.h \
+    src/Memo.h \
+    src/MemoWindow.h

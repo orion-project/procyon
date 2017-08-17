@@ -1,33 +1,32 @@
 #include "Catalog.h"
 #include "CatalogStore.h"
-#include "Glass.h"
+#include "Memo.h"
 
 #include <QDebug>
 
-Glass* ShottFormula::makeGlass() { return new GlassShott(this); }
-Glass* SellmeierFormula::makeGlass() { return new GlassSellmeier(this); }
-Glass* ReznikFormula::makeGlass() { return new GlassReznik(this); }
-Glass* CustomFormula::makeGlass() { return new GlassCustom(this); }
+Memo* PlainTextMemoType::makeMemo() { return new PlainTextMemo(this); }
+Memo* WikiTextMemoType::makeMemo() { return new WikiTextMemo(this); }
+Memo* RichTextMemoType::makeMemo() { return new RichTextMemo(this); }
 
 //------------------------------------------------------------------------------
 
 bool CatalogItem::isFolder() const { return dynamic_cast<const FolderItem*>(this); }
-bool CatalogItem::isGlass() const { return dynamic_cast<const GlassItem*>(this); }
+bool CatalogItem::isMemo() const { return dynamic_cast<const MemoItem*>(this); }
 FolderItem* CatalogItem::asFolder() { return dynamic_cast<FolderItem*>(this); }
-GlassItem* CatalogItem::asGlass() { return dynamic_cast<GlassItem*>(this); }
+MemoItem* CatalogItem::asMemo() { return dynamic_cast<MemoItem*>(this); }
 
 //------------------------------------------------------------------------------
 
-GlassItem::~GlassItem()
+MemoItem::~MemoItem()
 {
-    if (_glass) delete _glass;
+    if (_memo) delete _memo;
 }
 
 //------------------------------------------------------------------------------
 
 QString Catalog::fileFilter()
 {
-    return tr("Iris Catalog Files (*.iris);;All files (*.*)");
+    return tr("Procyon Memo Catalogs (*.enot);;All files (*.*)");
 }
 
 CatalorResult Catalog::open(const QString& fileName)
@@ -39,8 +38,6 @@ CatalorResult Catalog::open(const QString& fileName)
     Catalog* catalog = new Catalog;
     catalog->_fileName = fileName;
 
-    // NOTE: we do not expect a huge amount of folders
-    // and glasses in catalog so load all of them at once.
     FoldersResult folders = CatalogStore::folderManager()->selectAll();
     if (!folders.error.isEmpty())
     {
@@ -52,18 +49,18 @@ CatalorResult Catalog::open(const QString& fileName)
         if (!item->parent())
             catalog->_items.append(item);
 
-    GlassesResult glasses = CatalogStore::glassManager()->selectAll();
-    if (!glasses.error.isEmpty())
+    MemosResult memos = CatalogStore::memoManager()->selectAll();
+    if (!memos.error.isEmpty())
     {
         delete catalog;
-        return CatalorResult::fail(glasses.error);
+        return CatalorResult::fail(memos.error);
     }
 
-    if (!glasses.warnings.isEmpty())
-        for (auto warning: glasses.warnings)
+    if (!memos.warnings.isEmpty())
+        for (auto warning: memos.warnings)
             qWarning() << warning; // TODO make protocol window
 
-    for (int folderId: glasses.items.keys())
+    for (int folderId: memos.items.keys())
     {
         if (folderId > 0)
         {
@@ -71,18 +68,18 @@ CatalorResult Catalog::open(const QString& fileName)
             {
                 qWarning() << tr("Some materials are stored in folder #%1 but that "
                                  "is not found in the directory.").arg(folderId);
-                qDeleteAll(glasses.items[folderId]);
+                qDeleteAll(memos.items[folderId]);
                 continue;
             }
             FolderItem *parent = folders.items[folderId];
-            for (GlassItem* item: glasses.items[folderId])
+            for (MemoItem* item: memos.items[folderId])
             {
                 item->_parent = parent;
                 parent->_children.append(item);
             }
         }
         else
-            for (GlassItem* item: glasses.items[folderId])
+            for (MemoItem* item: memos.items[folderId])
                 catalog->_items.append(item);
     }
 
@@ -151,16 +148,16 @@ QString Catalog::removeFolder(FolderItem* item)
     return QString();
 }
 
-QString Catalog::createGlass(FolderItem* parent, Glass *glass)
+QString Catalog::createMemo(FolderItem* parent, Memo *memo)
 {
-    auto item = new GlassItem;
-    item->_glass = glass;
+    auto item = new MemoItem;
+    item->_memo = memo;
     item->_parent = parent;
-    item->_formula = glass->formula();
-    item->_title = glass->title();
-    item->_info = QString(); // TODO prepare glass info before saving
+    item->_type = memo->type();
+    item->_title = memo->title();
+    item->_info = QString(); // TODO prepare memo info before saving
 
-    auto res = CatalogStore::glassManager()->create(item);
+    auto res = CatalogStore::memoManager()->create(item);
     if (!res.isEmpty())
     {
         delete item;
@@ -170,61 +167,61 @@ QString Catalog::createGlass(FolderItem* parent, Glass *glass)
     (parent ? parent->asFolder()->_children : _items).append(item);
     // TODO sort items after inserting
 
-    emit glassCreated(item);
+    emit memoCreated(item);
 
     return QString();
 }
 
-QString Catalog::updateGlass(GlassItem* item, Glass *glass)
+QString Catalog::updateMemo(MemoItem* item, Memo *memo)
 {
-    QString info; // TODO prepage glass info before saving
-    QString res = CatalogStore::glassManager()->update(glass, info);
+    QString info; // TODO prepage memo info before saving
+    QString res = CatalogStore::memoManager()->update(memo, info);
     if (!res.isEmpty())
     {
-        delete glass;
+        delete memo;
         return res;
     }
 
-    delete item->_glass;
-    item->_glass = glass;
-    item->_formula = glass->formula();
-    item->_title = glass->title();
+    delete item->_memo;
+    item->_memo = memo;
+    item->_type = memo->type();
+    item->_title = memo->title();
     item->_info = info;
 
     // TODO sort items after renaming
     return QString();
 }
 
-QString Catalog::loadGlass(GlassItem* item)
+QString Catalog::loadMemo(MemoItem* item)
 {
-    Glass* glass = item->formula()->makeGlass();
-    glass->_id = item->_id;
-    QString res = CatalogStore::glassManager()->load(glass);
+    Memo* memo = item->type()->makeMemo();
+    memo->_id = item->_id;
+    QString res = CatalogStore::memoManager()->load(memo);
     if (!res.isEmpty())
     {
-        delete glass;
+        delete memo;
         return res;
     }
-    item->_glass = glass;
+    item->_memo = memo;
     return QString();
 }
 
-QString Catalog::removeGlass(GlassItem* item)
+QString Catalog::removeMemo(MemoItem* item)
 {
-    QString res = CatalogStore::glassManager()->remove(item);
+    QString res = CatalogStore::memoManager()->remove(item);
     if (!res.isEmpty()) return res;
 
     (item->parent() ? item->parent()->asFolder()->_children : _items).removeOne(item);
 
-    emit glassRemoved(item);
+    emit memoRemoved(item);
 
     delete item;
     return QString();
 }
 
-IntResult Catalog::countGlasses() const
+IntResult Catalog::countMemos() const
 {
     int count;
-    QString res = CatalogStore::glassManager()->countAll(&count);
+    QString res = CatalogStore::memoManager()->countAll(&count);
     return res.isEmpty() ? IntResult::ok(count) : IntResult::fail(res);
 }

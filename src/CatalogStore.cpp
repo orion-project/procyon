@@ -1,6 +1,6 @@
 #include "Catalog.h"
 #include "CatalogStore.h"
-#include "Glass.h"
+#include "Memo.h"
 #include "SqlHelper.h"
 
 #include <QDebug>
@@ -37,38 +37,34 @@ public:
 
 //------------------------------------------------------------------------------
 
-class GlassTableDef : public TableDef
+class MemoTableDef : public TableDef
 {
 public:
-    GlassTableDef() : TableDef("Glass") {}
+    MemoTableDef() : TableDef("Memo") {}
 
     const QString id = "Id";
     const QString parent = "Parent";
     const QString title = "Title";
     const QString info = "Info";
-    const QString comment = "Comment";
-    const QString formula = "Formula";
-    const QString lambdaMin = "LambdaMin";
-    const QString lambdaMax = "LambdaMax";
-    const QString coeffs = "Coeffs";
+    const QString type = "Type";
+    const QString data = "Data";
 
     QString sqlCreate() const override {
-        return "CREATE TABLE IF NOT EXISTS Glass ("
+        return "CREATE TABLE IF NOT EXISTS Memo ("
                "Id INTEGER PRIMARY KEY, "
                "Parent REFERENCES Folder(Id) ON DELETE CASCADE, "
-               "Title, Info, Comment, Formula, LambdaMin, LambdaMax, Coeffs)";
+               "Title, Info, Type, Data)";
     }
 
     const QString sqlInsert =
-        "INSERT INTO Glass (Id, Parent, Title, Info, Comment, Formula, LambdaMin, LambdaMax, Coeffs) "
-        "VALUES (:Id, :Parent, :Title, :Info, :Comment, :Formula, :LambdaMin, :LambdaMax, :Coeffs)";
+        "INSERT INTO Memo (Id, Parent, Title, Info, Type, Data) "
+        "VALUES (:Id, :Parent, :Title, :Info, :Type, :Data)";
 
     const QString sqlUpdate =
-        "UPDATE Glass SET Title = :Title, Info = :Info, Comment = :Comment, "
-            "Formula = :Formula, LambdaMin = :LambdaMin, LambdaMax = :LambdaMax, Coeffs = :Coeffs "
+        "UPDATE Memo SET Title = :Title, Info = :Info, Type = :Type, Data = :Data "
         "WHERE Id = :Id";
 
-    const QString sqlDelete = "DELETE FROM Glass WHERE Id = :Id";
+    const QString sqlDelete = "DELETE FROM Memo WHERE Id = :Id";
 };
 
 //------------------------------------------------------------------------------
@@ -172,68 +168,41 @@ QString FolderManager::removeBranch(FolderItem* folder, const QString& path) con
 
 //------------------------------------------------------------------------------
 
-QString serializeCoeffs(const QMap<QString, double>& coeffs)
-{
-    QStringList strs;
-    for (const QString& name : coeffs.keys())
-        strs.append(QString("%1=%2").arg(name).arg(coeffs[name], 0, 'g', 16));
-    return strs.join(';');
-}
+MemoTableDef* MemoManager::table() const { static MemoTableDef t; return &t; }
 
-QMap<QString, double> deserialzeCoeffs(const QString& str)
-{
-    QMap<QString, double> coeffs;
-    for (const QString& part : str.split(';', QString::SkipEmptyParts))
-    {
-        int index = part.indexOf('=');
-        if (index < 1) continue;
-        bool ok;
-        double value = QStringRef(&part, index+1, part.length()-index-1).toDouble(&ok);
-        if (!ok) continue;
-        coeffs[part.left(index)] = value;
-    }
-    return coeffs;
-}
-
-
-GlassTableDef* GlassManager::table() const { static GlassTableDef t; return &t; }
-
-QString GlassManager::create(GlassItem* item) const
+QString MemoManager::create(MemoItem* item) const
 {
     SelectQuery queryId(table()->sqlSelectMaxId());
     if (queryId.isFailed() || !queryId.next())
-        return qApp->tr("Unable to generate id for new material.\n\n%1").arg(queryId.error());
+        return qApp->tr("Unable to generate id for new memo.\n\n%1").arg(queryId.error());
 
-    if (!item->glass() || !item->formula())
-        return "Bad method usage: poorly defined material: no glass or formula is defined";
+    if (!item->memo() || !item->type())
+        return "Bad method usage: poorly defined memo: no content or type is defined";
 
-    item->glass()->_id = queryId.record().value(0).toInt() + 1;
+    item->memo()->_id = queryId.record().value(0).toInt() + 1;
 
     auto res = ActionQuery(table()->sqlInsert)
             .param(table()->parent, item->parent() ? item->parent()->asFolder()->id() : 0)
-            .param(table()->id, item->glass()->id())
-            .param(table()->title, item->glass()->title())
+            .param(table()->id, item->memo()->id())
+            .param(table()->title, item->memo()->title())
             .param(table()->info, item->info())
-            .param(table()->comment, item->glass()->comment())
-            .param(table()->lambdaMin, item->glass()->lambdaMin())
-            .param(table()->lambdaMax, item->glass()->lambdaMax())
-            .param(table()->formula, item->glass()->formula()->name())
-            .param(table()->coeffs, serializeCoeffs(item->glass()->coeffValues()))
+            .param(table()->type, item->memo()->type()->name())
+            .param(table()->data, item->memo()->data())
             .exec();
     if (!res.isEmpty())
-        return qApp->tr("Failed to create new material.\n\n%1").arg(res);
+        return qApp->tr("Failed to create new memo.\n\n%1").arg(res);
 
     return QString();
 }
 
-GlassesResult GlassManager::selectAll() const
+MemosResult MemoManager::selectAll() const
 {
-    GlassesResult result;
+    MemosResult result;
 
     SelectQuery query(table()->sqlSelectAll());
     if (query.isFailed())
     {
-        result.error = qApp->tr("Unable to load materials.\n\n%1").arg(query.error());
+        result.error = qApp->tr("Unable to load memos.\n\n%1").arg(query.error());
         return result;
     }
 
@@ -243,71 +212,65 @@ GlassesResult GlassManager::selectAll() const
 
         int id = r.value(table()->id).toInt();
         QString title = r.value(table()->title).toString();
-        QString formulaName = r.value(table()->formula).toString();
-        if (!dispersionFormulas().contains(formulaName))
+        QString memoType = r.value(table()->type).toString();
+        if (!memoTypes().contains(memoType))
         {
             result.warnings.append(qApp->tr("Skip material #%1 '%2': "
-                                            "unknown dispersion formula '%3'.")
-                                   .arg(id).arg(title).arg(formulaName));
+                                            "unknown memo type '%3'.")
+                                   .arg(id).arg(title).arg(memoType));
             continue;
         }
 
-        GlassItem *item = new GlassItem;
+        MemoItem *item = new MemoItem;
         item->_id = id;
         item->_title = title;
         item->_info = r.value(table()->info).toString();
-        item->_formula = dispersionFormulas()[formulaName];
+        item->_type = memoTypes()[memoType];
 
         int parentId = r.value(table()->parent).toInt();
         if (!result.items.contains(parentId))
-            result.items.insert(parentId, QList<GlassItem*>());
-        ((QList<GlassItem*>&)result.items[parentId]).append(item);
+            result.items.insert(parentId, QList<MemoItem*>());
+        ((QList<MemoItem*>&)result.items[parentId]).append(item);
     }
 
     return result;
 }
 
-QString GlassManager::load(Glass* glass) const
+QString MemoManager::load(Memo* memo) const
 {
-    SelectQuery query(table()->sqlSelectById(glass->id()));
+    SelectQuery query(table()->sqlSelectById(memo->id()));
     if (query.isFailed())
-        return qApp->tr("Unable to load material #%1.\n\n%2").arg(glass->id()).arg(query.error());
+        return qApp->tr("Unable to load memo #%1.\n\n%2").arg(memo->id()).arg(query.error());
 
     if (!query.next())
-        return qApp->tr("Material #%1 does not exist.").arg(glass->id());
+        return qApp->tr("Memo #%1 does not exist.").arg(memo->id());
 
     QSqlRecord r = query.record();
-    glass->_title = r.value(table()->title).toString();
-    glass->_comment = r.value(table()->comment).toString();
-    glass->_lambdaMin = r.value(table()->lambdaMin).toDouble();
-    glass->_lambdaMax = r.value(table()->lambdaMax).toDouble();
-    glass->_coeffValues = deserialzeCoeffs(r.value(table()->coeffs).toString());
+    memo->_title = r.value(table()->title).toString();
+    memo->_data = r.value(table()->data).toString();
     return QString();
 }
 
-QString GlassManager::update(Glass* glass, const QString &info) const
+QString MemoManager::update(Memo* memo, const QString &info) const
 {
     return ActionQuery(table()->sqlUpdate)
-            .param(table()->id, glass->id())
-            .param(table()->title, glass->title())
+            .param(table()->id, memo->id())
+            .param(table()->title, memo->title())
             .param(table()->info, info)
-            .param(table()->comment, glass->comment())
-            .param(table()->lambdaMin, glass->lambdaMin())
-            .param(table()->lambdaMax, glass->lambdaMax())
-            .param(table()->formula, glass->formula()->name())
-            .param(table()->coeffs, serializeCoeffs(glass->coeffValues()))
+            .param(table()->type, memo->type()->name())
+            .param(table()->data, memo->data())
             .exec();
 }
 
-QString GlassManager::remove(GlassItem* item) const
+QString MemoManager::remove(MemoItem* item) const
 {
     return ActionQuery(table()->sqlDelete)
-            .param(table()->id, item->glass()->id())
+            .param(table()->id, item->memo()->id())
             .exec();
-    // TODO remove formula specific values
+    // TODO remove memo specific data
 }
 
-QString GlassManager::countAll(int *count) const
+QString MemoManager::countAll(int *count) const
 {
     SelectQuery query(table()->sqlCountAll());
     if (query.isFailed()) return query.error();
@@ -369,7 +332,7 @@ QString openDatabase(const QString fileName)
     res = createTable(folderManager()->table());
     if (!res.isEmpty()) return res;
 
-    res = createTable(glassManager()->table());
+    res = createTable(memoManager()->table());
     if (!res.isEmpty()) return res;
 
     commitTran();
@@ -401,6 +364,6 @@ void rollbackTran() { __db.rollback(); }
 
 
 FolderManager *folderManager() { static FolderManager m; return &m; }
-GlassManager* glassManager() { static GlassManager m; return &m; }
+MemoManager* memoManager() { static MemoManager m; return &m; }
 
 } // namespace CatalogStore

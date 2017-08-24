@@ -28,6 +28,7 @@ MemoWindow::MemoWindow(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     Ori::Gui::setFontMonospace(_memoEditor);
 
     _titleEditor = new QLineEdit;
+    _titleEditor->setStyleSheet("border-style: none; font-family: Arial; font-size: 14pt; padding: 6px");
 
     _buttonEdit = new QPushButton(tr("Edit"));
     _buttonSave = new QPushButton(tr("Save"));
@@ -36,12 +37,13 @@ MemoWindow::MemoWindow(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     connect(_buttonSave, &QPushButton::clicked, this, &MemoWindow::saveEditing);
     connect(_buttonCancel, &QPushButton::clicked, this, &MemoWindow::cancelEditing);
 
-    auto toolbar = LayoutH({_titleEditor, Stretch(), _buttonEdit, _buttonSave, _buttonCancel}).makeWidget();
+    auto toolbar = LayoutH({_titleEditor, _buttonEdit, _buttonSave, _buttonCancel}).makeWidget();
 
     LayoutV({toolbar, _memoEditor}).setMargin(0).setSpacing(0).useFor(this);
 
-    toggleEditMode(false);
     showMemo();
+    toggleEditMode(false);
+    _memoEditor->setFocus();
 }
 
 MemoWindow::~MemoWindow()

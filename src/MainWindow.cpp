@@ -12,6 +12,7 @@
 #include "widgets/OriMruMenu.h"
 #include "widgets/OriStylesMenu.h"
 
+#include <QDebug>
 #include <QDockWidget>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -134,8 +135,8 @@ void MainWindow::loadSettings()
 
 void MainWindow::newCatalog()
 {
-    QString fileName = QFileDialog::getSaveFileName(
-                this, tr("Create Catalog"), QString(), Catalog::fileFilter());
+    QString fileName = Ori::Dlg::getSaveFileName(
+                tr("Create Catalog"), Catalog::fileFilter(), Catalog::defaultFileExt());
     if (fileName.isEmpty()) return;
 
     Ori::WaitCursor c;
@@ -153,6 +154,8 @@ void MainWindow::newCatalog()
 
 void MainWindow::openCatalog(const QString &fileName)
 {
+    if (!QFile::exists(fileName)) return;
+
     if (_catalog && QFileInfo(_catalog->fileName()) == QFileInfo(fileName))
         return;
 

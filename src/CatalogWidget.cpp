@@ -1,6 +1,7 @@
 #include "Catalog.h"
 #include "CatalogWidget.h"
 #include "CatalogModel.h"
+#include "MemoTypeSelector.h"
 #include "helpers/OriLayouts.h"
 #include "helpers/OriDialogs.h"
 
@@ -28,7 +29,7 @@ struct CatalogSelection
 };
 
 
-CatalogWidget::CatalogWidget(QAction* openMemo) : QWidget()
+CatalogWidget::CatalogWidget(QAction* openMemo) : QWidget(), _openMemo(openMemo)
 {
     _rootMenu = new QMenu(this);
     _rootMenu->addAction(tr("New Folder..."), this, &CatalogWidget::createFolder);
@@ -170,13 +171,21 @@ void CatalogWidget::deleteFolder()
 void CatalogWidget::createMemo()
 {
     CatalogSelection parentFolder(_catalogView);
-    // TODO create memo
+
+    auto memoType = MemoTypeSelector::selectType();
+    if (!memoType) return;
+
+    auto memo = memoType->makeMemo();
+    auto res = _catalog->createMemo(parentFolder.folder, memo);
+    if (!res.isEmpty()) return Ori::Dlg::error(res);
 
     // TODO do not know about item inserted at the end and select by pointer
     auto newIndex = _catalogModel->itemAdded(parentFolder.index);
     if (!_catalogView->isExpanded(parentFolder.index))
         _catalogView->expand(parentFolder.index);
     _catalogView->setCurrentIndex(newIndex);
+
+    _openMemo->trigger();
 }
 
 void CatalogWidget::deleteMemo()

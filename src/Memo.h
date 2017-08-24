@@ -26,6 +26,7 @@ private:
 
     friend class Catalog;
     friend class MemoManager;
+    friend class MemoWindow;
 };
 
 

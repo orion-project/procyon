@@ -242,6 +242,13 @@ void MainWindow::openMemo()
 {
     auto selected = _catalogView->selection();
     if (!selected.memo) return;
+
+    if (!selected.memo->memo())
+    {
+        auto res = _catalog->loadMemo(selected.memo);
+        if (!res.isEmpty()) return Ori::Dlg::error(res);
+    }
+
     auto memoWindow = new MemoWindow(_catalog, selected.memo);
     auto mdiChild = _mdiArea->addSubWindow(memoWindow);
     mdiChild->setWindowIcon(memoWindow->windowIcon());

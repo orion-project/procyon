@@ -24,7 +24,7 @@ public:
 class PlainTextMemoType : public MemoType
 {
 public:
-    const char* name() const { return QT_TRANSLATE_NOOP("Formula", "Shott"); }
+    const char* name() const { return QT_TRANSLATE_NOOP("MemoType", "Plain Text"); }
     const QIcon& icon() const { static QIcon icon(":/icon/memo_plain_text"); return icon; }
     Memo* makeMemo();
 };
@@ -32,7 +32,7 @@ public:
 class WikiTextMemoType : public MemoType
 {
 public:
-    const char* name() const { return QT_TRANSLATE_NOOP("Formula", "Sellmeier"); }
+    const char* name() const { return QT_TRANSLATE_NOOP("MemoType", "Wiki Text"); }
     const QIcon& icon() const { static QIcon icon(":/icon/memo_wiki_text"); return icon; }
     Memo* makeMemo();
 };
@@ -40,22 +40,23 @@ public:
 class RichTextMemoType : public MemoType
 {
 public:
-    const char* name() const { return QT_TRANSLATE_NOOP("Formula", "Reznik"); }
+    const char* name() const { return QT_TRANSLATE_NOOP("MemoType", "Rich Text"); }
     const QIcon& icon() const { static QIcon icon(":/icon/memo_rich_text"); return icon; }
     Memo* makeMemo();
 };
 
+inline MemoType* plainTextMemoType() { static PlainTextMemoType t; return &t; }
+inline MemoType* wikiTextMemoType() { static WikiTextMemoType t; return &t; }
+inline MemoType* richTextMemoType() { static RichTextMemoType t; return &t; }
+
 inline const QMap<QString, MemoType*>& memoTypes()
 {
-    static PlainTextMemoType shott;
-    static WikiTextMemoType sellmeier;
-    static RichTextMemoType reznik;
-    static QMap<QString, MemoType*> formulas {
-        { shott.name(), &shott },
-        { sellmeier.name(), &sellmeier },
-        { reznik.name(), &reznik }
+    static QMap<QString, MemoType*> memoTypes {
+        { plainTextMemoType()->name(), plainTextMemoType() },
+        { wikiTextMemoType()->name(), wikiTextMemoType() },
+        { richTextMemoType()->name(), richTextMemoType() }
     };
-    return formulas;
+    return memoTypes;
 }
 
 //------------------------------------------------------------------------------

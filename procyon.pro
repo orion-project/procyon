@@ -26,6 +26,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+RESOURCES += images.qrc
 
 SOURCES += src/main.cpp\
         src/MainWindow.cpp \
@@ -35,7 +36,8 @@ SOURCES += src/main.cpp\
     src/CatalogStore.cpp \
     src/SqlHelper.cpp \
     src/Memo.cpp \
-    src/MemoWindow.cpp
+    src/MemoWindow.cpp \
+    src/MemoTypeSelector.cpp
 
 HEADERS  += src/MainWindow.h \
     src/CatalogWidget.h \
@@ -46,4 +48,5 @@ HEADERS  += src/MainWindow.h \
     src/SqlHelper.h \
     src/Appearance.h \
     src/Memo.h \
-    src/MemoWindow.h
+    src/MemoWindow.h \
+    src/MemoTypeSelector.h

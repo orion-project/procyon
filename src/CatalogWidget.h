@@ -39,6 +39,7 @@ private:
     QTreeView* _catalogView;
     CatalogModel* _catalogModel = nullptr;
     QMenu *_rootMenu, *_folderMenu, *_memoMenu;
+    QAction *_openMemo;
     QAction *_folderMenuHeader, *_memoMenuHeader;
 
     static QAction *makeHeaderItem(QMenu* menu);

@@ -26,28 +26,18 @@ MemoWindow::MemoWindow(Catalog *catalog, MemoItem *memoItem) : QWidget(),
 
     _memoEditor = new QTextEdit;
     _memoEditor->setReadOnly(true);
-    QFont f = _memoEditor->font();
-    f.setFamily("Arial");
-    f.setPointSize(12);
-    _memoEditor->setFont(f);
     _memoEditor->setAcceptRichText(false);
-
+    _memoEditor->setWordWrapMode(QTextOption::NoWrap);
 
     _titleEditor = new QLineEdit;
-    f = _titleEditor->font();
-    f.setFamily("Arial");
-    f.setPointSize(14);
-    _titleEditor->setFont(f);
-
+    _titleEditor->setFont(QFont("Arial", 14));
 
     auto toolbar = new QToolBar;
     _actionEdit = toolbar->addAction(QIcon(":/toolbar/memo_edit"), tr("Edit"), this, &MemoWindow::beginEditing);
     _actionSave = toolbar->addAction(QIcon(":/toolbar/memo_save"), tr("Save"), this, &MemoWindow::saveEditing);
     _actionCancel = toolbar->addAction(QIcon(":/toolbar/memo_cancel"), tr("Cancel"), this, &MemoWindow::cancelEditing);
 
-    auto toolPanel = LayoutH({_titleEditor, toolbar})
-        .setMargin(0)
-        .makeWidget();
+    auto toolPanel = LayoutH({_titleEditor, toolbar}).setMargin(0).makeWidget();
 
     LayoutV({toolPanel, _memoEditor}).setMargin(0).setSpacing(0).useFor(this);
 
@@ -110,4 +100,9 @@ void MemoWindow::toggleEditMode(bool on)
     _titleEditor->setReadOnly(!on);
     _titleEditor->setStyleSheet(QString("border-style: none; background: %1; padding: 6px")
         .arg(palette().color(on ? QPalette::Base : QPalette::Window).name()));
+}
+
+void MemoWindow::setMemoFont(const QFont& font)
+{
+    _memoEditor->setFont(font);
 }

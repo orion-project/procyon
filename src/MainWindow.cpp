@@ -16,6 +16,7 @@
 #include <QDockWidget>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QFontDialog>
 #include <QIcon>
 #include <QLabel>
 #include <QMdiArea>
@@ -89,7 +90,10 @@ void MainWindow::createMenu()
 
     QMenu* menuMemo = menuBar()->addMenu(tr("&Memo"));
     connect(menuMemo, &QMenu::aboutToShow, this, &MainWindow::updateMenuMemo);
-    _actionOpenMemo = menuMemo->addAction(QIcon(":/icon/plot"), tr("Open memo"), this, &MainWindow::openMemo); // TODO icon
+    _actionOpenMemo = menuMemo->addAction(tr("Open memo"), this, &MainWindow::openMemo);
+
+    QMenu* menuOptions = menuBar()->addMenu(tr("&Options"));
+    menuOptions->addAction(tr("Choose Memo Font..."), this, &MainWindow::chooseMemoFont);
 }
 
 void MainWindow::createDocks()
@@ -122,6 +126,7 @@ void MainWindow::saveSettings()
     s.storeWindowGeometry(this);
     s.storeDockState(this);
     s.setValue("style", qApp->style()->objectName());
+    s.setValue("memoFont", _memoFont);
     if (_catalog)
         s.setValue("database", _catalog->fileName());
 }
@@ -133,6 +138,9 @@ void MainWindow::loadSettings()
     s.restoreDockState(this);
     _mruList->load(s.settings());
     qApp->setStyle(s.strValue("style"));
+
+    _memoFont = qvariant_cast<QFont>(s.value("memoFont", QFont("Arial", 12)));
+
     auto lastFile = s.value("database").toString();
     if (!lastFile.isEmpty())
         QTimer::singleShot(200, [this, lastFile](){ this->openCatalog(lastFile); });
@@ -270,8 +278,12 @@ void MainWindow::openMemo()
         _mdiArea->setActiveSubWindow(mdiChild);
     else
     {
+        auto memoWindow = new MemoWindow(_catalog, selected.memo);
+        //memoWindow->setMemoFont(_memoFont);
+        memoWindow->setMemoFont(_memoFont);
+
         mdiChild = new QMdiSubWindow;
-        mdiChild->setWidget(new MemoWindow(_catalog, selected.memo));
+        mdiChild->setWidget(memoWindow);
         mdiChild->setAttribute(Qt::WA_DeleteOnClose);
         mdiChild->resize(_mdiArea->size() * 0.7);
         _mdiArea->addSubWindow(mdiChild);
@@ -287,4 +299,20 @@ QMdiSubWindow* MainWindow::findMemoSubWindow(MemoItem* item) const
         if (memoWindow && memoWindow->memoItem() == item) return mdiChild;
     }
     return nullptr;
+}
+
+void MainWindow::chooseMemoFont()
+{
+    bool ok;
+    QFont font = QFontDialog::getFont(&ok, _memoFont, this, QString(), QFontDialog::ScalableFonts |
+        QFontDialog::NonScalableFonts | QFontDialog::MonospacedFonts | QFontDialog::ProportionalFonts);
+    if (!ok) return;
+
+    _memoFont = font;
+
+    for (auto mdiChild : _mdiArea->subWindowList())
+    {
+        auto memoWindow = qobject_cast<MemoWindow*>(mdiChild->widget());
+        if (memoWindow) memoWindow->setMemoFont(_memoFont);
+    }
 }

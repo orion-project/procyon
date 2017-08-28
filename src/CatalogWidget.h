@@ -15,6 +15,7 @@ class CatalogModel;
 class FolderItem;
 class MemoItem;
 
+struct CatalogSelection;
 struct SelectedItems
 {
     MemoItem* memo;
@@ -30,6 +31,8 @@ public:
     void setCatalog(Catalog* catalog);
 
     SelectedItems selection() const;
+
+    void createTopLevelFolder();
 
 signals:
     void contextMenuAboutToShow();
@@ -54,6 +57,7 @@ private:
     void deleteMemo();
 
     void memoUpdated(MemoItem*);
+    void createFolderInternal(const CatalogSelection& parentFolder);
 };
 
 #endif // CATALOGWIDGET_H

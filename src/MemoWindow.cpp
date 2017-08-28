@@ -32,8 +32,13 @@ MemoWindow::MemoWindow(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     _memoEditor->setFont(f);
     _memoEditor->setAcceptRichText(false);
 
+
     _titleEditor = new QLineEdit;
-    _titleEditor->setStyleSheet("border-style: none; font-family: Arial; font-size: 14pt; padding: 6px");
+    f = _titleEditor->font();
+    f.setFamily("Arial");
+    f.setPointSize(14);
+    _titleEditor->setFont(f);
+
 
     auto toolbar = new QToolBar;
     _actionEdit = toolbar->addAction(QIcon(":/toolbar/memo_edit"), tr("Edit"), this, &MemoWindow::beginEditing);
@@ -103,4 +108,6 @@ void MemoWindow::toggleEditMode(bool on)
     _actionEdit->setVisible(!on);
     _memoEditor->setReadOnly(!on);
     _titleEditor->setReadOnly(!on);
+    _titleEditor->setStyleSheet(QString("border-style: none; background: %1; padding: 6px")
+        .arg(palette().color(on ? QPalette::Base : QPalette::Window).name()));
 }

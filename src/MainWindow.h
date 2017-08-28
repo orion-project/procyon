@@ -38,6 +38,7 @@ private:
     QDockWidget *_dockCatalog, *_dockInfo;
     QLabel *_statusMemoCount, *_statusFileName;
     QAction *_actionViewCatalog, *_actionViewInfo;
+    QAction *_actionCatalogCreateTopLevelFolder;
     QAction *_actionOpenMemo;
 
     void createMenu();
@@ -53,6 +54,7 @@ private:
     void catalogClosed();
     void updateCounter();
     void updateMenuMemo();
+    void updateMenuCatalog();
     void openMemo();
 
     QMdiSubWindow* findMemoSubWindow(MemoItem* item) const;

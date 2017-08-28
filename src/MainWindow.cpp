@@ -82,6 +82,11 @@ void MainWindow::createMenu()
     menuView->addSeparator();
     menuView->addMenu(new Ori::Widgets::StylesMenu(this));
 
+    QMenu* menuCatalog = menuBar()->addMenu(tr("&Catalog"));
+    connect(menuCatalog, &QMenu::aboutToShow, this, &MainWindow::updateMenuCatalog);
+    _actionCatalogCreateTopLevelFolder = menuCatalog->addAction(tr("New Top Level Folder..."),
+        [this](){ this->_catalogView->createTopLevelFolder(); });
+
     QMenu* menuMemo = menuBar()->addMenu(tr("&Memo"));
     connect(menuMemo, &QMenu::aboutToShow, this, &MainWindow::updateMenuMemo);
     _actionOpenMemo = menuMemo->addAction(QIcon(":/icon/plot"), tr("Open memo"), this, &MainWindow::openMemo); // TODO icon
@@ -217,6 +222,13 @@ void MainWindow::updateCounter()
         _statusMemoCount->setToolTip(res.error());
         _statusMemoCount->setText(tr("Memos: ERROR"));
     }
+}
+
+void MainWindow::updateMenuCatalog()
+{
+    bool hasCatalog = _catalog;
+
+    _actionCatalogCreateTopLevelFolder->setEnabled(hasCatalog);
 }
 
 void MainWindow::updateMenuMemo()

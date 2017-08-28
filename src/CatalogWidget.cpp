@@ -15,6 +15,8 @@ struct CatalogSelection
     FolderItem* folder = nullptr;
     MemoItem* memo = nullptr;
 
+    CatalogSelection() {}
+
     CatalogSelection(QTreeView* view)
     {
         index = view->currentIndex();
@@ -136,7 +138,16 @@ SelectedItems CatalogWidget::selection() const
 
 void CatalogWidget::createFolder()
 {
-    CatalogSelection parentFolder(_catalogView);
+    createFolderInternal(CatalogSelection(_catalogView));
+}
+
+void CatalogWidget::createTopLevelFolder()
+{
+    createFolderInternal(CatalogSelection());
+}
+
+void CatalogWidget::createFolderInternal(const CatalogSelection& parentFolder)
+{
 
     auto title = Ori::Dlg::inputText(tr("Enter a title for new folder"), "");
     if (title.isEmpty()) return;

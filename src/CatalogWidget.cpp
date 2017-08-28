@@ -77,6 +77,9 @@ QAction* CatalogWidget::makeHeaderItem(QMenu* menu)
 
 void CatalogWidget::setCatalog(Catalog* catalog)
 {
+    if (_catalog)
+        disconnect(_catalog, &Catalog::memoUpdated, this, &CatalogWidget::memoUpdated);
+
     _catalog = catalog;
     if (_catalogModel)
     {
@@ -84,7 +87,10 @@ void CatalogWidget::setCatalog(Catalog* catalog)
         _catalogModel = nullptr;
     }
     if (_catalog)
+    {
         _catalogModel = new CatalogModel(_catalog);
+        connect(_catalog, &Catalog::memoUpdated, this, &CatalogWidget::memoUpdated);
+    }
     _catalogView->setModel(_catalogModel);
 }
 
@@ -203,4 +209,11 @@ void CatalogWidget::deleteMemo()
     if (!res.isEmpty()) return Ori::Dlg::error(res);
 
     _catalogView->setCurrentIndex(guard.parentIndex);
+}
+
+void CatalogWidget::memoUpdated(MemoItem* item)
+{
+    auto index = _catalogModel->findIndex(item);
+    if (index.isValid())
+        _catalogModel->itemRenamed(index);
 }

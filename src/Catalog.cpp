@@ -193,6 +193,8 @@ QString Catalog::updateMemo(MemoItem* item, Memo *memo)
     item->_title = memo->title();
     item->_info = info;
 
+    emit memoUpdated(item);
+
     // TODO sort items after renaming
     return QString();
 }

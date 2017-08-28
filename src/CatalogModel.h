@@ -21,6 +21,20 @@ public:
         return static_cast<CatalogItem*>(index.internalPointer());
     }
 
+    QModelIndex findIndex(CatalogItem* item, const QModelIndex &parent = QModelIndex())
+    {
+        int rows = rowCount(parent);
+        for (int row = 0; row < rows; row++)
+        {
+            auto currentIndex = index(row, 0, parent);
+            auto currentItem = catalogItem(currentIndex);
+            if (currentItem == item) return currentIndex;
+
+            return findIndex(item, currentIndex);
+        }
+        return QModelIndex();
+    }
+
     QModelIndex index(int row, int column, const QModelIndex &parent) const override
     {
         if (!parent.isValid())

@@ -35,7 +35,7 @@ signals:
     void contextMenuAboutToShow();
 
 private:
-    Catalog* _catalog;
+    Catalog* _catalog = nullptr;
     QTreeView* _catalogView;
     CatalogModel* _catalogModel = nullptr;
     QMenu *_rootMenu, *_folderMenu, *_memoMenu;
@@ -51,6 +51,8 @@ private:
     void deleteFolder();
     void createMemo();
     void deleteMemo();
+
+    void memoUpdated(MemoItem*);
 };
 
 #endif // CATALOGWIDGET_H

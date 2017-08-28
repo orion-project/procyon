@@ -174,6 +174,7 @@ public:
 signals:
     void memoCreated(MemoItem*);
     void memoRemoved(MemoItem*);
+    void memoUpdated(MemoItem*);
 
 private:
     QString _fileName;

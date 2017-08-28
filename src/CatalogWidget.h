@@ -45,6 +45,7 @@ private:
     static QAction *makeHeaderItem(QMenu* menu);
 
     void contextMenuRequested(const QPoint &pos);
+    void doubleClicked(const QModelIndex &);
 
     void createFolder();
     void renameFolder();

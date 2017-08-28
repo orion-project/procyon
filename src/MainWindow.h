@@ -8,12 +8,14 @@ class QAction;
 class QDockWidget;
 class QLabel;
 class QMdiArea;
+class QMdiSubWindow;
 QT_END_NAMESPACE
 
 class Catalog;
 class CatalogWidget;
 class InfoWidget;
 class MemoWindow;
+class MemoItem;
 
 namespace Ori {
 class MruFileList;
@@ -53,6 +55,7 @@ private:
     void updateMenuMemo();
     void openMemo();
 
+    QMdiSubWindow* findMemoSubWindow(MemoItem* item) const;
     MemoWindow* activePlot() const;
 };
 

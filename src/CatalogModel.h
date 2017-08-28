@@ -30,7 +30,8 @@ public:
             auto currentItem = catalogItem(currentIndex);
             if (currentItem == item) return currentIndex;
 
-            return findIndex(item, currentIndex);
+            auto targetIndex = findIndex(item, currentIndex);
+            if (targetIndex.isValid()) return targetIndex;
         }
         return QModelIndex();
     }

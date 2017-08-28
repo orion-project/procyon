@@ -238,7 +238,7 @@ MemoWindow* MainWindow::activePlot() const
 {
     auto mdiChild = _mdiArea->currentSubWindow();
     if (!mdiChild) return nullptr;
-    return dynamic_cast<MemoWindow*>(mdiChild->widget());
+    return qobject_cast<MemoWindow*>(mdiChild->widget());
 }
 
 void MainWindow::openMemo()
@@ -252,8 +252,27 @@ void MainWindow::openMemo()
         if (!res.isEmpty()) return Ori::Dlg::error(res);
     }
 
-    auto memoWindow = new MemoWindow(_catalog, selected.memo);
-    auto mdiChild = _mdiArea->addSubWindow(memoWindow);
-    mdiChild->setWindowIcon(memoWindow->windowIcon());
-    mdiChild->show();
+
+    auto mdiChild = findMemoSubWindow(selected.memo);
+    if (mdiChild)
+        _mdiArea->setActiveSubWindow(mdiChild);
+    else
+    {
+        mdiChild = new QMdiSubWindow;
+        mdiChild->setWidget(new MemoWindow(_catalog, selected.memo));
+        mdiChild->setAttribute(Qt::WA_DeleteOnClose);
+        mdiChild->resize(_mdiArea->size() * 0.7);
+        _mdiArea->addSubWindow(mdiChild);
+        mdiChild->show();
+    }
+}
+
+QMdiSubWindow* MainWindow::findMemoSubWindow(MemoItem* item) const
+{
+    for (auto mdiChild : _mdiArea->subWindowList())
+    {
+        auto memoWindow = qobject_cast<MemoWindow*>(mdiChild->widget());
+        if (memoWindow && memoWindow->memoItem() == item) return mdiChild;
+    }
+    return nullptr;
 }

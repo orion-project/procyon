@@ -4,6 +4,7 @@
 #include <QWidget>
 
 QT_BEGIN_NAMESPACE
+class QAction;
 class QLineEdit;
 class QTextEdit;
 class QPushButton;
@@ -20,12 +21,14 @@ public:
     explicit MemoWindow(Catalog* catalog, MemoItem* memoItem);
     ~MemoWindow();
 
+    MemoItem* memoItem() const { return _memoItem; }
+
 private:
     Catalog* _catalog;
     MemoItem* _memoItem;
     QTextEdit* _memoEditor;
     QLineEdit* _titleEditor;
-    QPushButton *_buttonEdit, *_buttonSave, *_buttonCancel;
+    QAction *_actionEdit, *_actionSave, *_actionCancel;
 
     void memoRemoved(MemoItem* item);
     void showMemo();

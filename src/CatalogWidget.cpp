@@ -57,6 +57,7 @@ CatalogWidget::CatalogWidget(QAction* openMemo) : QWidget(), _openMemo(openMemo)
     _catalogView->setAlternatingRowColors(true);
     _catalogView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(_catalogView, &QTreeView::customContextMenuRequested, this, &CatalogWidget::contextMenuRequested);
+    connect(_catalogView, &QTreeView::doubleClicked, this, &CatalogWidget::doubleClicked);
 
     Ori::Layouts::LayoutV({_catalogView})
             .setMargin(0)
@@ -115,6 +116,14 @@ void CatalogWidget::contextMenuRequested(const QPoint &pos)
         _memoMenuHeader->setIcon(selected.memo->type()->icon());
         _memoMenu->popup(_catalogView->mapToGlobal(pos));
     }
+}
+
+void CatalogWidget::doubleClicked(const QModelIndex&)
+{
+    if (!_catalogModel) return;
+
+    CatalogSelection selected(_catalogView);
+    if (selected.memo) _openMemo->trigger();
 }
 
 SelectedItems CatalogWidget::selection() const

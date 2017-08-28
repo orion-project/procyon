@@ -10,6 +10,7 @@
 #include <QDebug>
 #include <QLineEdit>
 #include <QTextEdit>
+#include <QToolBar>
 #include <QPushButton>
 
 using namespace Ori::Layouts;
@@ -25,21 +26,25 @@ MemoWindow::MemoWindow(Catalog *catalog, MemoItem *memoItem) : QWidget(),
 
     _memoEditor = new QTextEdit;
     _memoEditor->setReadOnly(true);
-    Ori::Gui::setFontMonospace(_memoEditor);
+    QFont f = _memoEditor->font();
+    f.setFamily("Arial");
+    f.setPointSize(12);
+    _memoEditor->setFont(f);
+    _memoEditor->setAcceptRichText(false);
 
     _titleEditor = new QLineEdit;
     _titleEditor->setStyleSheet("border-style: none; font-family: Arial; font-size: 14pt; padding: 6px");
 
-    _buttonEdit = new QPushButton(tr("Edit"));
-    _buttonSave = new QPushButton(tr("Save"));
-    _buttonCancel = new QPushButton(tr("Cancel"));
-    connect(_buttonEdit, &QPushButton::clicked, this, &MemoWindow::beginEditing);
-    connect(_buttonSave, &QPushButton::clicked, this, &MemoWindow::saveEditing);
-    connect(_buttonCancel, &QPushButton::clicked, this, &MemoWindow::cancelEditing);
+    auto toolbar = new QToolBar;
+    _actionEdit = toolbar->addAction(QIcon(":/toolbar/memo_edit"), tr("Edit"), this, &MemoWindow::beginEditing);
+    _actionSave = toolbar->addAction(QIcon(":/toolbar/memo_save"), tr("Save"), this, &MemoWindow::saveEditing);
+    _actionCancel = toolbar->addAction(QIcon(":/toolbar/memo_cancel"), tr("Cancel"), this, &MemoWindow::cancelEditing);
 
-    auto toolbar = LayoutH({_titleEditor, _buttonEdit, _buttonSave, _buttonCancel}).makeWidget();
+    auto toolPanel = LayoutH({_titleEditor, toolbar})
+        .setMargin(0)
+        .makeWidget();
 
-    LayoutV({toolbar, _memoEditor}).setMargin(0).setSpacing(0).useFor(this);
+    LayoutV({toolPanel, _memoEditor}).setMargin(0).setSpacing(0).useFor(this);
 
     showMemo();
     toggleEditMode(false);
@@ -60,6 +65,7 @@ void MemoWindow::showMemo()
 {
     _memoEditor->setPlainText(_memoItem->memo()->data());
     _titleEditor->setText(_memoItem->memo()->title());
+    setWindowTitle(_memoItem->memo()->title());
 }
 
 void MemoWindow::beginEditing()
@@ -85,14 +91,16 @@ void MemoWindow::saveEditing()
     if (!res.isEmpty())
         return Ori::Dlg::error(res);
 
+    setWindowTitle(_memoItem->memo()->title());
+
     toggleEditMode(false);
 }
 
 void MemoWindow::toggleEditMode(bool on)
 {
-    _buttonSave->setVisible(on);
-    _buttonCancel->setVisible(on);
-    _buttonEdit->setVisible(!on);
+    _actionSave->setVisible(on);
+    _actionCancel->setVisible(on);
+    _actionEdit->setVisible(!on);
     _memoEditor->setReadOnly(!on);
     _titleEditor->setReadOnly(!on);
 }

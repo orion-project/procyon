@@ -37,7 +37,8 @@ SOURCES += src/main.cpp\
     src/SqlHelper.cpp \
     src/Memo.cpp \
     src/MemoWindow.cpp \
-    src/MemoTypeSelector.cpp
+    src/MemoTypeSelector.cpp \
+    src/hl/PythonSyntaxHighlighter.cpp
 
 HEADERS  += src/MainWindow.h \
     src/CatalogWidget.h \
@@ -49,4 +50,5 @@ HEADERS  += src/MainWindow.h \
     src/Appearance.h \
     src/Memo.h \
     src/MemoWindow.h \
-    src/MemoTypeSelector.h
+    src/MemoTypeSelector.h \
+    src/hl/PythonSyntaxHighlighter.h

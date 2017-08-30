@@ -7,7 +7,7 @@ QT_BEGIN_NAMESPACE
 class QAction;
 class QLineEdit;
 class QTextEdit;
-class QPushButton;
+class QSyntaxHighlighter;
 QT_END_NAMESPACE
 
 class Catalog;
@@ -31,6 +31,7 @@ private:
     QTextEdit* _memoEditor;
     QLineEdit* _titleEditor;
     QAction *_actionEdit, *_actionSave, *_actionCancel;
+    QSyntaxHighlighter* _highlighter = nullptr;
 
     void memoRemoved(MemoItem* item);
     void showMemo();

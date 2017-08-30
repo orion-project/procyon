@@ -2,6 +2,7 @@
 #include "Catalog.h"
 #include "Memo.h"
 #include "MemoWindow.h"
+#include "hl/PythonSyntaxHighlighter.h"
 #include "helpers/OriDialogs.h"
 #include "helpers/OriLayouts.h"
 #include "helpers/OriWidgets.h"
@@ -58,9 +59,25 @@ void MemoWindow::memoRemoved(MemoItem* item)
 
 void MemoWindow::showMemo()
 {
-    _memoEditor->setPlainText(_memoItem->memo()->data());
+    auto text = _memoItem->memo()->data();
+    _memoEditor->setPlainText(text);
     _titleEditor->setText(_memoItem->memo()->title());
     setWindowTitle(_memoItem->memo()->title());
+
+    // TODO make something clever to choose highlighter
+    if (text.startsWith("#!/usr/bin/env python"))
+    {
+        if (!_highlighter)
+            _highlighter = new PythonSyntaxHighlighter(_memoEditor->document());
+    }
+    else
+    {
+        if (_highlighter)
+        {
+            delete _highlighter;
+            _highlighter = nullptr;
+        }
+    }
 }
 
 void MemoWindow::beginEditing()

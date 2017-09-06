@@ -123,3 +123,9 @@ void MemoWindow::setMemoFont(const QFont& font)
 {
     _memoEditor->setFont(font);
 }
+
+void MemoWindow::setTitleFont(const QFont& font)
+{
+    _titleEditor->setFont(font);
+}
+

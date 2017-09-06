@@ -40,7 +40,7 @@ private:
     QAction *_actionViewCatalog, *_actionViewInfo;
     QAction *_actionCatalogCreateTopLevelFolder;
     QAction *_actionOpenMemo;
-    QFont _memoFont;
+    QFont _memoFont, _titleFont;
 
     void createMenu();
     void createDocks();
@@ -58,6 +58,7 @@ private:
     void updateMenuCatalog();
     void openMemo();
     void chooseMemoFont();
+    void chooseTitleFont();
 
     QMdiSubWindow* findMemoSubWindow(MemoItem* item) const;
     MemoWindow* activePlot() const;

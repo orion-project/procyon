@@ -24,6 +24,7 @@ public:
     MemoItem* memoItem() const { return _memoItem; }
 
     void setMemoFont(const QFont& font);
+    void setTitleFont(const QFont& font);
 
 private:
     Catalog* _catalog;

@@ -94,6 +94,7 @@ void MainWindow::createMenu()
 
     QMenu* menuOptions = menuBar()->addMenu(tr("&Options"));
     menuOptions->addAction(tr("Choose Memo Font..."), this, &MainWindow::chooseMemoFont);
+    menuOptions->addAction(tr("Choose Title Font..."), this, &MainWindow::chooseTitleFont);
 }
 
 void MainWindow::createDocks()
@@ -127,6 +128,7 @@ void MainWindow::saveSettings()
     s.storeDockState(this);
     s.setValue("style", qApp->style()->objectName());
     s.setValue("memoFont", _memoFont);
+    s.setValue("titleFont", _titleFont);
     if (_catalog)
         s.setValue("database", _catalog->fileName());
 }
@@ -140,6 +142,7 @@ void MainWindow::loadSettings()
     qApp->setStyle(s.strValue("style"));
 
     _memoFont = qvariant_cast<QFont>(s.value("memoFont", QFont("Arial", 12)));
+    _titleFont = qvariant_cast<QFont>(s.value("titleFont", QFont("Arial", 14)));
 
     auto lastFile = s.value("database").toString();
     if (!lastFile.isEmpty())
@@ -279,7 +282,7 @@ void MainWindow::openMemo()
     else
     {
         auto memoWindow = new MemoWindow(_catalog, selected.memo);
-        //memoWindow->setMemoFont(_memoFont);
+        memoWindow->setTitleFont(_titleFont);
         memoWindow->setMemoFont(_memoFont);
 
         mdiChild = new QMdiSubWindow;
@@ -301,18 +304,32 @@ QMdiSubWindow* MainWindow::findMemoSubWindow(MemoItem* item) const
     return nullptr;
 }
 
-void MainWindow::chooseMemoFont()
+bool chooseFont(QFont* targetFont)
 {
     bool ok;
-    QFont font = QFontDialog::getFont(&ok, _memoFont, this, QString(), QFontDialog::ScalableFonts |
-        QFontDialog::NonScalableFonts | QFontDialog::MonospacedFonts | QFontDialog::ProportionalFonts);
-    if (!ok) return;
+    QFont font = QFontDialog::getFont(&ok, *targetFont, qApp->activeWindow(), QString(),
+        QFontDialog::ScalableFonts | QFontDialog::NonScalableFonts |
+        QFontDialog::MonospacedFonts | QFontDialog::ProportionalFonts);
+    if (ok) *targetFont = font;
+    return ok;
+}
 
-    _memoFont = font;
+void MainWindow::chooseMemoFont()
+{
+    if (chooseFont(&_memoFont))
+        for (auto mdiChild : _mdiArea->subWindowList())
+        {
+            auto memoWindow = qobject_cast<MemoWindow*>(mdiChild->widget());
+            if (memoWindow) memoWindow->setMemoFont(_memoFont);
+        }
+}
 
-    for (auto mdiChild : _mdiArea->subWindowList())
-    {
-        auto memoWindow = qobject_cast<MemoWindow*>(mdiChild->widget());
-        if (memoWindow) memoWindow->setMemoFont(_memoFont);
-    }
+void MainWindow::chooseTitleFont()
+{
+    if (!chooseFont(&_titleFont))
+        for (auto mdiChild : _mdiArea->subWindowList())
+        {
+            auto memoWindow = qobject_cast<MemoWindow*>(mdiChild->widget());
+            if (memoWindow) memoWindow->setTitleFont(_titleFont);
+        }
 }

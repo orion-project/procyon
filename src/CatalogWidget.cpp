@@ -133,6 +133,7 @@ SelectedItems CatalogWidget::selection() const
     CatalogSelection selected(_catalogView);
     SelectedItems result;
     result.memo = selected.memo;
+    result.folder = selected.folder;
     return result;
 }
 

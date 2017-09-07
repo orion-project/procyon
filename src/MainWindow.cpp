@@ -37,7 +37,7 @@ MainWindow::MainWindow() : QMainWindow()
     createMenu();
 
     _catalogView = new CatalogWidget(_actionOpenMemo);
-    connect(_catalogView, &CatalogWidget::contextMenuAboutToShow, this, &MainWindow::updateMenuMemo);
+    connect(_catalogView, &CatalogWidget::contextMenuAboutToShow, this, &MainWindow::updateMenuCatalog);
 
     _infoView = new InfoWidget;
 
@@ -64,37 +64,49 @@ void toggleWidget(QWidget* panel)
 
 void MainWindow::createMenu()
 {
-    QMenu* menuFile = menuBar()->addMenu(tr("&File"));
-    menuFile->addAction(tr("New..."), this, &MainWindow::newCatalog);
-    menuFile->addAction(tr("Open..."), this, &MainWindow::openCatalogViaDialog, QKeySequence::Open);
-    menuFile->addSeparator();
-    auto actionExit = menuFile->addAction(tr("Exit"), this, &MainWindow::close, QKeySequence::Quit);
-    new Ori::Widgets::MruMenuPart(_mruList, menuFile, actionExit, this);
+    QMenu* m;
 
-    QMenu* menuView = menuBar()->addMenu(tr("&View"));
-    connect(menuView, &QMenu::aboutToShow, [this](){
+    menuBar()->setNativeMenuBar(false);
+
+    m = menuBar()->addMenu(tr("&File"));
+    m->addAction(tr("New..."), this, &MainWindow::newCatalog);
+    m->addAction(tr("Open..."), this, &MainWindow::openCatalogViaDialog, QKeySequence::Open);
+    m->addSeparator();
+    auto actionExit = m->addAction(tr("Exit"), this, &MainWindow::close, QKeySequence::Quit);
+    new Ori::Widgets::MruMenuPart(_mruList, m, actionExit, this);
+
+    m = menuBar()->addMenu(tr("&View"));
+    connect(m, &QMenu::aboutToShow, [this](){
         this->_actionViewCatalog->setChecked(this->_dockCatalog->isVisible());
         this->_actionViewInfo->setChecked(this->_dockInfo->isVisible());
     });
-    _actionViewCatalog = menuView->addAction(tr("Catalog Panel"), [this](){ toggleWidget(this->_dockCatalog); });
-    _actionViewInfo = menuView->addAction(tr("Info Panel"), [this](){ toggleWidget(this->_dockInfo); });
+    _actionViewCatalog = m->addAction(tr("Catalog Panel"), [this](){ toggleWidget(this->_dockCatalog); });
+    _actionViewInfo = m->addAction(tr("Info Panel"), [this](){ toggleWidget(this->_dockInfo); });
     _actionViewCatalog->setCheckable(true);
     _actionViewInfo->setCheckable(true);
-    menuView->addSeparator();
-    menuView->addMenu(new Ori::Widgets::StylesMenu(this));
+    m->addSeparator();
+    m->addMenu(new Ori::Widgets::StylesMenu(this));
 
-    QMenu* menuCatalog = menuBar()->addMenu(tr("&Catalog"));
-    connect(menuCatalog, &QMenu::aboutToShow, this, &MainWindow::updateMenuCatalog);
-    _actionCatalogCreateTopLevelFolder = menuCatalog->addAction(tr("New Top Level Folder..."),
+    m = menuBar()->addMenu(tr("&Catalog"));
+    connect(m, &QMenu::aboutToShow, this, &MainWindow::updateMenuCatalog);
+    _actionCreateTopLevelFolder = m->addAction(tr("New Top Level Folder..."),
         [this](){ this->_catalogView->createTopLevelFolder(); });
+    _actionCreateFolder = m->addAction(tr("New Folder..."),
+        [this](){ this->_catalogView->createFolder(); });
+    _actionRenameFolder = m->addAction(tr("Rename Folder..."),
+        [this](){ this->_catalogView->renameFolder(); });
+    _actionDeleteFolder = m->addAction(tr("Delete Folder"),
+        [this](){ this->_catalogView->deleteFolder(); });
+    m->addSeparator();
+    _actionOpenMemo = m->addAction(tr("Open memo"), this, &MainWindow::openMemo);
+    _actionCreateMemo = m->addAction(tr("New memo"),
+        [this](){ this->_catalogView->createMemo(); });
+    _actionDeleteMemo = m->addAction(tr("Delete memo"),
+        [this](){ this->_catalogView->deleteMemo(); });
 
-    QMenu* menuMemo = menuBar()->addMenu(tr("&Memo"));
-    connect(menuMemo, &QMenu::aboutToShow, this, &MainWindow::updateMenuMemo);
-    _actionOpenMemo = menuMemo->addAction(tr("Open memo"), this, &MainWindow::openMemo);
-
-    QMenu* menuOptions = menuBar()->addMenu(tr("&Options"));
-    menuOptions->addAction(tr("Choose Memo Font..."), this, &MainWindow::chooseMemoFont);
-    menuOptions->addAction(tr("Choose Title Font..."), this, &MainWindow::chooseTitleFont);
+    m = menuBar()->addMenu(tr("&Options"));
+    m->addAction(tr("Choose Memo Font..."), this, &MainWindow::chooseMemoFont);
+    m->addAction(tr("Choose Title Font..."), this, &MainWindow::chooseTitleFont);
 }
 
 void MainWindow::createDocks()
@@ -238,23 +250,21 @@ void MainWindow::updateCounter()
 void MainWindow::updateMenuCatalog()
 {
     bool hasCatalog = _catalog;
-
-    _actionCatalogCreateTopLevelFolder->setEnabled(hasCatalog);
-}
-
-void MainWindow::updateMenuMemo()
-{
-    bool canOpen = false;
-
-    if (_catalog)
+    bool hasFolder = false;
+    bool hasMemo = false;
+    if (hasCatalog)
     {
         auto selected = _catalogView->selection();
-        bool hasSelection = selected.memo;
-
-        canOpen = hasSelection;
+        hasFolder = selected.folder;
+        hasMemo = selected.memo;
     }
-
-    _actionOpenMemo->setEnabled(canOpen);
+    _actionCreateTopLevelFolder->setEnabled(hasCatalog);
+    _actionCreateFolder->setEnabled(hasFolder);
+    _actionRenameFolder->setEnabled(hasFolder);
+    _actionDeleteFolder->setEnabled(hasFolder);
+    _actionOpenMemo->setEnabled(hasMemo);
+    _actionDeleteMemo->setEnabled(hasMemo);
+    _actionCreateMemo->setEnabled(hasFolder);
 }
 
 MemoWindow* MainWindow::activePlot() const
@@ -326,7 +336,7 @@ void MainWindow::chooseMemoFont()
 
 void MainWindow::chooseTitleFont()
 {
-    if (!chooseFont(&_titleFont))
+    if (chooseFont(&_titleFont))
         for (auto mdiChild : _mdiArea->subWindowList())
         {
             auto memoWindow = qobject_cast<MemoWindow*>(mdiChild->widget());

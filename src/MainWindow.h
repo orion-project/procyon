@@ -43,6 +43,7 @@ private:
     QFont _memoFont, _titleFont;
 
     void createMenu();
+    void createToolBars();
     void createDocks();
     void createStatusBar();
     void saveSettings();

@@ -9,6 +9,7 @@
 #include "tools/OriMruList.h"
 #include "tools/OriSettings.h"
 #include "tools/OriWaitCursor.h"
+#include "widgets/OriMdiToolBar.h"
 #include "widgets/OriMruMenu.h"
 #include "widgets/OriStylesMenu.h"
 
@@ -34,6 +35,9 @@ MainWindow::MainWindow() : QMainWindow()
     _mruList = new Ori::MruFileList(this);
     connect(_mruList, &Ori::MruFileList::clicked, this, &MainWindow::openCatalog);
 
+    _mdiArea = new QMdiArea;
+    setCentralWidget(_mdiArea);
+
     createMenu();
 
     _catalogView = new CatalogWidget(_actionOpenMemo);
@@ -43,9 +47,7 @@ MainWindow::MainWindow() : QMainWindow()
 
     createDocks();
     createStatusBar();
-
-    _mdiArea = new QMdiArea;
-    setCentralWidget(_mdiArea);
+    createToolBars();
 
     loadSettings();
 }
@@ -107,6 +109,11 @@ void MainWindow::createMenu()
     m = menuBar()->addMenu(tr("&Options"));
     m->addAction(tr("Choose Memo Font..."), this, &MainWindow::chooseMemoFont);
     m->addAction(tr("Choose Title Font..."), this, &MainWindow::chooseTitleFont);
+}
+
+void MainWindow::createToolBars()
+{
+    addToolBar(Qt::RightToolBarArea, new Ori::Widgets::MdiToolBar(tr("Windows"), _mdiArea));
 }
 
 void MainWindow::createDocks()

@@ -38,8 +38,8 @@ private:
     QDockWidget *_dockCatalog, *_dockInfo;
     QLabel *_statusMemoCount, *_statusFileName;
     QAction *_actionViewCatalog, *_actionViewInfo;
-    QAction *_actionCatalogCreateTopLevelFolder;
-    QAction *_actionOpenMemo;
+    QAction *_actionCreateTopLevelFolder, *_actionCreateFolder, *_actionRenameFolder, *_actionDeleteFolder;
+    QAction *_actionOpenMemo, *_actionCreateMemo, *_actionDeleteMemo;
     QFont _memoFont, _titleFont;
 
     void createMenu();
@@ -54,7 +54,6 @@ private:
     void catalogOpened(Catalog* catalog);
     void catalogClosed();
     void updateCounter();
-    void updateMenuMemo();
     void updateMenuCatalog();
     void openMemo();
     void chooseMemoFont();

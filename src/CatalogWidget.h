@@ -19,6 +19,7 @@ struct CatalogSelection;
 struct SelectedItems
 {
     MemoItem* memo;
+    FolderItem* folder;
 };
 
 class CatalogWidget : public QWidget
@@ -32,6 +33,11 @@ public:
 
     SelectedItems selection() const;
 
+    void createFolder();
+    void renameFolder();
+    void deleteFolder();
+    void createMemo();
+    void deleteMemo();
     void createTopLevelFolder();
 
 signals:
@@ -49,12 +55,6 @@ private:
 
     void contextMenuRequested(const QPoint &pos);
     void doubleClicked(const QModelIndex &);
-
-    void createFolder();
-    void renameFolder();
-    void deleteFolder();
-    void createMemo();
-    void deleteMemo();
 
     void memoUpdated(MemoItem*);
     void createFolderInternal(const CatalogSelection& parentFolder);

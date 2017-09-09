@@ -210,8 +210,6 @@ void CatalogWidget::createMemo()
     if (!_catalogView->isExpanded(parentFolder.index))
         _catalogView->expand(parentFolder.index);
     _catalogView->setCurrentIndex(newIndex);
-
-    _openMemo->trigger();
 }
 
 void CatalogWidget::deleteMemo()

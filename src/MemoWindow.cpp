@@ -23,8 +23,6 @@ MemoWindow::MemoWindow(Catalog *catalog, MemoItem *memoItem) : QWidget(),
 {
     setWindowIcon(QIcon(":/icon/memo_plain_text"));
 
-    connect(catalog, &Catalog::memoRemoved, this, &MemoWindow::memoRemoved);
-
     _memoEditor = new QTextEdit;
     _memoEditor->setReadOnly(true);
     _memoEditor->setAcceptRichText(false);
@@ -49,12 +47,6 @@ MemoWindow::MemoWindow(Catalog *catalog, MemoItem *memoItem) : QWidget(),
 
 MemoWindow::~MemoWindow()
 {
-}
-
-void MemoWindow::memoRemoved(MemoItem* item)
-{
-    if (item == _memoItem)
-        deleteLater();
 }
 
 void MemoWindow::showMemo()
@@ -115,7 +107,7 @@ void MemoWindow::toggleEditMode(bool on)
     _actionEdit->setVisible(!on);
     _memoEditor->setReadOnly(!on);
     _titleEditor->setReadOnly(!on);
-    _titleEditor->setStyleSheet(QString("border-style: none; background: %1; padding: 6px")
+    _titleEditor->setStyleSheet(QString("QLineEdit { border-style: none; background: %1; padding: 6px }")
         .arg(palette().color(on ? QPalette::Base : QPalette::Window).name()));
 }
 

@@ -59,9 +59,13 @@ private:
     void openMemo();
     void chooseMemoFont();
     void chooseTitleFont();
+    void memoCreated(MemoItem* item);
+    void memoRemoved(MemoItem* item);
 
-    QMdiSubWindow* findMemoSubWindow(MemoItem* item) const;
-    MemoWindow* activePlot() const;
+    void openWindowForItem(MemoItem* item);
+    QMdiSubWindow* findMemoMdiChild(MemoItem* item) const;
+    MemoWindow* memoWindowOfMdiChild(QMdiSubWindow* subWindow) const;
+    MemoWindow* activeMemoWindow() const;
 };
 
 #endif // MAINWINDOW_H

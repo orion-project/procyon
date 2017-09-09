@@ -26,6 +26,8 @@ public:
     void setMemoFont(const QFont& font);
     void setTitleFont(const QFont& font);
 
+    void beginEditing();
+
 private:
     Catalog* _catalog;
     MemoItem* _memoItem;
@@ -34,9 +36,7 @@ private:
     QAction *_actionEdit, *_actionSave, *_actionCancel;
     QSyntaxHighlighter* _highlighter = nullptr;
 
-    void memoRemoved(MemoItem* item);
     void showMemo();
-    void beginEditing();
     void cancelEditing();
     void saveEditing();
     void toggleEditMode(bool on);

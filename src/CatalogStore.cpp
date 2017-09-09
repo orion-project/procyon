@@ -265,7 +265,7 @@ QString MemoManager::update(Memo* memo, const QString &info) const
 QString MemoManager::remove(MemoItem* item) const
 {
     return ActionQuery(table()->sqlDelete)
-            .param(table()->id, item->memo()->id())
+            .param(table()->id, item->id())
             .exec();
     // TODO remove memo specific data
 }

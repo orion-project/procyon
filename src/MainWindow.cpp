@@ -199,8 +199,8 @@ void MainWindow::openCatalogViaDialog()
 void MainWindow::catalogOpened(Catalog* catalog)
 {
     _catalog = catalog;
-    connect(_catalog, &Catalog::memoCreated, [this](){ this->updateCounter(); });
-    connect(_catalog, &Catalog::memoRemoved, [this](){ this->updateCounter(); });
+    connect(_catalog, &Catalog::memoCreated, this, &MainWindow::memoCreated);
+    connect(_catalog, &Catalog::memoRemoved, this, &MainWindow::memoRemoved);
     _catalogView->setCatalog(_catalog);
     auto filePath = _catalog->fileName();
     auto fileName = QFileInfo(filePath).fileName();
@@ -218,6 +218,7 @@ void MainWindow::catalogClosed()
     setWindowTitle(qApp->applicationName());
     _statusFileName->clear();
     _statusMemoCount->clear();
+    _mdiArea->closeAllSubWindows();
 }
 
 void MainWindow::updateCounter()
@@ -257,31 +258,34 @@ void MainWindow::updateMenuMemo()
     _actionOpenMemo->setEnabled(canOpen);
 }
 
-MemoWindow* MainWindow::activePlot() const
+MemoWindow* MainWindow::activeMemoWindow() const
 {
     auto mdiChild = _mdiArea->currentSubWindow();
     if (!mdiChild) return nullptr;
-    return qobject_cast<MemoWindow*>(mdiChild->widget());
+    return memoWindowOfMdiChild(mdiChild);
 }
 
 void MainWindow::openMemo()
 {
     auto selected = _catalogView->selection();
-    if (!selected.memo) return;
+    if (selected.memo)
+        openWindowForItem(selected.memo);
+}
 
-    if (!selected.memo->memo())
+void MainWindow::openWindowForItem(MemoItem* item)
+{
+    if (!item->memo())
     {
-        auto res = _catalog->loadMemo(selected.memo);
+        auto res = _catalog->loadMemo(item);
         if (!res.isEmpty()) return Ori::Dlg::error(res);
     }
 
-
-    auto mdiChild = findMemoSubWindow(selected.memo);
+    auto mdiChild = findMemoMdiChild(item);
     if (mdiChild)
         _mdiArea->setActiveSubWindow(mdiChild);
     else
     {
-        auto memoWindow = new MemoWindow(_catalog, selected.memo);
+        auto memoWindow = new MemoWindow(_catalog, item);
         memoWindow->setTitleFont(_titleFont);
         memoWindow->setMemoFont(_memoFont);
 
@@ -294,14 +298,19 @@ void MainWindow::openMemo()
     }
 }
 
-QMdiSubWindow* MainWindow::findMemoSubWindow(MemoItem* item) const
+QMdiSubWindow* MainWindow::findMemoMdiChild(MemoItem* item) const
 {
     for (auto mdiChild : _mdiArea->subWindowList())
     {
-        auto memoWindow = qobject_cast<MemoWindow*>(mdiChild->widget());
+        auto memoWindow = memoWindowOfMdiChild(mdiChild);
         if (memoWindow && memoWindow->memoItem() == item) return mdiChild;
     }
     return nullptr;
+}
+
+MemoWindow* MainWindow::memoWindowOfMdiChild(QMdiSubWindow* subWindow) const
+{
+    return subWindow ? qobject_cast<MemoWindow*>(subWindow->widget()) : nullptr;
 }
 
 bool chooseFont(QFont* targetFont)
@@ -319,17 +328,35 @@ void MainWindow::chooseMemoFont()
     if (chooseFont(&_memoFont))
         for (auto mdiChild : _mdiArea->subWindowList())
         {
-            auto memoWindow = qobject_cast<MemoWindow*>(mdiChild->widget());
+            auto memoWindow = memoWindowOfMdiChild(mdiChild);
             if (memoWindow) memoWindow->setMemoFont(_memoFont);
         }
 }
 
 void MainWindow::chooseTitleFont()
 {
-    if (!chooseFont(&_titleFont))
+    if (chooseFont(&_titleFont))
         for (auto mdiChild : _mdiArea->subWindowList())
         {
-            auto memoWindow = qobject_cast<MemoWindow*>(mdiChild->widget());
+            auto memoWindow = memoWindowOfMdiChild(mdiChild);
             if (memoWindow) memoWindow->setTitleFont(_titleFont);
         }
+}
+
+void MainWindow::memoCreated(MemoItem* item)
+{
+    updateCounter();
+
+    openWindowForItem(item);
+
+    auto memoWindow = memoWindowOfMdiChild(findMemoMdiChild(item));
+    if (memoWindow) memoWindow->beginEditing();
+}
+
+void MainWindow::memoRemoved(MemoItem* item)
+{
+    updateCounter();
+
+    auto mdiChild = findMemoMdiChild(item);
+    if (mdiChild) delete mdiChild;
 }

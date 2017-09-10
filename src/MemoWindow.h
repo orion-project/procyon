@@ -40,6 +40,7 @@ private:
     void cancelEditing();
     void saveEditing();
     void toggleEditMode(bool on);
+    void applyHighlighter();
 };
 
 #endif // DISPERSIONPLOT_H

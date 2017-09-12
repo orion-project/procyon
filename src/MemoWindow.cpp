@@ -158,7 +158,7 @@ void MemoWindow::processHyperlinks()
     static QList<QRegExp> rex;
     if (rex.isEmpty())
     {
-        rex.append(QRegExp("\\bhttp(s?)://.+\\b", Qt::CaseInsensitive));
+        rex.append(QRegExp("\\bhttp(s?)://[^\\s]+\\b", Qt::CaseInsensitive));
     }
     for (const QRegExp& re : rex)
     {

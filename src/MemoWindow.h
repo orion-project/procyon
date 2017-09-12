@@ -40,6 +40,8 @@ private:
     void cancelEditing();
     void saveEditing();
     void toggleEditMode(bool on);
+    void applyTextStyles();
+    void processHyperlinks();
     void applyHighlighter();
 };
 

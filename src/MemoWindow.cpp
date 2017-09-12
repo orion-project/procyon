@@ -13,32 +13,37 @@
 #include <QLineEdit>
 #include <QTextEdit>
 #include <QToolBar>
-#include <QPushButton>
+#include <QDesktopServices>
 
 using namespace Ori::Layouts;
 
 class MemoEditor : public QTextEdit
 {
 protected:
-//    bool event(QEvent *e) override
-//    {
-//        qDebug() << "event";
-//        return QTextEdit::event(e);
-//    }
-
-//    void mouseMoveEvent(QMouseEvent *e) override
-//    {
-//        QTextEdit::mouseMoveEvent(e);
-//        //auto cursor = cursorForPosition(e->pos());
-//        //qDebug() << cursor.columnNumber();
-//        qDebug() << "move";
-//    }
-
-    void mouseReleaseEvent(QMouseEvent *e) override
+    bool shouldProcess(QMouseEvent *e)
     {
-        qDebug() << e->pos() << anchorAt(e->pos());
-        QTextEdit::mouseReleaseEvent(e);
+        return e->modifiers() & Qt::ControlModifier && e->button() & Qt::LeftButton;
     }
+
+    void mousePressEvent(QMouseEvent *e)
+    {
+        QString href = anchorAt(e->pos());
+        if (!href.isEmpty() && shouldProcess(e))
+            _clickedAnchor = href;
+        else QTextEdit::mousePressEvent(e);
+    }
+
+    void mouseReleaseEvent(QMouseEvent *e)
+    {
+        if (!_clickedAnchor.isEmpty() && shouldProcess(e))
+        {
+            QDesktopServices::openUrl(_clickedAnchor);
+            _clickedAnchor.clear();
+        }
+        else QTextEdit::mouseReleaseEvent(e);
+    }
+private:
+    QString _clickedAnchor;
 };
 
 //------------------------------------------------------------------------------
@@ -49,7 +54,6 @@ MemoWindow::MemoWindow(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     setWindowIcon(QIcon(":/icon/memo_plain_text"));
 
     _memoEditor = new MemoEditor;
-    _memoEditor->setReadOnly(true);
     _memoEditor->setAcceptRichText(false);
     _memoEditor->setWordWrapMode(QTextOption::NoWrap);
 
@@ -80,7 +84,7 @@ void MemoWindow::showMemo()
     _memoEditor->setPlainText(text);
     _titleEditor->setText(_memoItem->memo()->title());
     setWindowTitle(_memoItem->memo()->title());
-    applyHighlighter();
+    applyTextStyles();
 }
 
 void MemoWindow::beginEditing()
@@ -111,9 +115,8 @@ void MemoWindow::saveEditing()
     }
 
     setWindowTitle(_memoItem->memo()->title());
-    applyHighlighter();
-
     toggleEditMode(false);
+    applyTextStyles();
 }
 
 void MemoWindow::toggleEditMode(bool on)
@@ -141,6 +144,42 @@ void MemoWindow::setMemoFont(const QFont& font)
 void MemoWindow::setTitleFont(const QFont& font)
 {
     _titleEditor->setFont(font);
+}
+
+void MemoWindow::applyTextStyles()
+{
+    processHyperlinks();
+    // Should be applied after hyperlinks to get correct finish style.
+    applyHighlighter();
+}
+
+void MemoWindow::processHyperlinks()
+{
+    static QList<QRegExp> rex;
+    if (rex.isEmpty())
+    {
+        rex.append(QRegExp("\\bhttp(s?)://.+\\b", Qt::CaseInsensitive));
+    }
+    for (const QRegExp& re : rex)
+    {
+        QTextCursor cursor = _memoEditor->document()->find(re);
+        while (!cursor.isNull())
+        {
+            QString href = cursor.selectedText();
+            qDebug() << href;
+            QTextCharFormat f;
+            f.setAnchor(true);
+            f.setAnchorHref(href);
+            f.setForeground(Qt::blue);
+            f.setFontUnderline(true);
+            // Wanted to draw Ctrl+Click bolded, but when html,
+            // tooltip becomes word-wrapped at some rather narrow width and it looks too ugly.
+            f.setToolTip(href + tr("\nCtrl + Click to open"));
+            cursor.mergeCharFormat(f);
+
+            cursor = _memoEditor->document()->find(re, cursor);
+        }
+    }
 }
 
 void MemoWindow::applyHighlighter()

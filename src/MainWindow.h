@@ -16,6 +16,7 @@ class CatalogWidget;
 class InfoWidget;
 class MemoWindow;
 class MemoItem;
+class WindowsWidget;
 
 namespace Ori {
 class MruFileList;
@@ -33,11 +34,12 @@ private:
     Catalog* _catalog = nullptr;
     CatalogWidget* _catalogView;
     InfoWidget* _infoView;
+    WindowsWidget* _windowsView;
     QMdiArea* _mdiArea;
     Ori::MruFileList *_mruList;
-    QDockWidget *_dockCatalog, *_dockInfo;
+    QDockWidget *_dockCatalog, *_dockInfo, *_dockWindows;
     QLabel *_statusMemoCount, *_statusFileName;
-    QAction *_actionViewCatalog, *_actionViewInfo;
+    QAction *_actionViewCatalog, *_actionViewInfo, *_actionViewWindows;
     QAction *_actionCreateTopLevelFolder, *_actionCreateFolder, *_actionRenameFolder, *_actionDeleteFolder;
     QAction *_actionOpenMemo, *_actionCreateMemo, *_actionDeleteMemo;
     QFont _memoFont, _titleFont;
@@ -66,6 +68,7 @@ private:
     QMdiSubWindow* findMemoMdiChild(MemoItem* item) const;
     MemoWindow* memoWindowOfMdiChild(QMdiSubWindow* subWindow) const;
     MemoWindow* activeMemoWindow() const;
+    QAction* addViewPanelAction(QMenu* m, const QString& title, QDockWidget* panel);
 };
 
 #endif // MAINWINDOW_H

@@ -40,7 +40,8 @@ SOURCES += src/main.cpp\
     src/MemoTypeSelector.cpp \
     src/hl/PythonSyntaxHighlighter.cpp \
     src/hl/ShellMemoSyntaxHighlighter.cpp \
-    src/hl/HighlightingRule.cpp
+    src/hl/HighlightingRule.cpp \
+    src/WindowsWidget.cpp
 
 HEADERS  += src/MainWindow.h \
     src/CatalogWidget.h \
@@ -55,4 +56,5 @@ HEADERS  += src/MainWindow.h \
     src/MemoTypeSelector.h \
     src/hl/PythonSyntaxHighlighter.h \
     src/hl/HighlightingRule.h \
-    src/hl/ShellMemoSyntaxHighlighter.h
+    src/hl/ShellMemoSyntaxHighlighter.h \
+    src/WindowsWidget.h

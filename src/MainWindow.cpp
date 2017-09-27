@@ -3,6 +3,7 @@
 #include "CatalogWidget.h"
 #include "InfoWidget.h"
 #include "MemoWindow.h"
+#include "WindowsWidget.h"
 #include "helpers/OriDialogs.h"
 #include "helpers/OriLayouts.h"
 #include "helpers/OriWindows.h"
@@ -45,6 +46,8 @@ MainWindow::MainWindow() : QMainWindow()
 
     _infoView = new InfoWidget;
 
+    _windowsView = new WindowsWidget(_mdiArea);
+
     createDocks();
     createStatusBar();
     createToolBars();
@@ -59,9 +62,13 @@ MainWindow::~MainWindow()
     if (_catalog) delete _catalog;
 }
 
-void toggleWidget(QWidget* panel)
+QAction* MainWindow::addViewPanelAction(QMenu* m, const QString& title, QDockWidget* panel)
 {
-    if (panel->isVisible()) panel->hide(); else panel->show();
+    auto action = m->addAction(title, [panel](){
+        if (panel->isVisible()) panel->hide(); else panel->show();
+    });
+    action->setCheckable(true);
+    return action;
 }
 
 void MainWindow::createMenu()
@@ -81,11 +88,11 @@ void MainWindow::createMenu()
     connect(m, &QMenu::aboutToShow, [this](){
         this->_actionViewCatalog->setChecked(this->_dockCatalog->isVisible());
         this->_actionViewInfo->setChecked(this->_dockInfo->isVisible());
+        this->_actionViewWindows->setChecked(this->_dockWindows->isVisible());
     });
-    _actionViewCatalog = m->addAction(tr("Catalog Panel"), [this](){ toggleWidget(this->_dockCatalog); });
-    _actionViewInfo = m->addAction(tr("Info Panel"), [this](){ toggleWidget(this->_dockInfo); });
-    _actionViewCatalog->setCheckable(true);
-    _actionViewInfo->setCheckable(true);
+    _actionViewCatalog = addViewPanelAction(m, tr("Catalog Panel"), _dockCatalog);
+    _actionViewInfo = addViewPanelAction(m, tr("Info Panel"), _dockInfo);
+    _actionViewWindows = addViewPanelAction(m, tr("Memos Panel"), _dockWindows);
     m->addSeparator();
     m->addMenu(new Ori::Widgets::StylesMenu(this));
 
@@ -126,8 +133,13 @@ void MainWindow::createDocks()
     _dockInfo->setObjectName("InfoPanel");
     _dockInfo->setWidget(_infoView);
 
+    _dockWindows = new QDockWidget(tr("Memos"));
+    _dockWindows->setObjectName("WindowsPanel");
+    _dockWindows->setWidget(_windowsView);
+
     addDockWidget(Qt::LeftDockWidgetArea, _dockCatalog);
     addDockWidget(Qt::LeftDockWidgetArea, _dockInfo);
+    addDockWidget(Qt::RightDockWidgetArea, _dockWindows);
 }
 
 void MainWindow::createStatusBar()

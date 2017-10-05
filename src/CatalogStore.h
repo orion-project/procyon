@@ -2,6 +2,7 @@
 #define CATALOGSTORE_H
 
 #include <QVector>
+#include <QVariant>
 
 class CatalogItem;
 class MemoItem;
@@ -39,7 +40,12 @@ struct MemosResult
 {
     QString error;
     QStringList warnings;
+
+    // folderId -> [memoItems]
     QMap<int, QList<MemoItem*>> items;
+
+    // memoId -> memoItem
+    QMap<int, MemoItem*> allMemos;
 };
 
 class MemoManager
@@ -62,8 +68,14 @@ class SettingsManager
 public:
     SettingsTableDef* table() const;
 
-    QVector<int> readIntArray(const QString& id);
-    void writeIntArray(const QString& id, const QVector<int>& value);
+    void writeValue(const QString& id, const QVariant& value) const;
+    QVariant readValue(const QString& id, const QVariant& defValue = QVariant()) const;
+
+    void writeBool(const QString& id, bool value) const;
+    bool readBool(const QString& id, bool defValue) const;
+    
+    void writeIntArray(const QString& id, const QVector<int>& values) const;
+    QVector<int> readIntArray(const QString& id) const;
 };
 
 //------------------------------------------------------------------------------

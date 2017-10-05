@@ -54,15 +54,17 @@ MainWindow::MainWindow() : QMainWindow()
     createToolBars();
 
     loadSettings();
-    loadSession();
 }
 
 MainWindow::~MainWindow()
 {
     saveSettings();
-    saveSession();
 
-    if (_catalog) delete _catalog;
+    if (_catalog)
+    {
+        saveSession();
+        delete _catalog;
+    }
 }
 
 QAction* MainWindow::addViewPanelAction(QMenu* m, const QString& title, QDockWidget* panel)
@@ -185,25 +187,39 @@ void MainWindow::loadSettings()
 
 void MainWindow::loadSession()
 {
+    bool isMaximized = CatalogStore::settingsManager()->readBool("isMaximized", false);
     QVector<int> ids = CatalogStore::settingsManager()->readIntArray("openedMemos");
     for (int id: ids)
     {
         CatalogItem* item = _catalog->findById(id);
         if (item && item->isMemo())
+        {
             openWindowForItem(item->asMemo());
+            if (isMaximized)
+            {
+                auto window = findMemoMdiChild(item->asMemo());
+                if (!(window->windowState() & Qt::WindowMaximized))
+                    window->setWindowState(Qt::WindowMaximized);
+            }
+        }
     }
 }
 
 void MainWindow::saveSession()
 {
     QVector<int> ids;
+    bool isMaximized = false;
     for (auto subWindow: _mdiArea->subWindowList())
     {
         auto memoWindow = memoWindowOfMdiChild(subWindow);
         if (!memoWindow) continue;
         ids << memoWindow->memoItem()->id();
+        if (!isMaximized)
+            isMaximized = subWindow->windowState() & Qt::WindowMaximized;
     }
     CatalogStore::settingsManager()->writeIntArray("openedMemos", ids);
+    qDebug() << isMaximized;
+    CatalogStore::settingsManager()->writeBool("isMaximized", isMaximized);
 }
 
 void MainWindow::newCatalog()
@@ -270,9 +286,13 @@ void MainWindow::catalogOpened(Catalog* catalog)
 
 void MainWindow::catalogClosed()
 {
-    saveSession();
-    delete _catalog;
-    _catalog = nullptr;
+    if (_catalog)
+    {
+        qDebug() << "catalogClosed";
+        saveSession();
+        delete _catalog;
+        _catalog = nullptr;
+    }
     _catalogView->setCatalog(nullptr);
     setWindowTitle(qApp->applicationName());
     _statusFileName->clear();
@@ -347,7 +367,7 @@ void MainWindow::openWindowForItem(MemoItem* item)
         memoWindow->setMemoFont(_memoFont);
 
         bool isMaximized = _mdiArea->activeSubWindow() &&
-            (_mdiArea->activeSubWindow()->windowState() & Qt::WindowMaximized);
+                (_mdiArea->activeSubWindow()->windowState() & Qt::WindowMaximized);
 
         mdiChild = new QMdiSubWindow;
         mdiChild->setWidget(memoWindow);

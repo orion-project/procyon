@@ -74,7 +74,7 @@ class SettingsTableDef : public TableDef
 public:
     SettingsTableDef() : TableDef("Settings") {}
 
-    const QString name = "Id";
+    const QString id = "Id";
     const QString value = "Value";
 
     QString sqlCreate() const override {
@@ -233,7 +233,7 @@ MemosResult MemoManager::selectAll() const
         QString memoType = r.value(table()->type).toString();
         if (!memoTypes().contains(memoType))
         {
-            result.warnings.append(qApp->tr("Skip material #%1 '%2': "
+            result.warnings.append(qApp->tr("Skip memo #%1 '%2': "
                                             "unknown memo type '%3'.")
                                    .arg(id).arg(title).arg(memoType));
             continue;
@@ -249,6 +249,7 @@ MemosResult MemoManager::selectAll() const
         if (!result.items.contains(parentId))
             result.items.insert(parentId, QList<MemoItem*>());
         ((QList<MemoItem*>&)result.items[parentId]).append(item);
+        result.allMemos.insert(id, item);
     }
 
     return result;
@@ -302,15 +303,88 @@ QString MemoManager::countAll(int *count) const
 
 SettingsTableDef* SettingsManager::table() const { static SettingsTableDef t; return &t; }
 
-QVector<int> SettingsManager::readIntArray(const QString& id)
+void SettingsManager::writeValue(const QString& id, const QVariant& value) const
 {
-    // TODO
-    return QVector<int>();
+    SelectQuery query(table()->sqlCheckId(id));
+    if (query.isFailed())
+    {
+        qWarning() << "Unable to write setting" << id << query.error();
+        return;
+    }
+    QString sql = query.next() ? table()->sqlUpdate : table()->sqlInsert;
+    QString res = ActionQuery(sql)
+            .param(table()->id, id)
+            .param(table()->value, value)
+            .exec();
+    if (!res.isEmpty())
+        qWarning() << "Error while write setting" << id << res;
 }
 
-void SettingsManager::writeIntArray(const QString& id, const QVector<int>& value)
+QVariant SettingsManager::readValue(const QString& id, const QVariant& defValue) const
 {
-    // TODO
+    SelectQuery query(table()->sqlSelectById(id));
+    if (query.isFailed())
+    {
+        qWarning() << "Unable to read setting" << id << query.error();
+        return defValue;
+    }
+    if (!query.next())
+        return defValue;
+    return query.record().field(table()->value).value();
+}
+
+void SettingsManager::writeBool(const QString& id, bool value) const
+{
+    bool oldValue = readBool(id, false);
+    if (oldValue != value)
+        writeValue(id, value);
+}
+
+bool SettingsManager::readBool(const QString& id, bool defValue) const
+{
+    return readValue(id, defValue).toBool();
+}
+
+void SettingsManager::writeIntArray(const QString& id, const QVector<int>& values) const
+{
+    bool doSave = false;
+    auto oldValues = readIntArray(id);
+    for (int value: oldValues)
+        if (!values.contains(value))
+        {
+            doSave = true;
+            break;
+        }
+    if (!doSave)
+        for (int value: values)
+            if (!oldValues.contains(value))
+            {
+                doSave = true;
+                break;
+            }
+    if (!doSave) return;
+
+    QStringList strs;
+    for (int value: values)
+        strs << QString::number(value);
+    writeValue(id, strs.join(';'));
+}
+
+QVector<int> SettingsManager::readIntArray(const QString& id) const
+{
+    QVector<int> result;
+    QString valuesStr = readValue(id).toString();
+    if (!valuesStr.isEmpty())
+    {
+        bool ok;
+        int value;
+        for (const QString& valueStr: valuesStr.split(';'))
+        {
+            value = valueStr.toInt(&ok);
+            if (ok) result << value;
+        }
+    }
+    return result;
 }
 
 //------------------------------------------------------------------------------

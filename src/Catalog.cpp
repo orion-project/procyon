@@ -88,6 +88,8 @@ CatalorResult Catalog::open(const QString& fileName)
                 catalog->_items.append(item);
     }
 
+    catalog->_allMemos = memos.allMemos;
+
     return CatalorResult::ok(catalog);
 }
 
@@ -170,6 +172,7 @@ QString Catalog::createMemo(FolderItem* parent, Memo *memo)
     }
 
     (parent ? parent->asFolder()->_children : _items).append(item);
+    _allMemos.insert(item->id(), item);
     // TODO sort items after inserting
 
     emit memoCreated(item);
@@ -219,6 +222,7 @@ QString Catalog::removeMemo(MemoItem* item)
     if (!res.isEmpty()) return res;
 
     (item->parent() ? item->parent()->asFolder()->_children : _items).removeOne(item);
+    _allMemos.remove(item->id());
 
     emit memoRemoved(item);
 
@@ -235,6 +239,10 @@ IntResult Catalog::countMemos() const
 
 CatalogItem* Catalog::findById(int id) const
 {
-    return nullptr;
-    // TODO
+    if (!_allMemos.contains(id))
+    {
+        qCritical() << "Inconsistent state! _allMemos does not contain memo" << id;
+        return nullptr;
+    }
+    return _allMemos[id];
 }

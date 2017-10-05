@@ -180,6 +180,7 @@ signals:
 private:
     QString _fileName;
     QList<CatalogItem*> _items;
+    QMap<int, MemoItem*> _allMemos;
 };
 
 #endif // CATALOG_H

@@ -98,8 +98,20 @@ public:
         return QString("SELECT * FROM %1 WHERE Id = %2").arg(_tableName).arg(id);
     }
 
+    virtual QString sqlSelectById(const QString& id) const {
+        return QString("SELECT * FROM %1 WHERE Id = '%2'").arg(_tableName).arg(id);
+    }
+
     virtual QString sqlSelectMaxId() const {
         return QString("SELECT MAX(Id) FROM %1").arg(_tableName);
+    }
+
+    virtual QString sqlCheckId(int id) const {
+        return QString("SELECT Id FROM %1 WHERE Id = %2 LIMIT 1").arg(_tableName).arg(id);
+    }
+
+    virtual QString sqlCheckId(const QString& id) const {
+        return QString("SELECT Id FROM %1 WHERE Id = '%2' LIMIT 1").arg(_tableName).arg(id);
     }
 
 protected:

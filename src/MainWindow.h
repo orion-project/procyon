@@ -50,6 +50,8 @@ private:
     void createStatusBar();
     void saveSettings();
     void loadSettings();
+    void loadSession();
+    void saveSession();
     void closeCurrentFile();
     void newCatalog();
     void openCatalog(const QString &fileName);

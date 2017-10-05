@@ -69,6 +69,24 @@ public:
 
 //------------------------------------------------------------------------------
 
+class SettingsTableDef : public TableDef
+{
+public:
+    SettingsTableDef() : TableDef("Settings") {}
+
+    const QString name = "Id";
+    const QString value = "Value";
+
+    QString sqlCreate() const override {
+        return "CREATE TABLE IF NOT EXISTS Settings (Id, Value)";
+    }
+
+    const QString sqlInsert = "INSERT INTO Settings (Id, Value) VALUES (:Id, :Value)";
+    const QString sqlUpdate = "UPDATE Settings SET Value = :Value WHERE Id = :Id";
+};
+
+//------------------------------------------------------------------------------
+
 FolderTableDef* FolderManager::table() const { static FolderTableDef t; return &t; }
 
 QString FolderManager::create(FolderItem* folder) const
@@ -282,6 +300,21 @@ QString MemoManager::countAll(int *count) const
 
 //------------------------------------------------------------------------------
 
+SettingsTableDef* SettingsManager::table() const { static SettingsTableDef t; return &t; }
+
+QVector<int> SettingsManager::readIntArray(const QString& id)
+{
+    // TODO
+    return QVector<int>();
+}
+
+void SettingsManager::writeIntArray(const QString& id, const QVector<int>& value)
+{
+    // TODO
+}
+
+//------------------------------------------------------------------------------
+
 namespace CatalogStore {
 
 QSqlDatabase __db;
@@ -335,6 +368,9 @@ QString openDatabase(const QString fileName)
     res = createTable(memoManager()->table());
     if (!res.isEmpty()) return res;
 
+    res = createTable(settingsManager()->table());
+    if (!res.isEmpty()) return res;
+
     commitTran();
 
     return QString();
@@ -365,5 +401,6 @@ void rollbackTran() { __db.rollback(); }
 
 FolderManager *folderManager() { static FolderManager m; return &m; }
 MemoManager* memoManager() { static MemoManager m; return &m; }
+SettingsManager* settingsManager() { static SettingsManager m; return &m; }
 
 } // namespace CatalogStore

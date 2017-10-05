@@ -160,6 +160,7 @@ public:
 
     const QString& fileName() const { return _fileName; }
     const QList<CatalogItem*>& items() const { return _items; }
+    CatalogItem* findById(int id) const;
 
     IntResult countMemos() const;
 

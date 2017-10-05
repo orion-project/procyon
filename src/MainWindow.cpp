@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 #include "Catalog.h"
+#include "CatalogStore.h"
 #include "CatalogWidget.h"
 #include "InfoWidget.h"
 #include "MemoWindow.h"
@@ -53,11 +54,13 @@ MainWindow::MainWindow() : QMainWindow()
     createToolBars();
 
     loadSettings();
+    loadSession();
 }
 
 MainWindow::~MainWindow()
 {
     saveSettings();
+    saveSession();
 
     if (_catalog) delete _catalog;
 }
@@ -180,6 +183,29 @@ void MainWindow::loadSettings()
         QTimer::singleShot(200, [this, lastFile](){ this->openCatalog(lastFile); });
 }
 
+void MainWindow::loadSession()
+{
+    QVector<int> ids = CatalogStore::settingsManager()->readIntArray("openedMemos");
+    for (int id: ids)
+    {
+        CatalogItem* item = _catalog->findById(id);
+        if (item && item->isMemo())
+            openWindowForItem(item->asMemo());
+    }
+}
+
+void MainWindow::saveSession()
+{
+    QVector<int> ids;
+    for (auto subWindow: _mdiArea->subWindowList())
+    {
+        auto memoWindow = memoWindowOfMdiChild(subWindow);
+        if (!memoWindow) continue;
+        ids << memoWindow->memoItem()->id();
+    }
+    CatalogStore::settingsManager()->writeIntArray("openedMemos", ids);
+}
+
 void MainWindow::newCatalog()
 {
     QString fileName = Ori::Dlg::getSaveFileName(
@@ -239,10 +265,12 @@ void MainWindow::catalogOpened(Catalog* catalog)
     _mruList->append(filePath);
     _statusFileName->setText(tr("Catalog: %1").arg(QDir::toNativeSeparators(filePath)));
     updateCounter();
+    loadSession();
 }
 
 void MainWindow::catalogClosed()
 {
+    saveSession();
     delete _catalog;
     _catalog = nullptr;
     _catalogView->setCatalog(nullptr);
@@ -325,13 +353,11 @@ void MainWindow::openWindowForItem(MemoItem* item)
         mdiChild->setWidget(memoWindow);
         mdiChild->setAttribute(Qt::WA_DeleteOnClose);
         mdiChild->resize(_mdiArea->size() * 0.7);
-        if (isMaximized)
-            mdiChild->setWindowState(Qt::WindowMaximized);
         _mdiArea->addSubWindow(mdiChild);
         mdiChild->show();
 
-//        if (isMaximized)
-  //          mdiChild->setWindowState(Qt::WindowMaximized);
+        if (isMaximized)
+            mdiChild->setWindowState(Qt::WindowMaximized);
     }
 }
 

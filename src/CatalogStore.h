@@ -9,6 +9,7 @@ class FolderItem;
 class FolderTableDef;
 class MemoTableDef;
 class Memo;
+class SettingsTableDef;
 
 //------------------------------------------------------------------------------
 
@@ -56,6 +57,17 @@ public:
 
 //------------------------------------------------------------------------------
 
+class SettingsManager
+{
+public:
+    SettingsTableDef* table() const;
+
+    QVector<int> readIntArray(const QString& id);
+    void writeIntArray(const QString& id, const QVector<int>& value);
+};
+
+//------------------------------------------------------------------------------
+
 namespace CatalogStore {
 
 void closeDatabase();
@@ -67,6 +79,7 @@ void rollbackTran();
 
 FolderManager* folderManager();
 MemoManager* memoManager();
+SettingsManager* settingsManager();
 
 } // namespace CatalogStore
 

@@ -71,7 +71,7 @@ CatalorResult Catalog::open(const QString& fileName)
         {
             if (!folders.items.contains(folderId))
             {
-                qWarning() << tr("Some materials are stored in folder #%1 but that "
+                qWarning() << tr("Some memos are stored in folder #%1 but that "
                                  "is not found in the directory.").arg(folderId);
                 qDeleteAll(memos.items[folderId]);
                 continue;
@@ -231,4 +231,10 @@ IntResult Catalog::countMemos() const
     int count;
     QString res = CatalogStore::memoManager()->countAll(&count);
     return res.isEmpty() ? IntResult::ok(count) : IntResult::fail(res);
+}
+
+CatalogItem* Catalog::findById(int id) const
+{
+    return nullptr;
+    // TODO
 }

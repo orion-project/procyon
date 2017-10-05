@@ -318,12 +318,20 @@ void MainWindow::openWindowForItem(MemoItem* item)
         memoWindow->setTitleFont(_titleFont);
         memoWindow->setMemoFont(_memoFont);
 
+        bool isMaximized = _mdiArea->activeSubWindow() &&
+            (_mdiArea->activeSubWindow()->windowState() & Qt::WindowMaximized);
+
         mdiChild = new QMdiSubWindow;
         mdiChild->setWidget(memoWindow);
         mdiChild->setAttribute(Qt::WA_DeleteOnClose);
         mdiChild->resize(_mdiArea->size() * 0.7);
+        if (isMaximized)
+            mdiChild->setWindowState(Qt::WindowMaximized);
         _mdiArea->addSubWindow(mdiChild);
         mdiChild->show();
+
+//        if (isMaximized)
+  //          mdiChild->setWindowState(Qt::WindowMaximized);
     }
 }
 

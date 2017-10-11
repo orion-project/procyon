@@ -22,6 +22,13 @@ namespace Ori {
 class MruFileList;
 }
 
+struct MemoSettings
+{
+    QFont memoFont;
+    QFont titleFont;
+    bool wordWrap;
+};
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -39,10 +46,9 @@ private:
     Ori::MruFileList *_mruList;
     QDockWidget *_dockCatalog, *_dockInfo, *_dockWindows;
     QLabel *_statusMemoCount, *_statusFileName;
-    QAction *_actionViewCatalog, *_actionViewInfo, *_actionViewWindows;
     QAction *_actionCreateTopLevelFolder, *_actionCreateFolder, *_actionRenameFolder, *_actionDeleteFolder;
     QAction *_actionOpenMemo, *_actionCreateMemo, *_actionDeleteMemo;
-    QFont _memoFont, _titleFont;
+    MemoSettings _memoSettings;
 
     void createMenu();
     void createToolBars();
@@ -65,6 +71,7 @@ private:
     void chooseTitleFont();
     void memoCreated(MemoItem* item);
     void memoRemoved(MemoItem* item);
+    void toggleWordWrap();
 
     void openWindowForItem(MemoItem* item);
     QMdiSubWindow* findMemoMdiChild(MemoItem* item) const;

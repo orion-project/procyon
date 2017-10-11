@@ -11,6 +11,7 @@
 #include <QIcon>
 #include <QDebug>
 #include <QLineEdit>
+//#include <QMdiSubWindow>
 #include <QTextEdit>
 #include <QToolBar>
 #include <QDesktopServices>
@@ -64,6 +65,10 @@ MemoWindow::MemoWindow(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     _actionEdit = toolbar->addAction(QIcon(":/toolbar/memo_edit"), tr("Edit"), this, &MemoWindow::beginEditing);
     _actionSave = toolbar->addAction(QIcon(":/toolbar/memo_save"), tr("Save"), this, &MemoWindow::saveEditing);
     _actionCancel = toolbar->addAction(QIcon(":/toolbar/memo_cancel"), tr("Cancel"), this, &MemoWindow::cancelEditing);
+    toolbar->addSeparator();
+    toolbar->addAction(QIcon(":/toolbar/memo_close"), tr("Close"), [this](){
+        parentWidget()->close();
+    });
 
     auto toolPanel = LayoutH({_titleEditor, toolbar}).setMargin(0).makeWidget();
 
@@ -144,6 +149,11 @@ void MemoWindow::setMemoFont(const QFont& font)
 void MemoWindow::setTitleFont(const QFont& font)
 {
     _titleEditor->setFont(font);
+}
+
+void MemoWindow::setWordWrap(bool wrap)
+{
+    _memoEditor->setWordWrapMode(wrap ? QTextOption::WrapAtWordBoundaryOrAnywhere : QTextOption::NoWrap);
 }
 
 void MemoWindow::applyTextStyles()

@@ -90,37 +90,36 @@ void MainWindow::createMenu()
     new Ori::Widgets::MruMenuPart(_mruList, m, actionExit, this);
 
     m = menuBar()->addMenu(tr("&View"));
-    connect(m, &QMenu::aboutToShow, [this](){
-        this->_actionViewCatalog->setChecked(this->_dockCatalog->isVisible());
-        this->_actionViewInfo->setChecked(this->_dockInfo->isVisible());
-        this->_actionViewWindows->setChecked(this->_dockWindows->isVisible());
-    });
-    _actionViewCatalog = addViewPanelAction(m, tr("Catalog Panel"), _dockCatalog);
-    _actionViewInfo = addViewPanelAction(m, tr("Info Panel"), _dockInfo);
-    _actionViewWindows = addViewPanelAction(m, tr("Memos Panel"), _dockWindows);
+    auto actionViewCatalog = addViewPanelAction(m, tr("Catalog Panel"), _dockCatalog);
+    auto actionViewInfo = addViewPanelAction(m, tr("Info Panel"), _dockInfo);
+    auto actionViewWindows = addViewPanelAction(m, tr("Memos Panel"), _dockWindows);
     m->addSeparator();
     m->addMenu(new Ori::Widgets::StylesMenu(this));
+    connect(m, &QMenu::aboutToShow, [this, actionViewCatalog, actionViewInfo, actionViewWindows](){
+        actionViewCatalog->setChecked(_dockCatalog->isVisible());
+        actionViewInfo->setChecked(_dockInfo->isVisible());
+        actionViewWindows->setChecked(_dockWindows->isVisible());
+    });
 
     m = menuBar()->addMenu(tr("&Catalog"));
     connect(m, &QMenu::aboutToShow, this, &MainWindow::updateMenuCatalog);
-    _actionCreateTopLevelFolder = m->addAction(tr("New Top Level Folder..."),
-        [this](){ this->_catalogView->createTopLevelFolder(); });
-    _actionCreateFolder = m->addAction(tr("New Folder..."),
-        [this](){ this->_catalogView->createFolder(); });
-    _actionRenameFolder = m->addAction(tr("Rename Folder..."),
-        [this](){ this->_catalogView->renameFolder(); });
-    _actionDeleteFolder = m->addAction(tr("Delete Folder"),
-        [this](){ this->_catalogView->deleteFolder(); });
+    _actionCreateTopLevelFolder = m->addAction(tr("New Top Level Folder..."), [this](){ _catalogView->createTopLevelFolder(); });
+    _actionCreateFolder = m->addAction(tr("New Folder..."), [this](){ _catalogView->createFolder(); });
+    _actionRenameFolder = m->addAction(tr("Rename Folder..."), [this](){ _catalogView->renameFolder(); });
+    _actionDeleteFolder = m->addAction(tr("Delete Folder"), [this](){ _catalogView->deleteFolder(); });
     m->addSeparator();
     _actionOpenMemo = m->addAction(tr("Open memo"), this, &MainWindow::openMemo);
-    _actionCreateMemo = m->addAction(tr("New memo"),
-        [this](){ this->_catalogView->createMemo(); });
-    _actionDeleteMemo = m->addAction(tr("Delete memo"),
-        [this](){ this->_catalogView->deleteMemo(); });
+    _actionCreateMemo = m->addAction(tr("New memo"), [this](){ _catalogView->createMemo(); });
+    _actionDeleteMemo = m->addAction(tr("Delete memo"), [this](){ _catalogView->deleteMemo(); });
 
     m = menuBar()->addMenu(tr("&Options"));
     m->addAction(tr("Choose Memo Font..."), this, &MainWindow::chooseMemoFont);
     m->addAction(tr("Choose Title Font..."), this, &MainWindow::chooseTitleFont);
+    auto actionWordWrap = m->addAction(tr("Word Wrap"), this, &MainWindow::toggleWordWrap);
+    actionWordWrap->setCheckable(true);
+    connect(m, &QMenu::aboutToShow, [this, actionWordWrap](){
+        actionWordWrap->setChecked(_memoSettings.wordWrap);
+    });
 }
 
 void MainWindow::createToolBars()
@@ -163,8 +162,9 @@ void MainWindow::saveSettings()
     s.storeWindowGeometry(this);
     s.storeDockState(this);
     s.setValue("style", qApp->style()->objectName());
-    s.setValue("memoFont", _memoFont);
-    s.setValue("titleFont", _titleFont);
+    s.setValue("memoFont", _memoSettings.memoFont);
+    s.setValue("titleFont", _memoSettings.titleFont);
+    s.setValue("wordWrap", _memoSettings.wordWrap);
     if (_catalog)
         s.setValue("database", _catalog->fileName());
 }
@@ -177,8 +177,9 @@ void MainWindow::loadSettings()
     _mruList->load(s.settings());
     qApp->setStyle(s.strValue("style"));
 
-    _memoFont = qvariant_cast<QFont>(s.value("memoFont", QFont("Arial", 12)));
-    _titleFont = qvariant_cast<QFont>(s.value("titleFont", QFont("Arial", 14)));
+    _memoSettings.memoFont = qvariant_cast<QFont>(s.value("memoFont", QFont("Arial", 12)));
+    _memoSettings.titleFont = qvariant_cast<QFont>(s.value("titleFont", QFont("Arial", 14)));
+    _memoSettings.wordWrap = s.value("wordWrap", false).toBool();
 
     auto lastFile = s.value("database").toString();
     if (!lastFile.isEmpty())
@@ -363,8 +364,9 @@ void MainWindow::openWindowForItem(MemoItem* item)
     else
     {
         auto memoWindow = new MemoWindow(_catalog, item);
-        memoWindow->setTitleFont(_titleFont);
-        memoWindow->setMemoFont(_memoFont);
+        memoWindow->setTitleFont(_memoSettings.titleFont);
+        memoWindow->setMemoFont(_memoSettings.memoFont);
+        memoWindow->setWordWrap(_memoSettings.wordWrap);
 
         bool isMaximized = _mdiArea->activeSubWindow() &&
                 (_mdiArea->activeSubWindow()->windowState() & Qt::WindowMaximized);
@@ -408,22 +410,32 @@ bool chooseFont(QFont* targetFont)
 
 void MainWindow::chooseMemoFont()
 {
-    if (chooseFont(&_memoFont))
+    if (chooseFont(&_memoSettings.memoFont))
         for (auto mdiChild : _mdiArea->subWindowList())
         {
             auto memoWindow = memoWindowOfMdiChild(mdiChild);
-            if (memoWindow) memoWindow->setMemoFont(_memoFont);
+            if (memoWindow) memoWindow->setMemoFont(_memoSettings.memoFont);
         }
 }
 
 void MainWindow::chooseTitleFont()
 {
-    if (chooseFont(&_titleFont))
+    if (chooseFont(&_memoSettings.titleFont))
         for (auto mdiChild : _mdiArea->subWindowList())
         {
             auto memoWindow = memoWindowOfMdiChild(mdiChild);
-            if (memoWindow) memoWindow->setTitleFont(_titleFont);
+            if (memoWindow) memoWindow->setTitleFont(_memoSettings.titleFont);
         }
+}
+
+void MainWindow::toggleWordWrap()
+{
+    _memoSettings.wordWrap = !_memoSettings.wordWrap;
+    for (auto mdiChild : _mdiArea->subWindowList())
+    {
+        auto memoWindow = memoWindowOfMdiChild(mdiChild);
+        if (memoWindow) memoWindow->setWordWrap(_memoSettings.wordWrap);
+    }
 }
 
 void MainWindow::memoCreated(MemoItem* item)

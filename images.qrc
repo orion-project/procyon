@@ -9,6 +9,7 @@
         <file alias="memo_save">./img/toolbar/check_green.svg</file>
         <file alias="memo_edit">./img/toolbar/pencil.svg</file>
         <file alias="memo_cancel">./img/toolbar/revert_red.svg</file>
+        <file alias="memo_close">./img/toolbar/close.svg</file>
     </qresource>
 </RCC>
 

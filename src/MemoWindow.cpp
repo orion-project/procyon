@@ -63,8 +63,11 @@ MemoWindow::MemoWindow(Catalog *catalog, MemoItem *memoItem) : QWidget(),
 
     auto toolbar = new QToolBar;
     _actionEdit = toolbar->addAction(QIcon(":/toolbar/memo_edit"), tr("Edit"), this, &MemoWindow::beginEditing);
+    _actionEdit->setShortcut(QKeySequence(Qt::Key_Return, Qt::Key_Return));
     _actionSave = toolbar->addAction(QIcon(":/toolbar/memo_save"), tr("Save"), this, &MemoWindow::saveEditing);
+    _actionSave->setShortcut(QKeySequence::Save);
     _actionCancel = toolbar->addAction(QIcon(":/toolbar/memo_cancel"), tr("Cancel"), this, &MemoWindow::cancelEditing);
+    _actionCancel->setShortcut(QKeySequence(Qt::Key_Escape, Qt::Key_Escape));
     toolbar->addSeparator();
     toolbar->addAction(QIcon(":/toolbar/memo_close"), tr("Close"), [this](){
         parentWidget()->close();

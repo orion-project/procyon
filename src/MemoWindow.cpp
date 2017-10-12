@@ -90,16 +90,18 @@ void MemoWindow::showMemo()
 {
     auto text = _memoItem->memo()->data();
     _memoEditor->setPlainText(text);
-    _memoEditor->document()->setModified(false);
     _titleEditor->setText(_memoItem->memo()->title());
-    _titleEditor->setModified(false);
     setWindowTitle(_memoItem->memo()->title());
     applyTextStyles();
+
+    _memoEditor->document()->setModified(false);
+    _titleEditor->setModified(false);
 }
 
 void MemoWindow::beginEditing()
 {
     toggleEditMode(true);
+    _memoEditor->setFocus();
 }
 
 void MemoWindow::cancelEditing()
@@ -126,6 +128,8 @@ bool MemoWindow::saveEditing()
     setWindowTitle(_memoItem->memo()->title());
     toggleEditMode(false);
     applyTextStyles();
+    _memoEditor->document()->setModified(false);
+    _titleEditor->setModified(false);
     return true;
 }
 
@@ -140,14 +144,10 @@ void MemoWindow::toggleEditMode(bool on)
         Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard;
     if (on) flags |= Qt::TextEditable;
     _memoEditor->setTextInteractionFlags(flags);
-    _memoEditor->document()->setModified(false);
 
     _titleEditor->setReadOnly(!on);
-    _titleEditor->setModified(false);
     _titleEditor->setStyleSheet(QString("QLineEdit { border-style: none; background: %1; padding: 6px }")
         .arg(palette().color(on ? QPalette::Base : QPalette::Window).name()));
-
-    if (on) _memoEditor->setFocus();
 }
 
 void MemoWindow::setMemoFont(const QFont& font)

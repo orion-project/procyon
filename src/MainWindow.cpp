@@ -23,11 +23,22 @@
 #include <QIcon>
 #include <QLabel>
 #include <QMdiArea>
-#include <QMdiSubWindow>
+#include <QMessageBox>
 #include <QMenuBar>
 #include <QStatusBar>
 #include <QStyle>
 #include <QTimer>
+
+
+void MemoMdiSubWindow::closeEvent(QCloseEvent *event)
+{
+    bool canClose = emit windowClosing();
+    if (canClose)
+        event->accept();
+    else
+        event->ignore();
+}
+
 
 MainWindow::MainWindow() : QMainWindow()
 {
@@ -289,7 +300,6 @@ void MainWindow::catalogClosed()
 {
     if (_catalog)
     {
-        qDebug() << "catalogClosed";
         saveSession();
         delete _catalog;
         _catalog = nullptr;
@@ -336,6 +346,21 @@ void MainWindow::updateMenuCatalog()
     _actionCreateMemo->setEnabled(hasFolder);
 }
 
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    for (auto mdiChild : _mdiArea->subWindowList())
+    {
+        auto memoWindow = memoWindowOfMdiChild(mdiChild);
+        if (!memoWindow) continue;
+        if (!canClose(memoWindow))
+        {
+            event->ignore();
+            return;
+        }
+    }
+    event->accept();
+}
+
 MemoWindow* MainWindow::activeMemoWindow() const
 {
     auto mdiChild = _mdiArea->currentSubWindow();
@@ -358,29 +383,33 @@ void MainWindow::openWindowForItem(MemoItem* item)
         if (!res.isEmpty()) return Ori::Dlg::error(res);
     }
 
-    auto mdiChild = findMemoMdiChild(item);
-    if (mdiChild)
-        _mdiArea->setActiveSubWindow(mdiChild);
-    else
+    bool isMaximized = _mdiArea->activeSubWindow() &&
+            (_mdiArea->activeSubWindow()->windowState() & Qt::WindowMaximized);
+
+    auto existedChild = findMemoMdiChild(item);
+    if (existedChild)
     {
-        auto memoWindow = new MemoWindow(_catalog, item);
-        memoWindow->setTitleFont(_memoSettings.titleFont);
-        memoWindow->setMemoFont(_memoSettings.memoFont);
-        memoWindow->setWordWrap(_memoSettings.wordWrap);
-
-        bool isMaximized = _mdiArea->activeSubWindow() &&
-                (_mdiArea->activeSubWindow()->windowState() & Qt::WindowMaximized);
-
-        mdiChild = new QMdiSubWindow;
-        mdiChild->setWidget(memoWindow);
-        mdiChild->setAttribute(Qt::WA_DeleteOnClose);
-        mdiChild->resize(_mdiArea->size() * 0.7);
-        _mdiArea->addSubWindow(mdiChild);
-        mdiChild->show();
-
+        _mdiArea->setActiveSubWindow(existedChild);
         if (isMaximized)
-            mdiChild->setWindowState(Qt::WindowMaximized);
+            existedChild->setWindowState(Qt::WindowMaximized);
+        return;
     }
+
+    auto memoWindow = new MemoWindow(_catalog, item);
+    memoWindow->setTitleFont(_memoSettings.titleFont);
+    memoWindow->setMemoFont(_memoSettings.memoFont);
+    memoWindow->setWordWrap(_memoSettings.wordWrap);
+
+    auto mdiChild = new MemoMdiSubWindow;
+    mdiChild->setWidget(memoWindow);
+    mdiChild->setAttribute(Qt::WA_DeleteOnClose);
+    mdiChild->resize(_mdiArea->size() * 0.7);
+    connect(mdiChild, &MemoMdiSubWindow::windowClosing, this, &MainWindow::memoWindowAboutToClose);
+    connect(mdiChild, &MemoMdiSubWindow::aboutToActivate, this, &MainWindow::memoWindowAboutToActivate);
+    _mdiArea->addSubWindow(mdiChild);
+    mdiChild->show();
+    if (isMaximized)
+        mdiChild->setWindowState(Qt::WindowMaximized);
 }
 
 QMdiSubWindow* MainWindow::findMemoMdiChild(MemoItem* item) const
@@ -396,6 +425,39 @@ QMdiSubWindow* MainWindow::findMemoMdiChild(MemoItem* item) const
 MemoWindow* MainWindow::memoWindowOfMdiChild(QMdiSubWindow* subWindow) const
 {
     return subWindow ? qobject_cast<MemoWindow*>(subWindow->widget()) : nullptr;
+}
+
+bool MainWindow::memoWindowAboutToClose()
+{
+    auto subWindow = qobject_cast<QMdiSubWindow*>(sender());
+    if (!subWindow) return true;
+
+    _prevWindowWasMaximized = subWindow->windowState() & Qt::WindowMaximized;
+
+    auto memoWindow = memoWindowOfMdiChild(subWindow);
+    return memoWindow && canClose(memoWindow);
+}
+
+bool MainWindow::canClose(MemoWindow* memoWindow)
+{
+    if (!memoWindow->isModified()) return true;
+
+    int res = Ori::Dlg::yesNoCancel(tr("<b>%1</b><br><br>"
+                                       "This memo has been changed. "
+                                       "Save changes before closing?")
+                                    .arg(memoWindow->windowTitle()));
+    if (res == QMessageBox::Cancel) return false;
+    if (res == QMessageBox::No) return true;
+    if (!memoWindow->saveEditing()) return false;
+
+    return true;
+}
+
+void MainWindow::memoWindowAboutToActivate()
+{
+    auto window = qobject_cast<QMdiSubWindow*>(sender());
+    if (window && _prevWindowWasMaximized)
+        window->setWindowState(Qt::WindowMaximized);
 }
 
 bool chooseFont(QFont* targetFont)

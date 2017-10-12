@@ -90,7 +90,9 @@ void MemoWindow::showMemo()
 {
     auto text = _memoItem->memo()->data();
     _memoEditor->setPlainText(text);
+    _memoEditor->document()->setModified(false);
     _titleEditor->setText(_memoItem->memo()->title());
+    _titleEditor->setModified(false);
     setWindowTitle(_memoItem->memo()->title());
     applyTextStyles();
 }
@@ -106,7 +108,7 @@ void MemoWindow::cancelEditing()
     showMemo();
 }
 
-void MemoWindow::saveEditing()
+bool MemoWindow::saveEditing()
 {
     auto memo = _memoItem->type()->makeMemo();
     // TODO preserve additional non editable data - dates, etc.
@@ -118,13 +120,13 @@ void MemoWindow::saveEditing()
     if (!res.isEmpty())
     {
         Ori::Dlg::error(res);
-        cancelEditing();
-        return;
+        return false;
     }
 
     setWindowTitle(_memoItem->memo()->title());
     toggleEditMode(false);
     applyTextStyles();
+    return true;
 }
 
 void MemoWindow::toggleEditMode(bool on)
@@ -138,10 +140,14 @@ void MemoWindow::toggleEditMode(bool on)
         Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard;
     if (on) flags |= Qt::TextEditable;
     _memoEditor->setTextInteractionFlags(flags);
+    _memoEditor->document()->setModified(false);
 
     _titleEditor->setReadOnly(!on);
+    _titleEditor->setModified(false);
     _titleEditor->setStyleSheet(QString("QLineEdit { border-style: none; background: %1; padding: 6px }")
         .arg(palette().color(on ? QPalette::Base : QPalette::Window).name()));
+
+    if (on) _memoEditor->setFocus();
 }
 
 void MemoWindow::setMemoFont(const QFont& font)
@@ -161,9 +167,11 @@ void MemoWindow::setWordWrap(bool wrap)
 
 void MemoWindow::applyTextStyles()
 {
+    _memoEditor->setUndoRedoEnabled(false);
     processHyperlinks();
     // Should be applied after hyperlinks to get correct finish style.
     applyHighlighter();
+    _memoEditor->setUndoRedoEnabled(true);
 }
 
 void MemoWindow::processHyperlinks()
@@ -211,4 +219,9 @@ void MemoWindow::applyHighlighter()
         _highlighter = new PythonSyntaxHighlighter(_memoEditor->document());
     else if (text.startsWith("#shell-memo"))
         _highlighter = new ShellMemoSyntaxHighlighter(_memoEditor->document());
+}
+
+bool MemoWindow::isModified() const
+{
+    return _memoEditor->document()->isModified() || _titleEditor->isModified();
 }

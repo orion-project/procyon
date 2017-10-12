@@ -2,13 +2,13 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QMdiSubWindow>
 
 QT_BEGIN_NAMESPACE
 class QAction;
 class QDockWidget;
 class QLabel;
 class QMdiArea;
-class QMdiSubWindow;
 QT_END_NAMESPACE
 
 class Catalog;
@@ -22,12 +22,24 @@ namespace Ori {
 class MruFileList;
 }
 
+
 struct MemoSettings
 {
     QFont memoFont;
     QFont titleFont;
     bool wordWrap;
 };
+
+
+class MemoMdiSubWindow : public QMdiSubWindow
+{
+    Q_OBJECT
+signals:
+    bool windowClosing();
+protected:
+    void closeEvent(QCloseEvent *event) override;
+};
+
 
 class MainWindow : public QMainWindow
 {
@@ -36,6 +48,9 @@ class MainWindow : public QMainWindow
 public:
     MainWindow();
     ~MainWindow();
+
+protected:
+    void closeEvent(QCloseEvent *event) override;
 
 private:
     Catalog* _catalog = nullptr;
@@ -49,6 +64,7 @@ private:
     QAction *_actionCreateTopLevelFolder, *_actionCreateFolder, *_actionRenameFolder, *_actionDeleteFolder;
     QAction *_actionOpenMemo, *_actionCreateMemo, *_actionDeleteMemo;
     MemoSettings _memoSettings;
+    bool _prevWindowWasMaximized = false;
 
     void createMenu();
     void createToolBars();
@@ -72,12 +88,15 @@ private:
     void memoCreated(MemoItem* item);
     void memoRemoved(MemoItem* item);
     void toggleWordWrap();
+    bool memoWindowAboutToClose();
+    void memoWindowAboutToActivate();
 
     void openWindowForItem(MemoItem* item);
     QMdiSubWindow* findMemoMdiChild(MemoItem* item) const;
     MemoWindow* memoWindowOfMdiChild(QMdiSubWindow* subWindow) const;
     MemoWindow* activeMemoWindow() const;
     QAction* addViewPanelAction(QMenu* m, const QString& title, QDockWidget* panel);
+    bool canClose(MemoWindow* memoWindow);
 };
 
 #endif // MAINWINDOW_H

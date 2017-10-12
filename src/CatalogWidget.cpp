@@ -56,7 +56,9 @@ CatalogWidget::CatalogWidget(QAction* openMemo) : QWidget(), _openMemo(openMemo)
 
     _catalogView = new QTreeView;
     _catalogView->setHeaderHidden(true);
-    _catalogView->setAlternatingRowColors(true);
+    // TODO alternate color looks too dark on some themes, e.g. Fusion on Windows,
+    // should set alternate color via stylesheet and it should be only slightly different from base
+    //_catalogView->setAlternatingRowColors(true);
     _catalogView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(_catalogView, &QTreeView::customContextMenuRequested, this, &CatalogWidget::contextMenuRequested);
     connect(_catalogView, &QTreeView::doubleClicked, this, &CatalogWidget::doubleClicked);

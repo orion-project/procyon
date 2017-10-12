@@ -11,6 +11,9 @@ WindowsWidget::WindowsWidget(QMdiArea *parent) : QWidget(parent), _mdiArea(paren
     connect(_mdiArea, &QMdiArea::subWindowActivated, this, &WindowsWidget::subWindowActivated);
 
     _windowsList = new QListWidget;
+    // TODO alternate color looks too dark on some themes, e.g. Fusion on Windows,
+    // should set alternate color via stylesheet and it should be only slightly different from base
+    //_windowsList->setAlternatingRowColors(true);
     connect(_windowsList, &QListWidget::currentItemChanged, this, &WindowsWidget::currentItemChanged);
 
     Ori::Layouts::LayoutV({_windowsList}).setMargin(0).useFor(this);

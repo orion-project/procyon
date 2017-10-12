@@ -28,6 +28,8 @@ public:
     void setWordWrap(bool wrap);
 
     void beginEditing();
+    bool saveEditing();
+    bool isModified() const;
 
 private:
     Catalog* _catalog;
@@ -39,7 +41,6 @@ private:
 
     void showMemo();
     void cancelEditing();
-    void saveEditing();
     void toggleEditMode(bool on);
     void applyTextStyles();
     void processHyperlinks();

@@ -27,6 +27,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 RESOURCES += images.qrc
+RC_ICONS = ./img/icon/main.ico
 
 SOURCES += src/main.cpp\
         src/MainWindow.cpp \

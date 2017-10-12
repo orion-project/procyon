@@ -25,6 +25,8 @@ private:
 
     void subWindowActivated(QMdiSubWindow*);
     void subWindowDestroyed(QObject*);
+    void subWindowTitleChanged(const QString& title);
+    void subWindowIconChanged(const QIcon& icon);
     void currentItemChanged(QListWidgetItem*, QListWidgetItem*);
 };
 

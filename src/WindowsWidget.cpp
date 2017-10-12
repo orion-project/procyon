@@ -32,13 +32,15 @@ void WindowsWidget::subWindowActivated(QMdiSubWindow* window)
         _windowsList->addItem(item);
         _windowsMap.insert(window, item);
         connect(window, &QMdiSubWindow::destroyed, this, &WindowsWidget::subWindowDestroyed);
+        connect(window, &QMdiSubWindow::windowTitleChanged, this, &WindowsWidget::subWindowTitleChanged);
+        connect(window, &QMdiSubWindow::windowIconChanged, this, &WindowsWidget::subWindowIconChanged);
     }
     _windowsList->setCurrentItem(_windowsMap[window]);
 }
 
 void WindowsWidget::subWindowDestroyed(QObject* obj)
 {
-    auto window = (QMdiSubWindow*)obj;
+    auto window = (QMdiSubWindow*)obj; // <- qobject_cast returns null here
     if (_windowsMap.contains(window))
     {
         auto item = _windowsMap[window];
@@ -55,4 +57,18 @@ void WindowsWidget::currentItemChanged(QListWidgetItem *current, QListWidgetItem
     if (!window->isVisible()) window->show();
     if (window->windowState() | Qt::WindowMinimized) window->showNormal();
     _mdiArea->setActiveSubWindow(window);
+}
+
+void WindowsWidget::subWindowTitleChanged(const QString& title)
+{
+    auto window = qobject_cast<QMdiSubWindow*>(sender());
+    if (!window || !_windowsMap.contains(window)) return;
+    _windowsMap[window]->setText(title);
+}
+
+void WindowsWidget::subWindowIconChanged(const QIcon& icon)
+{
+    auto window = qobject_cast<QMdiSubWindow*>(sender());
+    if (!window || !_windowsMap.contains(window)) return;
+    _windowsMap[window]->setIcon(icon);
 }

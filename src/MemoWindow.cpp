@@ -94,6 +94,7 @@ void MemoWindow::showMemo()
     setWindowTitle(_memoItem->memo()->title());
     applyTextStyles();
 
+    // Modified flag should be reset after text style was applied
     _memoEditor->document()->setModified(false);
     _titleEditor->setModified(false);
 }
@@ -128,8 +129,11 @@ bool MemoWindow::saveEditing()
     setWindowTitle(_memoItem->memo()->title());
     toggleEditMode(false);
     applyTextStyles();
+
+    // Modified flag should be reset after text style was applied
     _memoEditor->document()->setModified(false);
     _titleEditor->setModified(false);
+
     return true;
 }
 

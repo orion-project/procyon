@@ -10,6 +10,7 @@
 #define STYLE_EXCLAME 5
 #define STYLE_QUESTION 6
 #define STYLE_OPTION 7
+#define STYLE_SUBHEADER 8
 
 HighlightingStyleSet* getShellmemoHighlightingStyles()
 {
@@ -20,6 +21,7 @@ HighlightingStyleSet* getShellmemoHighlightingStyles()
         // https://www.w3.org/TR/SVG/types.html#ColorKeywords
         styles.insert(STYLE_COMMAND, getTextCharFormat("darkBlue"));
         styles.insert(STYLE_HEADER, getTextCharFormat("black", "bold"));
+        styles.insert(STYLE_SUBHEADER, getTextCharFormat("darkSlateGray", "bold"));
         styles.insert(STYLE_COMMENT, getTextCharFormat("darkGreen", "italic"));
         styles.insert(STYLE_SEPARATOR, getTextCharFormat("darkGray"));
         styles.insert(STYLE_OUTPUT, getTextCharFormat("darkMagenta"));
@@ -35,6 +37,7 @@ ShellMemoSyntaxHighlighter::ShellMemoSyntaxHighlighter(QTextDocument *parent) : 
     auto styles = getShellmemoHighlightingStyles();
     rules.append(HighlightingRule("^\\s*\\$\\s+.*$", 0, styles->value(STYLE_COMMAND)));
     rules.append(HighlightingRule("^\\s*\\*\\s+.*$", 0, styles->value(STYLE_HEADER)));
+    rules.append(HighlightingRule("^\\s*\\-\\s+.*$", 0, styles->value(STYLE_SUBHEADER)));
     rules.append(HighlightingRule("^\\s*\\!\\s+.*$", 0, styles->value(STYLE_EXCLAME)));
     rules.append(HighlightingRule("^\\s*\\?\\s+.*$", 0, styles->value(STYLE_QUESTION)));
     rules.append(HighlightingRule("^\\s*\\>\\s+.*$", 0, styles->value(STYLE_OUTPUT)));

@@ -72,10 +72,7 @@ MainWindow::~MainWindow()
     saveSettings();
 
     if (_catalog)
-    {
-        saveSession();
         delete _catalog;
-    }
 }
 
 QAction* MainWindow::addViewPanelAction(QMenu* m, const QString& title, QDockWidget* panel)
@@ -194,26 +191,37 @@ void MainWindow::loadSettings()
 
     auto lastFile = s.value("database").toString();
     if (!lastFile.isEmpty())
-        QTimer::singleShot(200, [this, lastFile](){ this->openCatalog(lastFile); });
+        QTimer::singleShot(200, [this, lastFile](){ openCatalog(lastFile); });
 }
 
 void MainWindow::loadSession()
 {
     bool isMaximized = CatalogStore::settingsManager()->readBool("isMaximized", false);
     QVector<int> ids = CatalogStore::settingsManager()->readIntArray("openedMemos");
+    int activeId = CatalogStore::settingsManager()->readInt("activeMemo", -1);
+    QMdiSubWindow *activeWindow = nullptr;
     for (int id: ids)
     {
         CatalogItem* item = _catalog->findById(id);
         if (item && item->isMemo())
         {
             openWindowForItem(item->asMemo());
-            if (isMaximized)
-            {
-                auto window = findMemoMdiChild(item->asMemo());
-                if (!(window->windowState() & Qt::WindowMaximized))
-                    window->setWindowState(Qt::WindowMaximized);
-            }
+            if (item->id() == activeId)
+                activeWindow = findMemoMdiChild(item->asMemo());
         }
+    }
+    if (!activeWindow)
+    {
+        auto subWindows = _mdiArea->subWindowList();
+        if (!subWindows.isEmpty())
+            activeWindow = subWindows.last();
+    }
+    if (activeWindow)
+    {
+        if (isMaximized)
+            if (!(activeWindow->windowState() & Qt::WindowMaximized))
+                activeWindow->setWindowState(Qt::WindowMaximized);
+        _mdiArea->setActiveSubWindow(activeWindow);
     }
 }
 
@@ -221,6 +229,7 @@ void MainWindow::saveSession()
 {
     QVector<int> ids;
     bool isMaximized = false;
+    int activeId = -1;
     for (auto subWindow: _mdiArea->subWindowList())
     {
         auto memoWindow = memoWindowOfMdiChild(subWindow);
@@ -228,10 +237,13 @@ void MainWindow::saveSession()
         ids << memoWindow->memoItem()->id();
         if (!isMaximized)
             isMaximized = subWindow->windowState() & Qt::WindowMaximized;
+        if (subWindow == _mdiArea->activeSubWindow())
+            activeId = memoWindow->memoItem()->id();
     }
-    CatalogStore::settingsManager()->writeIntArray("openedMemos", ids);
-    qDebug() << isMaximized;
+    CatalogStore::settingsManager()->writeIntArray("openedMemos", ids, SettingsManager::RespectValuesOrder);
     CatalogStore::settingsManager()->writeBool("isMaximized", isMaximized);
+    if (activeId >= 0)
+        CatalogStore::settingsManager()->writeInt("activeMemo", activeId);
 }
 
 void MainWindow::newCatalog()
@@ -359,6 +371,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
         }
     }
     event->accept();
+    saveSession();
 }
 
 MemoWindow* MainWindow::activeMemoWindow() const
@@ -457,7 +470,8 @@ void MainWindow::memoWindowAboutToActivate()
 {
     auto window = qobject_cast<QMdiSubWindow*>(sender());
     if (window && _prevWindowWasMaximized)
-        window->setWindowState(Qt::WindowMaximized);
+        if (!(window->windowState() & Qt::WindowMaximized))
+            window->setWindowState(Qt::WindowMaximized);
 }
 
 bool chooseFont(QFont* targetFont)

@@ -1,5 +1,5 @@
-#ifndef DISPERSIONPLOT_H
-#define DISPERSIONPLOT_H
+#ifndef MEMOWINDOW_H
+#define MEMOWINDOW_H
 
 #include <QWidget>
 
@@ -47,4 +47,4 @@ private:
     void applyHighlighter();
 };
 
-#endif // DISPERSIONPLOT_H
+#endif // MEMOWINDOW_H

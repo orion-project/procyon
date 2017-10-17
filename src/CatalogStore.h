@@ -66,15 +66,21 @@ public:
 class SettingsManager
 {
 public:
+    enum TrackChangesFlag { IgnoreValuesOrder, RespectValuesOrder };
+
     SettingsTableDef* table() const;
 
     void writeValue(const QString& id, const QVariant& value) const;
-    QVariant readValue(const QString& id, const QVariant& defValue = QVariant()) const;
+    QVariant readValue(const QString& id, const QVariant& defValue = QVariant(), bool *hasValue = nullptr) const;
 
     void writeBool(const QString& id, bool value) const;
     bool readBool(const QString& id, bool defValue) const;
+
+    void writeInt(const QString& id, int value) const;
+    int readInt(const QString& id, int defValue) const;
     
-    void writeIntArray(const QString& id, const QVector<int>& values) const;
+    void writeIntArray(const QString& id, const QVector<int>& values,
+                       TrackChangesFlag trackChangesFlag = IgnoreValuesOrder) const;
     QVector<int> readIntArray(const QString& id) const;
 };
 

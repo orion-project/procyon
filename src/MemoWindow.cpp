@@ -11,8 +11,9 @@
 #include <QIcon>
 #include <QDebug>
 #include <QLineEdit>
-//#include <QMdiSubWindow>
+#include <QStyle>
 #include <QTextEdit>
+#include <QTimer>
 #include <QToolBar>
 #include <QDesktopServices>
 
@@ -80,6 +81,11 @@ MemoWindow::MemoWindow(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     showMemo();
     toggleEditMode(false);
     _memoEditor->setFocus();
+
+    QTimer::singleShot(0, [this](){
+        auto sb = 1.5 * style()->pixelMetric(QStyle::PM_ScrollBarExtent);
+        _memoEditor->document()->setTextWidth(_memoEditor->width() - sb);
+    });
 }
 
 MemoWindow::~MemoWindow()
@@ -191,7 +197,6 @@ void MemoWindow::processHyperlinks()
         while (!cursor.isNull())
         {
             QString href = cursor.selectedText();
-            qDebug() << href;
             QTextCharFormat f;
             f.setAnchor(true);
             f.setAnchorHref(href);

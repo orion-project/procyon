@@ -218,10 +218,10 @@ void MainWindow::loadSession()
     }
     if (activeWindow)
     {
+        _mdiArea->setActiveSubWindow(activeWindow);
         if (isMaximized)
             if (!(activeWindow->windowState() & Qt::WindowMaximized))
                 activeWindow->setWindowState(Qt::WindowMaximized);
-        _mdiArea->setActiveSubWindow(activeWindow);
     }
 }
 

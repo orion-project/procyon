@@ -56,10 +56,20 @@ void WindowsWidget::currentItemChanged(QListWidgetItem *current, QListWidgetItem
 {
     if (!current) return;
     auto window = qvariant_cast<QMdiSubWindow*>(current->data(Qt::UserRole));
-    if (!window) return;
+    if (!window)
+    {
+        qCritical() << "Invalid app state: no window is attached do item";
+        return;
+    }
+    auto activeWindow = _mdiArea->activeSubWindow();
+    // Do nothing if window is already active
+    if (window == activeWindow) return;
     if (!window->isVisible()) window->show();
     if (window->windowState() | Qt::WindowMinimized) window->showNormal();
+    auto isMaximized = activeWindow && activeWindow->windowState() & Qt::WindowMaximized;
     _mdiArea->setActiveSubWindow(window);
+    if (isMaximized && !(window->windowState() & Qt::WindowMaximized))
+        window->setWindowState(Qt::WindowMaximized);
 }
 
 void WindowsWidget::subWindowTitleChanged(const QString& title)

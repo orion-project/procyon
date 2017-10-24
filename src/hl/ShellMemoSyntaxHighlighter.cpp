@@ -12,6 +12,7 @@
 #define STYLE_OPTION 7
 #define STYLE_SUBHEADER 8
 #define STYLE_SECTION 9
+#define STYLE_HYPERLINK 10
 
 HighlightingStyleSet* getShellmemoHighlightingStyles()
 {
@@ -30,6 +31,11 @@ HighlightingStyleSet* getShellmemoHighlightingStyles()
         styles.insert(STYLE_EXCLAME, getTextCharFormat("red"));
         styles.insert(STYLE_QUESTION, getTextCharFormat("magenta"));
         styles.insert(STYLE_OPTION, getTextCharFormat("darkSlateBlue"));
+
+        /*QTextCharFormat hrefFormat = getTextCharFormat("blue");
+        hrefFormat.setAnchor(true);
+        hrefFormat.setFontUnderline(true);
+        styles.insert(STYLE_HYPERLINK, hrefFormat);*/
     }
     return &styles;
 }
@@ -47,6 +53,10 @@ ShellMemoSyntaxHighlighter::ShellMemoSyntaxHighlighter(QTextDocument *parent) : 
     rules.append(HighlightingRule("^\\s*#.*$", STYLE_COMMENT));
     rules.append(HighlightingRule("^\\s*-{2}.*$", STYLE_OPTION));
     rules.append(HighlightingRule("^\\s*-{3,}.*$", STYLE_SEPARATOR));
+
+    // Hyperlink rule should be added after others to be applied correctly
+    // as most of rules here modifiy format of entire line and hyperlink as well.
+    //rules.append(HighlightingRule("\\bhttp(s?)://[^\\s]+\\b", STYLE_HYPERLINK));
 }
 
 void ShellMemoSyntaxHighlighter::highlightBlock(const QString &text)
@@ -58,7 +68,19 @@ void ShellMemoSyntaxHighlighter::highlightBlock(const QString &text)
         {
             int pos = currRule.pattern.pos(currRule.nth);
             int length = currRule.pattern.cap(currRule.nth).length();
-            setFormat(pos, length, styles->value(currRule.styleId));
+
+            // TODO font style is applied correctly but for some reasons
+            // highlighter can't make anchors and apply tooltip too
+            /*if (currRule.styleId == STYLE_HYPERLINK)
+            {
+                QStringRef href(&text, pos, length);
+                auto format = styles->value(currRule.styleId);
+                format.setAnchorHref(href.toString());
+                format.setToolTip(href + tr("\nCtrl + Click to open"));
+                setFormat(pos, length, format);
+            }
+            else*/
+                setFormat(pos, length, styles->value(currRule.styleId));
             idx = currRule.pattern.indexIn(text, pos + length);
         }
     }

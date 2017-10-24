@@ -14,6 +14,7 @@ protected:
     void highlightBlock(const QString &text);
 
 private:
+    HighlightingStyleSet* styles;
     QList<HighlightingRule> rules;
 };
 

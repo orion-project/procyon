@@ -57,6 +57,8 @@ HighlightingStyleSet* getPythonHighlightingStyles()
 
 PythonSyntaxHighlighter::PythonSyntaxHighlighter(QTextDocument *parent) : QSyntaxHighlighter(parent)
 {
+    // TODO there are lot of static data but it is initialized for each highlighter instance
+
     keywords = QStringList() << "and" << "assert" << "break" << "class" << "continue" << "def" <<
         "del" << "elif" << "else" << "except" << "exec" << "finally" <<
         "for" << "from" << "global" << "if" << "import" << "in" <<
@@ -82,40 +84,37 @@ PythonSyntaxHighlighter::PythonSyntaxHighlighter(QTextDocument *parent) : QSynta
     triDoubleQuote.setPattern("\"\"\"");
 
     foreach (QString currKeyword, keywords)
-        rules.append(HighlightingRule(QString("\\b%1\\b").arg(currKeyword), 0, styles->value(STYLE_KEYWORD)));
+        rules.append(HighlightingRule(QString("\\b%1\\b").arg(currKeyword), STYLE_KEYWORD));
     foreach (QString currOperator, operators)
-        rules.append(HighlightingRule(QString("%1").arg(currOperator), 0, styles->value(STYLE_OPERATOR)));
+        rules.append(HighlightingRule(QString("%1").arg(currOperator), STYLE_OPERATOR));
     foreach (QString currBrace, braces)
-        rules.append(HighlightingRule(QString("%1").arg(currBrace), 0, styles->value(STYLE_BRACE)));
+        rules.append(HighlightingRule(QString("%1").arg(currBrace), STYLE_BRACE));
 
     // 'self'
-    rules.append(HighlightingRule("\\bself\\b", 0, styles->value(STYLE_SELF)));
+    rules.append(HighlightingRule("\\bself\\b", STYLE_SELF));
 
     // Double-quoted string, possibly containing escape sequences
     // FF: originally in python : r'"[^"\\]*(\\.[^"\\]*)*"'
-    rules.append(HighlightingRule("\"[^\"\\\\]*(\\\\.[^\"\\\\]*)*\"", 0, styles->value(STYLE_STRING)));
+    rules.append(HighlightingRule("\"[^\"\\\\]*(\\\\.[^\"\\\\]*)*\"", STYLE_STRING));
     // Single-quoted string, possibly containing escape sequences
     // FF: originally in python : r"'[^'\\]*(\\.[^'\\]*)*'"
-    rules.append(HighlightingRule("'[^'\\\\]*(\\\\.[^'\\\\]*)*'", 0, styles->value(STYLE_STRING)));
+    rules.append(HighlightingRule("'[^'\\\\]*(\\\\.[^'\\\\]*)*'", STYLE_STRING));
 
     // 'def' followed by an identifier
     // FF: originally: r'\bdef\b\s*(\w+)'
-    rules.append(HighlightingRule("\\bdef\\b\\s*(\\w+)", 1, styles->value(STYLE_DEFCLASS)));
+    rules.append(HighlightingRule("\\bdef\\b\\s*(\\w+)", STYLE_DEFCLASS, 1));
     // 'class' followed by an identifier
     // FF: originally: r'\bclass\b\s*(\w+)'
-    rules.append(HighlightingRule("\\bclass\\b\\s*(\\w+)", 1, styles->value(STYLE_DEFCLASS)));
+    rules.append(HighlightingRule("\\bclass\\b\\s*(\\w+)", STYLE_DEFCLASS, 1));
 
     // From '#' until a newline
     // FF: originally: r'#[^\\n]*'
-    rules.append(HighlightingRule("#[^\\n]*", 0, styles->value(STYLE_COMMENT)));
+    rules.append(HighlightingRule("#[^\\n]*", STYLE_COMMENT));
 
     // Numeric literals
-    rules.append(HighlightingRule("\\b[+-]?[0-9]+[lL]?\\b",
-        0, styles->value(STYLE_NUMBER))); // r'\b[+-]?[0-9]+[lL]?\b'
-    rules.append(HighlightingRule("\\b[+-]?0[xX][0-9A-Fa-f]+[lL]?\\b",
-        0, styles->value(STYLE_NUMBER))); // r'\b[+-]?0[xX][0-9A-Fa-f]+[lL]?\b'
-    rules.append(HighlightingRule("\\b[+-]?[0-9]+(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\\b",
-        0, styles->value(STYLE_NUMBER))); // r'\b[+-]?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\b'
+    rules.append(HighlightingRule("\\b[+-]?[0-9]+[lL]?\\b", STYLE_NUMBER)); // r'\b[+-]?[0-9]+[lL]?\b'
+    rules.append(HighlightingRule("\\b[+-]?0[xX][0-9A-Fa-f]+[lL]?\\b", STYLE_NUMBER)); // r'\b[+-]?0[xX][0-9A-Fa-f]+[lL]?\b'
+    rules.append(HighlightingRule("\\b[+-]?[0-9]+(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\\b", STYLE_NUMBER)); // r'\b[+-]?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\b'
 }
 
 void PythonSyntaxHighlighter::highlightBlock(const QString &text)
@@ -128,7 +127,7 @@ void PythonSyntaxHighlighter::highlightBlock(const QString &text)
             // Get index of Nth match
             idx = currRule.pattern.pos(currRule.nth);
             int length = currRule.pattern.cap(currRule.nth).length();
-            setFormat(idx, length, currRule.format);
+            setFormat(idx, length, styles->value(currRule.styleId));
             idx = currRule.pattern.indexIn(text, idx + length);
         }
     }

@@ -36,17 +36,17 @@ HighlightingStyleSet* getShellmemoHighlightingStyles()
 
 ShellMemoSyntaxHighlighter::ShellMemoSyntaxHighlighter(QTextDocument *parent) : QSyntaxHighlighter(parent)
 {
-    auto styles = getShellmemoHighlightingStyles();
-    rules.append(HighlightingRule("^\\s*\\$\\s+.*$", 0, styles->value(STYLE_COMMAND)));
-    rules.append(HighlightingRule("^\\s*\\*\\s+.*$", 0, styles->value(STYLE_HEADER)));
-    rules.append(HighlightingRule("^\\s*\\-\\s+.*$", 0, styles->value(STYLE_SUBHEADER)));
-    rules.append(HighlightingRule("^\\s*\\+\\s+.*$", 0, styles->value(STYLE_SECTION)));
-    rules.append(HighlightingRule("^\\s*\\!\\s+.*$", 0, styles->value(STYLE_EXCLAME)));
-    rules.append(HighlightingRule("^\\s*\\?\\s+.*$", 0, styles->value(STYLE_QUESTION)));
-    rules.append(HighlightingRule("^\\s*\\>\\s+.*$", 0, styles->value(STYLE_OUTPUT)));
-    rules.append(HighlightingRule("^\\s*#.*$", 0, styles->value(STYLE_COMMENT)));
-    rules.append(HighlightingRule("^\\s*-{2}.*$", 0, styles->value(STYLE_OPTION)));
-    rules.append(HighlightingRule("^\\s*-{3,}.*$", 0, styles->value(STYLE_SEPARATOR)));
+    styles = getShellmemoHighlightingStyles();
+    rules.append(HighlightingRule("^\\s*\\$\\s+.*$", STYLE_COMMAND));
+    rules.append(HighlightingRule("^\\s*\\*\\s+.*$", STYLE_HEADER));
+    rules.append(HighlightingRule("^\\s*\\-\\s+.*$", STYLE_SUBHEADER));
+    rules.append(HighlightingRule("^\\s*\\+\\s+.*$", STYLE_SECTION));
+    rules.append(HighlightingRule("^\\s*\\!\\s+.*$", STYLE_EXCLAME));
+    rules.append(HighlightingRule("^\\s*\\?\\s+.*$", STYLE_QUESTION));
+    rules.append(HighlightingRule("^\\s*\\>\\s+.*$", STYLE_OUTPUT));
+    rules.append(HighlightingRule("^\\s*#.*$", STYLE_COMMENT));
+    rules.append(HighlightingRule("^\\s*-{2}.*$", STYLE_OPTION));
+    rules.append(HighlightingRule("^\\s*-{3,}.*$", STYLE_SEPARATOR));
 }
 
 void ShellMemoSyntaxHighlighter::highlightBlock(const QString &text)
@@ -58,7 +58,7 @@ void ShellMemoSyntaxHighlighter::highlightBlock(const QString &text)
         {
             int pos = currRule.pattern.pos(currRule.nth);
             int length = currRule.pattern.cap(currRule.nth).length();
-            setFormat(pos, length, currRule.format);
+            setFormat(pos, length, styles->value(currRule.styleId));
             idx = currRule.pattern.indexIn(text, pos + length);
         }
     }

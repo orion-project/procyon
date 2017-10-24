@@ -8,18 +8,19 @@
 class HighlightingRule
 {
 public:
-    HighlightingRule(const QString &patternStr, int n, const QTextCharFormat &matchingFormat)
+    HighlightingRule(const QString &patternStr, int styleId, int nth = 0)
     {
-        originalRuleStr = patternStr;
-        pattern = QRegExp(patternStr);
-        nth = n;
-        format = matchingFormat;
+        this->patternStr = patternStr;
+        this->pattern = QRegExp(patternStr);
+        this->styleId = styleId;
+        this->nth = nth;
     }
 
-    QString originalRuleStr;
+    int id;
+    QString patternStr;
     QRegExp pattern;
+    int styleId;
     int nth;
-    QTextCharFormat format;
 };
 
 inline const QTextCharFormat getTextCharFormat(const QString &colorName, const QString &style = QString())

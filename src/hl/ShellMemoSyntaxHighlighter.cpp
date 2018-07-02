@@ -11,6 +11,7 @@
 #define STYLE_QUESTION 6
 #define STYLE_OPTION 7
 #define STYLE_SUBHEADER 8
+#define STYLE_QUIET 9
 
 HighlightingStyleSet* getShellmemoHighlightingStyles()
 {
@@ -28,6 +29,7 @@ HighlightingStyleSet* getShellmemoHighlightingStyles()
         styles.insert(STYLE_EXCLAME, getTextCharFormat("red"));
         styles.insert(STYLE_QUESTION, getTextCharFormat("magenta"));
         styles.insert(STYLE_OPTION, getTextCharFormat("darkSlateBlue"));
+        styles.insert(STYLE_QUIET, getTextCharFormat("gainsboro"));
     }
     return &styles;
 }
@@ -41,6 +43,7 @@ ShellMemoSyntaxHighlighter::ShellMemoSyntaxHighlighter(QTextDocument *parent) : 
     rules.append(HighlightingRule("^\\s*\\!\\s+.*$", 0, styles->value(STYLE_EXCLAME)));
     rules.append(HighlightingRule("^\\s*\\?\\s+.*$", 0, styles->value(STYLE_QUESTION)));
     rules.append(HighlightingRule("^\\s*\\>\\s+.*$", 0, styles->value(STYLE_OUTPUT)));
+    rules.append(HighlightingRule("^\\s*\\..*$", 0, styles->value(STYLE_QUIET)));
     rules.append(HighlightingRule("^\\s*#.*$", 0, styles->value(STYLE_COMMENT)));
     rules.append(HighlightingRule("^\\s*-{2}.*$", 0, styles->value(STYLE_OPTION)));
     rules.append(HighlightingRule("^\\s*-{3,}.*$", 0, styles->value(STYLE_SEPARATOR)));

@@ -320,7 +320,7 @@ void SettingsManager::writeValue(const QString& id, const QVariant& value) const
         qWarning() << "Error while write setting" << id << res;
 }
 
-QVariant SettingsManager::readValue(const QString& id, const QVariant& defValue) const
+QVariant SettingsManager::readValue(const QString& id, const QVariant& defValue, bool *hasValue) const
 {
     SelectQuery query(table()->sqlSelectById(id));
     if (query.isFailed())
@@ -329,14 +329,21 @@ QVariant SettingsManager::readValue(const QString& id, const QVariant& defValue)
         return defValue;
     }
     if (!query.next())
+    {
+        if (hasValue)
+            *hasValue = false;
         return defValue;
+    }
+    if (hasValue)
+        *hasValue = true;
     return query.record().field(table()->value).value();
 }
 
 void SettingsManager::writeBool(const QString& id, bool value) const
 {
-    bool oldValue = readBool(id, false);
-    if (oldValue != value)
+    bool hasValue;
+    bool oldValue = readValue(id, QVariant(), &hasValue).toBool();
+    if (!hasValue || oldValue != value)
         writeValue(id, value);
 }
 
@@ -345,29 +352,54 @@ bool SettingsManager::readBool(const QString& id, bool defValue) const
     return readValue(id, defValue).toBool();
 }
 
-void SettingsManager::writeIntArray(const QString& id, const QVector<int>& values) const
+void SettingsManager::writeInt(const QString& id, int value) const
 {
-    bool doSave = false;
-    auto oldValues = readIntArray(id);
-    for (int value: oldValues)
-        if (!values.contains(value))
-        {
-            doSave = true;
-            break;
-        }
-    if (!doSave)
-        for (int value: values)
-            if (!oldValues.contains(value))
+    bool hasValue;
+    int oldValue = readValue(id, QVariant(), &hasValue).toInt();
+    if (!hasValue || oldValue != value)
+        writeValue(id, value);
+}
+
+int SettingsManager::readInt(const QString& id, int defValue) const
+{
+    return readValue(id, defValue).toInt();
+}
+
+void SettingsManager::writeIntArray(const QString& id, const QVector<int>& values, TrackChangesFlag trackChangesFlag) const
+{
+    if (trackChangesFlag == IgnoreValuesOrder)
+    {
+        bool doSave = false;
+        auto oldValues = readIntArray(id);
+        for (int value: oldValues)
+            if (!values.contains(value))
             {
                 doSave = true;
                 break;
             }
-    if (!doSave) return;
+        if (!doSave)
+            for (int value: values)
+                if (!oldValues.contains(value))
+                {
+                    doSave = true;
+                    break;
+                }
+        if (!doSave) return;
+    }
 
+    QString valueStr;
     QStringList strs;
     for (int value: values)
         strs << QString::number(value);
-    writeValue(id, strs.join(';'));
+    valueStr = strs.join(';');
+
+    if (trackChangesFlag == RespectValuesOrder)
+    {
+        auto oldValueStr = readValue(id).toString();
+        if (oldValueStr == valueStr) return;
+    }
+
+    writeValue(id, valueStr);
 }
 
 QVector<int> SettingsManager::readIntArray(const QString& id) const

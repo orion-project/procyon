@@ -238,3 +238,45 @@ void CatalogWidget::memoUpdated(MemoItem* item)
     if (index.isValid())
         _catalogModel->itemRenamed(index);
 }
+
+QStringList CatalogWidget::getExpandedIds() const
+{
+    QStringList ids;
+    fillExpandedIds(ids, QModelIndex());
+    return ids;
+}
+
+void CatalogWidget::setExpandedIds(const QStringList& ids)
+{
+    setExpandedIds(ids, QModelIndex());
+}
+
+void CatalogWidget::fillExpandedIds(QStringList& ids, const QModelIndex& parentIndex) const
+{
+    int rowCount = _catalogModel->rowCount(parentIndex);
+    for (int row = 0; row < rowCount; row++)
+    {
+        auto index = _catalogModel->index(row, 0, parentIndex);
+        if (_catalogView->isExpanded(index))
+        {
+            auto data = _catalogModel->data(index, Qt::UserRole);
+            if (data.isNull()) continue;
+            ids << QString::number(data.toInt());
+        }
+        fillExpandedIds(ids, index);
+    }
+}
+
+void CatalogWidget::setExpandedIds(const QStringList& ids, const QModelIndex& parentIndex)
+{
+    int rowCount = _catalogModel->rowCount(parentIndex);
+    for (int row = 0; row < rowCount; row++)
+    {
+        auto index = _catalogModel->index(row, 0, parentIndex);
+        auto data = _catalogModel->data(index, Qt::UserRole);
+        if (data.isNull()) continue;
+        if (ids.contains(QString::number(data.toInt())))
+            _catalogView->expand(index);
+        setExpandedIds(ids, index);
+    }
+}

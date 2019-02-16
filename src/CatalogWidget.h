@@ -40,6 +40,9 @@ public:
     void deleteMemo();
     void createTopLevelFolder();
 
+    QStringList getExpandedIds() const;
+    void setExpandedIds(const QStringList& ids);
+
 signals:
     void contextMenuAboutToShow();
 
@@ -58,6 +61,9 @@ private:
 
     void memoUpdated(MemoItem*);
     void createFolderInternal(const CatalogSelection& parentFolder);
+
+    void fillExpandedIds(QStringList& ids, const QModelIndex& parentIndex) const;
+    void setExpandedIds(const QStringList& ids, const QModelIndex& parentIndex);
 };
 
 #endif // CATALOGWIDGET_H

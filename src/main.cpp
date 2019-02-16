@@ -1,15 +1,14 @@
 #include "MainWindow.h"
-#include "tools/OriDebug.h"
 
 #include <QApplication>
+#include <QStyleFactory>
 
 int main(int argc, char *argv[])
 {
-    //Ori::Debug::installMessageHandler();
-
     QApplication app(argc, argv);
     app.setApplicationName("Procyon");
     app.setOrganizationName("orion-project.org");
+    app.setStyle(QStyleFactory::create("Fusion"));
 
     MainWindow w;
     w.show();

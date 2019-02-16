@@ -28,7 +28,7 @@ class PlainTextMemoType : public MemoType
 public:
     const char* name() const { return QT_TRANSLATE_NOOP("MemoType", "Plain Text"); }
     const QIcon& icon() const { static QIcon icon(iconPath()); return icon; }
-    const QString iconPath() const { return QStringLiteral("qrc:/icon/memo_plain_text"); }
+    const QString iconPath() const { return QStringLiteral(":/icon/memo_plain_text"); }
     Memo* makeMemo();
 };
 
@@ -37,7 +37,7 @@ class WikiTextMemoType : public MemoType
 public:
     const char* name() const { return QT_TRANSLATE_NOOP("MemoType", "Wiki Text"); }
     const QIcon& icon() const { static QIcon icon(iconPath()); return icon; }
-    const QString iconPath() const { return QStringLiteral("qrc:/icon/memo_wiki_text"); }
+    const QString iconPath() const { return QStringLiteral(":/icon/memo_wiki_text"); }
     Memo* makeMemo();
 };
 
@@ -46,7 +46,7 @@ class RichTextMemoType : public MemoType
 public:
     const char* name() const { return QT_TRANSLATE_NOOP("MemoType", "Rich Text"); }
     const QIcon& icon() const { static QIcon icon(iconPath()); return icon; }
-    const QString iconPath() const { return QStringLiteral("qrc:/icon/memo_rich_text"); }
+    const QString iconPath() const { return QStringLiteral(":/icon/memo_rich_text"); }
     Memo* makeMemo();
 };
 

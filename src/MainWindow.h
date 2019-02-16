@@ -1,14 +1,13 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef MAIN_WINDOW_H
+#define MAIN_WINDOW_H
 
 #include <QMainWindow>
-#include <QMdiSubWindow>
 
 QT_BEGIN_NAMESPACE
 class QAction;
-class QDockWidget;
 class QLabel;
-class QMdiArea;
+class QListWidget;
+class QStackedWidget;
 QT_END_NAMESPACE
 
 class Catalog;
@@ -16,10 +15,10 @@ class CatalogWidget;
 class InfoWidget;
 class MemoWindow;
 class MemoItem;
-class WindowsWidget;
 
 namespace Ori {
 class MruFileList;
+class Settings;
 }
 
 
@@ -31,14 +30,14 @@ struct MemoSettings
 };
 
 
-class MemoMdiSubWindow : public QMdiSubWindow
-{
-    Q_OBJECT
-signals:
-    bool windowClosing();
-protected:
-    void closeEvent(QCloseEvent *event) override;
-};
+//class MemoMdiSubWindow : public QMdiSubWindow
+//{
+//    Q_OBJECT
+//signals:
+//    bool windowClosing();
+//protected:
+//    void closeEvent(QCloseEvent *event) override;
+//};
 
 
 class MainWindow : public QMainWindow
@@ -47,7 +46,7 @@ class MainWindow : public QMainWindow
 
 public:
     MainWindow();
-    ~MainWindow();
+    ~MainWindow() override;
 
 protected:
     void closeEvent(QCloseEvent *event) override;
@@ -56,24 +55,23 @@ private:
     Catalog* _catalog = nullptr;
     CatalogWidget* _catalogView;
     InfoWidget* _infoView;
-    WindowsWidget* _windowsView;
-    QMdiArea* _mdiArea;
     Ori::MruFileList *_mruList;
-    QDockWidget *_dockCatalog, *_dockInfo, *_dockWindows;
     QLabel *_statusMemoCount, *_statusFileName;
     QAction *_actionCreateTopLevelFolder, *_actionCreateFolder, *_actionRenameFolder, *_actionDeleteFolder;
     QAction *_actionOpenMemo, *_actionCreateMemo, *_actionDeleteMemo;
     MemoSettings _memoSettings;
+    QStackedWidget* _memoPages;
+    QListWidget* _openedMemosList;
     bool _prevWindowWasMaximized = false;
 
     void createMenu();
-    void createToolBars();
-    void createDocks();
     void createStatusBar();
     void saveSettings();
     void loadSettings();
     void loadSession();
+    void loadSession(Ori::Settings* settings);
     void saveSession();
+    void saveSession(Ori::Settings* settings);
     void closeCurrentFile();
     void newCatalog();
     void openCatalog(const QString &fileName);
@@ -90,13 +88,14 @@ private:
     void toggleWordWrap();
     bool memoWindowAboutToClose();
     void memoWindowAboutToActivate();
+    void closeAllMemos();
 
     void openWindowForItem(MemoItem* item);
-    QMdiSubWindow* findMemoMdiChild(MemoItem* item) const;
-    MemoWindow* memoWindowOfMdiChild(QMdiSubWindow* subWindow) const;
+    QWidget* findMemoPage(MemoItem* item) const;
+//    MemoWindow* memoWindowOfMdiChild(QMdiSubWindow* subWindow) const;
     MemoWindow* activeMemoWindow() const;
     QAction* addViewPanelAction(QMenu* m, const QString& title, QDockWidget* panel);
     bool canClose(MemoWindow* memoWindow);
 };
 
-#endif // MAINWINDOW_H
+#endif // MAIN_WINDOW_H

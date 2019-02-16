@@ -8,7 +8,7 @@ class ShellMemoSyntaxHighlighter : public QSyntaxHighlighter
     Q_OBJECT
 
 public:
-    ShellMemoSyntaxHighlighter(QTextDocument *parent = 0);
+    ShellMemoSyntaxHighlighter(QTextDocument *parent = nullptr);
 
 protected:
     void highlightBlock(const QString &text);

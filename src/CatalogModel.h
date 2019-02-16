@@ -5,7 +5,7 @@
 #include <QDebug>
 #include <QIcon>
 
-#include "Catalog.h"
+#include "catalog/Catalog.h"
 
 class CatalogModel : public QAbstractItemModel
 {

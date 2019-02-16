@@ -197,7 +197,9 @@ QString MemoManager::create(MemoItem* item) const
     if (!item->memo() || !item->type())
         return "Bad method usage: poorly defined memo: no content or type is defined";
 
-    item->memo()->_id = queryId.record().value(0).toInt() + 1;
+    int newId = queryId.record().value(0).toInt() + 1;
+    item->_id = newId;
+    item->memo()->_id = newId;
 
     auto res = ActionQuery(table()->sqlInsert)
             .param(table()->parent, item->parent() ? item->parent()->asFolder()->id() : 0)
@@ -248,7 +250,7 @@ MemosResult MemoManager::selectAll() const
         int parentId = r.value(table()->parent).toInt();
         if (!result.items.contains(parentId))
             result.items.insert(parentId, QList<MemoItem*>());
-        ((QList<MemoItem*>&)result.items[parentId]).append(item);
+        static_cast<QList<MemoItem*>&>(result.items[parentId]).append(item);
         result.allMemos.insert(id, item);
     }
 

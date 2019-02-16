@@ -16,8 +16,10 @@ class Memo;
 class MemoType
 {
 public:
+    virtual ~MemoType();
     virtual const char* name() const = 0;
     virtual const QIcon& icon() const = 0;
+    virtual const QString iconPath() const = 0;
     virtual Memo* makeMemo() = 0;
 };
 
@@ -25,7 +27,8 @@ class PlainTextMemoType : public MemoType
 {
 public:
     const char* name() const { return QT_TRANSLATE_NOOP("MemoType", "Plain Text"); }
-    const QIcon& icon() const { static QIcon icon(":/icon/memo_plain_text"); return icon; }
+    const QIcon& icon() const { static QIcon icon(iconPath()); return icon; }
+    const QString iconPath() const { return QStringLiteral("qrc:/icon/memo_plain_text"); }
     Memo* makeMemo();
 };
 
@@ -33,7 +36,8 @@ class WikiTextMemoType : public MemoType
 {
 public:
     const char* name() const { return QT_TRANSLATE_NOOP("MemoType", "Wiki Text"); }
-    const QIcon& icon() const { static QIcon icon(":/icon/memo_wiki_text"); return icon; }
+    const QIcon& icon() const { static QIcon icon(iconPath()); return icon; }
+    const QString iconPath() const { return QStringLiteral("qrc:/icon/memo_wiki_text"); }
     Memo* makeMemo();
 };
 
@@ -41,7 +45,8 @@ class RichTextMemoType : public MemoType
 {
 public:
     const char* name() const { return QT_TRANSLATE_NOOP("MemoType", "Rich Text"); }
-    const QIcon& icon() const { static QIcon icon(":/icon/memo_rich_text"); return icon; }
+    const QIcon& icon() const { static QIcon icon(iconPath()); return icon; }
+    const QString iconPath() const { return QStringLiteral("qrc:/icon/memo_rich_text"); }
     Memo* makeMemo();
 };
 
@@ -79,20 +84,18 @@ private:
     TResult _result;
 };
 
-typedef OperationResult<Catalog*> CatalorResult;
-typedef OperationResult<int> IntResult;
-
 //------------------------------------------------------------------------------
 
 class CatalogItem
 {
 public:
-    virtual ~CatalogItem() {}
+    virtual ~CatalogItem();
 
     int id() const { return _id; }
     const QString& title() const { return _title; }
     const QString& info() const { return _info; }
     CatalogItem* parent() const { return _parent; }
+    const QString path() const;
 
     bool isFolder() const;
     bool isMemo() const;
@@ -114,7 +117,7 @@ private:
 class FolderItem : public CatalogItem
 {
 public:
-    ~FolderItem() { qDeleteAll(_children); }
+    ~FolderItem();
 
     const QList<CatalogItem*>& children() const { return _children; }
 
@@ -145,6 +148,13 @@ private:
 
 //------------------------------------------------------------------------------
 
+typedef OperationResult<int> IntResult;
+typedef OperationResult<MemoItem*> MemoResult;
+typedef OperationResult<FolderItem*> FolderResult;
+typedef OperationResult<Catalog*> CatalorResult;
+
+//------------------------------------------------------------------------------
+
 class Catalog : public QObject
 {
     Q_OBJECT
@@ -160,17 +170,21 @@ public:
 
     const QString& fileName() const { return _fileName; }
     const QList<CatalogItem*>& items() const { return _items; }
-    CatalogItem* findById(int id) const;
+    MemoItem* findMemoById(int id) const;
+    FolderItem* findFolderById(int id) const;
 
     IntResult countMemos() const;
 
     QString renameFolder(FolderItem* item, const QString& title);
-    QString createFolder(FolderItem* parent, const QString& title);
+    FolderResult createFolder(FolderItem* parent, const QString& title);
     QString removeFolder(FolderItem* item);
-    QString createMemo(FolderItem* parent, Memo *memo);
+    MemoResult createMemo(FolderItem* parent, Memo *memo);
     QString updateMemo(MemoItem* item, Memo* memo);
     QString removeMemo(MemoItem* item);
     QString loadMemo(MemoItem* item);
+
+    void fillSubitemsFlat(FolderItem* root, QVector<CatalogItem*> &subitems);
+    void fillMemoIdsFlat(FolderItem* root, QVector<int> &ids);
 
 signals:
     void memoCreated(MemoItem*);
@@ -181,6 +195,7 @@ private:
     QString _fileName;
     QList<CatalogItem*> _items;
     QMap<int, MemoItem*> _allMemos;
+    QMap<int, FolderItem*> _allFolders;
 };
 
 #endif // CATALOG_H

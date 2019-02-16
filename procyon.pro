@@ -4,9 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui sql
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT += core gui widgets sql
 
 TARGET = procyon
 TEMPLATE = app
@@ -21,41 +19,37 @@ include($$ORION"orion.pri")
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
 
-# You can also make your code fail to compile if you use deprecated APIs.
-# In order to do so, uncomment the following line.
-# You can also select to disable deprecated APIs only up to a certain version of Qt.
-#DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
-
 RESOURCES += images.qrc
-RC_ICONS = ./img/icon/main.ico
+
+win32: RC_FILE = src/app.rc
 
 SOURCES += src/main.cpp\
-        src/MainWindow.cpp \
+    src/MainWindow.cpp \
     src/CatalogWidget.cpp \
     src/InfoWidget.cpp \
-    src/Catalog.cpp \
-    src/CatalogStore.cpp \
-    src/SqlHelper.cpp \
-    src/Memo.cpp \
     src/MemoWindow.cpp \
     src/MemoTypeSelector.cpp \
-    src/hl/PythonSyntaxHighlighter.cpp \
-    src/hl/ShellMemoSyntaxHighlighter.cpp \
-    src/hl/HighlightingRule.cpp \
+    src/catalog/Catalog.cpp \
+    src/catalog/CatalogStore.cpp \
+    src/catalog/SqlHelper.cpp \
+    src/catalog/Memo.cpp \
+    src/highlighter/HighlightingRule.cpp \
+    src/highlighter/PythonSyntaxHighlighter.cpp \
+    src/highlighter/ShellMemoSyntaxHighlighter.cpp \
     src/WindowsWidget.cpp
 
 HEADERS  += src/MainWindow.h \
     src/CatalogWidget.h \
     src/InfoWidget.h \
-    src/Catalog.h \
     src/CatalogModel.h \
-    src/CatalogStore.h \
-    src/SqlHelper.h \
     src/Appearance.h \
-    src/Memo.h \
     src/MemoWindow.h \
     src/MemoTypeSelector.h \
-    src/hl/PythonSyntaxHighlighter.h \
-    src/hl/HighlightingRule.h \
-    src/hl/ShellMemoSyntaxHighlighter.h \
+    src/catalog/Catalog.h \
+    src/catalog/CatalogStore.h \
+    src/catalog/SqlHelper.h \
+    src/catalog/Memo.h \
+    src/highlighter/HighlightingRule.h \
+    src/highlighter/PythonSyntaxHighlighter.h \
+    src/highlighter/ShellMemoSyntaxHighlighter.h \
     src/WindowsWidget.h

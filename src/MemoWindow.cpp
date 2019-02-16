@@ -1,9 +1,9 @@
 #include "Appearance.h"
-#include "Catalog.h"
-#include "Memo.h"
 #include "MemoWindow.h"
-#include "hl/PythonSyntaxHighlighter.h"
-#include "hl/ShellMemoSyntaxHighlighter.h"
+#include "catalog/Catalog.h"
+#include "catalog/Memo.h"
+#include "highlighter/PythonSyntaxHighlighter.h"
+#include "highlighter/ShellMemoSyntaxHighlighter.h"
 #include "helpers/OriDialogs.h"
 #include "helpers/OriLayouts.h"
 #include "helpers/OriWidgets.h"
@@ -19,35 +19,35 @@
 
 using namespace Ori::Layouts;
 
-class MemoEditor : public QTextEdit
+//------------------------------------------------------------------------------
+//                               MemoEditor
+//------------------------------------------------------------------------------
+
+bool MemoEditor::shouldProcess(QMouseEvent *e)
 {
-protected:
-    bool shouldProcess(QMouseEvent *e)
-    {
-        return e->modifiers() & Qt::ControlModifier && e->button() & Qt::LeftButton;
-    }
+    return e->modifiers() & Qt::ControlModifier && e->button() & Qt::LeftButton;
+}
 
-    void mousePressEvent(QMouseEvent *e)
-    {
-        QString href = anchorAt(e->pos());
-        if (!href.isEmpty() && shouldProcess(e))
-            _clickedAnchor = href;
-        else QTextEdit::mousePressEvent(e);
-    }
+void MemoEditor::mousePressEvent(QMouseEvent *e)
+{
+    QString href = anchorAt(e->pos());
+    if (!href.isEmpty() && shouldProcess(e))
+        _clickedAnchor = href;
+    else QTextEdit::mousePressEvent(e);
+}
 
-    void mouseReleaseEvent(QMouseEvent *e)
+void MemoEditor::mouseReleaseEvent(QMouseEvent *e)
+{
+    if (!_clickedAnchor.isEmpty() && shouldProcess(e))
     {
-        if (!_clickedAnchor.isEmpty() && shouldProcess(e))
-        {
-            QDesktopServices::openUrl(_clickedAnchor);
-            _clickedAnchor.clear();
-        }
-        else QTextEdit::mouseReleaseEvent(e);
+        QDesktopServices::openUrl(_clickedAnchor);
+        _clickedAnchor.clear();
     }
-private:
-    QString _clickedAnchor;
-};
+    else QTextEdit::mouseReleaseEvent(e);
+}
 
+//------------------------------------------------------------------------------
+//                               MemoWindow
 //------------------------------------------------------------------------------
 
 MemoWindow::MemoWindow(Catalog *catalog, MemoItem *memoItem) : QWidget(),

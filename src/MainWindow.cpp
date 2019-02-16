@@ -1,10 +1,10 @@
 #include "MainWindow.h"
-#include "Catalog.h"
-#include "CatalogStore.h"
 #include "CatalogWidget.h"
 #include "InfoWidget.h"
 #include "MemoWindow.h"
 #include "WindowsWidget.h"
+#include "catalog/Catalog.h"
+#include "catalog/CatalogStore.h"
 #include "helpers/OriDialogs.h"
 #include "helpers/OriLayouts.h"
 #include "helpers/OriWindows.h"
@@ -202,12 +202,12 @@ void MainWindow::loadSession()
     QMdiSubWindow *activeWindow = nullptr;
     for (int id: ids)
     {
-        CatalogItem* item = _catalog->findById(id);
-        if (item && item->isMemo())
+        MemoItem* memo = _catalog->findMemoById(id);
+        if (memo)
         {
-            openWindowForItem(item->asMemo());
-            if (item->id() == activeId)
-                activeWindow = findMemoMdiChild(item->asMemo());
+            openWindowForItem(memo);
+            if (memo->id() == activeId)
+                activeWindow = findMemoMdiChild(memo);
         }
     }
     if (!activeWindow)

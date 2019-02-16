@@ -1,17 +1,27 @@
 #ifndef MEMOWINDOW_H
 #define MEMOWINDOW_H
 
-#include <QWidget>
+#include <QTextEdit>
 
 QT_BEGIN_NAMESPACE
 class QAction;
 class QLineEdit;
-class QTextEdit;
 class QSyntaxHighlighter;
 QT_END_NAMESPACE
 
 class Catalog;
 class MemoItem;
+
+class MemoEditor : public QTextEdit
+{
+protected:
+    void mousePressEvent(QMouseEvent *e);
+    void mouseReleaseEvent(QMouseEvent *e);
+private:
+    QString _clickedAnchor;
+    bool shouldProcess(QMouseEvent *e);
+};
+
 
 class MemoWindow : public QWidget
 {

@@ -4,17 +4,45 @@
 
 #include <QDebug>
 
+MemoType::~MemoType() {}
+
 Memo* PlainTextMemoType::makeMemo() { return new PlainTextMemo(this); }
 Memo* WikiTextMemoType::makeMemo() { return new WikiTextMemo(this); }
 Memo* RichTextMemoType::makeMemo() { return new RichTextMemo(this); }
 
 //------------------------------------------------------------------------------
+//                                CatalogItem
+//------------------------------------------------------------------------------
 
+CatalogItem::~CatalogItem() {}
 bool CatalogItem::isFolder() const { return dynamic_cast<const FolderItem*>(this); }
 bool CatalogItem::isMemo() const { return dynamic_cast<const MemoItem*>(this); }
 FolderItem* CatalogItem::asFolder() { return dynamic_cast<FolderItem*>(this); }
 MemoItem* CatalogItem::asMemo() { return dynamic_cast<MemoItem*>(this); }
 
+const QString CatalogItem::path() const
+{
+    QStringList path;
+    auto p = _parent;
+    while (p)
+    {
+        path.insert(0, p->title());
+        p = p->parent();
+    }
+    return path.join('/');
+}
+
+//------------------------------------------------------------------------------
+//                                  FolderItem
+//------------------------------------------------------------------------------
+
+FolderItem::~FolderItem()
+{
+    qDeleteAll(_children);
+}
+
+//------------------------------------------------------------------------------
+//                                   MemoItem
 //------------------------------------------------------------------------------
 
 MemoItem::~MemoItem()
@@ -22,6 +50,8 @@ MemoItem::~MemoItem()
     if (_memo) delete _memo;
 }
 
+//------------------------------------------------------------------------------
+//                                   Catalog
 //------------------------------------------------------------------------------
 
 QString Catalog::fileFilter()
@@ -51,8 +81,12 @@ CatalorResult Catalog::open(const QString& fileName)
     }
 
     for (FolderItem* item: folders.items.values())
+    {
+        catalog->_allFolders[item->id()] = item;
+
         if (!item->parent())
             catalog->_items.append(item);
+    }
 
     MemosResult memos = CatalogStore::memoManager()->selectAll();
     if (!memos.error.isEmpty())
@@ -127,7 +161,7 @@ QString Catalog::renameFolder(FolderItem* item, const QString& title)
     return QString();
 }
 
-QString Catalog::createFolder(FolderItem* parent, const QString& title)
+FolderResult Catalog::createFolder(FolderItem* parent, const QString& title)
 {
     FolderItem* folder = new FolderItem;
     folder->_title = title;
@@ -137,25 +171,36 @@ QString Catalog::createFolder(FolderItem* parent, const QString& title)
     if (!res.isEmpty())
     {
         delete folder;
-        return res;
+        return FolderResult::fail(res);
     }
 
     (parent ? parent->_children : _items).append(folder);
+    _allFolders.insert(folder->id(), folder);
     // TODO sort items after inserting
-    return QString();
+
+    return FolderResult::ok(folder);
 }
 
 QString Catalog::removeFolder(FolderItem* item)
 {
+    QVector<CatalogItem*> subitems;
+    fillSubitemsFlat(item, subitems);
+
     QString res = CatalogStore::folderManager()->remove(item);
     if (!res.isEmpty()) return res;
 
     (item->parent() ? item->parent()->asFolder()->_children : _items).removeOne(item);
+    for (auto subitem : subitems)
+        if (subitem->isFolder())
+            _allFolders.remove(subitem->id());
+        else _allMemos.remove(subitem->id());
+    _allFolders.remove(item->id());
+
     delete item;
     return QString();
 }
 
-QString Catalog::createMemo(FolderItem* parent, Memo *memo)
+MemoResult Catalog::createMemo(FolderItem* parent, Memo *memo)
 {
     auto item = new MemoItem;
     item->_memo = memo;
@@ -168,7 +213,7 @@ QString Catalog::createMemo(FolderItem* parent, Memo *memo)
     if (!res.isEmpty())
     {
         delete item;
-        return res;
+        return MemoResult::fail(res);
     }
 
     (parent ? parent->asFolder()->_children : _items).append(item);
@@ -177,7 +222,7 @@ QString Catalog::createMemo(FolderItem* parent, Memo *memo)
 
     emit memoCreated(item);
 
-    return QString();
+    return MemoResult::ok(item);
 }
 
 QString Catalog::updateMemo(MemoItem* item, Memo *memo)
@@ -237,12 +282,54 @@ IntResult Catalog::countMemos() const
     return res.isEmpty() ? IntResult::ok(count) : IntResult::fail(res);
 }
 
-CatalogItem* Catalog::findById(int id) const
+namespace {
+
+template <typename TItem>
+TItem* findInContainerById(const QMap<int, TItem*>& container, int id)
 {
-    if (!_allMemos.contains(id))
+    if (id <= 0)
     {
-        qCritical() << "Inconsistent state! _allMemos does not contain memo" << id;
+        qCritical() << "Invalid folder or memo id" << id;
         return nullptr;
     }
-    return _allMemos[id];
+    if (!container.contains(id))
+    {
+        qCritical() << "Inconsistent state! Catalog does not contain folder or memo" << id;
+        return nullptr;
+    }
+    return container[id];
 }
+
+} // namespace
+
+MemoItem* Catalog::findMemoById(int id) const
+{
+    return findInContainerById(_allMemos, id);
+}
+
+FolderItem* Catalog::findFolderById(int id) const
+{
+    return findInContainerById(_allFolders, id);
+}
+
+void Catalog::fillSubitemsFlat(FolderItem* root, QVector<CatalogItem*>& subitems)
+{
+    for (CatalogItem* item : root->children())
+    {
+        subitems.append(item);
+
+        if (item->isFolder())
+            fillSubitemsFlat(item->asFolder(), subitems);
+    }
+}
+
+void Catalog::fillMemoIdsFlat(FolderItem* root, QVector<int> &ids)
+{
+    for (CatalogItem* item : root->children())
+    {
+        if (item->isFolder())
+            fillMemoIdsFlat(item->asFolder(), ids);
+        else ids.append(item->id());
+    }
+}
+

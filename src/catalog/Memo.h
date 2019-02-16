@@ -2,18 +2,23 @@
 #define MEMO_H
 
 #include <QString>
-#include <QMap>
 
 class MemoType;
 
 class Memo
 {
 public:
-    virtual ~Memo() {}
+    virtual ~Memo();
 
     int id() const { return _id; }
+    void setId(int id) { _id = id; }
+
     const QString& title() const { return _title; }
+    void setTitle(const QString& title) { _title = title; }
+
     const QString& data() const { return _data; }
+    void setData(const QString& data) { _data = data; }
+
     MemoType* type() const { return _type; }
 
 protected:
@@ -29,13 +34,12 @@ private:
     friend class MemoWindow;
 };
 
-
 class PlainTextMemo : public Memo
 {
 public:
 
 private:
-    PlainTextMemo(MemoType* type) : Memo(type) {}
+    PlainTextMemo(MemoType* type);
     friend class PlainTextMemoType;
 };
 
@@ -45,7 +49,7 @@ class WikiTextMemo : public Memo
 public:
 
 private:
-    WikiTextMemo(MemoType* type) : Memo(type) {}
+    WikiTextMemo(MemoType* type);
     friend class WikiTextMemoType;
 };
 
@@ -55,7 +59,7 @@ class RichTextMemo : public Memo
 public:
 
 private:
-    RichTextMemo(MemoType* type) : Memo(type) {}
+    RichTextMemo(MemoType* type);
     friend class RichTextMemoType;
 };
 

@@ -1,5 +1,5 @@
 #include "MemoTypeSelector.h"
-#include "Catalog.h"
+#include "catalog/Catalog.h"
 
 MemoType* MemoTypeSelector::selectType()
 {

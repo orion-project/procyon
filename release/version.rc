@@ -1,0 +1,25 @@
+// Setting the Version Info
+1 VERSIONINFO
+PRODUCTVERSION 	0,1,0,0
+FILEVERSION    	0,1,0,0
+FILEOS         	0x4
+FILETYPE       	1
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName",      "orion-project.org\0"
+            VALUE "FileVersion",      "0.1.0.0\0"
+            VALUE "InternalName",     "procyon\0"
+            VALUE "LegalCopyright",   "Chunosov N.I. (c) 2018-2019\0"
+            VALUE "OriginalFilename", "procyon.exe\0"
+            VALUE "ProductName",      "procyon\0"
+            VALUE "ProductVersion",   "0.1.0.0\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252 /* English */
+    END
+END

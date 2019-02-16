@@ -82,6 +82,8 @@ private:
 class TableDef
 {
 public:
+    virtual ~TableDef();
+
     const QString& tableName() const { return _tableName; }
 
     virtual QString sqlCreate() const = 0;
@@ -120,7 +122,6 @@ protected:
 private:
     QString _tableName;
 };
-
 
 } // namespace Sql
 } // namespace Ori

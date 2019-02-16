@@ -43,7 +43,7 @@ void WindowsWidget::subWindowActivated(QMdiSubWindow* window)
 
 void WindowsWidget::subWindowDestroyed(QObject* obj)
 {
-    auto window = (QMdiSubWindow*)obj; // <- qobject_cast returns null here
+    auto window = reinterpret_cast<QMdiSubWindow*>(obj); // <- qobject_cast returns null here
     if (_windowsMap.contains(window))
     {
         auto item = _windowsMap[window];

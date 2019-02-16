@@ -35,7 +35,7 @@ class PythonSyntaxHighlighter : public QSyntaxHighlighter
     Q_OBJECT
 
 public:
-    PythonSyntaxHighlighter(QTextDocument *parent = 0);
+    PythonSyntaxHighlighter(QTextDocument *parent = nullptr);
 
 protected:
     void highlightBlock(const QString &text);

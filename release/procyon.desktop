@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=procyon
+Comment=Procyon Note Keeper
+GenericName=Personal note keeping application
+Exec=procyon
+Icon=procyon
+Categories=Office;
+Terminal=false

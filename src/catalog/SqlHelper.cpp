@@ -45,3 +45,12 @@ QString errorText(const QSqlError &error)
 }
 
 } // namespace SqlHelper
+
+namespace Ori {
+namespace Sql {
+
+TableDef::~TableDef()
+{}
+
+} // namespace Sql
+} // namespace Ori

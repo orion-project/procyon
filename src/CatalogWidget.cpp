@@ -1,7 +1,7 @@
-#include "Catalog.h"
 #include "CatalogWidget.h"
 #include "CatalogModel.h"
 #include "MemoTypeSelector.h"
+#include "catalog/Catalog.h"
 #include "helpers/OriLayouts.h"
 #include "helpers/OriDialogs.h"
 
@@ -156,7 +156,7 @@ void CatalogWidget::createFolderInternal(const CatalogSelection& parentFolder)
     if (title.isEmpty()) return;
 
     auto res = _catalog->createFolder(parentFolder.folder, title);
-    if (!res.isEmpty()) return Ori::Dlg::error(res);
+    if (!res.ok()) return Ori::Dlg::error(res.error());
 
     // TODO do not know about item inserted at the end and select by pointer
     auto newIndex = _catalogModel->itemAdded(parentFolder.index);
@@ -206,7 +206,7 @@ void CatalogWidget::createMemo()
 
     auto memo = memoType->makeMemo();
     auto res = _catalog->createMemo(parentFolder.folder, memo);
-    if (!res.isEmpty()) return Ori::Dlg::error(res);
+    if (!res.ok()) return Ori::Dlg::error(res.error());
 
     // TODO do not know about item inserted at the end and select by pointer
     auto newIndex = _catalogModel->itemAdded(parentFolder.index);

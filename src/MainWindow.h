@@ -8,6 +8,7 @@ class QAction;
 class QLabel;
 class QListWidget;
 class QStackedWidget;
+class QSplitter;
 QT_END_NAMESPACE
 
 class Catalog;
@@ -30,16 +31,6 @@ struct MemoSettings
 };
 
 
-//class MemoMdiSubWindow : public QMdiSubWindow
-//{
-//    Q_OBJECT
-//signals:
-//    bool windowClosing();
-//protected:
-//    void closeEvent(QCloseEvent *event) override;
-//};
-
-
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -52,6 +43,7 @@ protected:
     void closeEvent(QCloseEvent *event) override;
 
 private:
+    QSplitter* _splitter;
     Catalog* _catalog = nullptr;
     CatalogWidget* _catalogView;
     InfoWidget* _infoView;
@@ -92,7 +84,6 @@ private:
 
     void openWindowForItem(MemoItem* item);
     QWidget* findMemoPage(MemoItem* item) const;
-//    MemoWindow* memoWindowOfMdiChild(QMdiSubWindow* subWindow) const;
     MemoWindow* activeMemoWindow() const;
     QAction* addViewPanelAction(QMenu* m, const QString& title, QDockWidget* panel);
     bool canClose(MemoWindow* memoWindow);

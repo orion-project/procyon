@@ -1,6 +1,5 @@
 #include "CatalogWidget.h"
 #include "CatalogModel.h"
-#include "MemoTypeSelector.h"
 #include "catalog/Catalog.h"
 #include "helpers/OriLayouts.h"
 #include "helpers/OriDialogs.h"
@@ -31,7 +30,7 @@ struct CatalogSelection
 };
 
 
-CatalogWidget::CatalogWidget(QAction* openMemo) : QWidget(), _openMemo(openMemo)
+CatalogWidget::CatalogWidget() : QWidget()
 {
     _rootMenu = new QMenu(this);
     _rootMenu->addAction(tr("New Folder..."), this, &CatalogWidget::createFolder);
@@ -43,16 +42,18 @@ CatalogWidget::CatalogWidget(QAction* openMemo) : QWidget(), _openMemo(openMemo)
     _folderMenu->addAction(tr("New Subfolder..."), this, &CatalogWidget::createFolder);
     _folderMenu->addAction(tr("New Memo"), this, &CatalogWidget::createMemo);
     _folderMenu->addSeparator();
-    _folderMenu->addAction(tr("Rename Folder..."), this, &CatalogWidget::renameFolder);
-    _folderMenu->addAction(tr("Delete Folder"), this, &CatalogWidget::deleteFolder);
+    _folderMenu->addAction(tr("Rename..."), this, &CatalogWidget::renameFolder);
+    _folderMenu->addAction(tr("Delete"), this, &CatalogWidget::deleteFolder);
+
+    auto openMemo = new QAction(tr("Open"));
+    connect(openMemo, &QAction::triggered, this, &CatalogWidget::openSelectedMemo);
 
     _memoMenu = new QMenu(this);
     _memoMenuHeader = makeHeaderItem(_memoMenu);
     _memoMenu->addSeparator();
     _memoMenu->addAction(openMemo);
     _memoMenu->addSeparator();
-    _memoMenu->addAction(tr("Delete Memo"), this, &CatalogWidget::deleteMemo);
-    connect(_memoMenu, &QMenu::aboutToShow, [this](){ emit this->contextMenuAboutToShow(); });
+    _memoMenu->addAction(tr("Delete"), this, &CatalogWidget::deleteMemo);
 
     _catalogView = new QTreeView;
     _catalogView->setHeaderHidden(true);
@@ -122,12 +123,17 @@ void CatalogWidget::contextMenuRequested(const QPoint &pos)
     }
 }
 
-void CatalogWidget::doubleClicked(const QModelIndex&)
+void CatalogWidget::openSelectedMemo()
 {
     if (!_catalogModel) return;
 
     CatalogSelection selected(_catalogView);
-    if (selected.memo) _openMemo->trigger();
+    if (selected.memo) onOpenMemo(selected.memo);
+}
+
+void CatalogWidget::doubleClicked(const QModelIndex&)
+{
+    openSelectedMemo();
 }
 
 SelectedItems CatalogWidget::selection() const
@@ -201,8 +207,7 @@ void CatalogWidget::createMemo()
 {
     CatalogSelection parentFolder(_catalogView);
 
-    auto memoType = MemoTypeSelector::selectType();
-    if (!memoType) return;
+    auto memoType = plainTextMemoType();
 
     auto memo = memoType->makeMemo();
     auto res = _catalog->createMemo(parentFolder.folder, memo);

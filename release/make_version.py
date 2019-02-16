@@ -51,7 +51,9 @@ if __name__ == '__main__':
     if codename:
       version_str += '-' + codename
     print('Version: %s' % version_str)
-    
+
+    year = str(datetime.datetime.now().year)
+
     # Update version.txt
     print('Updating version.txt')
     set_file_text('release/version.txt', version_str)
@@ -69,7 +71,7 @@ if __name__ == '__main__':
     replace('APP_VER_MINOR', version_minor)
     replace('APP_VER_PATCH', version_patch)
     replace('APP_VER_CODENAME', codename)
-    replace('APP_VER_YEAR', str(datetime.datetime.now().year))
+    replace('APP_VER_YEAR', year)
     set_file_text(file_name, text)
     
     # Update version.rc
@@ -80,6 +82,7 @@ if __name__ == '__main__':
     text = text.replace('{v3}', version_patch)
     text = text.replace('{v4}', '0')
     text = text.replace('{codename}', codename)
+    text = text.replace('{year}', year)
     set_file_text('release/version.rc', text)
 
     print('OK')

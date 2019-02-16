@@ -9,6 +9,10 @@ using namespace Ori::Sql;
 
 // TODO check if strings from this file are put in language file
 
+namespace {
+
+//------------------------------------------------------------------------------
+//                                FolderTableDef
 //------------------------------------------------------------------------------
 
 class FolderTableDef : public TableDef
@@ -35,6 +39,8 @@ public:
     const QString sqlDelete = "DELETE FROM Folder WHERE Id = :Id";
 };
 
+//------------------------------------------------------------------------------
+//                               MemoTableDef
 //------------------------------------------------------------------------------
 
 class MemoTableDef : public TableDef
@@ -68,6 +74,8 @@ public:
 };
 
 //------------------------------------------------------------------------------
+//                              SettingsTableDef
+//------------------------------------------------------------------------------
 
 class SettingsTableDef : public TableDef
 {
@@ -86,22 +94,34 @@ public:
 };
 
 //------------------------------------------------------------------------------
+//                               Table getters
+//------------------------------------------------------------------------------
 
-FolderTableDef* FolderManager::table() const { static FolderTableDef t; return &t; }
+FolderTableDef* folderTable() { static FolderTableDef t; return &t; }
+MemoTableDef* memoTable() { static MemoTableDef t; return &t; }
+SettingsTableDef* settingsTable() { static SettingsTableDef t; return &t; }
+
+} // namespace
+
+//------------------------------------------------------------------------------
+//                                FolderManager
+//------------------------------------------------------------------------------
 
 QString FolderManager::create(FolderItem* folder) const
 {
-    SelectQuery queryId(table()->sqlSelectMaxId());
+    auto table = folderTable();
+
+    SelectQuery queryId(table->sqlSelectMaxId());
     if (queryId.isFailed() || !queryId.next())
         return qApp->tr("Unable to generate id for new folder.\n\n%1").arg(queryId.error());
 
     folder->_id = queryId.record().value(0).toInt() + 1;
 
-    auto res = ActionQuery(table()->sqlInsert)
-                .param(table()->id, folder->id())
-                .param(table()->parent, folder->parent() ? folder->parent()->asFolder()->id() : 0)
-                .param(table()->title, folder->title())
-                .param(table()->info, folder->info())
+    auto res = ActionQuery(table->sqlInsert)
+                .param(table->id, folder->id())
+                .param(table->parent, folder->parent() ? folder->parent()->asFolder()->id() : 0)
+                .param(table->title, folder->title())
+                .param(table->info, folder->info())
                 .exec();
     if (!res.isEmpty())
         return qApp->tr("Failed to create new folder.\n\n%1").arg(res);
@@ -113,7 +133,9 @@ FoldersResult FolderManager::selectAll() const
 {
     FoldersResult result;
 
-    SelectQuery query(table()->sqlSelectAll());
+    auto table = folderTable();
+
+    SelectQuery query(table->sqlSelectAll());
     if (query.isFailed())
     {
         result.error = qApp->tr("Unable to load folder list.\n\n%1").arg(query.error());
@@ -123,14 +145,14 @@ FoldersResult FolderManager::selectAll() const
     while (query.next())
     {
         auto r = query.record();
-        int id = r.value(table()->id).toInt();
+        int id = r.value(table->id).toInt();
         if (!result.items.contains(id))
             result.items.insert(id, new FolderItem);
         auto item = result.items[id];
         item->_id = id;
-        item->_title = r.value(table()->title).toString();
-        item->_info = r.value(table()->info).toString();
-        int parentId = r.value(table()->parent).toInt();
+        item->_title = r.value(table->title).toString();
+        item->_info = r.value(table->info).toString();
+        int parentId = r.value(table->parent).toInt();
         if (parentId > 0)
         {
             if (!result.items.contains(parentId))
@@ -146,9 +168,10 @@ FoldersResult FolderManager::selectAll() const
 
 QString FolderManager::rename(int folderId, const QString title) const
 {
-    return ActionQuery(table()->sqlRename)
-            .param(table()->id, folderId)
-            .param(table()->title, title)
+    auto table = folderTable();
+    return ActionQuery(table->sqlRename)
+            .param(table->id, folderId)
+            .param(table->title, title)
             .exec();
 }
 
@@ -167,6 +190,7 @@ QString FolderManager::remove(FolderItem *folder) const
 
 QString FolderManager::removeBranch(FolderItem* folder, const QString& path) const
 {
+    auto table = folderTable();
     QString thisPath = path + '/' + folder->title();
 
     for (auto item: folder->children())
@@ -176,8 +200,8 @@ QString FolderManager::removeBranch(FolderItem* folder, const QString& path) con
             if (!res.isEmpty()) return res;
         }
 
-    QString res = ActionQuery(table()->sqlDelete)
-            .param(table()->id, folder->id())
+    QString res = ActionQuery(table->sqlDelete)
+            .param(table->id, folder->id())
             .exec();
     if (!res.isEmpty())
         return qApp->tr("Failed to delete folder '%1'.\n\n%2").arg(thisPath).arg(res);
@@ -185,12 +209,14 @@ QString FolderManager::removeBranch(FolderItem* folder, const QString& path) con
 }
 
 //------------------------------------------------------------------------------
-
-MemoTableDef* MemoManager::table() const { static MemoTableDef t; return &t; }
+//                               MemoManager
+//------------------------------------------------------------------------------
 
 QString MemoManager::create(MemoItem* item) const
 {
-    SelectQuery queryId(table()->sqlSelectMaxId());
+    auto table = memoTable();
+
+    SelectQuery queryId(table->sqlSelectMaxId());
     if (queryId.isFailed() || !queryId.next())
         return qApp->tr("Unable to generate id for new memo.\n\n%1").arg(queryId.error());
 
@@ -201,13 +227,13 @@ QString MemoManager::create(MemoItem* item) const
     item->_id = newId;
     item->memo()->_id = newId;
 
-    auto res = ActionQuery(table()->sqlInsert)
-            .param(table()->parent, item->parent() ? item->parent()->asFolder()->id() : 0)
-            .param(table()->id, item->memo()->id())
-            .param(table()->title, item->memo()->title())
-            .param(table()->info, item->info())
-            .param(table()->type, item->memo()->type()->name())
-            .param(table()->data, item->memo()->data())
+    auto res = ActionQuery(table->sqlInsert)
+            .param(table->parent, item->parent() ? item->parent()->asFolder()->id() : 0)
+            .param(table->id, item->memo()->id())
+            .param(table->title, item->memo()->title())
+            .param(table->info, item->info())
+            .param(table->type, item->memo()->type()->name())
+            .param(table->data, item->memo()->data())
             .exec();
     if (!res.isEmpty())
         return qApp->tr("Failed to create new memo.\n\n%1").arg(res);
@@ -217,9 +243,11 @@ QString MemoManager::create(MemoItem* item) const
 
 MemosResult MemoManager::selectAll() const
 {
+    auto table = memoTable();
+
     MemosResult result;
 
-    SelectQuery query(table()->sqlSelectAll());
+    SelectQuery query(table->sqlSelectAll());
     if (query.isFailed())
     {
         result.error = qApp->tr("Unable to load memos.\n\n%1").arg(query.error());
@@ -230,9 +258,9 @@ MemosResult MemoManager::selectAll() const
     {
         auto r = query.record();
 
-        int id = r.value(table()->id).toInt();
-        QString title = r.value(table()->title).toString();
-        QString memoType = r.value(table()->type).toString();
+        int id = r.value(table->id).toInt();
+        QString title = r.value(table->title).toString();
+        QString memoType = r.value(table->type).toString();
         if (!memoTypes().contains(memoType))
         {
             result.warnings.append(qApp->tr("Skip memo #%1 '%2': "
@@ -244,10 +272,10 @@ MemosResult MemoManager::selectAll() const
         MemoItem *item = new MemoItem;
         item->_id = id;
         item->_title = title;
-        item->_info = r.value(table()->info).toString();
+        item->_info = r.value(table->info).toString();
         item->_type = memoTypes()[memoType];
 
-        int parentId = r.value(table()->parent).toInt();
+        int parentId = r.value(table->parent).toInt();
         if (!result.items.contains(parentId))
             result.items.insert(parentId, QList<MemoItem*>());
         static_cast<QList<MemoItem*>&>(result.items[parentId]).append(item);
@@ -259,7 +287,9 @@ MemosResult MemoManager::selectAll() const
 
 QString MemoManager::load(Memo* memo) const
 {
-    SelectQuery query(table()->sqlSelectById(memo->id()));
+    auto table = memoTable();
+
+    SelectQuery query(table->sqlSelectById(memo->id()));
     if (query.isFailed())
         return qApp->tr("Unable to load memo #%1.\n\n%2").arg(memo->id()).arg(query.error());
 
@@ -267,33 +297,36 @@ QString MemoManager::load(Memo* memo) const
         return qApp->tr("Memo #%1 does not exist.").arg(memo->id());
 
     QSqlRecord r = query.record();
-    memo->_title = r.value(table()->title).toString();
-    memo->_data = r.value(table()->data).toString();
+    memo->_title = r.value(table->title).toString();
+    memo->_data = r.value(table->data).toString();
     return QString();
 }
 
 QString MemoManager::update(Memo* memo, const QString &info) const
 {
-    return ActionQuery(table()->sqlUpdate)
-            .param(table()->id, memo->id())
-            .param(table()->title, memo->title())
-            .param(table()->info, info)
-            .param(table()->type, memo->type()->name())
-            .param(table()->data, memo->data())
+    auto table = memoTable();
+    return ActionQuery(table->sqlUpdate)
+            .param(table->id, memo->id())
+            .param(table->title, memo->title())
+            .param(table->info, info)
+            .param(table->type, memo->type()->name())
+            .param(table->data, memo->data())
             .exec();
 }
 
 QString MemoManager::remove(MemoItem* item) const
 {
-    return ActionQuery(table()->sqlDelete)
-            .param(table()->id, item->id())
+    auto table = memoTable();
+    return ActionQuery(table->sqlDelete)
+            .param(table->id, item->id())
             .exec();
     // TODO remove memo specific data
 }
 
 QString MemoManager::countAll(int *count) const
 {
-    SelectQuery query(table()->sqlCountAll());
+    auto table = memoTable();
+    SelectQuery query(table->sqlCountAll());
     if (query.isFailed()) return query.error();
 
     query.next();
@@ -302,21 +335,23 @@ QString MemoManager::countAll(int *count) const
 }
 
 //------------------------------------------------------------------------------
-
-SettingsTableDef* SettingsManager::table() const { static SettingsTableDef t; return &t; }
+//                              SettingsManager
+//------------------------------------------------------------------------------
 
 void SettingsManager::writeValue(const QString& id, const QVariant& value) const
 {
-    SelectQuery query(table()->sqlCheckId(id));
+    auto table = settingsTable();
+
+    SelectQuery query(table->sqlCheckId(id));
     if (query.isFailed())
     {
         qWarning() << "Unable to write setting" << id << query.error();
         return;
     }
-    QString sql = query.next() ? table()->sqlUpdate : table()->sqlInsert;
+    QString sql = query.next() ? table->sqlUpdate : table->sqlInsert;
     QString res = ActionQuery(sql)
-            .param(table()->id, id)
-            .param(table()->value, value)
+            .param(table->id, id)
+            .param(table->value, value)
             .exec();
     if (!res.isEmpty())
         qWarning() << "Error while write setting" << id << res;
@@ -324,7 +359,9 @@ void SettingsManager::writeValue(const QString& id, const QVariant& value) const
 
 QVariant SettingsManager::readValue(const QString& id, const QVariant& defValue, bool *hasValue) const
 {
-    SelectQuery query(table()->sqlSelectById(id));
+    auto table = settingsTable();
+
+    SelectQuery query(table->sqlSelectById(id));
     if (query.isFailed())
     {
         qWarning() << "Unable to read setting" << id << query.error();
@@ -338,7 +375,7 @@ QVariant SettingsManager::readValue(const QString& id, const QVariant& defValue,
     }
     if (hasValue)
         *hasValue = true;
-    return query.record().field(table()->value).value();
+    return query.record().field(table->value).value();
 }
 
 void SettingsManager::writeBool(const QString& id, bool value) const
@@ -425,7 +462,7 @@ QVector<int> SettingsManager::readIntArray(const QString& id) const
 
 namespace CatalogStore {
 
-QSqlDatabase __db;
+static QSqlDatabase __db;
 
 QString createTable(TableDef *table);
 
@@ -470,13 +507,13 @@ QString openDatabase(const QString fileName)
     QString res = beginTran("Setup database structure");
     if (!res.isEmpty()) return res;
 
-    res = createTable(folderManager()->table());
+    res = createTable(folderTable());
     if (!res.isEmpty()) return res;
 
-    res = createTable(memoManager()->table());
+    res = createTable(memoTable());
     if (!res.isEmpty()) return res;
 
-    res = createTable(settingsManager()->table());
+    res = createTable(settingsTable());
     if (!res.isEmpty()) return res;
 
     commitTran();
@@ -505,7 +542,6 @@ QString beginTran(const QString& operation)
 
 void commitTran() { __db.commit(); }
 void rollbackTran() { __db.rollback(); }
-
 
 FolderManager *folderManager() { static FolderManager m; return &m; }
 MemoManager* memoManager() { static MemoManager m; return &m; }

@@ -52,19 +52,21 @@ MainWindow::MainWindow() : QMainWindow()
 
     _memoPages = new QStackedWidget;
 
-    createMenu();
-
-    _catalogView = new CatalogWidget(_actionOpenMemo);
-    connect(_catalogView, &CatalogWidget::contextMenuAboutToShow, this, &MainWindow::updateMenuCatalog);
+    _catalogView = new CatalogWidget;
+    connect(_catalogView, &CatalogWidget::onOpenMemo, this, &MainWindow::openWindowForItem);
 
     //_windowsView = new WindowsWidget(_mdiArea);
 
-    auto splitter = new QSplitter;
-    splitter->addWidget(_openedMemosList);
-    splitter->addWidget(_memoPages);
-    splitter->addWidget(_catalogView);
-    setCentralWidget(splitter);
+    _splitter = new QSplitter;
+    _splitter->addWidget(_openedMemosList);
+    _splitter->addWidget(_memoPages);
+    _splitter->addWidget(_catalogView);
+    _splitter->setStretchFactor(0, 0);
+    _splitter->setStretchFactor(1, 1);
+    _splitter->setStretchFactor(2, 0);
+    setCentralWidget(_splitter);
 
+    createMenu();
     createStatusBar();
 
     loadSettings();
@@ -149,6 +151,11 @@ void MainWindow::saveSettings()
     s.setValue("memoFont", _memoSettings.memoFont);
     s.setValue("titleFont", _memoSettings.titleFont);
     s.setValue("wordWrap", _memoSettings.wordWrap);
+
+    auto sizes = _splitter->sizes();
+    s.setValue("memosPanel_width", sizes.at(0));
+    s.setValue("catalogPanel_width", sizes.at(2));
+
     if (_catalog)
     {
         s.setValue("database", _catalog->fileName());
@@ -165,6 +172,11 @@ void MainWindow::loadSettings()
     _memoSettings.memoFont = qvariant_cast<QFont>(s.value("memoFont", QFont("Arial", 12)));
     _memoSettings.titleFont = qvariant_cast<QFont>(s.value("titleFont", QFont("Arial", 14)));
     _memoSettings.wordWrap = s.value("wordWrap", false).toBool();
+
+    int w1 = s.value("memosPanel_width", 200).toInt();
+    int w3 = s.value("catalogPanel_width", 200).toInt();
+    int w2 = _splitter->width() - w1 - w3;
+    _splitter->setSizes({w1, w2, w3});
 
     auto lastFile = s.value("database").toString();
     if (!lastFile.isEmpty())
@@ -354,7 +366,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 //        }
 //    }
     event->accept();
-    saveSession();
+    //saveSession();
 }
 
 MemoWindow* MainWindow::activeMemoWindow() const
@@ -391,6 +403,7 @@ void MainWindow::openWindowForItem(MemoItem* item)
     memoWindow->setMemoFont(_memoSettings.memoFont);
     memoWindow->setWordWrap(_memoSettings.wordWrap);
     _memoPages->addWidget(memoWindow);
+    _memoPages->setCurrentWidget(memoWindow);
 }
 
 QWidget* MainWindow::findMemoPage(MemoItem* item) const
@@ -405,11 +418,6 @@ QWidget* MainWindow::findMemoPage(MemoItem* item) const
     }
     return nullptr;
 }
-
-//MemoWindow* MainWindow::memoWindowOfMdiChild(QMdiSubWindow* subWindow) const
-//{
-//    return subWindow ? qobject_cast<MemoWindow*>(subWindow->widget()) : nullptr;
-//}
 
 bool MainWindow::memoWindowAboutToClose()
 {

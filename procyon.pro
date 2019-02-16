@@ -27,7 +27,6 @@ SOURCES += src/main.cpp\
     src/MainWindow.cpp \
     src/CatalogWidget.cpp \
     src/MemoWindow.cpp \
-    src/MemoTypeSelector.cpp \
     src/catalog/Catalog.cpp \
     src/catalog/CatalogStore.cpp \
     src/catalog/SqlHelper.cpp \
@@ -41,9 +40,7 @@ SOURCES += src/main.cpp\
 HEADERS  += src/MainWindow.h \
     src/CatalogWidget.h \
     src/CatalogModel.h \
-    src/Appearance.h \
     src/MemoWindow.h \
-    src/MemoTypeSelector.h \
     src/catalog/Catalog.h \
     src/catalog/CatalogStore.h \
     src/catalog/SqlHelper.h \

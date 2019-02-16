@@ -1,5 +1,5 @@
-#ifndef CATALOGWIDGET_H
-#define CATALOGWIDGET_H
+#ifndef CATALOG_WIDGET_H
+#define CATALOG_WIDGET_H
 
 #include <QWidget>
 
@@ -27,7 +27,7 @@ class CatalogWidget : public QWidget
     Q_OBJECT
 
 public:
-    CatalogWidget(QAction *actionMakeDispPlot);
+    CatalogWidget();
 
     void setCatalog(Catalog* catalog);
 
@@ -44,7 +44,7 @@ public:
     void setExpandedIds(const QStringList& ids);
 
 signals:
-    void contextMenuAboutToShow();
+    void onOpenMemo(MemoItem* item);
 
 private:
     Catalog* _catalog = nullptr;
@@ -58,6 +58,7 @@ private:
 
     void contextMenuRequested(const QPoint &pos);
     void doubleClicked(const QModelIndex &);
+    void openSelectedMemo();
 
     void memoUpdated(MemoItem*);
     void createFolderInternal(const CatalogSelection& parentFolder);
@@ -66,4 +67,4 @@ private:
     void setExpandedIds(const QStringList& ids, const QModelIndex& parentIndex);
 };
 
-#endif // CATALOGWIDGET_H
+#endif // CATALOG_WIDGET_H

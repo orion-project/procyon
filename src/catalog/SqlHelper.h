@@ -1,11 +1,9 @@
-#ifndef SQLHELPER_H
-#define SQLHELPER_H
+#ifndef ORI_SQL_HELPER_H
+#define ORI_SQL_HELPER_H
 
 #include <QtSql>
 #include <QString>
 #include <QDebug>
-
-//-----------------------------------------------------------------------------------------------
 
 namespace SqlHelper {
 
@@ -126,4 +124,4 @@ private:
 } // namespace Sql
 } // namespace Ori
 
-#endif // SQLHELPER_H
+#endif // ORI_SQL_HELPER_H

@@ -12,7 +12,7 @@ BEGIN
             VALUE "CompanyName",      "orion-project.org\0"
             VALUE "FileVersion",      "0.1.0.0\0"
             VALUE "InternalName",     "procyon\0"
-            VALUE "LegalCopyright",   "Chunosov N.I. (c) 2018-2019\0"
+            VALUE "LegalCopyright",   "Chunosov N.I. (c) 2017-2019\0"
             VALUE "OriginalFilename", "procyon.exe\0"
             VALUE "ProductName",      "procyon\0"
             VALUE "ProductVersion",   "0.1.0.0\0"

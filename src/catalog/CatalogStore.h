@@ -1,5 +1,5 @@
-#ifndef CATALOGSTORE_H
-#define CATALOGSTORE_H
+#ifndef CATALOG_STORE_H
+#define CATALOG_STORE_H
 
 #include <QVector>
 #include <QVariant>
@@ -7,10 +7,7 @@
 class CatalogItem;
 class MemoItem;
 class FolderItem;
-class FolderTableDef;
-class MemoTableDef;
 class Memo;
-class SettingsTableDef;
 
 //------------------------------------------------------------------------------
 
@@ -23,8 +20,6 @@ struct FoldersResult
 class FolderManager
 {
 public:
-    FolderTableDef* table() const;
-
     QString create(FolderItem* folder) const;
     QString rename(int folderId, const QString title) const;
     QString remove(FolderItem* folder) const;
@@ -51,8 +46,6 @@ struct MemosResult
 class MemoManager
 {
 public:
-    MemoTableDef* table() const;
-
     QString create(MemoItem* item) const;
     QString update(Memo* memo, const QString& info) const;
     QString remove(MemoItem* item) const;
@@ -67,8 +60,6 @@ class SettingsManager
 {
 public:
     enum TrackChangesFlag { IgnoreValuesOrder, RespectValuesOrder };
-
-    SettingsTableDef* table() const;
 
     void writeValue(const QString& id, const QVariant& value) const;
     QVariant readValue(const QString& id, const QVariant& defValue = QVariant(), bool *hasValue = nullptr) const;
@@ -101,4 +92,4 @@ SettingsManager* settingsManager();
 
 } // namespace CatalogStore
 
-#endif // CATALOGSTORE_H
+#endif // CATALOG_STORE_H

@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 #include "CatalogWidget.h"
 #include "MemoPage.h"
+#include "StyleEditorPage.h"
 #include "OpenedPagesWidget.h"
 #include "catalog/Catalog.h"
 #include "catalog/CatalogStore.h"
@@ -96,6 +97,8 @@ void MainWindow::createMenu()
     connect(m, &QMenu::aboutToShow, [this, actionWordWrap](){
         actionWordWrap->setChecked(_memoSettings.wordWrap);
     });
+    m->addSeparator();
+    m->addAction(tr("Edit Style Sheet"), this, &MainWindow::editStyleSheet);
 }
 
 void MainWindow::createStatusBar()
@@ -382,42 +385,39 @@ bool chooseFont(QFont* targetFont)
     if (ok) *targetFont = font;
     return ok;
 }
+
+template <typename TPage>
+QVector<TPage*> getPages(QStackedWidget* pagesView)
+{
+    QVector<TPage*> pages;
+    for (int i = 0; i < pagesView->count(); i++)
+    {
+        auto page = qobject_cast<MemoPage*>(pagesView->widget(i));
+        if (page) pages << page;
+    }
+    return pages;
+}
 } // namespace
 
 void MainWindow::chooseMemoFont()
 {
     if (chooseFont(&_memoSettings.memoFont))
-        for (int i = 0; i < _pagesView->count(); i++)
-        {
-            auto widget = _pagesView->widget(i);
-            auto page = qobject_cast<MemoPage*>(widget);
-            if (!page) continue;
+        for (auto page : getPages<MemoPage>(_pagesView))
             page->setMemoFont(_memoSettings.memoFont);
-        }
 }
 
 void MainWindow::chooseTitleFont()
 {
     if (chooseFont(&_memoSettings.titleFont))
-        for (int i = 0; i < _pagesView->count(); i++)
-        {
-            auto widget = _pagesView->widget(i);
-            auto page = qobject_cast<MemoPage*>(widget);
-            if (!page) continue;
+        for (auto page : getPages<MemoPage>(_pagesView))
             page->setTitleFont(_memoSettings.titleFont);
-        }
 }
 
 void MainWindow::toggleWordWrap()
 {
     _memoSettings.wordWrap = !_memoSettings.wordWrap;
-    for (int i = 0; i < _pagesView->count(); i++)
-    {
-        auto widget = _pagesView->widget(i);
-        auto page = qobject_cast<MemoPage*>(widget);
-        if (!page) continue;
+    for (auto page : getPages<MemoPage>(_pagesView))
         page->setWordWrap(_memoSettings.wordWrap);
-    }
 }
 
 void MainWindow::memoCreated(MemoItem* item)
@@ -436,4 +436,23 @@ void MainWindow::memoRemoved(MemoItem* item)
 
     auto page = findMemoPage(item);
     if (page) page->deleteLater();
+}
+
+void MainWindow::editStyleSheet()
+{
+    for (int i = 0; i < _pagesView->count(); i++)
+    {
+        auto widget = _pagesView->widget(i);
+        auto page = qobject_cast<StyleEditorPage*>(widget);
+        if (page)
+        {
+            _pagesView->setCurrentWidget(page);
+            _openedPagesView->addOpenedPage(page);
+            return;
+        }
+    }
+    auto page = new StyleEditorPage;
+    _pagesView->addWidget(page);
+    _pagesView->setCurrentWidget(page);
+    _openedPagesView->addOpenedPage(page);
 }

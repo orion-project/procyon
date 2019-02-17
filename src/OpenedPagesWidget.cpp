@@ -10,7 +10,7 @@ OpenedPagesWidget::OpenedPagesWidget() : QWidget()
     _pagesList = new QListWidget;
     // TODO alternate color looks too dark on some themes, e.g. Fusion on Windows,
     // should set alternate color via stylesheet and it should be only slightly different from base
-    //_windowsList->setAlternatingRowColors(true);
+    //_pagesList->setAlternatingRowColors(true);
     connect(_pagesList, &QListWidget::currentItemChanged, this, &OpenedPagesWidget::currentItemChanged);
 
     Ori::Layouts::LayoutV({_pagesList}).setMargin(0).setSpacing(0).useFor(this);

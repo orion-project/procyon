@@ -26,7 +26,6 @@ win32: RC_FILE = src/app.rc
 SOURCES += src/main.cpp\
     src/MainWindow.cpp \
     src/CatalogWidget.cpp \
-    src/MemoWindow.cpp \
     src/catalog/Catalog.cpp \
     src/catalog/CatalogStore.cpp \
     src/catalog/SqlHelper.cpp \
@@ -34,13 +33,13 @@ SOURCES += src/main.cpp\
     src/highlighter/HighlightingRule.cpp \
     src/highlighter/PythonSyntaxHighlighter.cpp \
     src/highlighter/ShellMemoSyntaxHighlighter.cpp \
-    src/WindowsWidget.cpp \
-    src/CatalogModel.cpp
+    src/CatalogModel.cpp \
+    src/OpenedPagesWidget.cpp \
+    src/MemoPage.cpp
 
 HEADERS  += src/MainWindow.h \
     src/CatalogWidget.h \
     src/CatalogModel.h \
-    src/MemoWindow.h \
     src/catalog/Catalog.h \
     src/catalog/CatalogStore.h \
     src/catalog/SqlHelper.h \
@@ -48,4 +47,5 @@ HEADERS  += src/MainWindow.h \
     src/highlighter/HighlightingRule.h \
     src/highlighter/PythonSyntaxHighlighter.h \
     src/highlighter/ShellMemoSyntaxHighlighter.h \
-    src/WindowsWidget.h
+    src/OpenedPagesWidget.h \
+    src/MemoPage.h

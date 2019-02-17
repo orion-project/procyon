@@ -1,7 +1,7 @@
 #include "MainWindow.h"
 #include "CatalogWidget.h"
-#include "MemoWindow.h"
-//#include "WindowsWidget.h"
+#include "MemoPage.h"
+#include "OpenedPagesWidget.h"
 #include "catalog/Catalog.h"
 #include "catalog/CatalogStore.h"
 #include "helpers/OriDialogs.h"
@@ -13,32 +13,17 @@
 #include "widgets/OriMruMenu.h"
 
 #include <QDebug>
-#include <QDockWidget>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFontDialog>
 #include <QIcon>
 #include <QLabel>
-#include <QListWidget>
-#include <QMdiArea>
 #include <QMessageBox>
 #include <QMenuBar>
 #include <QSplitter>
 #include <QStatusBar>
 #include <QStackedWidget>
-#include <QStyle>
 #include <QTimer>
-
-
-//void MemoMdiSubWindow::closeEvent(QCloseEvent *event)
-//{
-//    bool canClose = emit windowClosing();
-//    if (canClose)
-//        event->accept();
-//    else
-//        event->ignore();
-//}
-
 
 MainWindow::MainWindow() : QMainWindow()
 {
@@ -48,18 +33,17 @@ MainWindow::MainWindow() : QMainWindow()
     _mruList = new Ori::MruFileList(this);
     connect(_mruList, &Ori::MruFileList::clicked, this, &MainWindow::openCatalog);
 
-    _openedMemosList = new QListWidget;
+    _pagesView = new QStackedWidget;
 
-    _memoPages = new QStackedWidget;
+    _openedPagesView = new OpenedPagesWidget;
+    connect(_openedPagesView, &OpenedPagesWidget::onActivatePage, _pagesView, &QStackedWidget::setCurrentWidget);
 
     _catalogView = new CatalogWidget;
-    connect(_catalogView, &CatalogWidget::onOpenMemo, this, &MainWindow::openWindowForItem);
-
-    //_windowsView = new WindowsWidget(_mdiArea);
+    connect(_catalogView, &CatalogWidget::onOpenMemo, this, &MainWindow::openMemoPage);
 
     _splitter = new QSplitter;
-    _splitter->addWidget(_openedMemosList);
-    _splitter->addWidget(_memoPages);
+    _splitter->addWidget(_openedPagesView);
+    _splitter->addWidget(_pagesView);
     _splitter->addWidget(_catalogView);
     _splitter->setStretchFactor(0, 0);
     _splitter->setStretchFactor(1, 1);
@@ -80,15 +64,6 @@ MainWindow::~MainWindow()
         delete _catalog;
 }
 
-QAction* MainWindow::addViewPanelAction(QMenu* m, const QString& title, QDockWidget* panel)
-{
-    auto action = m->addAction(title, [panel](){
-        if (panel->isVisible()) panel->hide(); else panel->show();
-    });
-    action->setCheckable(true);
-    return action;
-}
-
 void MainWindow::createMenu()
 {
     QMenu* m;
@@ -101,17 +76,6 @@ void MainWindow::createMenu()
     m->addSeparator();
     auto actionExit = m->addAction(tr("Exit"), this, &MainWindow::close, QKeySequence::Quit);
     new Ori::Widgets::MruMenuPart(_mruList, m, actionExit, this);
-
-    m = menuBar()->addMenu(tr("&View"));
-//    auto actionViewCatalog = addViewPanelAction(m, tr("Catalog Panel"), _dockCatalog);
-//    auto actionViewInfo = addViewPanelAction(m, tr("Info Panel"), _dockInfo);
-//    auto actionViewWindows = addViewPanelAction(m, tr("Memos Panel"), _dockWindows);
-//    m->addSeparator();
-//    connect(m, &QMenu::aboutToShow, [this, actionViewCatalog, actionViewInfo, actionViewWindows](){
-//        actionViewCatalog->setChecked(_dockCatalog->isVisible());
-//        actionViewInfo->setChecked(_dockInfo->isVisible());
-//        actionViewWindows->setChecked(_dockWindows->isVisible());
-//    });
 
     m = menuBar()->addMenu(tr("&Catalog"));
     connect(m, &QMenu::aboutToShow, this, &MainWindow::updateMenuCatalog);
@@ -156,11 +120,8 @@ void MainWindow::saveSettings()
     s.setValue("memosPanel_width", sizes.at(0));
     s.setValue("catalogPanel_width", sizes.at(2));
 
-    if (_catalog)
-    {
-        s.setValue("database", _catalog->fileName());
-        saveSession(&s);
-    }
+    if (!_lastOpenedCatalog.isEmpty())
+        s.setValue("database", _lastOpenedCatalog);
 }
 
 void MainWindow::loadSettings()
@@ -168,6 +129,8 @@ void MainWindow::loadSettings()
     Ori::Settings s;
     s.restoreWindowGeometry(this);
     _mruList->load(s.settings());
+    qDebug() << "Group" << s.settings()->group();
+    qDebug() << "MRU loaded" << _mruList->items().join(',');
 
     _memoSettings.memoFont = qvariant_cast<QFont>(s.value("memoFont", QFont("Arial", 12)));
     _memoSettings.titleFont = qvariant_cast<QFont>(s.value("titleFont", QFont("Arial", 14)));
@@ -186,43 +149,35 @@ void MainWindow::loadSettings()
 void MainWindow::loadSession()
 {
     Ori::Settings settings;
-    loadSession(&settings);
-}
 
-void MainWindow::loadSession(Ori::Settings* settings)
-{
-    settings->beginGroup(QFileInfo(_catalog->fileName()).baseName());
-    QStringList expandedIds = settings->value("expandedFolders").toString().split(',');
+    settings.beginGroup(QFileInfo(_catalog->fileName()).baseName());
+    QStringList expandedIds = settings.value("expandedFolders").toString().split(',');
     _catalogView->setExpandedIds(expandedIds);
 
-    QStringList openedIds = settings->value("openedMemos").toString().split(',');
+    QStringList openedIds = settings.value("openedMemos").toString().split(',');
     for (auto idStr : openedIds)
     {
         auto memoItem = _catalog->findMemoById(idStr.toInt());
         if (!memoItem) continue;
-        openWindowForItem(memoItem);
+        openMemoPage(memoItem);
     }
 
-    int activeId = settings->value("activeMemo", -1).toInt();
+    int activeId = settings.value("activeMemo", -1).toInt();
     auto activeMemoItem = _catalog->findMemoById(activeId);
-    if (activeMemoItem) openWindowForItem(activeMemoItem);
+    if (activeMemoItem) openMemoPage(activeMemoItem);
 }
 
 void MainWindow::saveSession()
 {
     Ori::Settings settings;
-    saveSession(&settings);
-}
 
-void MainWindow::saveSession(Ori::Settings* settings)
-{
     QStringList openedIds;
     int activeId = -1;
-    auto activeWidget = _memoPages->currentWidget();
-    for (int i = 0; i < _memoPages->count(); i++)
+    auto activeWidget = _pagesView->currentWidget();
+    for (int i = 0; i < _pagesView->count(); i++)
     {
-        auto widget = _memoPages->widget(i);
-        auto memoWindow = qobject_cast<MemoWindow*>(widget);
+        auto widget = _pagesView->widget(i);
+        auto memoWindow = qobject_cast<MemoPage*>(widget);
         if (!memoWindow) continue;
         int memoId = memoWindow->memoItem()->id();
         openedIds << QString::number(memoId);
@@ -230,21 +185,19 @@ void MainWindow::saveSession(Ori::Settings* settings)
             activeId = memoId;
     }
     QStringList expandedIds = _catalogView->getExpandedIds();
-    settings->beginGroup(QFileInfo(_catalog->fileName()).baseName());
-    settings->setValue("expandedFolders", expandedIds.join(','));
-    settings->setValue("openedMemos", openedIds.join(','));
-    settings->setValue("activeMemo", activeId);
+    settings.beginGroup(QFileInfo(_catalog->fileName()).baseName());
+    settings.setValue("expandedFolders", expandedIds.join(','));
+    settings.setValue("openedMemos", openedIds.join(','));
+    settings.setValue("activeMemo", activeId);
 }
 
 void MainWindow::newCatalog()
 {
+    if (!closeCatalog()) return;
+
     QString fileName = Ori::Dlg::getSaveFileName(
                 tr("Create Catalog"), Catalog::fileFilter(), Catalog::defaultFileExt());
     if (fileName.isEmpty()) return;
-
-    Ori::WaitCursor c;
-
-    catalogClosed();
 
     auto res = Catalog::create(fileName);
     if (res.ok())
@@ -262,9 +215,7 @@ void MainWindow::openCatalog(const QString &fileName)
     if (_catalog && QFileInfo(_catalog->fileName()) == QFileInfo(fileName))
         return;
 
-    Ori::WaitCursor c;
-
-    catalogClosed();
+    if (!closeCatalog()) return;
 
     auto res = Catalog::open(fileName);
     if (res.ok())
@@ -294,15 +245,17 @@ void MainWindow::catalogOpened(Catalog* catalog)
     setWindowTitle(fileName % " - " % qApp->applicationName());
     _mruList->append(filePath);
     _statusFileName->setText(tr("Catalog: %1").arg(QDir::toNativeSeparators(filePath)));
+    _lastOpenedCatalog = filePath;
     updateCounter();
     loadSession();
 }
 
-void MainWindow::catalogClosed()
+bool MainWindow::closeCatalog()
 {
     if (_catalog)
     {
         saveSession();
+        if (!closeAllMemos()) return false;
         delete _catalog;
         _catalog = nullptr;
     }
@@ -310,12 +263,24 @@ void MainWindow::catalogClosed()
     setWindowTitle(qApp->applicationName());
     _statusFileName->clear();
     _statusMemoCount->clear();
-    closeAllMemos();
+   return true;
 }
 
-void MainWindow::closeAllMemos()
+bool MainWindow::closeAllMemos()
 {
-    // TODO
+    QVector<QWidget*> deletingPages;
+    for (int i = 0; i < _pagesView->count(); i++)
+    {
+        auto widget = _pagesView->widget(i);
+        auto page = qobject_cast<MemoPage*>(widget);
+        if (!page) continue;
+        if (!page->canClose())
+            return false;
+        deletingPages << page;
+    }
+    for (auto page : deletingPages)
+        page->deleteLater();
+    return true;
 }
 
 void MainWindow::updateCounter()
@@ -355,35 +320,21 @@ void MainWindow::updateMenuCatalog()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-//    for (auto mdiChild : _mdiArea->subWindowList())
-//    {
-//        auto memoWindow = memoWindowOfMdiChild(mdiChild);
-//        if (!memoWindow) continue;
-//        if (!canClose(memoWindow))
-//        {
-//            event->ignore();
-//            return;
-//        }
-//    }
+    if (!closeCatalog())
+    {
+        event->ignore();
+        return;
+    }
     event->accept();
-    //saveSession();
-}
-
-MemoWindow* MainWindow::activeMemoWindow() const
-{
-//    auto mdiChild = _mdiArea->currentSubWindow();
-//    if (!mdiChild) return nullptr;
-//    return memoWindowOfMdiChild(mdiChild);
 }
 
 void MainWindow::openMemo()
 {
     auto selected = _catalogView->selection();
-    if (selected.memo)
-        openWindowForItem(selected.memo);
+    if (selected.memo) openMemoPage(selected.memo);
 }
 
-void MainWindow::openWindowForItem(MemoItem* item)
+void MainWindow::openMemoPage(MemoItem* item)
 {
     if (!item->memo())
     {
@@ -394,66 +345,34 @@ void MainWindow::openWindowForItem(MemoItem* item)
     auto existedPage = findMemoPage(item);
     if (existedPage)
     {
-        _memoPages->setCurrentWidget(existedPage);
+        _pagesView->setCurrentWidget(existedPage);
+        _openedPagesView->addOpenedPage(existedPage);
         return;
     }
 
-    auto memoWindow = new MemoWindow(_catalog, item);
-    memoWindow->setTitleFont(_memoSettings.titleFont);
-    memoWindow->setMemoFont(_memoSettings.memoFont);
-    memoWindow->setWordWrap(_memoSettings.wordWrap);
-    _memoPages->addWidget(memoWindow);
-    _memoPages->setCurrentWidget(memoWindow);
+    auto page = new MemoPage(_catalog, item);
+    page->setTitleFont(_memoSettings.titleFont);
+    page->setMemoFont(_memoSettings.memoFont);
+    page->setWordWrap(_memoSettings.wordWrap);
+    _pagesView->addWidget(page);
+    _pagesView->setCurrentWidget(page);
+    _openedPagesView->addOpenedPage(page);
 }
 
-QWidget* MainWindow::findMemoPage(MemoItem* item) const
+MemoPage* MainWindow::findMemoPage(MemoItem* item) const
 {
-    for (int i = 0; i < _memoPages->count(); i++)
+    for (int i = 0; i < _pagesView->count(); i++)
     {
-        auto widget = _memoPages->widget(i);
-        auto memoWindow = qobject_cast<MemoWindow*>(widget);
-        if (!memoWindow) continue;
-        if (memoWindow->memoItem() == item)
-            return widget;
+        auto widget = _pagesView->widget(i);
+        auto page = qobject_cast<MemoPage*>(widget);
+        if (!page) continue;
+        if (page->memoItem() == item)
+            return page;
     }
     return nullptr;
 }
 
-bool MainWindow::memoWindowAboutToClose()
-{
-//    auto subWindow = qobject_cast<QMdiSubWindow*>(sender());
-//    if (!subWindow) return true;
-
-//    _prevWindowWasMaximized = subWindow->windowState() & Qt::WindowMaximized;
-
-//    auto memoWindow = memoWindowOfMdiChild(subWindow);
-//    return memoWindow && canClose(memoWindow);
-    return true;
-}
-
-bool MainWindow::canClose(MemoWindow* memoWindow)
-{
-    if (!memoWindow->isModified()) return true;
-
-    int res = Ori::Dlg::yesNoCancel(tr("<b>%1</b><br><br>"
-                                       "This memo has been changed. "
-                                       "Save changes before closing?")
-                                    .arg(memoWindow->windowTitle()));
-    if (res == QMessageBox::Cancel) return false;
-    if (res == QMessageBox::No) return true;
-    if (!memoWindow->saveEditing()) return false;
-
-    return true;
-}
-
-void MainWindow::memoWindowAboutToActivate()
-{
-//    auto window = qobject_cast<QMdiSubWindow*>(sender());
-//    if (window && _prevWindowWasMaximized)
-//        if (!(window->windowState() & Qt::WindowMaximized))
-//            window->setWindowState(Qt::WindowMaximized);
-}
-
+namespace {
 bool chooseFont(QFont* targetFont)
 {
     bool ok;
@@ -463,51 +382,58 @@ bool chooseFont(QFont* targetFont)
     if (ok) *targetFont = font;
     return ok;
 }
+} // namespace
 
 void MainWindow::chooseMemoFont()
 {
-//    if (chooseFont(&_memoSettings.memoFont))
-//        for (auto mdiChild : _mdiArea->subWindowList())
-//        {
-//            auto memoWindow = memoWindowOfMdiChild(mdiChild);
-//            if (memoWindow) memoWindow->setMemoFont(_memoSettings.memoFont);
-//        }
+    if (chooseFont(&_memoSettings.memoFont))
+        for (int i = 0; i < _pagesView->count(); i++)
+        {
+            auto widget = _pagesView->widget(i);
+            auto page = qobject_cast<MemoPage*>(widget);
+            if (!page) continue;
+            page->setMemoFont(_memoSettings.memoFont);
+        }
 }
 
 void MainWindow::chooseTitleFont()
 {
-//    if (chooseFont(&_memoSettings.titleFont))
-//        for (auto mdiChild : _mdiArea->subWindowList())
-//        {
-//            auto memoWindow = memoWindowOfMdiChild(mdiChild);
-//            if (memoWindow) memoWindow->setTitleFont(_memoSettings.titleFont);
-//        }
+    if (chooseFont(&_memoSettings.titleFont))
+        for (int i = 0; i < _pagesView->count(); i++)
+        {
+            auto widget = _pagesView->widget(i);
+            auto page = qobject_cast<MemoPage*>(widget);
+            if (!page) continue;
+            page->setTitleFont(_memoSettings.titleFont);
+        }
 }
 
 void MainWindow::toggleWordWrap()
 {
-//    _memoSettings.wordWrap = !_memoSettings.wordWrap;
-//    for (auto mdiChild : _mdiArea->subWindowList())
-//    {
-//        auto memoWindow = memoWindowOfMdiChild(mdiChild);
-//        if (memoWindow) memoWindow->setWordWrap(_memoSettings.wordWrap);
-//    }
+    _memoSettings.wordWrap = !_memoSettings.wordWrap;
+    for (int i = 0; i < _pagesView->count(); i++)
+    {
+        auto widget = _pagesView->widget(i);
+        auto page = qobject_cast<MemoPage*>(widget);
+        if (!page) continue;
+        page->setWordWrap(_memoSettings.wordWrap);
+    }
 }
 
 void MainWindow::memoCreated(MemoItem* item)
 {
     updateCounter();
 
-    openWindowForItem(item);
+    openMemoPage(item);
 
-//    auto memoWindow = memoWindowOfMdiChild(findMemoMdiChild(item));
-//    if (memoWindow) memoWindow->beginEditing();
+    auto page = findMemoPage(item);
+    if (page) page->beginEditing();
 }
 
 void MainWindow::memoRemoved(MemoItem* item)
 {
     updateCounter();
 
-//    auto mdiChild = findMemoMdiChild(item);
-//    if (mdiChild) delete mdiChild;
+    auto page = findMemoPage(item);
+    if (page) page->deleteLater();
 }

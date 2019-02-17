@@ -6,15 +6,15 @@
 QT_BEGIN_NAMESPACE
 class QAction;
 class QLabel;
-class QListWidget;
 class QStackedWidget;
 class QSplitter;
 QT_END_NAMESPACE
 
 class Catalog;
 class CatalogWidget;
+class OpenedPagesWidget;
 class InfoWidget;
-class MemoWindow;
+class MemoPage;
 class MemoItem;
 
 namespace Ori {
@@ -46,30 +46,26 @@ private:
     QSplitter* _splitter;
     Catalog* _catalog = nullptr;
     CatalogWidget* _catalogView;
-    InfoWidget* _infoView;
+    QStackedWidget* _pagesView;
+    OpenedPagesWidget* _openedPagesView;
     Ori::MruFileList *_mruList;
     QLabel *_statusMemoCount, *_statusFileName;
     QAction *_actionCreateTopLevelFolder, *_actionCreateFolder, *_actionRenameFolder, *_actionDeleteFolder;
     QAction *_actionOpenMemo, *_actionCreateMemo, *_actionDeleteMemo;
     MemoSettings _memoSettings;
-    QStackedWidget* _memoPages;
-    QListWidget* _openedMemosList;
-    bool _prevWindowWasMaximized = false;
+    QString _lastOpenedCatalog;
 
     void createMenu();
     void createStatusBar();
     void saveSettings();
     void loadSettings();
     void loadSession();
-    void loadSession(Ori::Settings* settings);
     void saveSession();
-    void saveSession(Ori::Settings* settings);
-    void closeCurrentFile();
     void newCatalog();
     void openCatalog(const QString &fileName);
     void openCatalogViaDialog();
     void catalogOpened(Catalog* catalog);
-    void catalogClosed();
+    bool closeCatalog();
     void updateCounter();
     void updateMenuCatalog();
     void openMemo();
@@ -78,15 +74,9 @@ private:
     void memoCreated(MemoItem* item);
     void memoRemoved(MemoItem* item);
     void toggleWordWrap();
-    bool memoWindowAboutToClose();
-    void memoWindowAboutToActivate();
-    void closeAllMemos();
-
-    void openWindowForItem(MemoItem* item);
-    QWidget* findMemoPage(MemoItem* item) const;
-    MemoWindow* activeMemoWindow() const;
-    QAction* addViewPanelAction(QMenu* m, const QString& title, QDockWidget* panel);
-    bool canClose(MemoWindow* memoWindow);
+    bool closeAllMemos();
+    void openMemoPage(MemoItem* item);
+    MemoPage* findMemoPage(MemoItem* item) const;
 };
 
 #endif // MAIN_WINDOW_H

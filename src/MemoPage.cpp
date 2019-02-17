@@ -1,5 +1,4 @@
-#include "Appearance.h"
-#include "MemoWindow.h"
+#include "MemoPage.h"
 #include "catalog/Catalog.h"
 #include "catalog/Memo.h"
 #include "highlighter/PythonSyntaxHighlighter.h"
@@ -11,6 +10,7 @@
 #include <QIcon>
 #include <QDebug>
 #include <QLineEdit>
+#include <QMessageBox>
 #include <QStyle>
 #include <QTextEdit>
 #include <QTimer>
@@ -47,10 +47,10 @@ void MemoEditor::mouseReleaseEvent(QMouseEvent *e)
 }
 
 //------------------------------------------------------------------------------
-//                               MemoWindow
+//                                 MemoPage
 //------------------------------------------------------------------------------
 
-MemoWindow::MemoWindow(Catalog *catalog, MemoItem *memoItem) : QWidget(),
+MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     _catalog(catalog), _memoItem(memoItem)
 {
     setWindowIcon(QIcon(":/icon/memo_plain_text"));
@@ -63,15 +63,15 @@ MemoWindow::MemoWindow(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     _titleEditor->setFont(QFont("Arial", 14));
 
     auto toolbar = new QToolBar;
-    _actionEdit = toolbar->addAction(QIcon(":/toolbar/memo_edit"), tr("Edit"), this, &MemoWindow::beginEditing);
+    _actionEdit = toolbar->addAction(QIcon(":/toolbar/memo_edit"), tr("Edit"), this, &MemoPage::beginEditing);
     _actionEdit->setShortcut(QKeySequence(Qt::Key_Return, Qt::Key_Return));
-    _actionSave = toolbar->addAction(QIcon(":/toolbar/memo_save"), tr("Save"), this, &MemoWindow::saveEditing);
+    _actionSave = toolbar->addAction(QIcon(":/toolbar/memo_save"), tr("Save"), this, &MemoPage::saveEditing);
     _actionSave->setShortcut(QKeySequence::Save);
-    _actionCancel = toolbar->addAction(QIcon(":/toolbar/memo_cancel"), tr("Cancel"), this, &MemoWindow::cancelEditing);
+    _actionCancel = toolbar->addAction(QIcon(":/toolbar/memo_cancel"), tr("Cancel"), this, &MemoPage::cancelEditing);
     _actionCancel->setShortcut(QKeySequence(Qt::Key_Escape, Qt::Key_Escape));
     toolbar->addSeparator();
     toolbar->addAction(QIcon(":/toolbar/memo_close"), tr("Close"), [this](){
-        parentWidget()->close();
+        if (canClose()) deleteLater();
     });
 
     auto toolPanel = LayoutH({_titleEditor, toolbar}).setMargin(0).makeWidget();
@@ -88,11 +88,11 @@ MemoWindow::MemoWindow(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     });
 }
 
-MemoWindow::~MemoWindow()
+MemoPage::~MemoPage()
 {
 }
 
-void MemoWindow::showMemo()
+void MemoPage::showMemo()
 {
     auto text = _memoItem->memo()->data();
     _memoEditor->setPlainText(text);
@@ -105,25 +105,40 @@ void MemoWindow::showMemo()
     _titleEditor->setModified(false);
 }
 
-void MemoWindow::beginEditing()
+bool MemoPage::canClose()
+{
+    if (!isModified()) return true;
+
+    int res = Ori::Dlg::yesNoCancel(tr("<b>%1</b><br><br>"
+                                       "This memo has been changed. "
+                                       "Save changes before closing?")
+                                    .arg(windowTitle()));
+    if (res == QMessageBox::Cancel) return false;
+    if (res == QMessageBox::No) return true;
+    if (!saveEditing()) return false;
+
+    return true;
+}
+
+void MemoPage::beginEditing()
 {
     toggleEditMode(true);
     _memoEditor->setFocus();
 }
 
-void MemoWindow::cancelEditing()
+void MemoPage::cancelEditing()
 {
     toggleEditMode(false);
     showMemo();
 }
 
-bool MemoWindow::saveEditing()
+bool MemoPage::saveEditing()
 {
     auto memo = _memoItem->type()->makeMemo();
     // TODO preserve additional non editable data - dates, etc.
-    memo->_id = _memoItem->memo()->id();
-    memo->_title  = _titleEditor->text().trimmed();
-    memo->_data = _memoEditor->toPlainText();
+    memo->setId(_memoItem->memo()->id());
+    memo->setTitle(_titleEditor->text().trimmed());
+    memo->setData(_memoEditor->toPlainText());
 
     auto res = _catalog->updateMemo(_memoItem, memo);
     if (!res.isEmpty())
@@ -143,7 +158,7 @@ bool MemoWindow::saveEditing()
     return true;
 }
 
-void MemoWindow::toggleEditMode(bool on)
+void MemoPage::toggleEditMode(bool on)
 {
     _actionSave->setVisible(on);
     _actionCancel->setVisible(on);
@@ -160,22 +175,22 @@ void MemoWindow::toggleEditMode(bool on)
         .arg(palette().color(on ? QPalette::Base : QPalette::Window).name()));
 }
 
-void MemoWindow::setMemoFont(const QFont& font)
+void MemoPage::setMemoFont(const QFont& font)
 {
     _memoEditor->setFont(font);
 }
 
-void MemoWindow::setTitleFont(const QFont& font)
+void MemoPage::setTitleFont(const QFont& font)
 {
     _titleEditor->setFont(font);
 }
 
-void MemoWindow::setWordWrap(bool wrap)
+void MemoPage::setWordWrap(bool wrap)
 {
     _memoEditor->setWordWrapMode(wrap ? QTextOption::WrapAtWordBoundaryOrAnywhere : QTextOption::NoWrap);
 }
 
-void MemoWindow::applyTextStyles()
+void MemoPage::applyTextStyles()
 {
     _memoEditor->setUndoRedoEnabled(false);
     processHyperlinks();
@@ -184,7 +199,7 @@ void MemoWindow::applyTextStyles()
     _memoEditor->setUndoRedoEnabled(true);
 }
 
-void MemoWindow::processHyperlinks()
+void MemoPage::processHyperlinks()
 {
     static QList<QRegExp> rex;
     if (rex.isEmpty())
@@ -212,7 +227,7 @@ void MemoWindow::processHyperlinks()
     }
 }
 
-void MemoWindow::applyHighlighter()
+void MemoPage::applyHighlighter()
 {
     // TODO preserve highlighter if its type is not changed
     if (_highlighter)
@@ -230,7 +245,7 @@ void MemoWindow::applyHighlighter()
         _highlighter = new ShellMemoSyntaxHighlighter(_memoEditor->document());
 }
 
-bool MemoWindow::isModified() const
+bool MemoPage::isModified() const
 {
     return _memoEditor->document()->isModified() || _titleEditor->isModified();
 }

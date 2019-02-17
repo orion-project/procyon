@@ -1,5 +1,5 @@
-#ifndef MEMOWINDOW_H
-#define MEMOWINDOW_H
+#ifndef MEMO_PAGE_H
+#define MEMO_PAGE_H
 
 #include <QTextEdit>
 
@@ -23,13 +23,13 @@ private:
 };
 
 
-class MemoWindow : public QWidget
+class MemoPage : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit MemoWindow(Catalog* catalog, MemoItem* memoItem);
-    ~MemoWindow();
+    explicit MemoPage(Catalog* catalog, MemoItem* memoItem);
+    ~MemoPage();
 
     MemoItem* memoItem() const { return _memoItem; }
 
@@ -40,6 +40,10 @@ public:
     void beginEditing();
     bool saveEditing();
     bool isModified() const;
+    bool canClose();
+
+signals:
+    bool onAboutToBeClosed();
 
 private:
     Catalog* _catalog;
@@ -57,4 +61,4 @@ private:
     void applyHighlighter();
 };
 
-#endif // MEMOWINDOW_H
+#endif // MEMO_PAGE_H

@@ -132,8 +132,6 @@ void MainWindow::loadSettings()
     Ori::Settings s;
     s.restoreWindowGeometry(this);
     _mruList->load(s.settings());
-    qDebug() << "Group" << s.settings()->group();
-    qDebug() << "MRU loaded" << _mruList->items().join(',');
 
     _memoSettings.memoFont = qvariant_cast<QFont>(s.value("memoFont", QFont("Arial", 12)));
     _memoSettings.titleFont = qvariant_cast<QFont>(s.value("titleFont", QFont("Arial", 14)));

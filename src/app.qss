@@ -1,0 +1,145 @@
+/************************************
+             Main window
+************************************/
+QMainWindow {
+  background-color: #dadbde;
+}
+
+/************************************
+               Menu
+************************************/
+QMenuBar {
+  background: transparent;
+  margin: 2px;
+  font-size: 12px;
+}
+QMenuBar::item {
+  padding: 3px 6px;
+  border-radius: 3px;
+}
+QMenuBar::item:selected {
+  color: white;
+  background: steelBlue;
+}
+
+/************************************
+             List view
+************************************/
+QListView {
+  font-size: 13px;
+  background-color: white;
+  border: 1px solid silver;
+  border-radius: 4px;
+  padding-left: 2px;
+  padding-right: 2px;
+  padding-top: 2px;
+  margin-left: 3px;
+  selection-background-color: white;
+}
+QListView::item {
+  height: 32px;
+}
+QListView::item:hover {
+  background-color: #edf3f8;
+  border-radius: 4px;
+}
+QListView::item:selected {
+  background-color: steelBlue;
+  border-radius: 4px;
+}
+
+/************************************
+             Tree view
+************************************/
+QTreeView {
+  font-size: 13px;
+  background-color: white;
+  border: 1px solid silver;
+  border-radius: 4px;
+  padding-left: 2px;
+  padding-right: 2px;
+  padding-top: 2px;
+  margin-right: 3px;
+  selection-background-color: white;
+}
+QTreeView::item {
+  height: 24px;
+}
+QTreeView::item:hover {
+  background-color: #edf3f8;
+  border-radius: 4px;
+}
+QTreeView::item:selected {
+  background-color: steelBlue;
+  border-radius: 4px;
+}
+
+/************************************
+             Memo editor
+************************************/
+[role=memo_editor] {
+  background-color: white;
+  border: 1px solid silver;
+  border-radius: 4px;
+  padding: 2px;
+}
+
+/************************************
+             Scroll bars
+************************************/
+QAbstractScrollArea::corner {
+  border: none;
+}
+
+QScrollBar:vertical {
+  background-color: white;
+  width: 10px;
+  margin-left: 2px;
+  margin-bottom: 2px;
+}
+QScrollBar::handle:vertical {
+  border: 1px solid silver;
+  border-radius: 4px;
+  background-color: #f6f7fa;
+  min-height: 20px;
+}
+QScrollBar::handle:vertical:hover {
+  background-color: #dadbde;
+}
+QScrollBar::add-line:vertical {
+  height: 0;
+}
+QScrollBar::sub-line:vertical {
+  height: 0;
+}
+
+QScrollBar:horizontal {
+  background-color: white;
+  height: 10px;
+  margin-top: 2px;
+}
+QScrollBar::handle:horizontal {
+  border: 1px solid silver;
+  border-radius: 4px;
+  background-color: #f6f7fa;
+  min-width: 20px;
+}
+QScrollBar::handle:horizontal:hover {
+  background-color: #dadbde;
+}
+QScrollBar::add-line:horizontal {
+  width: 0;
+}
+QScrollBar::sub-line:horizontal {
+  width: 0;
+}
+
+/************************************
+              Tooltip
+************************************/
+QToolTip {
+  font-size: 12px;
+  border: 1px solid silver;
+  background-color: #edf3f8;
+  padding: 2px;
+}

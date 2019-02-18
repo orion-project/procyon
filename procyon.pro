@@ -19,7 +19,7 @@ include($$ORION"orion.pri")
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
 
-RESOURCES += images.qrc
+RESOURCES += src/resources.qrc
 
 win32: RC_FILE = src/app.rc
 
@@ -51,3 +51,6 @@ HEADERS  += src/MainWindow.h \
     src/OpenedPagesWidget.h \
     src/MemoPage.h \
     src/StyleEditorPage.h
+
+DISTFILES += \
+    src/app.qss

@@ -11,6 +11,7 @@ StyleEditorPage::StyleEditorPage(QWidget *parent) : QWidget(parent)
     setWindowTitle("Style Sheet Editor");
 
     _editor = new QPlainTextEdit;
+    _editor->setProperty("role", "memo_editor");
     _editor->setWordWrapMode(QTextOption::NoWrap);
     auto f = _editor->font();
 #if defined(Q_OS_WIN)
@@ -27,6 +28,7 @@ StyleEditorPage::StyleEditorPage(QWidget *parent) : QWidget(parent)
     _editor->setPlainText(qApp->styleSheet());
 
     auto buttonApply = new QPushButton("Apply");
+    buttonApply->setToolTip("Apply style sheet");
     connect(buttonApply, &QPushButton::clicked, [this](){
         qApp->setStyleSheet(_editor->toPlainText());
     });

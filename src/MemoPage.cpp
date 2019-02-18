@@ -58,6 +58,7 @@ MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     _memoEditor = new MemoEditor;
     _memoEditor->setAcceptRichText(false);
     _memoEditor->setWordWrapMode(QTextOption::NoWrap);
+    _memoEditor->setProperty("role", "memo_editor");
 
     _titleEditor = new QLineEdit;
     _titleEditor->setFont(QFont("Arial", 14));

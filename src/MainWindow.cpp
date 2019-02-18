@@ -17,6 +17,7 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFontDialog>
+#include <QFrame>
 #include <QIcon>
 #include <QLabel>
 #include <QMessageBox>
@@ -101,14 +102,27 @@ void MainWindow::createMenu()
     m->addAction(tr("Edit Style Sheet"), this, &MainWindow::editStyleSheet);
 }
 
+namespace  {
+QWidget* makeStatusPanel(const QString& title, QLabel*& labelValue)
+{
+    auto labelTitle = new QLabel(title);
+    labelTitle->setProperty("role", "status_title");
+
+    labelValue = new QLabel;
+    labelValue->setProperty("role", "status_value");
+
+    auto panel = new QFrame;
+    panel->setProperty("role", "status_panel");
+    Ori::Layouts::LayoutH({labelTitle, labelValue}).setMargin(0).setSpacing(0).useFor(panel);
+    return panel;
+}
+} // namespace
+
 void MainWindow::createStatusBar()
 {
-    statusBar()->addWidget(_statusMemoCount = new QLabel);
-    statusBar()->addWidget(_statusFileName = new QLabel);
+    statusBar()->addWidget(makeStatusPanel(tr("Memos:"), _statusMemoCount));
+    statusBar()->addWidget(makeStatusPanel(tr("Catalog:"), _statusFileName));
     statusBar()->showMessage(tr("Ready"));
-
-    _statusMemoCount->setMargin(2);
-    _statusFileName->setMargin(2);
 }
 
 void MainWindow::saveSettings()
@@ -245,7 +259,7 @@ void MainWindow::catalogOpened(Catalog* catalog)
     auto fileName = QFileInfo(filePath).fileName();
     setWindowTitle(fileName % " - " % qApp->applicationName());
     _mruList->append(filePath);
-    _statusFileName->setText(tr("Catalog: %1").arg(QDir::toNativeSeparators(filePath)));
+    _statusFileName->setText(QDir::toNativeSeparators(filePath));
     _lastOpenedCatalog = filePath;
     updateCounter();
     loadSession();
@@ -262,8 +276,8 @@ bool MainWindow::closeCatalog()
     }
     _catalogView->setCatalog(nullptr);
     setWindowTitle(qApp->applicationName());
-    _statusFileName->clear();
-    _statusMemoCount->clear();
+    _statusFileName->setText(tr("(n/a)"));
+    _statusMemoCount->setText(tr("(none)"));
    return true;
 }
 
@@ -290,12 +304,12 @@ void MainWindow::updateCounter()
     if (res.ok())
     {
         _statusMemoCount->setToolTip(QString());
-        _statusMemoCount->setText(tr("Memos: %1").arg(res.result()));
+        _statusMemoCount->setText(QString::number(res.result()));
     }
     else
     {
         _statusMemoCount->setToolTip(res.error());
-        _statusMemoCount->setText(tr("Memos: ERROR"));
+        _statusMemoCount->setText(tr("ERROR"));
     }
 }
 
@@ -352,7 +366,7 @@ void MainWindow::openMemoPage(MemoItem* item)
     }
 
     auto page = new MemoPage(_catalog, item);
-    page->setTitleFont(_memoSettings.titleFont);
+    //page->setTitleFont(_memoSettings.titleFont);
     page->setMemoFont(_memoSettings.memoFont);
     page->setWordWrap(_memoSettings.wordWrap);
     _pagesView->addWidget(page);

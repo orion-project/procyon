@@ -61,7 +61,8 @@ MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     _memoEditor->setProperty("role", "memo_editor");
 
     _titleEditor = new QLineEdit;
-    _titleEditor->setFont(QFont("Arial", 14));
+    _titleEditor->setObjectName("memo_title_editor");
+    //_titleEditor->setFont(QFont("Arial", 14));
 
     auto toolbar = new QToolBar;
     _actionEdit = toolbar->addAction(QIcon(":/toolbar/memo_edit"), tr("Edit"), this, &MemoPage::beginEditing);
@@ -172,8 +173,11 @@ void MemoPage::toggleEditMode(bool on)
     _memoEditor->setTextInteractionFlags(flags);
 
     _titleEditor->setReadOnly(!on);
-    _titleEditor->setStyleSheet(QString("QLineEdit { border-style: none; background: %1; padding: 6px }")
-        .arg(palette().color(on ? QPalette::Base : QPalette::Window).name()));
+    _titleEditor->setProperty("mode", on ? "editable" : "read_only");
+    _titleEditor->setStyleSheet(QString("QLineEdit { background: %1 }")
+        .arg(on ? "white" : "transparent"));
+    //_titleEditor->setStyleSheet(QString("QLineEdit { border-style: none; background: %1; padding: 6px }")
+      //  .arg(palette().color(on ? QPalette::Base : QPalette::Window).name()));
 }
 
 void MemoPage::setMemoFont(const QFont& font)

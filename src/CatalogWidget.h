@@ -5,6 +5,7 @@
 
 QT_BEGIN_NAMESPACE
 class QAction;
+class QLabel;
 class QMenu;
 class QTreeView;
 QT_END_NAMESPACE
@@ -52,9 +53,8 @@ private:
     CatalogModel* _catalogModel = nullptr;
     QMenu *_rootMenu, *_folderMenu, *_memoMenu;
     QAction *_openMemo;
-    QAction *_folderMenuHeader, *_memoMenuHeader;
-
-    static QAction *makeHeaderItem(QMenu* menu);
+    QLabel *_folderMenuHeader, *_memoMenuHeader;
+    QLabel *_folderMenuIcon, *_memoMenuIcon;
 
     void contextMenuRequested(const QPoint &pos);
     void doubleClicked(const QModelIndex &);

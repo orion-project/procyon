@@ -21,11 +21,56 @@ QMenuBar::item:selected {
   color: white;
   background: steelBlue;
 }
+QMenu {
+  background-color: #f6f7fa;
+  border: 1px solid silver;
+}
+QMenu::item {
+  margin: 2px;
+  padding: 3px 6px;
+  min-width: 100px;
+}
+QMenu::item:disabled {
+  color: #99a3aa;
+}
+QMenu::item:selected {
+  color: white;
+  background-color: steelBlue;
+  border-radius: 4px;
+}
+QMenu::separator {
+  height: 1px;
+  background: silver;
+  margin: 6px;
+}
+QMenu::indicator {
+  background: white;
+  border: 1px solid silver;
+  width: 8px;
+  height: 8px;
+  margin-left: 5px;
+  margin-top: 2px;
+}
+QMenu::indicator:checked {
+  background: #2b506e;
+}
+QFrame[role=context_menu_header_panel] {
+  border-bottom: 1px solid silver;
+  margin-bottom: 3px;
+  background: #dadbde;
+  padding: 5px;
+}
+QLabel[role=context_menu_header_text] {
+  font-size: 12px;
+  font-weight: bold;
+  margin-left: 3px;
+  color: #32424c;
+}
 
 /************************************
              List view
 ************************************/
-QListView {
+#pages_list {
   font-size: 13px;
   background-color: white;
   border: 1px solid silver;
@@ -34,16 +79,16 @@ QListView {
   padding-right: 2px;
   padding-top: 2px;
   margin-left: 3px;
-  selection-background-color: white;
+  selection-color: white;
 }
-QListView::item {
+#pages_list::item {
   height: 32px;
 }
-QListView::item:hover {
+#pages_list::item:hover {
   background-color: #edf3f8;
   border-radius: 4px;
 }
-QListView::item:selected {
+#pages_list::item:selected {
   background-color: steelBlue;
   border-radius: 4px;
 }
@@ -60,6 +105,7 @@ QTreeView {
   padding-right: 2px;
   padding-top: 2px;
   margin-right: 3px;
+  selection-color: white;
   selection-background-color: white;
 }
 QTreeView::item {
@@ -82,6 +128,30 @@ QTreeView::item:selected {
   border: 1px solid silver;
   border-radius: 4px;
   padding: 2px;
+  selection-color: white;
+  selection-background-color: steelBlue;
+}
+[role=memo_title] {
+  color: #32424c;
+  font-size: 20px;
+  font-weight: bold;
+  margin-left: 3px;
+}
+#memo_title_editor {
+  color: #32424c;
+  font-size: 20px;
+  font-weight: bold;
+  selection-color: white;
+  selection-background-color: steelBlue;
+  background: transparent;
+  padding: 3px;
+}
+#memo_title_editor[readOnly=true] {
+  border: 1px solid transparent;
+}
+#memo_title_editor[readOnly=false] {
+  border: 1px solid silver;
+  border-radius: 4px;
 }
 
 /************************************
@@ -142,4 +212,37 @@ QToolTip {
   border: 1px solid silver;
   background-color: #edf3f8;
   padding: 2px;
+}
+
+/************************************
+             Status bar
+************************************/
+QStatusBar QLabel {
+  font-size: 12px;
+}
+QStatusBar [role=status_panel] {
+  margin-left: 3px;
+  margin-bottom: 4px;
+  margin-right: 10px;
+  margin-top: 2px;
+}
+QStatusBar [role=status_title] {
+  color: #99a3aa;
+}
+QStatusBar [role=status_value] {
+  color: #32424c;
+  margin-left: 3px;
+}
+
+/************************************
+             Tool bar
+************************************/
+QToolBar::separator {
+  background: silver;
+  width: 1px;
+  margin-left: 3px;
+  margin-right: 3px;
+}
+QToolButton:hover {
+  background: steelBlue;
 }

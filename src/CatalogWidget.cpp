@@ -4,8 +4,11 @@
 #include "helpers/OriLayouts.h"
 #include "helpers/OriDialogs.h"
 
+#include <QFrame>
+#include <QLabel>
 #include <QMenu>
 #include <QTreeView>
+#include <QWidgetAction>
 
 struct CatalogSelection
 {
@@ -29,6 +32,25 @@ struct CatalogSelection
     }
 };
 
+namespace {
+QAction* makeMenuHeader(QWidget* parent, QLabel*& iconLabel, QLabel*& titleLabel)
+{
+    iconLabel = new QLabel;
+    iconLabel->setProperty("role", "context_menu_header_icon");
+
+    titleLabel = new QLabel;
+    titleLabel->setProperty("role", "context_menu_header_text");
+
+    auto panel = new QFrame;
+    panel->setProperty("role", "context_menu_header_panel");
+    Ori::Layouts::LayoutH({iconLabel, titleLabel,
+        Ori::Layouts::Stretch()}).setSpacing(0).setMargin(0).useFor(panel);
+
+    auto action = new QWidgetAction(parent);
+    action->setDefaultWidget(panel);
+    return action;
+}
+} // namespace
 
 CatalogWidget::CatalogWidget() : QWidget()
 {
@@ -37,8 +59,7 @@ CatalogWidget::CatalogWidget() : QWidget()
     _rootMenu->addAction(tr("New Memo"), this, &CatalogWidget::createMemo);
 
     _folderMenu = new QMenu(this);
-    _folderMenuHeader = makeHeaderItem(_folderMenu);
-    _folderMenu->addSeparator();
+    _folderMenu->addAction(makeMenuHeader(this, _folderMenuIcon, _folderMenuHeader));
     _folderMenu->addAction(tr("New Subfolder..."), this, &CatalogWidget::createFolder);
     _folderMenu->addAction(tr("New Memo"), this, &CatalogWidget::createMemo);
     _folderMenu->addSeparator();
@@ -49,17 +70,13 @@ CatalogWidget::CatalogWidget() : QWidget()
     connect(openMemo, &QAction::triggered, this, &CatalogWidget::openSelectedMemo);
 
     _memoMenu = new QMenu(this);
-    _memoMenuHeader = makeHeaderItem(_memoMenu);
-    _memoMenu->addSeparator();
+    _memoMenu->addAction(makeMenuHeader(this, _memoMenuIcon, _memoMenuHeader));
     _memoMenu->addAction(openMemo);
     _memoMenu->addSeparator();
     _memoMenu->addAction(tr("Delete"), this, &CatalogWidget::deleteMemo);
 
     _catalogView = new QTreeView;
     _catalogView->setHeaderHidden(true);
-    // TODO alternate color looks too dark on some themes, e.g. Fusion on Windows,
-    // should set alternate color via stylesheet and it should be only slightly different from base
-    //_catalogView->setAlternatingRowColors(true);
     _catalogView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(_catalogView, &QTreeView::customContextMenuRequested, this, &CatalogWidget::contextMenuRequested);
     connect(_catalogView, &QTreeView::doubleClicked, this, &CatalogWidget::doubleClicked);
@@ -68,17 +85,6 @@ CatalogWidget::CatalogWidget() : QWidget()
             .setMargin(0)
             .setSpacing(0)
             .useFor(this);
-}
-
-QAction* CatalogWidget::makeHeaderItem(QMenu* menu)
-{
-    QAction* item = menu->addAction("");
-    auto font = item->font();
-    font.setBold(true);
-    font.setPointSize(font.pointSize()+2);
-    item->setFont(font);
-    item->setEnabled(false);
-    return item;
 }
 
 void CatalogWidget::setCatalog(Catalog* catalog)
@@ -112,13 +118,13 @@ void CatalogWidget::contextMenuRequested(const QPoint &pos)
     else if (selected.folder)
     {
         _folderMenuHeader->setText(selected.item->title());
-        _folderMenuHeader->setIcon(_catalogModel->folderIcon());
+        _folderMenuIcon->setPixmap(_catalogModel->folderIcon().pixmap(16, 16));
         _folderMenu->popup(_catalogView->mapToGlobal(pos));
     }
     else if (selected.memo)
     {
         _memoMenuHeader->setText(selected.item->title());
-        _memoMenuHeader->setIcon(selected.memo->type()->icon());
+        _memoMenuIcon->setPixmap(selected.memo->type()->icon().pixmap(16, 16));
         _memoMenu->popup(_catalogView->mapToGlobal(pos));
     }
 }

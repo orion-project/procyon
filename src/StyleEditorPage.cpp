@@ -3,12 +3,14 @@
 #include "helpers/OriLayouts.h"
 
 #include <QApplication>
+#include <QLabel>
 #include <QPlainTextEdit>
-#include <QPushButton>
+#include <QToolBar>
 
 StyleEditorPage::StyleEditorPage(QWidget *parent) : QWidget(parent)
 {
     setWindowTitle("Style Sheet Editor");
+    setWindowIcon(QIcon(":/icon/main"));
 
     _editor = new QPlainTextEdit;
     _editor->setProperty("role", "memo_editor");
@@ -27,17 +29,24 @@ StyleEditorPage::StyleEditorPage(QWidget *parent) : QWidget(parent)
     _editor->setFont(f);
     _editor->setPlainText(qApp->styleSheet());
 
-    auto buttonApply = new QPushButton("Apply");
-    buttonApply->setToolTip("Apply style sheet");
-    connect(buttonApply, &QPushButton::clicked, [this](){
+    auto titleLabel = new QLabel("Style Sheet Editor");
+    titleLabel->setProperty("role", "memo_title");
+
+    auto toolbar = new QToolBar;
+    toolbar->addAction(QIcon(":/toolbar/memo_save"), tr("Save"), [this](){
         qApp->setStyleSheet(_editor->toPlainText());
+    });
+    toolbar->addSeparator();
+    toolbar->addAction(QIcon(":/toolbar/memo_close"), tr("Close"), [this](){
+        deleteLater();
     });
 
     Ori::Layouts::LayoutV({
         Ori::Layouts::LayoutH({
+            titleLabel,
             Ori::Layouts::Stretch(),
-            buttonApply
-        }).setMargin(6),
+            toolbar
+        }).setMargin(0),
         _editor
     }).setMargin(0).setSpacing(0).useFor(this);
 }

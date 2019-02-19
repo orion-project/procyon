@@ -121,7 +121,6 @@ void MainWindow::createStatusBar()
 {
     statusBar()->addWidget(makeStatusPanel(tr("Memos:"), _statusMemoCount));
     statusBar()->addWidget(makeStatusPanel(tr("Catalog:"), _statusFileName));
-    statusBar()->showMessage(tr("Ready"));
 }
 
 void MainWindow::saveSettings()
@@ -148,8 +147,8 @@ void MainWindow::loadSettings()
     _memoSettings.memoFont = qvariant_cast<QFont>(s.value("memoFont", QFont("Arial", 12)));
     _memoSettings.wordWrap = s.value("wordWrap", false).toBool();
 
-    int w1 = s.value("memosPanel_width", 200).toInt();
-    int w3 = s.value("catalogPanel_width", 200).toInt();
+    int w1 = s.value("memosPanel_width", 260).toInt();
+    int w3 = s.value("catalogPanel_width", 260).toInt();
     int w2 = _splitter->width() - w1 - w3;
     _splitter->setSizes({w1, w2, w3});
 
@@ -213,10 +212,7 @@ void MainWindow::newCatalog()
 
     auto res = Catalog::create(fileName);
     if (res.ok())
-    {
         catalogOpened(res.result());
-        statusBar()->showMessage(tr("Catalog created"), 2000);
-    }
     else Ori::Dlg::error(tr("Unable to create catalog.\n\n%1").arg(res.error()));
 }
 
@@ -231,10 +227,7 @@ void MainWindow::openCatalog(const QString &fileName)
 
     auto res = Catalog::open(fileName);
     if (res.ok())
-    {
         catalogOpened(res.result());
-        statusBar()->showMessage(tr("Catalog loaded"), 2000);
-    }
     else Ori::Dlg::error(tr("Unable to load catalog.\n\n%1").arg(res.error()));
 }
 

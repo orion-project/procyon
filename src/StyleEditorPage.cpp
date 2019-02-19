@@ -35,7 +35,7 @@ StyleEditorPage::StyleEditorPage(QWidget *parent) : QWidget(parent)
     titleLabel->setProperty("role", "memo_title");
 
     auto toolbar = new QToolBar;
-    toolbar->addAction(QIcon(":/toolbar/memo_save"), tr("Save"), [this](){
+    toolbar->addAction(QIcon(":/toolbar/memo_save"), tr("Apply"), [this](){
         qApp->setStyleSheet(_editor->toPlainText());
     });
     toolbar->addSeparator();

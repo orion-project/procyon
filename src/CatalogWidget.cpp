@@ -76,6 +76,7 @@ CatalogWidget::CatalogWidget() : QWidget()
     _memoMenu->addAction(tr("Delete"), this, &CatalogWidget::deleteMemo);
 
     _catalogView = new QTreeView;
+    _catalogView->setObjectName("notebook_view");
     _catalogView->setHeaderHidden(true);
     _catalogView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(_catalogView, &QTreeView::customContextMenuRequested, this, &CatalogWidget::contextMenuRequested);

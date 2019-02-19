@@ -75,6 +75,10 @@ QLabel[role=context_menu_header_text] {
 ************************************/
 #pages_list {
   font-size: 13px;
+  background-image: url(":/style/background");
+  background-position: bottom left;
+  background-attachment: fixed;
+  background-repeat: none;
   background-color: white;
   border: 1px solid silver;
   border-radius: 4px;
@@ -88,7 +92,7 @@ QLabel[role=context_menu_header_text] {
   height: 32px;
 }
 #pages_list::item:hover {
-  background-color: #edf3f8;
+  background-color: #334682b4;
   border-radius: 4px;
 }
 #pages_list::item:selected {
@@ -99,7 +103,7 @@ QLabel[role=context_menu_header_text] {
 /************************************
              Tree view
 ************************************/
-QTreeView {
+#notebook_view {
   font-size: 13px;
   background-color: white;
   border: 1px solid silver;
@@ -111,14 +115,14 @@ QTreeView {
   selection-color: white;
   selection-background-color: white;
 }
-QTreeView::item {
+#notebook_view::item {
   height: 24px;
 }
-QTreeView::item:hover {
-  background-color: #edf3f8;
+#notebook_view::item:hover {
+  background-color: #334682b4;
   border-radius: 4px;
 }
-QTreeView::item:selected {
+#notebook_view::item:selected {
   background-color: steelBlue;
   border-radius: 4px;
 }

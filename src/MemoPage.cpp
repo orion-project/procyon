@@ -9,6 +9,7 @@
 
 #include <QIcon>
 #include <QDebug>
+#include <QFrame>
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QStyle>
@@ -62,9 +63,10 @@ MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
 
     _titleEditor = new QLineEdit;
     _titleEditor->setObjectName("memo_title_editor");
-    //_titleEditor->setFont(QFont("Arial", 14));
+    _titleEditor->setProperty("role", "memo_title");
 
     auto toolbar = new QToolBar;
+    toolbar->setIconSize(QSize(24, 24));
     _actionEdit = toolbar->addAction(QIcon(":/toolbar/memo_edit"), tr("Edit"), this, &MemoPage::beginEditing);
     _actionEdit->setShortcut(QKeySequence(Qt::Key_Return, Qt::Key_Return));
     _actionSave = toolbar->addAction(QIcon(":/toolbar/memo_save"), tr("Save"), this, &MemoPage::saveEditing);
@@ -76,7 +78,9 @@ MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
         if (canClose()) deleteLater();
     });
 
-    auto toolPanel = LayoutH({_titleEditor, toolbar}).setMargin(0).makeWidget();
+    auto toolPanel = new QFrame;
+    toolPanel->setObjectName("memo_header_panel");
+    LayoutH({_titleEditor, toolbar}).setMargin(0).useFor(toolPanel);
 
     LayoutV({toolPanel, _memoEditor}).setMargin(0).setSpacing(0).useFor(this);
 
@@ -173,21 +177,13 @@ void MemoPage::toggleEditMode(bool on)
     _memoEditor->setTextInteractionFlags(flags);
 
     _titleEditor->setReadOnly(!on);
-    _titleEditor->setProperty("mode", on ? "editable" : "read_only");
-    _titleEditor->setStyleSheet(QString("QLineEdit { background: %1 }")
-        .arg(on ? "white" : "transparent"));
-    //_titleEditor->setStyleSheet(QString("QLineEdit { border-style: none; background: %1; padding: 6px }")
-      //  .arg(palette().color(on ? QPalette::Base : QPalette::Window).name()));
+    // Force updating editor's style sheet, seems it doesn't note changing of readOnly or a custom property
+    _titleEditor->setStyleSheet(QString("QLineEdit { background: %1 }").arg(on ? "white" : "transparent"));
 }
 
 void MemoPage::setMemoFont(const QFont& font)
 {
     _memoEditor->setFont(font);
-}
-
-void MemoPage::setTitleFont(const QFont& font)
-{
-    _titleEditor->setFont(font);
 }
 
 void MemoPage::setWordWrap(bool wrap)

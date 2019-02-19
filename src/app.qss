@@ -22,13 +22,16 @@ QMenuBar::item:selected {
   background: steelBlue;
 }
 QMenu {
+  font-size: 12px;
   background-color: #f6f7fa;
   border: 1px solid silver;
 }
 QMenu::item {
   margin: 2px;
-  padding: 3px 6px;
-  min-width: 100px;
+  padding: 3px 25px;
+}
+QMenu::icon {
+  margin-left: 6px;
 }
 QMenu::item:disabled {
   color: #99a3aa;
@@ -41,7 +44,7 @@ QMenu::item:selected {
 QMenu::separator {
   height: 1px;
   background: silver;
-  margin: 6px;
+  margin: 3px 6px;
 }
 QMenu::indicator {
   background: white;
@@ -135,16 +138,14 @@ QTreeView::item:selected {
   color: #32424c;
   font-size: 20px;
   font-weight: bold;
-  margin-left: 3px;
 }
 #memo_title_editor {
-  color: #32424c;
-  font-size: 20px;
-  font-weight: bold;
   selection-color: white;
   selection-background-color: steelBlue;
   background: transparent;
-  padding: 3px;
+  height: 36px;
+  padding-left: 3px;
+  margin: 0;
 }
 #memo_title_editor[readOnly=true] {
   border: 1px solid transparent;
@@ -152,6 +153,14 @@ QTreeView::item:selected {
 #memo_title_editor[readOnly=false] {
   border: 1px solid silver;
   border-radius: 4px;
+}
+#memo_header_panel {
+  padding: 0;
+  height: 36px;
+  margin-bottom: 3px;
+}
+#style_sheet_editor_title {
+  margin-left: 3px;
 }
 
 /************************************
@@ -237,11 +246,22 @@ QStatusBar [role=status_value] {
 /************************************
              Tool bar
 ************************************/
+QToolBar {
+  height: 36px;
+  padding: 0;
+  margin: 0;
+  margin-top: 4px;
+}
 QToolBar::separator {
   background: silver;
   width: 1px;
   margin-left: 3px;
   margin-right: 3px;
+}
+QToolButton {
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
 }
 QToolButton:hover {
   background: steelBlue;

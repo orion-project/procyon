@@ -26,7 +26,6 @@ class Settings;
 struct MemoSettings
 {
     QFont memoFont;
-    QFont titleFont;
     bool wordWrap;
 };
 
@@ -70,7 +69,6 @@ private:
     void updateMenuCatalog();
     void openMemo();
     void chooseMemoFont();
-    void chooseTitleFont();
     void memoCreated(MemoItem* item);
     void memoRemoved(MemoItem* item);
     void toggleWordWrap();

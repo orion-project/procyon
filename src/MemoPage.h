@@ -34,7 +34,6 @@ public:
     MemoItem* memoItem() const { return _memoItem; }
 
     void setMemoFont(const QFont& font);
-    void setTitleFont(const QFont& font);
     void setWordWrap(bool wrap);
 
     void beginEditing();

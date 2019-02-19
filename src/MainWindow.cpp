@@ -92,7 +92,6 @@ void MainWindow::createMenu()
 
     m = menuBar()->addMenu(tr("&Options"));
     m->addAction(tr("Choose Memo Font..."), this, &MainWindow::chooseMemoFont);
-    m->addAction(tr("Choose Title Font..."), this, &MainWindow::chooseTitleFont);
     auto actionWordWrap = m->addAction(tr("Word Wrap"), this, &MainWindow::toggleWordWrap);
     actionWordWrap->setCheckable(true);
     connect(m, &QMenu::aboutToShow, [this, actionWordWrap](){
@@ -130,7 +129,6 @@ void MainWindow::saveSettings()
     Ori::Settings s;
     s.storeWindowGeometry(this);
     s.setValue("memoFont", _memoSettings.memoFont);
-    s.setValue("titleFont", _memoSettings.titleFont);
     s.setValue("wordWrap", _memoSettings.wordWrap);
 
     auto sizes = _splitter->sizes();
@@ -148,7 +146,6 @@ void MainWindow::loadSettings()
     _mruList->load(s.settings());
 
     _memoSettings.memoFont = qvariant_cast<QFont>(s.value("memoFont", QFont("Arial", 12)));
-    _memoSettings.titleFont = qvariant_cast<QFont>(s.value("titleFont", QFont("Arial", 14)));
     _memoSettings.wordWrap = s.value("wordWrap", false).toBool();
 
     int w1 = s.value("memosPanel_width", 200).toInt();
@@ -366,7 +363,6 @@ void MainWindow::openMemoPage(MemoItem* item)
     }
 
     auto page = new MemoPage(_catalog, item);
-    //page->setTitleFont(_memoSettings.titleFont);
     page->setMemoFont(_memoSettings.memoFont);
     page->setWordWrap(_memoSettings.wordWrap);
     _pagesView->addWidget(page);
@@ -388,16 +384,6 @@ MemoPage* MainWindow::findMemoPage(MemoItem* item) const
 }
 
 namespace {
-bool chooseFont(QFont* targetFont)
-{
-    bool ok;
-    QFont font = QFontDialog::getFont(&ok, *targetFont, qApp->activeWindow(), QString(),
-        QFontDialog::ScalableFonts | QFontDialog::NonScalableFonts |
-        QFontDialog::MonospacedFonts | QFontDialog::ProportionalFonts);
-    if (ok) *targetFont = font;
-    return ok;
-}
-
 template <typename TPage>
 QVector<TPage*> getPages(QStackedWidget* pagesView)
 {
@@ -413,16 +399,14 @@ QVector<TPage*> getPages(QStackedWidget* pagesView)
 
 void MainWindow::chooseMemoFont()
 {
-    if (chooseFont(&_memoSettings.memoFont))
-        for (auto page : getPages<MemoPage>(_pagesView))
-            page->setMemoFont(_memoSettings.memoFont);
-}
-
-void MainWindow::chooseTitleFont()
-{
-    if (chooseFont(&_memoSettings.titleFont))
-        for (auto page : getPages<MemoPage>(_pagesView))
-            page->setTitleFont(_memoSettings.titleFont);
+    bool ok;
+    QFont font = QFontDialog::getFont(&ok, _memoSettings.memoFont,
+        qApp->activeWindow(), tr("Select Memo Font"),
+        QFontDialog::ScalableFonts | QFontDialog::NonScalableFonts |
+        QFontDialog::MonospacedFonts | QFontDialog::ProportionalFonts);
+    if (!ok) return;
+    for (auto page : getPages<MemoPage>(_pagesView))
+        page->setMemoFont(_memoSettings.memoFont);
 }
 
 void MainWindow::toggleWordWrap()

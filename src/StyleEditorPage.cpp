@@ -3,6 +3,7 @@
 #include "helpers/OriLayouts.h"
 
 #include <QApplication>
+#include <QFrame>
 #include <QLabel>
 #include <QPlainTextEdit>
 #include <QToolBar>
@@ -30,6 +31,7 @@ StyleEditorPage::StyleEditorPage(QWidget *parent) : QWidget(parent)
     _editor->setPlainText(qApp->styleSheet());
 
     auto titleLabel = new QLabel("Style Sheet Editor");
+    titleLabel->setObjectName("style_sheet_editor_title");
     titleLabel->setProperty("role", "memo_title");
 
     auto toolbar = new QToolBar;
@@ -41,12 +43,9 @@ StyleEditorPage::StyleEditorPage(QWidget *parent) : QWidget(parent)
         deleteLater();
     });
 
-    Ori::Layouts::LayoutV({
-        Ori::Layouts::LayoutH({
-            titleLabel,
-            Ori::Layouts::Stretch(),
-            toolbar
-        }).setMargin(0),
-        _editor
-    }).setMargin(0).setSpacing(0).useFor(this);
+    auto toolPanel = new QFrame;
+    toolPanel->setObjectName("memo_header_panel");
+    Ori::Layouts::LayoutH({titleLabel, Ori::Layouts::Stretch(), toolbar}).setMargin(0).useFor(toolPanel);
+
+    Ori::Layouts::LayoutV({toolPanel, _editor}).setMargin(0).setSpacing(0).useFor(this);
 }

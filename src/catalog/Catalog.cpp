@@ -56,7 +56,7 @@ MemoItem::~MemoItem()
 
 QString Catalog::fileFilter()
 {
-    return tr("Procyon Memo Catalogs (*.enot);;All files (*.*)");
+    return tr("Procyon Notebooks (*.enot);;All files (*.*)");
 }
 
 QString Catalog::defaultFileExt()

@@ -34,3 +34,4 @@ CMakeLists.txt.user*
 bin/procyon
 bin/procyon.exe
 tmp
+out

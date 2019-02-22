@@ -10,13 +10,14 @@ cd ${SCRIPT_DIR}/..
 if [ ! -d out ]; then mkdir out; fi
 cd out
 
-# Download linuxdeplyqt if none
-# https://github.com/probonopd/linuxdeployqt
-LINUXDEPLOYQT=linuxdeployqt-continuous-x86_64.AppImage
+# Download linuxdeplyqt if none (https://github.com/probonopd/linuxdeployqt)
+# Don't take a build after v5 as it breaks compatibility with newer Ubuntu versions
+LINUXDEPLOYQT=linuxdeployqt-5-x86_64.AppImage
+LINUXDEPLOYQT_URL=https://github.com/probonopd/linuxdeployqt/releases/download/5/${LINUXDEPLOYQT}
 if [ ! -f ${LINUXDEPLOYQT} ]; then
   echo
   echo "Downloading ${LINUXDEPLOYQT}..."
-  wget -c https://github.com/probonopd/linuxdeployqt/releases/download/continuous/${LINUXDEPLOYQT}
+  wget -c ${LINUXDEPLOYQT_URL}
   chmod a+x ${LINUXDEPLOYQT}
   if [ "${?}" != "0" ]; then exit 1; fi
 fi
@@ -40,7 +41,10 @@ echo "Creating AppImage..."
 # qmake must be in PATH, we can try to extract its path from RPATH of app binary
 RPATH="$(objdump -x ../bin/procyon | grep RPATH | sed -e 's/^\s*RPATH\s*//')"
 PATH=${RPATH}/../bin:${PATH}
-./${LINUXDEPLOYQT} AppDir/usr/share/applications/procyon.desktop -appimage -no-translations
+./${LINUXDEPLOYQT} AppDir/usr/share/applications/procyon.desktop \
+  -appimage -no-translations -no-copy-copyright-files \
+  -extra-plugins=iconengines,imageformats/libqsvg.so \
+  -exclude-libs=libqsqlmysql,libqsqlpsql
 if [ "${?}" != "0" ]; then exit 1; fi
 
 # Rename resulting file to contain version
@@ -52,4 +56,3 @@ else
   echo "Warning: Unknown release version."
   echo "Run release/make_version.py script to generate version number."
 fi
-

@@ -79,7 +79,7 @@ void MainWindow::createMenu()
     auto actionExit = m->addAction(tr("Exit"), this, &MainWindow::close, QKeySequence::Quit);
     new Ori::Widgets::MruMenuPart(_mruList, m, actionExit, this);
 
-    m = menuBar()->addMenu(tr("&Catalog"));
+    m = menuBar()->addMenu(tr("&Notebook"));
     connect(m, &QMenu::aboutToShow, this, &MainWindow::updateMenuCatalog);
     _actionCreateTopLevelFolder = m->addAction(tr("New Top Level Folder..."), [this](){ _catalogView->createTopLevelFolder(); });
     _actionCreateFolder = m->addAction(tr("New Folder..."), [this](){ _catalogView->createFolder(); });
@@ -120,7 +120,7 @@ QWidget* makeStatusPanel(const QString& title, QLabel*& labelValue)
 void MainWindow::createStatusBar()
 {
     statusBar()->addWidget(makeStatusPanel(tr("Memos:"), _statusMemoCount));
-    statusBar()->addWidget(makeStatusPanel(tr("Catalog:"), _statusFileName));
+    statusBar()->addWidget(makeStatusPanel(tr("Notebook:"), _statusFileName));
 }
 
 void MainWindow::saveSettings()
@@ -204,16 +204,16 @@ void MainWindow::saveSession()
 
 void MainWindow::newCatalog()
 {
-    if (!closeCatalog()) return;
-
     QString fileName = Ori::Dlg::getSaveFileName(
-                tr("Create Catalog"), Catalog::fileFilter(), Catalog::defaultFileExt());
+                tr("Create Notebook"), Catalog::fileFilter(), Catalog::defaultFileExt());
     if (fileName.isEmpty()) return;
+
+    if (!closeCatalog()) return;
 
     auto res = Catalog::create(fileName);
     if (res.ok())
         catalogOpened(res.result());
-    else Ori::Dlg::error(tr("Unable to create catalog.\n\n%1").arg(res.error()));
+    else Ori::Dlg::error(tr("Unable to create notebook.\n\n%1").arg(res.error()));
 }
 
 void MainWindow::openCatalog(const QString &fileName)
@@ -228,13 +228,13 @@ void MainWindow::openCatalog(const QString &fileName)
     auto res = Catalog::open(fileName);
     if (res.ok())
         catalogOpened(res.result());
-    else Ori::Dlg::error(tr("Unable to load catalog.\n\n%1").arg(res.error()));
+    else Ori::Dlg::error(tr("Unable to load notebook.\n\n%1").arg(res.error()));
 }
 
 void MainWindow::openCatalogViaDialog()
 {
     QString fileName = QFileDialog::getOpenFileName(
-                this, tr("Open Catalog"), QString(), Catalog::fileFilter());
+                this, tr("Open Notebook"), QString(), Catalog::fileFilter());
     if (!fileName.isEmpty())
         openCatalog(fileName);
 }

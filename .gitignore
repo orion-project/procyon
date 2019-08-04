@@ -30,6 +30,9 @@ Makefile*
 *.qmlproject.user.*
 CMakeLists.txt.user*
 
+# Python
+__pycache__
+
 # Output
 bin/procyon
 bin/procyon.exe

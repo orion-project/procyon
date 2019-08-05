@@ -32,6 +32,7 @@ CMakeLists.txt.user*
 
 # Python
 __pycache__
+*.pyc
 
 # Output
 bin/procyon

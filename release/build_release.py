@@ -4,7 +4,7 @@ import time
 
 from helpers import *
 
-print('Build release version of the application\n')
+printc('Build release version of the application', Colors.BOLD)
 
 check_qt_path()
 check_make_path()

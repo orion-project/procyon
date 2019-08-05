@@ -1,9 +1,11 @@
+from __future__ import print_function
+
 import os
-import sys
 import subprocess
 import platform
 import shutil
 import struct
+import errno
 
 IS_WINDOWS = False
 IS_LINUX = False
@@ -17,7 +19,7 @@ elif p == 'Darwin':
   IS_MACOS = True
 else:
   print('ERROR: Unknown platform {}'.format(p))
-  sys.exit()
+  exit()
 
 
 PROJECT_FILE = 'procyon.pro'
@@ -45,7 +47,7 @@ def printc(txt, color):
 
 def print_error_and_exit(txt):
   printc('ERROR: ' + txt, Colors.FAIL)
-  sys.exit()
+  exit()
 
 
 def print_header(txt):
@@ -57,7 +59,9 @@ def print_header(txt):
 
 
 def execute(cmd, print_stdout = True, check_return_code = True):
-  p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+  # It works in Python 3.5 but Python 2.7 can't find command with parameters
+  # given as a string (e.g.: 'qmake -v'), it should be splitted to array (['qmake', '-v'])
+  p = subprocess.Popen(cmd.split(' '), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
   for line in iter(p.stdout.readline, ''):
     if print_stdout:
       print(line, end='')
@@ -72,7 +76,7 @@ def navigate_to_project_dir():
   os.chdir(os.path.join(curdir, '..'))
   if not os.path.isfile(PROJECT_FILE):
     print_error_and_exit((
-      'Project file {} is not found in the current directory.\n' +
+      'Project file {} not found in the current directory.\n' +
       'This script should be run from the project directory.'
     ).format(PROJECT_FILE))
 
@@ -91,11 +95,14 @@ def check_qt_path(cmd = 'qmake -v', print_stdout = True, check_return_code = Tru
   try:
     execute(cmd, print_stdout, check_return_code)
     print()
-  except FileNotFoundError:
-    printc('ERROR: qmake is not found in PATH', Colors.FAIL)
-    print('Find Qt installation and update your PATH like:')
-    printc(get_qt_path_example(), Colors.BOLD)
-    sys.exit()
+  except OSError as e:
+    if e.errno == errno.ENOENT:
+      printc('ERROR: qmake not found in PATH', Colors.FAIL)
+      print('Find Qt installation and update your PATH like:')
+      printc(get_qt_path_example(), Colors.BOLD)
+      exit()
+    else:
+      raise e
 
 
 def check_make_path():
@@ -104,11 +111,14 @@ def check_make_path():
   try:
     execute('mingw32-make --version')
     print()
-  except FileNotFoundError:
-    printc('ERROR: mingw32-make is not found in PATH', Colors.FAIL)
-    print('Ensure you have MinGW installed and update PATH like:')
-    printc('set PATH=c:\\Qt\\Tools\\mingw730_64\\bin;%PATH%', Colors.BOLD)
-    sys.exit()
+  except OSError as e:
+    if e.errno == errno.ENOENT:
+      printc('ERROR: mingw32-make not found in PATH', Colors.FAIL)
+      print('Ensure you have MinGW installed and update PATH like:')
+      printc('set PATH=c:\\Qt\\Tools\\mingw730_64\\bin;%PATH%', Colors.BOLD)
+      exit()
+    else:
+      raise e
 
 
 def create_dir_if_none(dirname):

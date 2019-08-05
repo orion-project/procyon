@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
 from helpers import *
 
 navigate_to_project_dir()
@@ -45,7 +45,7 @@ def make_package_for_windows():
   print_header('Pack files to zip...')
   global package_name
   package_name = '{}-win-x{}.zip'.format(package_name, get_exe_bits(PROJECT_EXE))
-  with ZipFile('..\\' + package_name, 'w') as zip:
+  with ZipFile('..\\' + package_name, mode='w', compression=ZIP_DEFLATED) as zip:
      for dirname, subdirs, filenames in os.walk('.'):
         for filename in filenames:
           zip.write(os.path.join(dirname, filename))

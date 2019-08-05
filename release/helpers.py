@@ -22,10 +22,15 @@ else:
   exit()
 
 
+PROJECT_NAME = 'procyon'
 PROJECT_FILE = 'procyon.pro'
+if IS_WINDOWS: PROJECT_EXE = 'procyon.exe'
+if IS_LINUX: PROJECT_EXE = 'procyon'
+if IS_MACOS: PROJECT_EXE = 'procyon.app'
 OUT_DIR = 'out'
 BUILD_DIR = 'build'
 REDIST_DIR = 'redist'
+
 
 class Colors:
   HEADER = '\033[95m'
@@ -140,6 +145,11 @@ def remove_files(filenames):
   for filename in filenames:
     if os.path.exists(filename):
       os.remove(filename)
+
+
+def remove_dir(dirname):
+  if os.path.exists(dirname):
+    shutil.rmtree(dirname)
 
 
 def get_file_text(file_name):

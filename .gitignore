@@ -37,5 +37,6 @@ __pycache__
 # Output
 bin/procyon
 bin/procyon.exe
+bin/procyon.app
 tmp
 out

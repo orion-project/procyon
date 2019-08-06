@@ -63,17 +63,23 @@ def print_header(txt):
     printc(txt, Colors.HEADER)
 
 
-def execute(cmd, print_stdout = True, check_return_code = True):
+def execute(cmd, print_stdout = True, return_stdout = False, check_return_code = True):
   # It works in Python 3.5 but Python 2.7 can't find command with parameters
   # given as a string (e.g.: 'qmake -v'), it should be splitted to array (['qmake', '-v'])
   p = subprocess.Popen(cmd.split(' '), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+  if return_stdout:
+    stdout = []
   for line in iter(p.stdout.readline, ''):
+    if return_stdout:
+      stdout.append(line)
     if print_stdout:
       print(line, end='')
   p.stdout.close()
   return_code = p.wait()
   if return_code and check_return_code:
     raise subprocess.CalledProcessError(return_code, cmd)
+  if return_stdout:
+    return stdout
 
 
 def navigate_to_project_dir():
@@ -163,6 +169,11 @@ def set_file_text(file_name, text):
 
 
 def get_exe_bits(file_name):
+  if IS_LINUX:
+    exe_info = execute('file ' + file_name, print_stdout = False, return_stdout = True)
+    exe_bits = exe_info[0].split(',')[1].strip()
+    return exe_bits.split('-')[1]
+
   with open(file_name, 'rb') as f:
     if f.read(2) != b'MZ':
       raise Exception('Invalid exe file {}: invalid MZ signature'.format(file_name))

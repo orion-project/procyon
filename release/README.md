@@ -38,7 +38,6 @@ git push origin v0.1.0
 
 Target package is in `../out` subdirectory, it's named
 
-- on Windows `procyon-{version}-win-x32|x64.zip`
+- on Windows `procyon-{version}-win-{x32|x64}.zip`
+- on Linux: `procyon-{version}-linux-{x32|x64}.AppImage`
 - on MacOS `procyon-{version}.dmg`
-- on Linux: `procyon-{version}.AppImage`
-

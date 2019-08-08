@@ -13,6 +13,9 @@ DESTDIR = $$_PRO_FILE_PWD_/bin
 ORION = $$_PRO_FILE_PWD_/orion/
 include($$ORION"orion.pri")
 
+# Version information
+include(release/version.pri)
+
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked as deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
@@ -24,6 +27,7 @@ RESOURCES += src/resources.qrc
 win32: RC_FILE = src/app.rc
 
 SOURCES += src/main.cpp\
+    src/AppSettings.cpp \
     src/MainWindow.cpp \
     src/CatalogWidget.cpp \
     src/catalog/Catalog.cpp \
@@ -39,6 +43,7 @@ SOURCES += src/main.cpp\
     src/StyleEditorPage.cpp
 
 HEADERS  += src/MainWindow.h \
+    src/AppSettings.h \
     src/CatalogWidget.h \
     src/CatalogModel.h \
     src/catalog/Catalog.h \

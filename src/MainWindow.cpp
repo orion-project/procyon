@@ -1,10 +1,13 @@
 #include "MainWindow.h"
+
+#include "AppSettings.h"
 #include "CatalogWidget.h"
 #include "MemoPage.h"
 #include "StyleEditorPage.h"
 #include "OpenedPagesWidget.h"
 #include "catalog/Catalog.h"
 #include "catalog/CatalogStore.h"
+
 #include "helpers/OriDialogs.h"
 #include "helpers/OriLayouts.h"
 #include "helpers/OriWindows.h"
@@ -97,8 +100,11 @@ void MainWindow::createMenu()
     connect(m, &QMenu::aboutToShow, [this, actionWordWrap](){
         actionWordWrap->setChecked(_memoSettings.wordWrap);
     });
-    m->addSeparator();
-    m->addAction(tr("Edit Style Sheet"), this, &MainWindow::editStyleSheet);
+    if (Settings::instance().isDevMode)
+    {
+        m->addSeparator();
+        m->addAction(tr("Edit Style Sheet"), this, &MainWindow::editStyleSheet);
+    }
 }
 
 namespace  {

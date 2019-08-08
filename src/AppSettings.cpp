@@ -33,12 +33,14 @@ void Settings::load()
 {
     Ori::Settings s;
 
-    // TODO
+    s.beginGroup("View");
+    LOAD_DEF(useNativeMenuBar, Bool, true);
 }
 
 void Settings::save()
 {
     Ori::Settings s;
 
-    // TODO
+    s.beginGroup("View");
+    SAVE(useNativeMenuBar);
 }

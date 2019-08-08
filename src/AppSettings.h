@@ -18,6 +18,9 @@ class Settings :
         public Notifier<SettingsListener>
 {
 public:
+#ifndef Q_OS_WIN
+    bool useNativeMenuBar;    ///< Use menu bar specfic to Ubuntu Unity or MacOS (on sceern's top).
+#endif
     bool isDevMode = false;
 
     void load();

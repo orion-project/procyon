@@ -39,8 +39,8 @@ SOURCES += src/main.cpp\
     src/highlighter/ShellMemoSyntaxHighlighter.cpp \
     src/CatalogModel.cpp \
     src/OpenedPagesWidget.cpp \
-    src/MemoPage.cpp \
-    src/StyleEditorPage.cpp
+    src/pages/MemoPage.cpp \
+    src/pages/StyleEditorPage.cpp
 
 HEADERS  += src/MainWindow.h \
     src/AppSettings.h \
@@ -54,8 +54,8 @@ HEADERS  += src/MainWindow.h \
     src/highlighter/PythonSyntaxHighlighter.h \
     src/highlighter/ShellMemoSyntaxHighlighter.h \
     src/OpenedPagesWidget.h \
-    src/MemoPage.h \
-    src/StyleEditorPage.h
+    src/pages/MemoPage.h \
+    src/pages/StyleEditorPage.h
 
 DISTFILES += \
     src/app.qss

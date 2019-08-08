@@ -1,8 +1,10 @@
 #include "MemoPage.h"
-#include "catalog/Catalog.h"
-#include "catalog/Memo.h"
-#include "highlighter/PythonSyntaxHighlighter.h"
-#include "highlighter/ShellMemoSyntaxHighlighter.h"
+
+#include "../catalog/Catalog.h"
+#include "../catalog/Memo.h"
+#include "../highlighter/PythonSyntaxHighlighter.h"
+#include "../highlighter/ShellMemoSyntaxHighlighter.h"
+
 #include "helpers/OriDialogs.h"
 #include "helpers/OriLayouts.h"
 #include "helpers/OriWidgets.h"
@@ -66,12 +68,14 @@ MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     _titleEditor->setProperty("role", "memo_title");
 
     auto toolbar = new QToolBar;
+    toolbar->setObjectName("memo_toolbar");
+    toolbar->setContentsMargins(0, 0, 0, 0);
     toolbar->setIconSize(QSize(24, 24));
     _actionEdit = toolbar->addAction(QIcon(":/toolbar/memo_edit"), tr("Edit"), this, &MemoPage::beginEditing);
-    _actionEdit->setShortcut(QKeySequence(Qt::Key_Return, Qt::Key_Return));
     _actionSave = toolbar->addAction(QIcon(":/toolbar/memo_save"), tr("Save"), this, &MemoPage::saveEditing);
-    _actionSave->setShortcut(QKeySequence::Save);
     _actionCancel = toolbar->addAction(QIcon(":/toolbar/memo_cancel"), tr("Cancel"), this, &MemoPage::cancelEditing);
+    _actionEdit->setShortcut(QKeySequence(Qt::Key_Return, Qt::Key_Return));
+    _actionSave->setShortcut(QKeySequence::Save);
     _actionCancel->setShortcut(QKeySequence(Qt::Key_Escape, Qt::Key_Escape));
     toolbar->addSeparator();
     toolbar->addAction(QIcon(":/toolbar/memo_close"), tr("Close"), [this](){

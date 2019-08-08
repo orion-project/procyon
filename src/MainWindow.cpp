@@ -2,11 +2,11 @@
 
 #include "AppSettings.h"
 #include "CatalogWidget.h"
-#include "MemoPage.h"
-#include "StyleEditorPage.h"
 #include "OpenedPagesWidget.h"
 #include "catalog/Catalog.h"
 #include "catalog/CatalogStore.h"
+#include "pages/MemoPage.h"
+#include "pages/StyleEditorPage.h"
 
 #include "helpers/OriDialogs.h"
 #include "helpers/OriLayouts.h"
@@ -54,6 +54,11 @@ MainWindow::MainWindow() : QMainWindow()
     _splitter->setStretchFactor(0, 0);
     _splitter->setStretchFactor(1, 1);
     _splitter->setStretchFactor(2, 0);
+
+#ifndef Q_OS_WIN
+    if (Settings::instance().useNativeMenuBar)
+        setContentsMargins(0, 3, 0, 0);
+#endif
     setCentralWidget(_splitter);
 
     createMenu();
@@ -74,7 +79,7 @@ void MainWindow::createMenu()
 {
     QMenu* m;
 
-    menuBar()->setNativeMenuBar(false);
+    menuBar()->setNativeMenuBar(Settings::instance().useNativeMenuBar);
 
     m = menuBar()->addMenu(tr("File"));
     m->addAction(tr("New..."), this, &MainWindow::newCatalog);

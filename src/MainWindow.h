@@ -76,6 +76,7 @@ private:
     void openMemoPage(MemoItem* item);
     MemoPage* findMemoPage(MemoItem* item) const;
     void editStyleSheet();
+    void showAbout();
 };
 
 #endif // MAIN_WINDOW_H

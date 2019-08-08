@@ -11,10 +11,6 @@
 #include <QCommandLineParser>
 #include <QMessageBox>
 
-#ifndef Q_OS_WIN
-#include <iostream>
-#endif
-
 QString loadStyleSheet()
 {
     QFile file(":/style/app_main");

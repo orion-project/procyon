@@ -25,6 +25,7 @@
 #include <QLabel>
 #include <QMessageBox>
 #include <QMenuBar>
+#include <QPushButton>
 #include <QSplitter>
 #include <QStatusBar>
 #include <QStackedWidget>
@@ -75,14 +76,14 @@ void MainWindow::createMenu()
 
     menuBar()->setNativeMenuBar(false);
 
-    m = menuBar()->addMenu(tr("&File"));
+    m = menuBar()->addMenu(tr("File"));
     m->addAction(tr("New..."), this, &MainWindow::newCatalog);
     m->addAction(tr("Open..."), this, &MainWindow::openCatalogViaDialog, QKeySequence::Open);
     m->addSeparator();
     auto actionExit = m->addAction(tr("Exit"), this, &MainWindow::close, QKeySequence::Quit);
     new Ori::Widgets::MruMenuPart(_mruList, m, actionExit, this);
 
-    m = menuBar()->addMenu(tr("&Notebook"));
+    m = menuBar()->addMenu(tr("Notebook"));
     connect(m, &QMenu::aboutToShow, this, &MainWindow::updateMenuCatalog);
     _actionCreateTopLevelFolder = m->addAction(tr("New Top Level Folder..."), [this](){ _catalogView->createTopLevelFolder(); });
     _actionCreateFolder = m->addAction(tr("New Folder..."), [this](){ _catalogView->createFolder(); });
@@ -93,7 +94,7 @@ void MainWindow::createMenu()
     _actionCreateMemo = m->addAction(tr("New memo"), [this](){ _catalogView->createMemo(); });
     _actionDeleteMemo = m->addAction(tr("Delete memo"), [this](){ _catalogView->deleteMemo(); });
 
-    m = menuBar()->addMenu(tr("&Options"));
+    m = menuBar()->addMenu(tr("Options"));
     m->addAction(tr("Choose Memo Font..."), this, &MainWindow::chooseMemoFont);
     auto actionWordWrap = m->addAction(tr("Word Wrap"), this, &MainWindow::toggleWordWrap);
     actionWordWrap->setCheckable(true);
@@ -105,6 +106,9 @@ void MainWindow::createMenu()
         m->addSeparator();
         m->addAction(tr("Edit Style Sheet"), this, &MainWindow::editStyleSheet);
     }
+
+    m = menuBar()->addMenu(tr("Help"));
+    m->addAction(tr("About %1...").arg(qApp->applicationName()), this, &MainWindow::showAbout);
 }
 
 namespace  {
@@ -450,4 +454,26 @@ void MainWindow::editStyleSheet()
     _pagesView->addWidget(page);
     _pagesView->setCurrentWidget(page);
     _openedPagesView->addOpenedPage(page);
+}
+
+void MainWindow::showAbout()
+{
+    auto title = tr("About %1").arg(qApp->applicationName());
+    auto text = tr(
+                "<h2>{app} {app_ver}</h2>"
+                "<p>Built: {build_date}"
+                "<p>Copyright: Chunosov N.&nbsp;I. © 2017-{app_year}"
+                "<p>Web: <a href='{www}'>{www}</a>"
+                "<p>&nbsp;")
+            .replace("{app}", qApp->applicationName())
+            .replace("{app_ver}", qApp->applicationVersion())
+            .replace("{app_year}", QString::number(APP_VER_YEAR))
+            .replace("{build_date}", QString("%1 %2").arg(BUILDDATE).arg(BUILDTIME))
+            .replace("{www}", "https://github.com/orion-project/procyon");
+    QMessageBox about(QMessageBox::NoIcon, title, text, QMessageBox::Ok, this);
+    about.setIconPixmap(QPixmap(":/icon/main").
+        scaled(64, 64, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    auto button = about.addButton(tr("About Qt"), QMessageBox::ActionRole);
+    connect(button, SIGNAL(clicked()), qApp, SLOT(aboutQt()));
+    about.exec();
 }

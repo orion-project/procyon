@@ -40,6 +40,7 @@ SOURCES += src/main.cpp\
     src/CatalogModel.cpp \
     src/OpenedPagesWidget.cpp \
     src/pages/MemoPage.cpp \
+    src/pages/PageWidgets.cpp \
     src/pages/StyleEditorPage.cpp
 
 HEADERS  += src/MainWindow.h \
@@ -55,6 +56,7 @@ HEADERS  += src/MainWindow.h \
     src/highlighter/ShellMemoSyntaxHighlighter.h \
     src/OpenedPagesWidget.h \
     src/pages/MemoPage.h \
+    src/pages/PageWidgets.h \
     src/pages/StyleEditorPage.h
 
 DISTFILES += \

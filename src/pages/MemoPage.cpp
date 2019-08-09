@@ -1,18 +1,17 @@
 #include "MemoPage.h"
 
+#include "PageWidgets.h"
 #include "../catalog/Catalog.h"
 #include "../catalog/Memo.h"
 #include "../highlighter/PythonSyntaxHighlighter.h"
 #include "../highlighter/ShellMemoSyntaxHighlighter.h"
 
 #include "helpers/OriDialogs.h"
-#include "helpers/OriLayouts.h"
 #include "helpers/OriWidgets.h"
 
 #include <QIcon>
 #include <QDebug>
 #include <QFrame>
-#include <QLineEdit>
 #include <QMessageBox>
 #include <QStyle>
 #include <QTextEdit>
@@ -63,9 +62,7 @@ MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     _memoEditor->setWordWrapMode(QTextOption::NoWrap);
     _memoEditor->setProperty("role", "memo_editor");
 
-    _titleEditor = new QLineEdit;
-    _titleEditor->setObjectName("memo_title_editor");
-    _titleEditor->setProperty("role", "memo_title");
+    _titleEditor = PageWidgets::makeTitleEditor();
 
     auto toolbar = new QToolBar;
     toolbar->setObjectName("memo_toolbar");
@@ -82,9 +79,7 @@ MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
         if (canClose()) deleteLater();
     });
 
-    auto toolPanel = new QFrame;
-    toolPanel->setObjectName("memo_header_panel");
-    LayoutH({_titleEditor, toolbar}).setMargin(0).useFor(toolPanel);
+    auto toolPanel = PageWidgets::makeHeaderPanel({_titleEditor, toolbar});
 
     LayoutV({toolPanel, _memoEditor}).setMargin(0).setSpacing(0).useFor(this);
 

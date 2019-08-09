@@ -1,10 +1,12 @@
 #include "StyleEditorPage.h"
 
+#include "PageWidgets.h"
+
 #include "helpers/OriLayouts.h"
 
 #include <QApplication>
 #include <QFrame>
-#include <QLabel>
+#include <QLineEdit>
 #include <QPlainTextEdit>
 #include <QToolBar>
 
@@ -30,9 +32,8 @@ StyleEditorPage::StyleEditorPage(QWidget *parent) : QWidget(parent)
     _editor->setFont(f);
     _editor->setPlainText(qApp->styleSheet());
 
-    auto titleLabel = new QLabel("Style Sheet Editor");
-    titleLabel->setObjectName("style_sheet_editor_title");
-    titleLabel->setProperty("role", "memo_title");
+    auto titleEditor = PageWidgets::makeTitleEditor();
+    titleEditor->setText(tr("Stylesheet Editor"));
 
     auto toolbar = new QToolBar;
     toolbar->addAction(QIcon(":/toolbar/memo_save"), tr("Apply"), [this](){
@@ -43,9 +44,7 @@ StyleEditorPage::StyleEditorPage(QWidget *parent) : QWidget(parent)
         deleteLater();
     });
 
-    auto toolPanel = new QFrame;
-    toolPanel->setObjectName("memo_header_panel");
-    Ori::Layouts::LayoutH({titleLabel, Ori::Layouts::Stretch(), toolbar}).setMargin(0).useFor(toolPanel);
+    auto toolPanel = PageWidgets::makeHeaderPanel({titleEditor, toolbar});
 
     Ori::Layouts::LayoutV({toolPanel, _editor}).setMargin(0).setSpacing(0).useFor(this);
 }

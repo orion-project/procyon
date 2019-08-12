@@ -8,6 +8,7 @@ class QAction;
 class QLabel;
 class QStackedWidget;
 class QSplitter;
+class QSettings;
 QT_END_NAMESPACE
 
 class Catalog;
@@ -19,15 +20,7 @@ class MemoItem;
 
 namespace Ori {
 class MruFileList;
-class Settings;
 }
-
-
-struct MemoSettings
-{
-    QFont memoFont;
-    bool wordWrap;
-};
 
 
 class MainWindow : public QMainWindow
@@ -37,6 +30,9 @@ class MainWindow : public QMainWindow
 public:
     MainWindow();
     ~MainWindow() override;
+
+    void loadSettings(QSettings* s);
+    void saveSettings(QSettings* s);
 
 protected:
     void closeEvent(QCloseEvent *event) override;
@@ -51,13 +47,10 @@ private:
     QLabel *_statusMemoCount, *_statusFileName;
     QAction *_actionCreateTopLevelFolder, *_actionCreateFolder, *_actionRenameFolder, *_actionDeleteFolder;
     QAction *_actionOpenMemo, *_actionCreateMemo, *_actionDeleteMemo;
-    MemoSettings _memoSettings;
     QString _lastOpenedCatalog;
 
     void createMenu();
     void createStatusBar();
-    void saveSettings();
-    void loadSettings();
     void loadSession();
     void saveSession();
     void newCatalog();

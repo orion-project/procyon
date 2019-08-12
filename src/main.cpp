@@ -3,6 +3,7 @@
 #include "AppSettings.h"
 
 #include "tools/OriDebug.h"
+#include "tools/OriSettings.h"
 
 #include <QApplication>
 #include <QDebug>
@@ -11,7 +12,7 @@
 #include <QCommandLineParser>
 #include <QMessageBox>
 
-QString loadStyleSheet()
+QString loadStyleSheet(QSettings* s)
 {
     QFile file(":/style/app_main");
     bool ok = file.open(QIODevice::ReadOnly);
@@ -26,8 +27,15 @@ QString loadStyleSheet()
         qWarning() << "Unable to load style from resources: read data is empty";
         return QString();
     }
+
     QString styleSheet(data);
-    styleSheet.replace("$base-color", Settings::instance().baseColor);
+
+    Ori::SettingsGroup group(s, "Theme");
+
+    // General window color, it can be set slightly different than the default, for example,
+    // to make it better match the window borders color depending on the desktop theme.
+    styleSheet.replace("$base-color", s->value("baseColor", "#dadbde").toString());
+
     return styleSheet;
 }
 
@@ -74,16 +82,32 @@ int main(int argc, char *argv[])
     app.setApplicationVersion(APP_VER);
     app.setStyle(QStyleFactory::create("Fusion"));
 
-    Settings::instance().load();
-
-    // Call after setting loading
-    // to be able to apply custom settings
-    app.setStyleSheet(loadStyleSheet());
-
     if (!processCommandLine()) return 1;
 
     MainWindow w;
-    w.show();
 
-    return app.exec();
+    { // Settings scope
+        QSharedPointer<QSettings> s(Ori::Settings::open());
+
+        Settings::instance().load(s.data());
+
+        // Call `setStyleSheet` after setting loaded
+        // to be able to apply custom colors.
+        app.setStyleSheet(loadStyleSheet(s.data()));
+
+        w.loadSettings(s.data());
+        w.show();
+    }
+
+    int res = app.exec();
+
+    { // Settings scope
+        QSharedPointer<QSettings> s(Ori::Settings::open());
+
+        Settings::instance().save(s.data());
+
+        w.saveSettings(s.data());
+    }
+
+    return res;
 }

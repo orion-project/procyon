@@ -20,29 +20,24 @@ SettingsListener::~SettingsListener()
 //                               Settings
 //------------------------------------------------------------------------------
 
-#define LOAD(option, type)\
-    option = s.settings()->value(QStringLiteral(#option)).to ## type()
-
-#define LOAD_DEF(option, type, default_value)\
-    option = s.settings()->value(QStringLiteral(#option), default_value).to ## type()
+#define LOAD(option, type, default_value)\
+    option = s->value(QStringLiteral(#option), default_value).to ## type()
 
 #define SAVE(option)\
-    s.settings()->setValue(QStringLiteral(#option), option)
+    s->setValue(QStringLiteral(#option), option)
 
-void Settings::load()
+void Settings::load(QSettings* s)
 {
-    Ori::Settings s;
-
-    s.beginGroup("View");
-    LOAD_DEF(useNativeMenuBar, Bool, true);
-    LOAD_DEF(baseColor, String, "#dadbde");
+    Ori::SettingsGroup group(s, "View");
+    LOAD(useNativeMenuBar, Bool, true);
+    LOAD(memoWordWrap, Bool, false);
+    memoFont = qvariant_cast<QFont>(s->value("memoFont", QFont("Arial", 12)));
 }
 
-void Settings::save()
+void Settings::save(QSettings* s)
 {
-    Ori::Settings s;
-
-    s.beginGroup("View");
+    Ori::SettingsGroup group(s, "View");
     SAVE(useNativeMenuBar);
-    SAVE(baseColor);
+    SAVE(memoWordWrap);
+    SAVE(memoFont);
 }

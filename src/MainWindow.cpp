@@ -63,14 +63,10 @@ MainWindow::MainWindow() : QMainWindow()
 
     createMenu();
     createStatusBar();
-
-    loadSettings();
 }
 
 MainWindow::~MainWindow()
 {
-    saveSettings();
-
     if (_catalog)
         delete _catalog;
 }
@@ -103,8 +99,8 @@ void MainWindow::createMenu()
     m->addAction(tr("Choose Memo Font..."), this, &MainWindow::chooseMemoFont);
     auto actionWordWrap = m->addAction(tr("Word Wrap"), this, &MainWindow::toggleWordWrap);
     actionWordWrap->setCheckable(true);
-    connect(m, &QMenu::aboutToShow, [this, actionWordWrap](){
-        actionWordWrap->setChecked(_memoSettings.wordWrap);
+    connect(m, &QMenu::aboutToShow, [actionWordWrap](){
+        actionWordWrap->setChecked(Settings::instance().memoWordWrap);
     });
     if (Settings::instance().isDevMode)
     {
@@ -138,36 +134,33 @@ void MainWindow::createStatusBar()
     statusBar()->addWidget(makeStatusPanel(tr("Notebook:"), _statusFileName));
 }
 
-void MainWindow::saveSettings()
+void MainWindow::saveSettings(QSettings* s)
 {
-    Ori::Settings s;
-    s.storeWindowGeometry(this);
-    s.setValue("memoFont", _memoSettings.memoFont);
-    s.setValue("wordWrap", _memoSettings.wordWrap);
+    Ori::SettingsHelper::storeWindowGeometry(s, this);
+
+    Ori::SettingsGroup group(s, "Common");
 
     auto sizes = _splitter->sizes();
-    s.setValue("memosPanel_width", sizes.at(0));
-    s.setValue("catalogPanel_width", sizes.at(2));
+    s->setValue("memosPanel_width", sizes.at(0));
+    s->setValue("catalogPanel_width", sizes.at(2));
 
     if (!_lastOpenedCatalog.isEmpty())
-        s.setValue("database", _lastOpenedCatalog);
+        s->setValue("database", _lastOpenedCatalog);
 }
 
-void MainWindow::loadSettings()
+void MainWindow::loadSettings(QSettings* s)
 {
-    Ori::Settings s;
-    s.restoreWindowGeometry(this);
-    _mruList->load(s.settings());
+    Ori::SettingsHelper::restoreWindowGeometry(s, this);
 
-    _memoSettings.memoFont = qvariant_cast<QFont>(s.value("memoFont", QFont("Arial", 12)));
-    _memoSettings.wordWrap = s.value("wordWrap", false).toBool();
+    Ori::SettingsGroup group(s, "Common");
+    _mruList->load(s);
 
-    int w1 = s.value("memosPanel_width", 260).toInt();
-    int w3 = s.value("catalogPanel_width", 260).toInt();
+    int w1 = s->value("memosPanel_width", 260).toInt();
+    int w3 = s->value("catalogPanel_width", 260).toInt();
     int w2 = _splitter->width() - w1 - w3;
     _splitter->setSizes({w1, w2, w3});
 
-    auto lastFile = s.value("database").toString();
+    auto lastFile = s->value("database").toString();
     if (!lastFile.isEmpty())
         QTimer::singleShot(200, [this, lastFile](){ openCatalog(lastFile); });
 }
@@ -371,8 +364,8 @@ void MainWindow::openMemoPage(MemoItem* item)
     }
 
     auto page = new MemoPage(_catalog, item);
-    page->setMemoFont(_memoSettings.memoFont);
-    page->setWordWrap(_memoSettings.wordWrap);
+    page->setMemoFont(Settings::instance().memoFont);
+    page->setWordWrap(Settings::instance().memoWordWrap);
     _pagesView->addWidget(page);
     _pagesView->setCurrentWidget(page);
     _openedPagesView->addOpenedPage(page);
@@ -408,20 +401,22 @@ QVector<TPage*> getPages(QStackedWidget* pagesView)
 void MainWindow::chooseMemoFont()
 {
     bool ok;
-    QFont font = QFontDialog::getFont(&ok, _memoSettings.memoFont,
+    QFont font = QFontDialog::getFont(&ok, Settings::instance().memoFont,
         qApp->activeWindow(), tr("Select Memo Font"),
         QFontDialog::ScalableFonts | QFontDialog::NonScalableFonts |
         QFontDialog::MonospacedFonts | QFontDialog::ProportionalFonts);
     if (!ok) return;
+    Settings::instance().memoFont = font;
     for (auto page : getPages<MemoPage>(_pagesView))
-        page->setMemoFont(_memoSettings.memoFont);
+        page->setMemoFont(font);
 }
 
 void MainWindow::toggleWordWrap()
 {
-    _memoSettings.wordWrap = !_memoSettings.wordWrap;
+    auto s = Settings::instancePtr();
+    s->memoWordWrap = !s->memoWordWrap;
     for (auto page : getPages<MemoPage>(_pagesView))
-        page->setWordWrap(_memoSettings.wordWrap);
+        page->setWordWrap(s->memoWordWrap);
 }
 
 void MainWindow::memoCreated(MemoItem* item)

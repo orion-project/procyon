@@ -35,6 +35,7 @@ void Settings::load()
 
     s.beginGroup("View");
     LOAD_DEF(useNativeMenuBar, Bool, true);
+    LOAD_DEF(baseColor, String, "#dadbde");
 }
 
 void Settings::save()
@@ -43,4 +44,5 @@ void Settings::save()
 
     s.beginGroup("View");
     SAVE(useNativeMenuBar);
+    SAVE(baseColor);
 }

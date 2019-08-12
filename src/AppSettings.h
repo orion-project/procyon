@@ -18,10 +18,12 @@ class Settings :
         public Notifier<SettingsListener>
 {
 public:
-#ifndef Q_OS_WIN
     bool useNativeMenuBar;    ///< Use menu bar specfic to Ubuntu Unity or MacOS (on sceern's top).
-#endif
     bool isDevMode = false;
+
+    /// General window color, it can be set slightly different than the default, for example,
+    /// to make it better match the window borders color depending on the desktop theme.
+    QString baseColor;
 
     void load();
     void save();

@@ -26,7 +26,9 @@ QString loadStyleSheet()
         qWarning() << "Unable to load style from resources: read data is empty";
         return QString();
     }
-    return data;
+    QString styleSheet(data);
+    styleSheet.replace("$base-color", Settings::instance().baseColor);
+    return styleSheet;
 }
 
 bool processCommandLine()
@@ -71,9 +73,12 @@ int main(int argc, char *argv[])
     app.setOrganizationName("orion-project.org");
     app.setApplicationVersion(APP_VER);
     app.setStyle(QStyleFactory::create("Fusion"));
-    app.setStyleSheet(loadStyleSheet());
 
     Settings::instance().load();
+
+    // Call after setting loading
+    // to be able to apply custom settings
+    app.setStyleSheet(loadStyleSheet());
 
     if (!processCommandLine()) return 1;
 

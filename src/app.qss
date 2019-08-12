@@ -2,7 +2,7 @@
              Main window
 ************************************/
 QMainWindow {
-  background-color: #dadbde;
+  background-color: $base-color;
 }
 
 /************************************
@@ -60,7 +60,7 @@ QMenu::indicator:checked {
 QFrame[role=context_menu_header_panel] {
   border-bottom: 1px solid silver;
   margin-bottom: 3px;
-  background: #dadbde;
+  background: $base-color;
   padding: 5px;
 }
 QLabel[role=context_menu_header_text] {
@@ -182,7 +182,7 @@ QScrollBar::handle:vertical {
   min-height: 20px;
 }
 QScrollBar::handle:vertical:hover {
-  background-color: #dadbde;
+  background-color: $base-color;
 }
 QScrollBar::add-line:vertical {
   height: 0;
@@ -203,7 +203,7 @@ QScrollBar::handle:horizontal {
   min-width: 20px;
 }
 QScrollBar::handle:horizontal:hover {
-  background-color: #dadbde;
+  background-color: $base-color;
 }
 QScrollBar::add-line:horizontal {
   width: 0;

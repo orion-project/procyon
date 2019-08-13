@@ -13,6 +13,10 @@ DESTDIR = $$_PRO_FILE_PWD_/bin
 ORION = $$_PRO_FILE_PWD_/orion/
 include($$ORION"orion.pri")
 
+# hunspell
+INCLUDEPATH += $$_PRO_FILE_PWD_/hunspell-1.7.0/src
+LIBS += $$_PRO_FILE_PWD_/hunspell-1.7.0/src/hunspell/.libs/libhunspell-1.7.a
+
 # Version information
 include(release/version.pri)
 
@@ -30,6 +34,7 @@ SOURCES += src/main.cpp\
     src/AppSettings.cpp \
     src/MainWindow.cpp \
     src/CatalogWidget.cpp \
+    src/SpellChecker.cpp \
     src/catalog/Catalog.cpp \
     src/catalog/CatalogStore.cpp \
     src/catalog/SqlHelper.cpp \
@@ -47,6 +52,7 @@ HEADERS  += src/MainWindow.h \
     src/AppSettings.h \
     src/CatalogWidget.h \
     src/CatalogModel.h \
+    src/SpellChecker.h \
     src/catalog/Catalog.h \
     src/catalog/CatalogStore.h \
     src/catalog/SqlHelper.h \

@@ -40,3 +40,5 @@ bin/procyon.exe
 bin/procyon.app
 tmp
 out
+hunspell*
+

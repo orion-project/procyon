@@ -11,6 +11,7 @@ QT_END_NAMESPACE
 
 class Catalog;
 class MemoItem;
+class SpellChecker;
 
 class MemoEditor : public QTextEdit
 {
@@ -51,6 +52,7 @@ private:
     QLineEdit* _titleEditor;
     QAction *_actionEdit, *_actionSave, *_actionCancel;
     QSyntaxHighlighter* _highlighter = nullptr;
+    SpellChecker* _spellChecker = nullptr;
 
     void showMemo();
     void cancelEditing();

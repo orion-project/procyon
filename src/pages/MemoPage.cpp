@@ -1,6 +1,7 @@
 #include "MemoPage.h"
 
 #include "PageWidgets.h"
+#include "../SpellChecker.h"
 #include "../catalog/Catalog.h"
 #include "../catalog/Memo.h"
 #include "../highlighter/PythonSyntaxHighlighter.h"
@@ -83,6 +84,8 @@ MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
 
     LayoutV({toolPanel, _memoEditor}).setMargin(0).setSpacing(0).useFor(this);
 
+    _spellChecker = new SpellChecker("", "");
+
     showMemo();
     toggleEditMode(false);
     _memoEditor->setFocus();
@@ -95,6 +98,7 @@ MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
 
 MemoPage::~MemoPage()
 {
+    if (_spellChecker) delete _spellChecker;
 }
 
 void MemoPage::showMemo()

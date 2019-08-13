@@ -32,10 +32,24 @@ bool MemoEditor::shouldProcess(QMouseEvent *e)
 
 void MemoEditor::mousePressEvent(QMouseEvent *e)
 {
-    QString href = anchorAt(e->pos());
-    if (!href.isEmpty() && shouldProcess(e))
-        _clickedAnchor = href;
-    else QTextEdit::mousePressEvent(e);
+    // A hyperlink made via syntax highlighter doesn't create some 'top level' anchor,
+    // so `anchorAt` returns nothing, we have to enumerate styles to find out a href.
+    auto cursor = cursorForPosition(viewport()->mapFromParent(e->pos()));
+    for (auto format : cursor.block().layout()->formats())
+    {
+        auto href = format.format.anchorHref();
+        if (!href.isEmpty())
+        {
+            _clickedAnchor = href;
+            break;
+        }
+    }
+
+//    QString href = anchorAt(e->pos());
+//    if (!href.isEmpty() && shouldProcess(e))
+//        _clickedAnchor = href;
+
+    QTextEdit::mousePressEvent(e);
 }
 
 void MemoEditor::mouseReleaseEvent(QMouseEvent *e)
@@ -45,7 +59,7 @@ void MemoEditor::mouseReleaseEvent(QMouseEvent *e)
         QDesktopServices::openUrl(_clickedAnchor);
         _clickedAnchor.clear();
     }
-    else QTextEdit::mouseReleaseEvent(e);
+    QTextEdit::mouseReleaseEvent(e);
 }
 
 //------------------------------------------------------------------------------
@@ -201,6 +215,7 @@ void MemoPage::applyTextStyles()
 
 void MemoPage::processHyperlinks()
 {
+/*
     static QList<QRegExp> rex;
     if (rex.isEmpty())
     {
@@ -225,6 +240,7 @@ void MemoPage::processHyperlinks()
             cursor = _memoEditor->document()->find(re, cursor);
         }
     }
+*/
 }
 
 void MemoPage::applyHighlighter()
@@ -238,7 +254,7 @@ void MemoPage::applyHighlighter()
 
     auto text = _memoItem->memo()->data();
 
-    // TODO highlighter should be selected bu user and saved into catalog
+    // TODO highlighter should be selected by user and saved into catalog
     if (text.startsWith("#!/usr/bin/env python"))
         _highlighter = new PythonSyntaxHighlighter(_memoEditor->document());
     else if (text.startsWith("#shell-memo"))

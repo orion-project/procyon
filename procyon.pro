@@ -15,7 +15,12 @@ include($$ORION"orion.pri")
 
 # hunspell
 INCLUDEPATH += $$_PRO_FILE_PWD_/hunspell-1.7.0/src
-LIBS += $$_PRO_FILE_PWD_/hunspell-1.7.0/src/hunspell/.libs/libhunspell-1.7.a
+win32 {
+    LIBS += -L$$_PRO_FILE_PWD_/hunspell-1.7.0/src/hunspell/.libs -lhunspell-1.7-0
+}
+else {
+    LIBS += $$_PRO_FILE_PWD_/hunspell-1.7.0/src/hunspell/.libs/libhunspell-1.7.a
+}
 
 # Version information
 include(release/version.pri)

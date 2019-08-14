@@ -51,7 +51,7 @@ bool processCommandLine()
     if (!parser.parse(QApplication::arguments()))
     {
 #ifdef Q_OS_WIN
-        QMessageBox::critical(nullptr, app.applicationName(), parser.errorText());
+        QMessageBox::critical(nullptr, "Procyon", parser.errorText());
 #else
         qCritical() << qPrintable(parser.errorText());
 #endif

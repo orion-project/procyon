@@ -51,6 +51,13 @@ def make_package_for_windows():
 
   print_header('Copy project files...')
   shutil.copyfile('..\\..\\bin\\' + PROJECT_EXE, PROJECT_EXE)
+  
+  print_header('Copy additional files ignored by windeployqt...')
+  qt_dir = '' # TODO: find qt dir
+  shutil.copyfile(qt_dir + '\\libgcc_s_seh-1.dll', 'libgcc_s_seh-1.dll')
+  shutil.copyfile(qt_dir + '\\libstdc++-6.dll', 'libstdc++-6.dll')
+  shutil.copyfile(qt_dir + '\\libwinpthread-1.dll', 'libwinpthread-1.dll')
+  # TODO: copy libhunspell-1.7-0.dll from \hunspell-1.7.0\src\hunspell\.libs\
 
   print_header('Pack files to zip...')
   global package_name

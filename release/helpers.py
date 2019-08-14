@@ -104,7 +104,9 @@ def check_qt_path(cmd = 'qmake -v', print_stdout = True, check_return_code = Tru
       return 'export PATH=/Users/user/Qt/5.10.0/clang_64/bin:$PATH$'
 
   try:
-    execute(cmd, print_stdout, check_return_code)
+    execute(cmd,
+            print_stdout = print_stdout,
+            check_return_code = check_return_code)
     print()
   except OSError as e:
     if e.errno == errno.ENOENT:

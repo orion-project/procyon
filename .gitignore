@@ -38,8 +38,8 @@ __pycache__
 bin/procyon
 bin/procyon.exe
 bin/procyon.app
+bin/dicts
 tmp
 out
 hunspell*
 libreoffice*
-Dicts

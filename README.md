@@ -10,11 +10,11 @@ See [Releases](https://github.com/orion-project/procyon/releases) section for do
 
 ![Main Window](./img/main_window.png)
 
-## Build
+## Dependencies
 
-### Install hunspell
+### hunspell
 
-[hunspell](https://github.com/hunspell/hunspell) used for spell checking. See its official readme for full build instructions. 
+[hunspell](http://hunspell.github.io/) is used for spell checking. See its official [readme](https://github.com/hunspell/hunspell) for full build instructions. 
 
 ```bash
 curl https://codeload.github.com/hunspell/hunspell/zip/v1.7.0 > hunspell-1.7.0.zip
@@ -40,7 +40,7 @@ autoreconf -vfi
 make
 ```
 
-On macOS we have to set lower target os version than it actually is to avoid a lot of linker warnings when linking lib to application (solution is from [here](https://stackoverflow.com/questions/43216273/object-file-was-built-for-newer-osx-version-than-being-linked)):
+On macOS, we have to set a lower target os version than it is to avoid many linker warnings when linking lib to the application (the solution is from [StackOverflow](https://stackoverflow.com/questions/43216273/object-file-was-built-for-newer-osx-version-than-being-linked)):
 
 > object file ... was built for newer OSX version (10.12) than being linked (10.10)
 
@@ -50,12 +50,13 @@ make CXXFLAGS="-g -O2 -mmacosx-version-min=10.10"
 
 ### Download dictionaries
 
-In the example below packages is the full set of dictionaries from [here](https://github.com/LibreOffice/dictionaries) and we have to extract only needed `.dic` and `.aff` files.
+In the example below, the package is the full set of dictionaries for [LibreOffice](https://github.com/LibreOffice/dictionaries) (74M), and we have to extract only needed `.dic` and `.aff` files.
 
 ```bash
+# Don't forget to leave hunspell directory
+cd ..
+
 curl https://codeload.github.com/LibreOffice/dictionaries/zip/libreoffice-6.3.0.4 > libreoffice-6.3.0.4.zip
-unzip -j libreoffice-6.3.0.4.zip dictionaries-libreoffice-6.3.0.4/en/en_US.dic -d dicts
-unzip -j libreoffice-6.3.0.4.zip dictionaries-libreoffice-6.3.0.4/en/en_US.aff -d dicts
-unzip -j libreoffice-6.3.0.4.zip dictionaries-libreoffice-6.3.0.4/ru_RU/ru_RU.dic -d dicts
-unzip -j libreoffice-6.3.0.4.zip dictionaries-libreoffice-6.3.0.4/ru_RU/ru_RU.aff -d dicts
+unzip -j libreoffice-6.3.0.4.zip dictionaries-libreoffice-6.3.0.4/en/en_US.* -d bin/dicts
+unzip -j libreoffice-6.3.0.4.zip dictionaries-libreoffice-6.3.0.4/ru_RU/ru_RU.* -d bin/dicts
 ```

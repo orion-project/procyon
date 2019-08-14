@@ -1,5 +1,5 @@
-#ifndef SHELLMEMOSYNTAXHIGHLIGHTER_H
-#define SHELLMEMOSYNTAXHIGHLIGHTER_H
+#ifndef SHELL_MEMO_SYNTAX_HIGHLIGHTER_H
+#define SHELL_MEMO_SYNTAX_HIGHLIGHTER_H
 
 #include "HighlightingRule.h"
 
@@ -14,8 +14,7 @@ protected:
     void highlightBlock(const QString &text);
 
 private:
-    HighlightingStyleSet* styles;
-    QList<HighlightingRule> rules;
+    QList<HighlightingRule1>* rules;
 };
 
-#endif // SHELLMEMOSYNTAXHIGHLIGHTER_H
+#endif // SHELL_MEMO_SYNTAX_HIGHLIGHTER_H

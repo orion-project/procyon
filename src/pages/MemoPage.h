@@ -18,9 +18,11 @@ class MemoEditor : public QTextEdit
 protected:
     void mousePressEvent(QMouseEvent *e);
     void mouseReleaseEvent(QMouseEvent *e);
+    bool event(QEvent *event);
 private:
-    QString _clickedAnchor;
+    QString _clickedHref;
     bool shouldProcess(QMouseEvent *e);
+    QString hrefAtWidgetPos(const QPoint& pos) const;
 };
 
 
@@ -57,8 +59,6 @@ private:
     void showMemo();
     void cancelEditing();
     void toggleEditMode(bool on);
-    void applyTextStyles();
-    void processHyperlinks();
     void applyHighlighter();
 };
 

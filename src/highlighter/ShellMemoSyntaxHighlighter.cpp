@@ -20,7 +20,7 @@ static QList<HighlightingRule1>* getRules()
 
         R_("Hyperlink",
            "\\bhttp(s?)://[^\\s]+\\b",
-           F_("blue").underline().get(),
+           F_("blue").underline().anchor().get(),
            HighlightingRule1::Options().hyperlink()),
 
         R_("Separator", "^\\s*-{3,}.*$",   F_("darkGray").get()),
@@ -46,15 +46,14 @@ void ShellMemoSyntaxHighlighter::highlightBlock(const QString &text)
             int pos = rule.pattern.pos(rule.options.nth);
             int length = rule.pattern.cap(rule.options.nth).length();
 
-            // TODO font style is applied correctly but for some reasons
-            // highlighter can't make anchors and apply tooltip too
-            // https://bugreports.qt.io/browse/QTBUG-21553
+            // Font style is applied correctly but highlighter can't make anchors and apply tooltips.
+            // We do it manually overriding event handlers in MemoEditor.
+            // There is the bug but seems nobody cares: https://bugreports.qt.io/browse/QTBUG-21553
             if (rule.options.isHyperlink)
             {
                 QStringRef href(&text, pos, length);
                 QTextCharFormat format(rule.format);
                 format.setAnchorHref(href.toString());
-                format.setToolTip(href + tr("\nCtrl + Click to open"));
                 setFormat(pos, length, format);
             }
             else

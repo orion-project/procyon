@@ -17,6 +17,7 @@
 #include <QTextEdit>
 #include <QTimer>
 #include <QToolBar>
+#include <QToolTip>
 #include <QDesktopServices>
 
 using namespace Ori::Layouts;
@@ -30,36 +31,63 @@ bool MemoEditor::shouldProcess(QMouseEvent *e)
     return e->modifiers() & Qt::ControlModifier && e->button() & Qt::LeftButton;
 }
 
-void MemoEditor::mousePressEvent(QMouseEvent *e)
+// A hyperlink made via syntax highlighter doesn't create some 'top level' anchor,
+// so `anchorAt` returns nothing, we have to enumerate styles to find out a href.
+QString MemoEditor::hrefAtWidgetPos(const QPoint& pos) const
 {
-    // A hyperlink made via syntax highlighter doesn't create some 'top level' anchor,
-    // so `anchorAt` returns nothing, we have to enumerate styles to find out a href.
-    auto cursor = cursorForPosition(viewport()->mapFromParent(e->pos()));
+    auto cursor = cursorForPosition(viewport()->mapFromParent(pos));
+
     for (auto format : cursor.block().layout()->formats())
     {
-        auto href = format.format.anchorHref();
-        if (!href.isEmpty())
+        int cursorPos = cursor.positionInBlock();
+        if (cursorPos >= format.start and
+            cursorPos < format.start + format.length and
+            format.format.isAnchor())
         {
-            _clickedAnchor = href;
-            break;
+            auto href = format.format.anchorHref();
+            if (not href.isEmpty()) return href;
         }
     }
+    return QString();
+}
 
-//    QString href = anchorAt(e->pos());
-//    if (!href.isEmpty() && shouldProcess(e))
-//        _clickedAnchor = href;
+void MemoEditor::mousePressEvent(QMouseEvent *e)
+{
+    if (shouldProcess(e))
+        _clickedHref = hrefAtWidgetPos(e->pos());
 
     QTextEdit::mousePressEvent(e);
 }
 
 void MemoEditor::mouseReleaseEvent(QMouseEvent *e)
 {
-    if (!_clickedAnchor.isEmpty() && shouldProcess(e))
+    if (not _clickedHref.isEmpty())
     {
-        QDesktopServices::openUrl(_clickedAnchor);
-        _clickedAnchor.clear();
+        QDesktopServices::openUrl(_clickedHref);
+        _clickedHref.clear();
     }
     QTextEdit::mouseReleaseEvent(e);
+}
+
+bool MemoEditor::event(QEvent *event)
+{
+    if (event->type() != QEvent::ToolTip)
+        return QTextEdit::event(event);
+
+    auto helpEvent = dynamic_cast<QHelpEvent*>(event);
+    if (not helpEvent) return false;
+
+    auto href = hrefAtWidgetPos(helpEvent->pos());
+    if (not href.isEmpty())
+    {
+        auto tooltip = QStringLiteral("<p style='white-space:pre'>%1<p>%2")
+                .arg(href, tr("<b>Ctrl + Click</b> to open"));
+        QToolTip::showText(helpEvent->globalPos(), tooltip);
+    }
+    else QToolTip::hideText();
+
+    event->accept();
+    return true;
 }
 
 //------------------------------------------------------------------------------
@@ -117,9 +145,8 @@ void MemoPage::showMemo()
     _memoEditor->setPlainText(text);
     _titleEditor->setText(_memoItem->memo()->title());
     setWindowTitle(_memoItem->memo()->title());
-    applyTextStyles();
+    applyHighlighter();
 
-    // Modified flag should be reset after text style was applied
     _memoEditor->document()->setModified(false);
     _titleEditor->setModified(false);
 }
@@ -168,9 +195,8 @@ bool MemoPage::saveEditing()
 
     setWindowTitle(_memoItem->memo()->title());
     toggleEditMode(false);
-    applyTextStyles();
+    applyHighlighter();
 
-    // Modified flag should be reset after text style was applied
     _memoEditor->document()->setModified(false);
     _titleEditor->setModified(false);
 
@@ -204,47 +230,10 @@ void MemoPage::setWordWrap(bool wrap)
     _memoEditor->setWordWrapMode(wrap ? QTextOption::WrapAtWordBoundaryOrAnywhere : QTextOption::NoWrap);
 }
 
-void MemoPage::applyTextStyles()
-{
-    _memoEditor->setUndoRedoEnabled(false);
-    processHyperlinks();
-    // Should be applied after hyperlinks to get correct finish style.
-    applyHighlighter();
-    _memoEditor->setUndoRedoEnabled(true);
-}
-
-void MemoPage::processHyperlinks()
-{
-/*
-    static QList<QRegExp> rex;
-    if (rex.isEmpty())
-    {
-        rex.append(QRegExp("\\bhttp(s?)://[^\\s]+\\b", Qt::CaseInsensitive));
-    }
-    for (const QRegExp& re : rex)
-    {
-        QTextCursor cursor = _memoEditor->document()->find(re);
-        while (!cursor.isNull())
-        {
-            QString href = cursor.selectedText();
-            QTextCharFormat f;
-            f.setAnchor(true);
-            f.setAnchorHref(href);
-            f.setForeground(Qt::blue);
-            f.setFontUnderline(true);
-            // Wanted to draw Ctrl+Click bolded, but when html,
-            // tooltip becomes word-wrapped at some rather narrow width and it looks too ugly.
-            f.setToolTip(href + tr("\nCtrl + Click to open"));
-            cursor.mergeCharFormat(f);
-
-            cursor = _memoEditor->document()->find(re, cursor);
-        }
-    }
-*/
-}
-
 void MemoPage::applyHighlighter()
 {
+    _memoEditor->setUndoRedoEnabled(false);
+
     // TODO preserve highlighter if its type is not changed
     if (_highlighter)
     {
@@ -259,6 +248,8 @@ void MemoPage::applyHighlighter()
         _highlighter = new PythonSyntaxHighlighter(_memoEditor->document());
     else if (text.startsWith("#shell-memo"))
         _highlighter = new ShellMemoSyntaxHighlighter(_memoEditor->document());
+
+    _memoEditor->setUndoRedoEnabled(true);
 }
 
 bool MemoPage::isModified() const

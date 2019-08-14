@@ -65,36 +65,4 @@ inline const QTextCharFormat getTextCharFormat(const QString &colorName, const Q
 
 typedef QHash<int, QTextCharFormat> HighlightingStyleSet;
 
-struct TextFormat
-{
-    TextFormat() {}
-    TextFormat(const QString& colorName): _colorName(colorName) {}
-    TextFormat& bold() { _bold = true; return *this; }
-    TextFormat& italic() { _italic = true; return *this; }
-    TextFormat& underline() { _underline = true; return *this; }
-    TextFormat& anchor() { _anchor = true; return *this; }
-
-    QTextCharFormat get()
-    {
-        QTextCharFormat f;
-        if (!_colorName.isEmpty())
-        {
-            QColor color(_colorName);
-            f.setForeground(color);
-        }
-        if (_bold) f.setFontWeight(QFont::Bold);
-        f.setFontItalic(_italic);
-        f.setFontUnderline(_underline);
-        f.setAnchor(_anchor);
-        return f;
-    }
-
-private:
-    QString _colorName;
-    bool _bold = false;
-    bool _italic = false;
-    bool _underline = false;
-    bool _anchor = false;
-};
-
 #endif // HIGHLIGHTING_RULE_H

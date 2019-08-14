@@ -1,7 +1,9 @@
 #include "MemoPage.h"
 
+#include "MemoEditor.h"
 #include "PageWidgets.h"
 #include "../SpellChecker.h"
+#include "../TextEditorHelpers.h"
 #include "../catalog/Catalog.h"
 #include "../catalog/Memo.h"
 #include "../highlighter/PythonSyntaxHighlighter.h"
@@ -15,85 +17,8 @@
 #include <QFrame>
 #include <QMessageBox>
 #include <QStyle>
-#include <QTextEdit>
 #include <QTimer>
 #include <QToolBar>
-#include <QToolTip>
-#include <QDesktopServices>
-
-using namespace Ori::Layouts;
-
-//------------------------------------------------------------------------------
-//                               MemoEditor
-//------------------------------------------------------------------------------
-
-bool MemoEditor::shouldProcess(QMouseEvent *e)
-{
-    return e->modifiers() & Qt::ControlModifier && e->button() & Qt::LeftButton;
-}
-
-// A hyperlink made via syntax highlighter doesn't create some 'top level' anchor,
-// so `anchorAt` returns nothing, we have to enumerate styles to find out a href.
-QString MemoEditor::hrefAtWidgetPos(const QPoint& pos) const
-{
-    auto cursor = cursorForPosition(viewport()->mapFromParent(pos));
-
-    for (auto format : cursor.block().layout()->formats())
-    {
-        int cursorPos = cursor.positionInBlock();
-        if (cursorPos >= format.start and
-            cursorPos < format.start + format.length and
-            format.format.isAnchor())
-        {
-            auto href = format.format.anchorHref();
-            if (not href.isEmpty()) return href;
-        }
-    }
-    return QString();
-}
-
-void MemoEditor::mousePressEvent(QMouseEvent *e)
-{
-    if (shouldProcess(e))
-        _clickedHref = hrefAtWidgetPos(e->pos());
-
-    QTextEdit::mousePressEvent(e);
-}
-
-void MemoEditor::mouseReleaseEvent(QMouseEvent *e)
-{
-    if (not _clickedHref.isEmpty())
-    {
-        QDesktopServices::openUrl(_clickedHref);
-        _clickedHref.clear();
-    }
-    QTextEdit::mouseReleaseEvent(e);
-}
-
-bool MemoEditor::event(QEvent *event)
-{
-    if (event->type() != QEvent::ToolTip)
-        return QTextEdit::event(event);
-
-    auto helpEvent = dynamic_cast<QHelpEvent*>(event);
-    if (not helpEvent) return false;
-
-    auto href = hrefAtWidgetPos(helpEvent->pos());
-    if (not href.isEmpty())
-    {
-        auto tooltip = QStringLiteral("<p style='white-space:pre'>%1<p>%2")
-                .arg(href, tr("<b>Ctrl + Click</b> to open"));
-        QToolTip::showText(helpEvent->globalPos(), tooltip);
-    }
-    else QToolTip::hideText();
-
-    event->accept();
-    return true;
-}
-
-//------------------------------------------------------------------------------
-//                                 MemoPage
-//------------------------------------------------------------------------------
 
 MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     _catalog(catalog), _memoItem(memoItem)
@@ -124,9 +49,7 @@ MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
 
     auto toolPanel = PageWidgets::makeHeaderPanel({_titleEditor, toolbar});
 
-    LayoutV({toolPanel, _memoEditor}).setMargin(0).setSpacing(0).useFor(this);
-
-    _spellChecker = new SpellChecker("", "");
+    Ori::Layouts::LayoutV({toolPanel, _memoEditor}).setMargin(0).setSpacing(0).useFor(this);
 
     showMemo();
     toggleEditMode(false);
@@ -140,7 +63,6 @@ MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
 
 MemoPage::~MemoPage()
 {
-    if (_spellChecker) delete _spellChecker;
 }
 
 void MemoPage::showMemo()
@@ -222,6 +144,12 @@ void MemoPage::toggleEditMode(bool on)
     _titleEditor->setReadOnly(!on);
     // Force updating editor's style sheet, seems it doesn't note changing of readOnly or a custom property
     _titleEditor->setStyleSheet(QString("QLineEdit { background: %1 }").arg(on ? "white" : "transparent"));
+
+    if (on)
+    {
+        _spellChecker = SpellChecker::get("en_US");
+        spellCheck();
+    }
 }
 
 void MemoPage::setMemoFont(const QFont& font)
@@ -259,4 +187,54 @@ void MemoPage::applyHighlighter()
 bool MemoPage::isModified() const
 {
     return _memoEditor->document()->isModified() || _titleEditor->isModified();
+}
+
+void MemoPage::spellCheck()
+{
+    if (!_spellChecker) return;
+
+    TextEditCursorBackup cursorBacup(_memoEditor);
+
+    static auto spellErrorFormat = TextFormat().spellError().get();
+
+    QList<QTextEdit::ExtraSelection> spellErrorMarks;
+
+    QTextCursor cursor(_memoEditor->document());
+    while (!cursor.atEnd())
+    {
+        cursor.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
+        QString word = cursor.selectedText();
+
+        if (!word.isEmpty() && !word.at(0).isLetter())
+        {
+            // Skip punctuation at the beginning of a word, quoted and bracketed words accounted here too
+            while (!word.isEmpty() && !word.at(0).isLetter() && cursor.anchor() < cursor.position())
+            {
+                int cursorPos = cursor.position();
+                cursor.setPosition(cursor.anchor() + 1, QTextCursor::MoveAnchor);
+                cursor.setPosition(cursorPos, QTextCursor::KeepAnchor);
+                word = cursor.selectedText();
+            }
+            if (word.isEmpty())
+            {
+                // When we've skipped punctuation,
+                // the cursor may be at the beginning of the next word already.
+                // For example, have text "(word1) word2",
+                // after skipping the bracket "(" we are at the "w" of "word1",
+                // i.e., on a word already, then moving via `QTextCursor::NextWord`
+                // shifts the cursor to the next word "word2" and "word1" gets missed.
+                // To avoid, try to find the end of a word after skipping punctuation.
+                cursor.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
+                word = cursor.selectedText();
+            }
+        }
+
+        if (!word.isEmpty() && !_spellChecker->check(word))
+            spellErrorMarks << QTextEdit::ExtraSelection {cursor, spellErrorFormat};
+
+        cursor.movePosition(QTextCursor::NextWord, QTextCursor::MoveAnchor);
+    }
+
+    if (!spellErrorMarks.isEmpty())
+        _memoEditor->setExtraSelections(spellErrorMarks);
 }

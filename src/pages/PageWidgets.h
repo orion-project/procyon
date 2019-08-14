@@ -3,6 +3,7 @@
 
 #include <QLineEdit>
 #include <QFrame>
+#include <QTextEdit>
 
 #include "helpers/OriLayouts.h"
 

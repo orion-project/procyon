@@ -1,5 +1,7 @@
 #include "ShellMemoSyntaxHighlighter.h"
 
+#include "../TextEditorHelpers.h"
+
 #include <QDebug>
 
 static QList<HighlightingRule1>* getRules()

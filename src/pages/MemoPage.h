@@ -1,7 +1,7 @@
 #ifndef MEMO_PAGE_H
 #define MEMO_PAGE_H
 
-#include <QTextEdit>
+#include <QWidget>
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -10,21 +10,9 @@ class QSyntaxHighlighter;
 QT_END_NAMESPACE
 
 class Catalog;
+class MemoEditor;
 class MemoItem;
 class SpellChecker;
-
-class MemoEditor : public QTextEdit
-{
-protected:
-    void mousePressEvent(QMouseEvent *e);
-    void mouseReleaseEvent(QMouseEvent *e);
-    bool event(QEvent *event);
-private:
-    QString _clickedHref;
-    bool shouldProcess(QMouseEvent *e);
-    QString hrefAtWidgetPos(const QPoint& pos) const;
-};
-
 
 class MemoPage : public QWidget
 {
@@ -50,7 +38,7 @@ signals:
 private:
     Catalog* _catalog;
     MemoItem* _memoItem;
-    QTextEdit* _memoEditor;
+    MemoEditor* _memoEditor;
     QLineEdit* _titleEditor;
     QAction *_actionEdit, *_actionSave, *_actionCancel;
     QSyntaxHighlighter* _highlighter = nullptr;
@@ -60,6 +48,7 @@ private:
     void cancelEditing();
     void toggleEditMode(bool on);
     void applyHighlighter();
+    void spellCheck();
 };
 
 #endif // MEMO_PAGE_H

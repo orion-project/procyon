@@ -8,12 +8,18 @@ class Hunspell;
 class SpellChecker
 {
 public:
-    SpellChecker(const QString &dictionaryPath, const QString &userDictionary);
+    static SpellChecker* get(const QString& lang);
+
     ~SpellChecker();
 
+    bool check(const QString &word) const;
+
 private:
-    Hunspell* _hunspell;
-    QString _userDictionary;
+    SpellChecker(const QString &dictionaryPath, const QString &userDictionaryPath);
+
+    QString _userDictionaryPath;
+    Hunspell* _hunspell = nullptr;
+    QTextCodec *_codec;
 };
 
 #endif // SPELL_CHECKER_H

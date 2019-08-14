@@ -15,12 +15,8 @@ include($$ORION"orion.pri")
 
 # hunspell
 INCLUDEPATH += $$_PRO_FILE_PWD_/hunspell-1.7.0/src
-win32 {
-    LIBS += -L$$_PRO_FILE_PWD_/hunspell-1.7.0/src/hunspell/.libs -lhunspell-1.7-0
-}
-else {
-    LIBS += $$_PRO_FILE_PWD_/hunspell-1.7.0/src/hunspell/.libs/libhunspell-1.7.a
-}
+win32: LIBS += -L$$_PRO_FILE_PWD_/hunspell-1.7.0/src/hunspell/.libs -lhunspell-1.7-0
+else: LIBS += $$_PRO_FILE_PWD_/hunspell-1.7.0/src/hunspell/.libs/libhunspell-1.7.a
 
 # Version information
 include(release/version.pri)
@@ -40,6 +36,7 @@ SOURCES += src/main.cpp\
     src/MainWindow.cpp \
     src/CatalogWidget.cpp \
     src/SpellChecker.cpp \
+    src/TextEditorHelpers.cpp \
     src/catalog/Catalog.cpp \
     src/catalog/CatalogStore.cpp \
     src/catalog/SqlHelper.cpp \
@@ -49,6 +46,7 @@ SOURCES += src/main.cpp\
     src/highlighter/ShellMemoSyntaxHighlighter.cpp \
     src/CatalogModel.cpp \
     src/OpenedPagesWidget.cpp \
+    src/pages/MemoEditor.cpp \
     src/pages/MemoPage.cpp \
     src/pages/PageWidgets.cpp \
     src/pages/StyleEditorPage.cpp
@@ -58,6 +56,7 @@ HEADERS  += src/MainWindow.h \
     src/CatalogWidget.h \
     src/CatalogModel.h \
     src/SpellChecker.h \
+    src/TextEditorHelpers.h \
     src/catalog/Catalog.h \
     src/catalog/CatalogStore.h \
     src/catalog/SqlHelper.h \
@@ -66,6 +65,7 @@ HEADERS  += src/MainWindow.h \
     src/highlighter/PythonSyntaxHighlighter.h \
     src/highlighter/ShellMemoSyntaxHighlighter.h \
     src/OpenedPagesWidget.h \
+    src/pages/MemoEditor.h \
     src/pages/MemoPage.h \
     src/pages/PageWidgets.h \
     src/pages/StyleEditorPage.h

@@ -40,12 +40,22 @@ autoreconf -vfi
 make
 ```
 
-On macOS we have to set lower target os version than it actually is to avoid a lot of linker warnings when linking lib to application:
+On macOS we have to set lower target os version than it actually is to avoid a lot of linker warnings when linking lib to application (solution is from [here](https://stackoverflow.com/questions/43216273/object-file-was-built-for-newer-osx-version-than-being-linked)):
 
 > object file ... was built for newer OSX version (10.12) than being linked (10.10)
 
-https://stackoverflow.com/questions/43216273/object-file-was-built-for-newer-osx-version-than-being-linked
+```bash
+make CXXFLAGS="-g -O2 -mmacosx-version-min=10.10"
+```
+
+### Download dictionaries
+
+In the example below packages is the full set of dictionaries from [here](https://github.com/LibreOffice/dictionaries) and we have to extract only needed `.dic` and `.aff` files.
 
 ```bash
-make CFLAGS="-g -O2 -mmacosx-version-min=10.10" LDFLAGS="-mmacosx-version-min=10.10"
+curl https://codeload.github.com/LibreOffice/dictionaries/zip/libreoffice-6.3.0.4 > libreoffice-6.3.0.4.zip
+unzip -j libreoffice-6.3.0.4.zip dictionaries-libreoffice-6.3.0.4/en/en_US.dic -d dicts
+unzip -j libreoffice-6.3.0.4.zip dictionaries-libreoffice-6.3.0.4/en/en_US.aff -d dicts
+unzip -j libreoffice-6.3.0.4.zip dictionaries-libreoffice-6.3.0.4/ru_RU/ru_RU.dic -d dicts
+unzip -j libreoffice-6.3.0.4.zip dictionaries-libreoffice-6.3.0.4/ru_RU/ru_RU.aff -d dicts
 ```

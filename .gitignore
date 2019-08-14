@@ -41,4 +41,5 @@ bin/procyon.app
 tmp
 out
 hunspell*
-
+libreoffice*
+Dicts

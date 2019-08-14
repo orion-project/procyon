@@ -6,10 +6,9 @@ SpellChecker::SpellChecker(const QString &dictionaryPath, const QString &userDic
 {
     _userDictionary = userDictionary;
 
-    auto dictFile = dictionaryPath + ".dic";
-    auto affixFile = dictionaryPath + ".aff";
-    _hunspell = new Hunspell(dictFile.toLocal8Bit().constData(),
-                             affixFile.toLocal8Bit().constData());
+    auto dictFile = (dictionaryPath + ".dic").toLocal8Bit();
+    auto affixFile = (dictionaryPath + ".aff").toLocal8Bit();
+    _hunspell = new Hunspell(dictFile.constData(), affixFile.constData());
 }
 
 SpellChecker::~SpellChecker()

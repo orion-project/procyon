@@ -35,7 +35,7 @@ SOURCES += src/main.cpp\
     src/AppSettings.cpp \
     src/MainWindow.cpp \
     src/CatalogWidget.cpp \
-    src/SpellChecker.cpp \
+    src/Spellchecker.cpp \
     src/TextEditorHelpers.cpp \
     src/catalog/Catalog.cpp \
     src/catalog/CatalogStore.cpp \
@@ -55,7 +55,7 @@ HEADERS  += src/MainWindow.h \
     src/AppSettings.h \
     src/CatalogWidget.h \
     src/CatalogModel.h \
-    src/SpellChecker.h \
+    src/Spellchecker.h \
     src/TextEditorHelpers.h \
     src/catalog/Catalog.h \
     src/catalog/CatalogStore.h \

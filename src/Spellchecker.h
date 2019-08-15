@@ -5,17 +5,17 @@
 
 class Hunspell;
 
-class SpellChecker
+class Spellchecker
 {
 public:
-    static SpellChecker* get(const QString& lang);
+    static Spellchecker* get(const QString& lang);
 
-    ~SpellChecker();
+    ~Spellchecker();
 
     bool check(const QString &word) const;
 
 private:
-    SpellChecker(const QString &dictionaryPath, const QString &userDictionaryPath);
+    Spellchecker(const QString &dictionaryPath, const QString &userDictionaryPath);
 
     QString _userDictionaryPath;
     Hunspell* _hunspell = nullptr;

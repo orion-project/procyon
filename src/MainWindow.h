@@ -62,9 +62,11 @@ private:
     void updateMenuCatalog();
     void openMemo();
     void chooseMemoFont();
+    void toggleWordWrap();
+    void spellcheckEn();
+    void spellcheckRu();
     void memoCreated(MemoItem* item);
     void memoRemoved(MemoItem* item);
-    void toggleWordWrap();
     bool closeAllMemos();
     void openMemoPage(MemoItem* item);
     MemoPage* findMemoPage(MemoItem* item) const;

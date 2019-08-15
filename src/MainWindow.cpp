@@ -96,6 +96,9 @@ void MainWindow::createMenu()
     _actionDeleteMemo = m->addAction(tr("Delete memo"), [this](){ _catalogView->deleteMemo(); });
 
     m = menuBar()->addMenu(tr("Options"));
+    m->addAction(tr("Check spelling (en)"), this, &MainWindow::spellcheckEn, QKeySequence(Qt::CTRL + Qt::Key_E));
+    m->addAction(tr("Check spelling (ru)"), this, &MainWindow::spellcheckRu, QKeySequence(Qt::CTRL + Qt::Key_R));
+    m->addSeparator();
     m->addAction(tr("Choose Memo Font..."), this, &MainWindow::chooseMemoFont);
     auto actionWordWrap = m->addAction(tr("Word Wrap"), this, &MainWindow::toggleWordWrap);
     actionWordWrap->setCheckable(true);
@@ -417,6 +420,18 @@ void MainWindow::toggleWordWrap()
     s->memoWordWrap = !s->memoWordWrap;
     for (auto page : getPages<MemoPage>(_pagesView))
         page->setWordWrap(s->memoWordWrap);
+}
+
+void MainWindow::spellcheckEn()
+{
+    auto memoPage = dynamic_cast<MemoPage*>(_pagesView->currentWidget());
+    if (memoPage) memoPage->spellcheck("en_US");
+}
+
+void MainWindow::spellcheckRu()
+{
+    auto memoPage = dynamic_cast<MemoPage*>(_pagesView->currentWidget());
+    if (memoPage) memoPage->spellcheck("ru_RU");
 }
 
 void MainWindow::memoCreated(MemoItem* item)

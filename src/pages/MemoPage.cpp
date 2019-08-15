@@ -2,7 +2,7 @@
 
 #include "MemoEditor.h"
 #include "PageWidgets.h"
-#include "../SpellChecker.h"
+#include "../Spellchecker.h"
 #include "../TextEditorHelpers.h"
 #include "../catalog/Catalog.h"
 #include "../catalog/Memo.h"
@@ -144,12 +144,6 @@ void MemoPage::toggleEditMode(bool on)
     _titleEditor->setReadOnly(!on);
     // Force updating editor's style sheet, seems it doesn't note changing of readOnly or a custom property
     _titleEditor->setStyleSheet(QString("QLineEdit { background: %1 }").arg(on ? "white" : "transparent"));
-
-    if (on)
-    {
-        _spellChecker = SpellChecker::get("en_US");
-        spellCheck();
-    }
 }
 
 void MemoPage::setMemoFont(const QFont& font)
@@ -189,9 +183,10 @@ bool MemoPage::isModified() const
     return _memoEditor->document()->isModified() || _titleEditor->isModified();
 }
 
-void MemoPage::spellCheck()
+void MemoPage::spellcheck(const QString &lang)
 {
-    if (!_spellChecker) return;
+    auto spellchecker = Spellchecker::get(lang);
+    if (!spellchecker) return;
 
     TextEditCursorBackup cursorBacup(_memoEditor);
 
@@ -229,7 +224,7 @@ void MemoPage::spellCheck()
             }
         }
 
-        if (!word.isEmpty() && !_spellChecker->check(word))
+        if (!word.isEmpty() && !spellchecker->check(word))
             spellErrorMarks << QTextEdit::ExtraSelection {cursor, spellErrorFormat};
 
         cursor.movePosition(QTextCursor::NextWord, QTextCursor::MoveAnchor);

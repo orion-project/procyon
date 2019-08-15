@@ -1,4 +1,4 @@
-#include "SpellChecker.h"
+#include "Spellchecker.h"
 
 #include "hunspell/hunspell.hxx"
 
@@ -39,14 +39,14 @@ static QString getDictionaryEncoding(const QString& affixFilePath)
     return encoding;
 }
 
-SpellChecker* SpellChecker::get(const QString& lang)
+Spellchecker* Spellchecker::get(const QString& lang)
 {
-    static QMap<QString, SpellChecker*> checkers;
+    static QMap<QString, Spellchecker*> checkers;
     if (!checkers.contains(lang))
     {
         QString dictionary = getDictionaryDir() + lang;
         QString userDictionary = getUserDictionaryPath(lang);
-        auto checker = new SpellChecker(dictionary, userDictionary);
+        auto checker = new Spellchecker(dictionary, userDictionary);
         if (checker->_hunspell)
             checkers.insert(lang, checker);
         else
@@ -56,7 +56,7 @@ SpellChecker* SpellChecker::get(const QString& lang)
 }
 
 
-SpellChecker::SpellChecker(const QString &dictionaryPath, const QString &userDictionaryPath)
+Spellchecker::Spellchecker(const QString &dictionaryPath, const QString &userDictionaryPath)
 {
     _userDictionaryPath = userDictionaryPath;
 
@@ -87,12 +87,12 @@ SpellChecker::SpellChecker(const QString &dictionaryPath, const QString &userDic
                              dictFilePath.toLocal8Bit().constData());
 }
 
-SpellChecker::~SpellChecker()
+Spellchecker::~Spellchecker()
 {
     if (_hunspell) delete _hunspell;
 }
 
-bool SpellChecker::check(const QString &word) const
+bool Spellchecker::check(const QString &word) const
 {
     return _hunspell->spell(_codec->fromUnicode(word).toStdString());
 }

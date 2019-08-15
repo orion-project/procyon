@@ -12,7 +12,6 @@ QT_END_NAMESPACE
 class Catalog;
 class MemoEditor;
 class MemoItem;
-class SpellChecker;
 
 class MemoPage : public QWidget
 {
@@ -26,6 +25,7 @@ public:
 
     void setMemoFont(const QFont& font);
     void setWordWrap(bool wrap);
+    void spellcheck(const QString& lang);
 
     void beginEditing();
     bool saveEditing();
@@ -42,13 +42,11 @@ private:
     QLineEdit* _titleEditor;
     QAction *_actionEdit, *_actionSave, *_actionCancel;
     QSyntaxHighlighter* _highlighter = nullptr;
-    SpellChecker* _spellChecker = nullptr;
 
     void showMemo();
     void cancelEditing();
     void toggleEditMode(bool on);
     void applyHighlighter();
-    void spellCheck();
 };
 
 #endif // MEMO_PAGE_H

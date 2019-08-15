@@ -183,49 +183,72 @@ bool MemoPage::isModified() const
     return _memoEditor->document()->isModified() || _titleEditor->isModified();
 }
 
+// When move cursor to EndOfWord, it stops before bracket, qoute, or punctuation.
+// But quotes like &raquo; or &rdquo; become a part of the world for some reason.
+// Remove such punctuation at word boundaries.
+static int selectWord(QTextCursor& cursor)
+{
+    QString word = cursor.selectedText();
+    int length = word.length();
+    int start = 0;
+    int stop = length - 1;
+
+    while (start < length)
+    {
+        auto ch = word.at(start);
+        if (ch.isLetter() || ch.isDigit()) break;
+        start++;
+    }
+
+    while (stop > start)
+    {
+        auto ch = word.at(stop);
+        if (ch.isLetter() || ch.isDigit()) break;
+        stop--;
+    }
+
+    length = stop - start + 1;
+    int anchor = cursor.anchor();
+    cursor.setPosition(anchor + start, QTextCursor::MoveAnchor);
+    cursor.setPosition(anchor + start + length, QTextCursor::KeepAnchor);
+    return length;
+}
+
 void MemoPage::spellcheck(const QString &lang)
 {
     auto spellchecker = Spellchecker::get(lang);
     if (!spellchecker) return;
 
-    TextEditCursorBackup cursorBacup(_memoEditor);
-
     static auto spellErrorFormat = TextFormat().spellError().get();
-
     QList<QTextEdit::ExtraSelection> spellErrorMarks;
-
+    TextEditCursorBackup cursorBackup(_memoEditor);
     QTextCursor cursor(_memoEditor->document());
+
     while (!cursor.atEnd())
     {
         cursor.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
-        QString word = cursor.selectedText();
+        int length = selectWord(cursor);
 
-        if (!word.isEmpty() && !word.at(0).isLetter())
+        // When we've skipped punctuation and there is no word,
+        // the cursor may be at the beginning of the next word already.
+        // For example, have text "(word1) word2",
+        // the bracket "(" is treated by QTextEdit as a separate word.
+        // After skipping it, we become at the "w" of "word1" - at the next word after the bracket!
+        // Then moving to `NextWord` shifts the cursor to "word2", and "word1" gets missed.
+        // To avoid, try to find the end of a (possible current) word after skipping punctuation.
+        if (length == 0)
         {
-            // Skip punctuation at the beginning of a word, quoted and bracketed words accounted here too
-            while (!word.isEmpty() && !word.at(0).isLetter() && cursor.anchor() < cursor.position())
-            {
-                int cursorPos = cursor.position();
-                cursor.setPosition(cursor.anchor() + 1, QTextCursor::MoveAnchor);
-                cursor.setPosition(cursorPos, QTextCursor::KeepAnchor);
-                word = cursor.selectedText();
-            }
-            if (word.isEmpty())
-            {
-                // When we've skipped punctuation,
-                // the cursor may be at the beginning of the next word already.
-                // For example, have text "(word1) word2",
-                // after skipping the bracket "(" we are at the "w" of "word1",
-                // i.e., on a word already, then moving via `QTextCursor::NextWord`
-                // shifts the cursor to the next word "word2" and "word1" gets missed.
-                // To avoid, try to find the end of a word after skipping punctuation.
-                cursor.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
-                word = cursor.selectedText();
-            }
+            cursor.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
+            length = selectWord(cursor);
         }
 
-        if (!word.isEmpty() && !spellchecker->check(word))
-            spellErrorMarks << QTextEdit::ExtraSelection {cursor, spellErrorFormat};
+        if (length >= 1)
+        {
+            QString word = cursor.selectedText();
+
+            if (!spellchecker->check(word))
+                spellErrorMarks << QTextEdit::ExtraSelection {cursor, spellErrorFormat};
+        }
 
         cursor.movePosition(QTextCursor::NextWord, QTextCursor::MoveAnchor);
     }

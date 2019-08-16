@@ -3,6 +3,8 @@
 
 #include <QTextEdit>
 
+class Spellchecker;
+
 struct TextFormat
 {
     TextFormat() {}
@@ -45,14 +47,13 @@ private:
 
 struct TextEditSpellcheck
 {
-    TextEditSpellcheck(QTextEdit* editor);
+    TextEditSpellcheck(QTextEdit* editor, Spellchecker* spellchecker);
 
-    void check(const QString &lang);
+    void check();
 
 private:
     QTextEdit* _editor;
-
-    int selectWord(QTextCursor& cursor);
+    Spellchecker* _spellchecker;
 };
 
 #endif // TEXT_EDITOR_HELPERS_H

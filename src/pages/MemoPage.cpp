@@ -2,6 +2,7 @@
 
 #include "MemoEditor.h"
 #include "PageWidgets.h"
+#include "../Spellchecker.h"
 #include "../TextEditorHelpers.h"
 #include "../catalog/Catalog.h"
 #include "../catalog/Memo.h"
@@ -184,5 +185,11 @@ bool MemoPage::isModified() const
 
 void MemoPage::spellcheck(const QString &lang)
 {
-    TextEditSpellcheck(_memoEditor).check(lang);
+    if (!_spellchecker || _spellchecker->lang() != lang)
+    {
+        _spellchecker = Spellchecker::get(lang);
+        _memoEditor->setSpellchecker(_spellchecker);
+    }
+
+    TextEditSpellcheck(_memoEditor, _spellchecker).check();
 }

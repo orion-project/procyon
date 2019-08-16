@@ -28,14 +28,15 @@ QTextCharFormat TextFormat::get() const
 //                              TextEditSpellcheck
 //------------------------------------------------------------------------------
 
-TextEditSpellcheck::TextEditSpellcheck(QTextEdit* editor): _editor(editor)
+TextEditSpellcheck::TextEditSpellcheck(QTextEdit* editor, Spellchecker* spellchecker)
+    : _editor(editor), _spellchecker(spellchecker)
 {
 }
 
 // When move cursor to EndOfWord, it stops before bracket, qoute, or punctuation.
 // But quotes like &raquo; or &rdquo; become a part of the world for some reason.
 // Remove such punctuation at word boundaries.
-int TextEditSpellcheck::selectWord(QTextCursor& cursor)
+static int selectWord(QTextCursor& cursor)
 {
     QString word = cursor.selectedText();
     int length = word.length();
@@ -63,11 +64,8 @@ int TextEditSpellcheck::selectWord(QTextCursor& cursor)
     return length;
 }
 
-void TextEditSpellcheck::check(const QString &lang)
+void TextEditSpellcheck::check()
 {
-    auto spellchecker = Spellchecker::get(lang);
-    if (!spellchecker) return;
-
     static auto spellErrorFormat = TextFormat().spellError().get();
     QList<QTextEdit::ExtraSelection> spellErrorMarks;
     TextEditCursorBackup cursorBackup(_editor);
@@ -92,22 +90,29 @@ void TextEditSpellcheck::check(const QString &lang)
         }
 
         // Skip one-letter words
+        //
         // TODO: currently, abbreviations such as "e.i.", "e.g.", "т.д.", "т.п."
         // are splitted to series of one-letter words and therefore skipped.
         // It allows mixing of such words in different languages,
         // e.g. one can use "т.д." in a text in English, it's not ok.
+        //
+        // Similar issue with words like "doesn't" - it splitted into "doesn" and "t",
+        // "t" is skipped and "doesn" gives spelling error. Checking is ok when
+        // true apostrophe character is used (’ = U+2019). But it's not the case
+        // when one type memos via keyboard - single quote is generally used as apostrophe.
+        //
         // It'd be better to check such words as a whole.
+        //
         if (length > 1)
         {
             QString word = cursor.selectedText();
 
-            if (!spellchecker->check(word))
+            if (!_spellchecker->check(word))
                 spellErrorMarks << QTextEdit::ExtraSelection {cursor, spellErrorFormat};
         }
 
         cursor.movePosition(QTextCursor::NextWord, QTextCursor::MoveAnchor);
     }
 
-    if (!spellErrorMarks.isEmpty())
-        _editor->setExtraSelections(spellErrorMarks);
+    _editor->setExtraSelections(spellErrorMarks);
 }

@@ -48,9 +48,11 @@ Spellchecker* Spellchecker::get(const QString& lang)
         QString userDictionary = getUserDictionaryPath(lang);
         auto checker = new Spellchecker(dictionary, userDictionary);
         if (checker->_hunspell)
+        {
+            checker->_lang = lang;
             checkers.insert(lang, checker);
-        else
-            delete checker;
+        }
+        else delete checker;
     }
     return checkers.contains(lang) ? checkers[lang] : nullptr;
 }
@@ -80,11 +82,28 @@ Spellchecker::Spellchecker(const QString &dictionaryPath, const QString &userDic
         return;
     }
 
-    // TODO: load user dictionary
-
     // TODO: In WIN32 environment, use UTF-8 encoded paths started with the long path prefix
     _hunspell = new Hunspell(affixFilePath.toLocal8Bit().constData(),
                              dictFilePath.toLocal8Bit().constData());
+
+
+/* TODO: load user dictionary
+
+if(!_userDictionary.isEmpty()) {
+        QFile userDictonaryFile(_userDictionary);
+        if(userDictonaryFile.open(QIODevice::ReadOnly)) {
+            QTextStream stream(&userDictonaryFile);
+            for(QString word = stream.readLine(); !word.isEmpty(); word = stream.readLine())
+                put_word(word);
+            userDictonaryFile.close();
+        } else {
+            qWarning() << "User dictionary in " << _userDictionary << "could not be opened";
+        }
+    } else {
+        qDebug() << "User dictionary not set.";
+    }
+
+*/
 }
 
 Spellchecker::~Spellchecker()
@@ -95,4 +114,39 @@ Spellchecker::~Spellchecker()
 bool Spellchecker::check(const QString &word) const
 {
     return _hunspell->spell(_codec->fromUnicode(word).toStdString());
+}
+
+void Spellchecker::ignore(const QString &word)
+{
+    _hunspell->add(_codec->fromUnicode(word).toStdString());
+}
+
+void Spellchecker::save(const QString &word)
+{
+    _hunspell->add(_codec->fromUnicode(word).toStdString());
+
+/* TODO
+
+if(!_userDictionary.isEmpty()) {
+        QFile userDictonaryFile(_userDictionary);
+        if(userDictonaryFile.open(QIODevice::Append)) {
+            QTextStream stream(&userDictonaryFile);
+            stream << word << "\n";
+            userDictonaryFile.close();
+        } else {
+            qWarning() << "User dictionary in " << _userDictionary << "could not be opened for appending a new word";
+        }
+    } else {
+        qDebug() << "User dictionary not set.";
+    }
+
+*/
+}
+
+QStringList Spellchecker::suggest(const QString &word) const
+{
+    QStringList variants;
+    for (auto variant : _hunspell->suggest(_codec->fromUnicode(word).toStdString()))
+        variants << _codec->toUnicode(QByteArray::fromStdString(variant));
+    return variants;
 }

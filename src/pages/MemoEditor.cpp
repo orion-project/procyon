@@ -1,18 +1,22 @@
 #include "MemoEditor.h"
 
+#include "../Spellchecker.h"
+
+#include <QDebug>
 #include <QDesktopServices>
+#include <QMenu>
 #include <QMouseEvent>
 #include <QTextBlock>
 #include <QToolTip>
 
-bool MemoEditor::shouldProcess(QMouseEvent *e)
+void MemoEditor::setSpellchecker(Spellchecker* checker)
 {
-    return e->modifiers() & Qt::ControlModifier && e->button() & Qt::LeftButton;
+    _spellchecker = checker;
 }
 
 // Hyperlink made via syntax highlighter doesn't create some 'top level' anchor,
 // so `anchorAt` returns nothing, we have to enumerate styles to find out a href.
-QString MemoEditor::hrefAtWidgetPos(const QPoint& pos) const
+QString MemoEditor::hyperlinkAt(const QPoint& pos) const
 {
     auto cursor = cursorForPosition(viewport()->mapFromParent(pos));
 
@@ -30,10 +34,36 @@ QString MemoEditor::hrefAtWidgetPos(const QPoint& pos) const
     return QString();
 }
 
+QTextCursor MemoEditor::spellingAt(const QPoint& pos) const
+{
+    auto cursor = cursorForPosition(viewport()->mapFromParent(pos));
+    auto cursorPos = cursor.position();
+    for (auto es : extraSelections())
+        if (cursorPos >= es.cursor.anchor() && cursorPos < es.cursor.position())
+            return es.cursor;
+    return QTextCursor();
+}
+
+void MemoEditor::contextMenuEvent(QContextMenuEvent *e)
+{
+    if (!_spellchecker)
+    {
+        QTextEdit::contextMenuEvent(e);
+        return;
+    }
+
+    auto pos = e->pos();
+    auto cursor = spellingAt(pos);
+    if (cursor.isNull())
+        QTextEdit::contextMenuEvent(e);
+    else
+        showSpellcheckMenu(cursor, pos);
+}
+
 void MemoEditor::mousePressEvent(QMouseEvent *e)
 {
-    if (shouldProcess(e))
-        _clickedHref = hrefAtWidgetPos(e->pos());
+    if (e->button() & Qt::LeftButton && e->modifiers().testFlag(Qt::ControlModifier))
+        _clickedHref = hyperlinkAt(e->pos());
 
     QTextEdit::mousePressEvent(e);
 }
@@ -56,7 +86,7 @@ bool MemoEditor::event(QEvent *event)
     auto helpEvent = dynamic_cast<QHelpEvent*>(event);
     if (not helpEvent) return false;
 
-    auto href = hrefAtWidgetPos(helpEvent->pos());
+    auto href = hyperlinkAt(helpEvent->pos());
     if (not href.isEmpty())
     {
         auto tooltip = QStringLiteral("<p style='white-space:pre'>%1<p>%2")
@@ -67,4 +97,43 @@ bool MemoEditor::event(QEvent *event)
 
     event->accept();
     return true;
+}
+
+void MemoEditor::showSpellcheckMenu(QTextCursor &cursor, const QPoint& pos)
+{
+    auto word = cursor.selectedText();
+    auto menu = createStandardContextMenu(pos);
+
+    QList<QAction*> actions;
+
+    auto variants = _spellchecker->suggest(word);
+    if (variants.isEmpty())
+    {
+        auto actionNone = new QAction(tr("No variants"), menu);
+        actionNone->setDisabled(true);
+        actions << actionNone;
+    }
+    else
+        for (auto variant : variants)
+        {
+            auto actionWord = new QAction(">  " + variant, menu);
+            connect(actionWord, &QAction::triggered, [&cursor, variant]{ cursor.insertText(variant); });
+            actions << actionWord;
+        }
+
+    auto actionRemember = new QAction(tr("Add to dictionary"), menu);
+    connect(actionRemember, &QAction::triggered, [this, word]{ _spellchecker->save(word); });
+    actions << actionRemember;
+
+    auto actionIgnore = new QAction(tr("Ignore this world"), menu);
+    connect(actionIgnore, &QAction::triggered, [this, word]{ _spellchecker->ignore(word); });
+    actions << actionIgnore;
+
+    auto actionSeparator = new QAction(menu);
+    actionSeparator->setSeparator(true);
+    actions << actionSeparator;
+
+    menu->insertActions(menu->actions().first(), actions);
+    menu->exec(mapToGlobal(pos));
+    delete menu;
 }

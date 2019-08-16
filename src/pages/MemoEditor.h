@@ -3,19 +3,27 @@
 
 #include <QTextEdit>
 
+class Spellchecker;
+
 class MemoEditor : public QTextEdit
 {
     Q_OBJECT
 
+public:
+    void setSpellchecker(Spellchecker* checker);
+
 protected:
-    void mousePressEvent(QMouseEvent *e);
-    void mouseReleaseEvent(QMouseEvent *e);
-    bool event(QEvent *event);
+    void contextMenuEvent(QContextMenuEvent *e) override;
+    void mousePressEvent(QMouseEvent *e) override;
+    void mouseReleaseEvent(QMouseEvent *e) override;
+    bool event(QEvent *event) override;
 
 private:
+    Spellchecker* _spellchecker = nullptr;
     QString _clickedHref;
-    bool shouldProcess(QMouseEvent *e);
-    QString hrefAtWidgetPos(const QPoint& pos) const;
+    QString hyperlinkAt(const QPoint& pos) const;
+    QTextCursor spellingAt(const QPoint& pos) const;
+    void showSpellcheckMenu(QTextCursor& cursor, const QPoint& pos);
 };
 
 #endif // MEMO_EDITOR_H

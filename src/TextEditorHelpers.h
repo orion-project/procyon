@@ -43,4 +43,16 @@ private:
     QTextCursor _cursor;
 };
 
+struct TextEditSpellcheck
+{
+    TextEditSpellcheck(QTextEdit* editor);
+
+    void check(const QString &lang);
+
+private:
+    QTextEdit* _editor;
+
+    int selectWord(QTextCursor& cursor);
+};
+
 #endif // TEXT_EDITOR_HELPERS_H

@@ -1,6 +1,7 @@
 #include "MemoEditor.h"
 
 #include "../Spellchecker.h"
+#include "../TextEditorHelpers.h"
 
 #include <QDebug>
 #include <QDesktopServices>
@@ -11,7 +12,18 @@
 
 void MemoEditor::setSpellchecker(Spellchecker* checker)
 {
+    if (_spellchecker == checker) return;
+
+    if (_spellchecker)
+        disconnect(_spellchecker, &Spellchecker::dictionaryChanged, this, &MemoEditor::spellcheck);
+
     _spellchecker = checker;
+
+    if (_spellchecker)
+        connect(_spellchecker, &Spellchecker::dictionaryChanged, this, &MemoEditor::spellcheck);
+    else
+        // TODO: dont't clear search result marks
+        setExtraSelections(QList<QTextEdit::ExtraSelection>());
 }
 
 // Hyperlink made via syntax highlighter doesn't create some 'top level' anchor,
@@ -117,16 +129,25 @@ void MemoEditor::showSpellcheckMenu(QTextCursor &cursor, const QPoint& pos)
         for (auto variant : variants)
         {
             auto actionWord = new QAction(">  " + variant, menu);
-            connect(actionWord, &QAction::triggered, [&cursor, variant]{ cursor.insertText(variant); });
+            connect(actionWord, &QAction::triggered, [&cursor, variant]{
+                cursor.insertText(variant);
+            });
             actions << actionWord;
         }
 
     auto actionRemember = new QAction(tr("Add to dictionary"), menu);
-    connect(actionRemember, &QAction::triggered, [this, word]{ _spellchecker->save(word); });
+    connect(actionRemember, &QAction::triggered, [this, &cursor, &word]{
+        _spellchecker->save(word);
+        _spellchecker->ignore(word);
+        removeSpellErrorMark(cursor);
+    });
     actions << actionRemember;
 
     auto actionIgnore = new QAction(tr("Ignore this world"), menu);
-    connect(actionIgnore, &QAction::triggered, [this, word]{ _spellchecker->ignore(word); });
+    connect(actionIgnore, &QAction::triggered, [this, &cursor, &word]{
+        _spellchecker->ignore(word);
+        removeSpellErrorMark(cursor);
+    });
     actions << actionIgnore;
 
     auto actionSeparator = new QAction(menu);
@@ -136,4 +157,18 @@ void MemoEditor::showSpellcheckMenu(QTextCursor &cursor, const QPoint& pos)
     menu->insertActions(menu->actions().first(), actions);
     menu->exec(mapToGlobal(pos));
     delete menu;
+}
+
+void MemoEditor::removeSpellErrorMark(const QTextCursor& cursor)
+{
+    QList<QTextEdit::ExtraSelection> marks;
+    for (auto mark : extraSelections())
+        if (mark.cursor != cursor)
+            marks << mark;
+    setExtraSelections(marks);
+}
+
+void MemoEditor::spellcheck()
+{
+    TextEditSpellcheck(this, _spellchecker).check();
 }

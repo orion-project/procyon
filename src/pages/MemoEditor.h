@@ -11,6 +11,7 @@ class MemoEditor : public QTextEdit
 
 public:
     void setSpellchecker(Spellchecker* checker);
+    void spellcheck();
 
 protected:
     void contextMenuEvent(QContextMenuEvent *e) override;
@@ -24,6 +25,7 @@ private:
     QString hyperlinkAt(const QPoint& pos) const;
     QTextCursor spellingAt(const QPoint& pos) const;
     void showSpellcheckMenu(QTextCursor& cursor, const QPoint& pos);
+    void removeSpellErrorMark(const QTextCursor& cursor);
 };
 
 #endif // MEMO_EDITOR_H

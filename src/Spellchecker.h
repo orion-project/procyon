@@ -1,12 +1,14 @@
 #ifndef SPELL_CHECKER_H
 #define SPELL_CHECKER_H
 
-#include <QString>
+#include <QObject>
 
 class Hunspell;
 
-class Spellchecker
+class Spellchecker : public QObject
 {
+    Q_OBJECT
+
 public:
     static Spellchecker* get(const QString& lang);
 
@@ -18,6 +20,9 @@ public:
     void save(const QString &word);
     QStringList suggest(const QString &word) const;
 
+signals:
+    void dictionaryChanged();
+
 private:
     Spellchecker(const QString &dictionaryPath, const QString &userDictionaryPath);
 
@@ -25,6 +30,8 @@ private:
     QString _userDictionaryPath;
     Hunspell* _hunspell = nullptr;
     QTextCodec *_codec;
+
+    void loadUserDictionary();
 };
 
 #endif // SPELL_CHECKER_H

@@ -425,13 +425,13 @@ void MainWindow::toggleWordWrap()
 void MainWindow::spellcheckEn()
 {
     auto memoPage = dynamic_cast<MemoPage*>(_pagesView->currentWidget());
-    if (memoPage) memoPage->spellcheck("en_US");
+    if (memoPage) memoPage->setSpellcheck("en_US");
 }
 
 void MainWindow::spellcheckRu()
 {
     auto memoPage = dynamic_cast<MemoPage*>(_pagesView->currentWidget());
-    if (memoPage) memoPage->spellcheck("ru_RU");
+    if (memoPage) memoPage->setSpellcheck("ru_RU");
 }
 
 void MainWindow::memoCreated(MemoItem* item)

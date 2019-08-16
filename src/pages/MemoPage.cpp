@@ -183,13 +183,15 @@ bool MemoPage::isModified() const
     return _memoEditor->document()->isModified() || _titleEditor->isModified();
 }
 
-void MemoPage::spellcheck(const QString &lang)
+void MemoPage::setSpellcheck(const QString &lang)
 {
-    if (!_spellchecker || _spellchecker->lang() != lang)
+    if (lang.isEmpty())
+        _memoEditor->setSpellchecker(nullptr);
+    else
     {
-        _spellchecker = Spellchecker::get(lang);
-        _memoEditor->setSpellchecker(_spellchecker);
+        _memoEditor->setSpellchecker(Spellchecker::get(lang));
+        _memoEditor->spellcheck();
     }
-
-    TextEditSpellcheck(_memoEditor, _spellchecker).check();
 }
+
+

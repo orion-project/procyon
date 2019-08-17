@@ -39,6 +39,7 @@ private:
     void removeErrorMark(const QTextCursor& cursor);
     void documentChanged(int position, int charsRemoved, int charsAdded);
     void spellcheckChanges();
+    void wordIgnored(const QString& word);
 };
 
 #endif // TEXT_EDIT_SPELLCHECK_H

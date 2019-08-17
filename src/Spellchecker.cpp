@@ -132,7 +132,7 @@ bool Spellchecker::check(const QString &word) const
 void Spellchecker::ignore(const QString &word)
 {
     _hunspell->add(_codec->fromUnicode(word).toStdString());
-    emit dictionaryChanged();
+    emit wordIgnored(word);
 }
 
 void Spellchecker::save(const QString &word)

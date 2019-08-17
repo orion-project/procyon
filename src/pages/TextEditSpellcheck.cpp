@@ -13,7 +13,7 @@ using This = TextEditSpellcheck;
 TextEditSpellcheck::TextEditSpellcheck(QTextEdit *editor, const QString& lang, QObject *parent): QObject(parent), _editor(editor)
 {
     _spellchecker = Spellchecker::get(lang);
-    connect(_spellchecker, &Spellchecker::dictionaryChanged, this, &This::spellcheckAll);
+    connect(_spellchecker, &Spellchecker::wordIgnored, this, &This::wordIgnored);
 
     _editor->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(_editor, &QTextEdit::customContextMenuRequested, this, &This::contextMenuRequested);
@@ -179,14 +179,12 @@ void TextEditSpellcheck::addSpellcheckActions(QMenu* menu, QTextCursor& cursor)
     connect(actionRemember, &QAction::triggered, [this, cursor, word]{
         _spellchecker->save(word);
         _spellchecker->ignore(word);
-        removeErrorMark(cursor);
     });
     actions << actionRemember;
 
     auto actionIgnore = new QAction(tr("Ignore this world"), menu);
     connect(actionIgnore, &QAction::triggered, [this, cursor, word]{
         _spellchecker->ignore(word);
-        removeErrorMark(cursor);
     });
     actions << actionIgnore;
 
@@ -242,6 +240,7 @@ void TextEditSpellcheck::spellcheckChanges()
     cursor.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
     _spellcheckStop = cursor.position();
 
+    // Remove marks which are in checking range, they will be recreated on spellcheck
     QList<QTextEdit::ExtraSelection> errorMarks;
     for (auto es : _editor->extraSelections())
         if (es.cursor.position() < _spellcheckStart ||
@@ -257,4 +256,13 @@ void TextEditSpellcheck::spellcheckChanges()
     _spellcheckStop = -1;
     _changesStart = -1;
     _changesStop = -1;
+}
+
+void TextEditSpellcheck::wordIgnored(const QString& word)
+{
+    QList<QTextEdit::ExtraSelection> errorMarks;
+    for (auto es : _editor->extraSelections())
+        if (es.cursor.selectedText() != word)
+            errorMarks << es;
+    _editor->setExtraSelections(errorMarks);
 }

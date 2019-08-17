@@ -28,7 +28,7 @@ public:
     QStringList suggest(const QString &word) const;
 
 signals:
-    void dictionaryChanged();
+    void wordIgnored(const QString& word);
 
 private:
     Spellchecker(const QString &dictionaryPath, const QString &userDictionaryPath);

@@ -28,7 +28,7 @@ public:
     void setWordWrap(bool wrap);
 
     void setSpellcheckLang(const QString& lang);
-    QString spellcheckLang() const;
+    QString spellcheckLang() const { return _spellcheckLang; }
 
     void beginEditing();
     bool saveEditing();
@@ -46,11 +46,13 @@ private:
     QLineEdit* _titleEditor;
     QAction *_actionEdit, *_actionSave, *_actionCancel;
     QSyntaxHighlighter* _highlighter = nullptr;
-    TextEditSpellcheck* _spellcheck;
+    TextEditSpellcheck* _spellcheck = nullptr;
+    QString _spellcheckLang;
 
     void showMemo();
     void cancelEditing();
     void toggleEditMode(bool on);
+    void toggleSpellcheck(bool on);
     void applyHighlighter();
 };
 

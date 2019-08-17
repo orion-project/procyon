@@ -3,7 +3,6 @@
 #include "MemoEditor.h"
 #include "TextEditSpellcheck.h"
 #include "PageWidgets.h"
-#include "../Spellchecker.h"
 #include "../TextEditorHelpers.h"
 #include "../catalog/Catalog.h"
 #include "../catalog/Memo.h"
@@ -30,7 +29,6 @@ MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     _memoEditor->setAcceptRichText(false);
     _memoEditor->setWordWrapMode(QTextOption::NoWrap);
     _memoEditor->setProperty("role", "memo_editor");
-    _spellcheck = new TextEditSpellcheck(_memoEditor, this);
 
     _titleEditor = PageWidgets::makeTitleEditor();
 
@@ -98,14 +96,12 @@ void MemoPage::beginEditing()
 {
     toggleEditMode(true);
     _memoEditor->setFocus();
-    _spellcheck->spellcheckAll();
 }
 
 void MemoPage::cancelEditing()
 {
     toggleEditMode(false);
     showMemo();
-    _spellcheck->clearErrorMarks();
 }
 
 bool MemoPage::saveEditing()
@@ -148,6 +144,29 @@ void MemoPage::toggleEditMode(bool on)
     _titleEditor->setReadOnly(!on);
     // Force updating editor's style sheet, seems it doesn't note changing of readOnly or a custom property
     _titleEditor->setStyleSheet(QString("QLineEdit { background: %1 }").arg(on ? "white" : "transparent"));
+
+    toggleSpellcheck(on);
+}
+
+void MemoPage::toggleSpellcheck(bool on)
+{
+    if (on)
+    {
+        if (!_spellcheckLang.isEmpty())
+        {
+            _spellcheck = new TextEditSpellcheck(_memoEditor, _spellcheckLang, this);
+            _spellcheck->spellcheckAll();
+        }
+    }
+    else
+    {
+        if (_spellcheck)
+        {
+            _spellcheck->clearErrorMarks();
+            delete _spellcheck;
+            _spellcheck = nullptr;
+        }
+    }
 }
 
 void MemoPage::setMemoFont(const QFont& font)
@@ -192,22 +211,9 @@ bool MemoPage::isReadOnly() const
     return _memoEditor->isReadOnly();
 }
 
-QString MemoPage::spellcheckLang() const
-{
-    return _spellcheck->spellchecker() ? _spellcheck->spellchecker()->lang() : QString();
-}
-
 void MemoPage::setSpellcheckLang(const QString &lang)
 {
-    if (lang.isEmpty())
-    {
-        _spellcheck->setSpellchecker(nullptr);
-        _spellcheck->clearErrorMarks();
-    }
-    else
-    {
-        _spellcheck->setSpellchecker(Spellchecker::get(lang));
-        if (!_memoEditor->isReadOnly())
-            _spellcheck->spellcheckAll();
-    }
+    toggleSpellcheck(false);
+    _spellcheckLang = lang;
+    toggleSpellcheck(true);
 }

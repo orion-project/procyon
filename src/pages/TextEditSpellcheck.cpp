@@ -8,32 +8,28 @@
 #include <QMenu>
 #include <QTimer>
 
-TextEditSpellcheck::TextEditSpellcheck(QTextEdit *editor, QObject *parent) : QObject(parent), _editor(editor)
+using This = TextEditSpellcheck;
+
+TextEditSpellcheck::TextEditSpellcheck(QTextEdit *editor, const QString& lang, QObject *parent): QObject(parent), _editor(editor)
 {
+    _spellchecker = Spellchecker::get(lang);
+    connect(_spellchecker, &Spellchecker::dictionaryChanged, this, &This::spellcheckAll);
+
     _editor->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(_editor, &QTextEdit::customContextMenuRequested,
-            this, &TextEditSpellcheck::contextMenuRequested);
-    connect(_editor->document(), QOverload<int, int, int>::of(&QTextDocument::contentsChange),
-            this, &TextEditSpellcheck::documentContentChanged);
+    connect(_editor, &QTextEdit::customContextMenuRequested, this, &This::contextMenuRequested);
+    connect(_editor->document(), QOverload<int, int, int>::of(&QTextDocument::contentsChange), this, &This::documentChanged);
 }
 
-void TextEditSpellcheck::setSpellchecker(Spellchecker* checker)
+TextEditSpellcheck::~TextEditSpellcheck()
 {
-    if (_spellchecker == checker) return;
-
-    if (_spellchecker)
-        disconnect(_spellchecker, &Spellchecker::dictionaryChanged, this, &TextEditSpellcheck::spellcheckAll);
-
-    _spellchecker = checker;
-
-    if (_spellchecker)
-        connect(_spellchecker, &Spellchecker::dictionaryChanged, this, &TextEditSpellcheck::spellcheckAll);
+    // When program closes we don't know what object is deleted first.
+    // This is the only dangerous case we use QPointer for.
+    if (_editor)
+        _editor->setContextMenuPolicy(Qt::DefaultContextMenu);
 }
 
 void TextEditSpellcheck::spellcheckAll()
 {
-    if (!_spellchecker) return;
-
     TextEditCursorBackup cursorBackup(_editor);
 
     _startPos = -1;
@@ -147,12 +143,9 @@ void TextEditSpellcheck::contextMenuRequested(const QPoint &pos)
 {
     auto menu = _editor->createStandardContextMenu(pos);
 
-    if (_spellchecker)
-    {
-        auto cursor = spellingAt(pos);
-        if (!cursor.isNull())
-            addSpellcheckActions(menu, cursor);
-    }
+    auto cursor = spellingAt(pos);
+    if (!cursor.isNull())
+        addSpellcheckActions(menu, cursor);
 
     menu->exec(_editor->mapToGlobal(pos));
     delete menu;
@@ -216,33 +209,28 @@ void TextEditSpellcheck::removeErrorMark(const QTextCursor& cursor)
 
 void TextEditSpellcheck::clearErrorMarks()
 {
-    if (!_spellchecker) return;
     _editor->setExtraSelections(QList<QTextEdit::ExtraSelection>());
 }
 
-void TextEditSpellcheck::documentContentChanged(int position, int charsRemoved, int charsAdded)
+void TextEditSpellcheck::documentChanged(int position, int charsRemoved, int charsAdded)
 {
-    if (!_spellchecker || _changesLocked || _editor->isReadOnly()) return;
+    if (_changesLocked) return;
 
     qDebug() << "changed" << position << charsRemoved << charsAdded;
 
-//    if (!_timer)
-//    {
-//        _timer = new QTimer(this);
-//        _timer->setInterval(500);
-//        connect(_timer, &QTimer::timeout, this, &TextEditSpellcheck::spellcheckChanges);
-//    }
-//    _timer->start();
+    if (!_timer)
+    {
+        _timer = new QTimer(this);
+        _timer->setInterval(500);
+        connect(_timer, &QTimer::timeout, this, &TextEditSpellcheck::spellcheckChanges);
+    }
 
-//    if (position < _startPos) _startPos = position;
+    if (position < _startPos) _startPos = position;
 
-//    int
-//    if (position + charsAdded > _stopPos)
-//        _stopPos = position + charsAdded;
+    int stopPos = position + charsAdded;
+    if (stopPos > _stopPos) _stopPos = stopPos;
 
-//    //TextEditCursorBackup backup(this);
-
-////    int startOfChanges = position
+    _timer->start();
 
 //    QTextCursor cursor(document());
 //    cursor.setPosition(position);
@@ -250,14 +238,4 @@ void TextEditSpellcheck::documentContentChanged(int position, int charsRemoved, 
 //    cursor.setPosition(position + charsAdded);
 //    cursor.movePosition(QTextCursor::EndOfWord);
 //    qDebug() << "check:" << cursor.selectedText();
-
-
-    /*for (auto es : extraSelections())
-    {
-        if (position >= es.cursor.anchor() && position <= es.cursor.position())
-        {
-            qDebug() << "SPELL" << es.cursor.selectedText();
-            break;
-        }
-    }*/
 }

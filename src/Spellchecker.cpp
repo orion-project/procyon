@@ -71,6 +71,7 @@ static QString dictionaryEncoding(const QString& affixFilePath)
 
 Spellchecker* Spellchecker::get(const QString& lang)
 {
+    if (lang.isEmpty()) return nullptr;
     static QMap<QString, Spellchecker*> checkers;
     if (!checkers.contains(lang))
     {

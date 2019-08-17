@@ -183,7 +183,12 @@ bool MemoPage::isModified() const
     return _memoEditor->document()->isModified() || _titleEditor->isModified();
 }
 
-void MemoPage::setSpellcheck(const QString &lang)
+QString MemoPage::spellcheckLang() const
+{
+    return _memoEditor->spellchecker() ? _memoEditor->spellchecker()->lang() : QString();
+}
+
+void MemoPage::setSpellcheckLang(const QString &lang)
 {
     if (lang.isEmpty())
         _memoEditor->setSpellchecker(nullptr);

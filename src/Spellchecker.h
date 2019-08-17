@@ -3,6 +3,13 @@
 
 #include <QObject>
 
+QT_BEGIN_NAMESPACE
+class QAction;
+class QActionGroup;
+class QMenu;
+class QWidget;
+QT_END_NAMESPACE
+
 class Hunspell;
 
 class Spellchecker : public QObject
@@ -32,6 +39,28 @@ private:
     QTextCodec *_codec;
 
     void loadUserDictionary();
+};
+
+
+class SpellcheckControl : public QObject
+{
+    Q_OBJECT
+
+public:
+    explicit SpellcheckControl(QObject* parent = nullptr);
+
+    QMenu* makeMenu(QWidget* parent = nullptr);
+
+    void showCurrentLang(const QString& lang);
+    void setEnabled(bool on);
+
+signals:
+    void langSelected(const QString& lang);
+
+private:
+    QActionGroup* _actionGroup = nullptr;
+
+    void actionGroupTriggered(QAction* action);
 };
 
 #endif // SPELL_CHECKER_H

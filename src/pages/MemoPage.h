@@ -26,7 +26,9 @@ public:
 
     void setMemoFont(const QFont& font);
     void setWordWrap(bool wrap);
-    void setSpellcheck(const QString& lang);
+
+    void setSpellcheckLang(const QString& lang);
+    QString spellcheckLang() const;
 
     void beginEditing();
     bool saveEditing();

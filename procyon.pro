@@ -33,6 +33,7 @@ win32: RC_FILE = src/app.rc
 
 SOURCES += src/main.cpp\
     src/AppSettings.cpp \
+    src/LangCodeAndNames.cpp \
     src/MainWindow.cpp \
     src/CatalogWidget.cpp \
     src/Spellchecker.cpp \

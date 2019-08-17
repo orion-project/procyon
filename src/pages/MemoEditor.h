@@ -10,6 +10,7 @@ class MemoEditor : public QTextEdit
     Q_OBJECT
 
 public:
+    Spellchecker* spellchecker() const { return _spellchecker; }
     void setSpellchecker(Spellchecker* checker);
     void spellcheck();
 

@@ -3,6 +3,7 @@
 #include "AppSettings.h"
 #include "CatalogWidget.h"
 #include "OpenedPagesWidget.h"
+#include "Spellchecker.h"
 #include "catalog/Catalog.h"
 #include "catalog/CatalogStore.h"
 #include "pages/MemoPage.h"
@@ -61,6 +62,9 @@ MainWindow::MainWindow() : QMainWindow()
 #endif
     setCentralWidget(_splitter);
 
+    _spellcheckControl = new SpellcheckControl(this);
+    connect(_spellcheckControl, &SpellcheckControl::langSelected, this, &MainWindow::setMemoSpellcheckLang);
+
     createMenu();
     createStatusBar();
 }
@@ -96,9 +100,14 @@ void MainWindow::createMenu()
     _actionDeleteMemo = m->addAction(tr("Delete memo"), [this](){ _catalogView->deleteMemo(); });
 
     m = menuBar()->addMenu(tr("Options"));
-    m->addAction(tr("Check spelling (en)"), this, &MainWindow::spellcheckEn, QKeySequence(Qt::CTRL + Qt::Key_E));
-    m->addAction(tr("Check spelling (ru)"), this, &MainWindow::spellcheckRu, QKeySequence(Qt::CTRL + Qt::Key_R));
-    m->addSeparator();
+
+    auto dictsMenu = _spellcheckControl->makeMenu(this);
+    if (dictsMenu)
+    {
+        connect(dictsMenu, &QMenu::aboutToShow, this, &MainWindow::dictsMenuAboutToShow);
+        m->addMenu(dictsMenu);
+    }
+
     m->addAction(tr("Choose Memo Font..."), this, &MainWindow::chooseMemoFont);
     auto actionWordWrap = m->addAction(tr("Word Wrap"), this, &MainWindow::toggleWordWrap);
     actionWordWrap->setCheckable(true);
@@ -422,18 +431,6 @@ void MainWindow::toggleWordWrap()
         page->setWordWrap(s->memoWordWrap);
 }
 
-void MainWindow::spellcheckEn()
-{
-    auto memoPage = dynamic_cast<MemoPage*>(_pagesView->currentWidget());
-    if (memoPage) memoPage->setSpellcheck("en_US");
-}
-
-void MainWindow::spellcheckRu()
-{
-    auto memoPage = dynamic_cast<MemoPage*>(_pagesView->currentWidget());
-    if (memoPage) memoPage->setSpellcheck("ru_RU");
-}
-
 void MainWindow::memoCreated(MemoItem* item)
 {
     updateCounter();
@@ -491,4 +488,19 @@ void MainWindow::showAbout()
     auto button = about.addButton(tr("About Qt"), QMessageBox::ActionRole);
     connect(button, SIGNAL(clicked()), qApp, SLOT(aboutQt()));
     about.exec();
+}
+
+void MainWindow::dictsMenuAboutToShow()
+{
+    auto memoPage = dynamic_cast<MemoPage*>(_pagesView->currentWidget());
+    _spellcheckControl->setEnabled(memoPage);
+    if (memoPage)
+        _spellcheckControl->showCurrentLang(memoPage->spellcheckLang());
+}
+
+void MainWindow::setMemoSpellcheckLang(const QString& lang)
+{
+    qDebug() << "setMemoSpellcheckLang" << lang;
+    auto memoPage = dynamic_cast<MemoPage*>(_pagesView->currentWidget());
+    if (memoPage) memoPage->setSpellcheckLang(lang);
 }

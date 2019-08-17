@@ -14,6 +14,7 @@ QT_END_NAMESPACE
 class Catalog;
 class CatalogWidget;
 class OpenedPagesWidget;
+class SpellcheckControl;
 class InfoWidget;
 class MemoPage;
 class MemoItem;
@@ -48,6 +49,7 @@ private:
     QAction *_actionCreateTopLevelFolder, *_actionCreateFolder, *_actionRenameFolder, *_actionDeleteFolder;
     QAction *_actionOpenMemo, *_actionCreateMemo, *_actionDeleteMemo;
     QString _lastOpenedCatalog;
+    SpellcheckControl* _spellcheckControl;
 
     void createMenu();
     void createStatusBar();
@@ -63,8 +65,6 @@ private:
     void openMemo();
     void chooseMemoFont();
     void toggleWordWrap();
-    void spellcheckEn();
-    void spellcheckRu();
     void memoCreated(MemoItem* item);
     void memoRemoved(MemoItem* item);
     bool closeAllMemos();
@@ -72,6 +72,8 @@ private:
     MemoPage* findMemoPage(MemoItem* item) const;
     void editStyleSheet();
     void showAbout();
+    void dictsMenuAboutToShow();
+    void setMemoSpellcheckLang(const QString& lang);
 };
 
 #endif // MAIN_WINDOW_H

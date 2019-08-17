@@ -2,28 +2,53 @@
 
 #include "hunspell/hunspell.hxx"
 
+#include <QActionGroup>
 #include <QApplication>
 #include <QDebug>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QMenu>
 #include <QTextCodec>
 
 #include "tools/OriSettings.h"
 
-static QString getDictionaryDir()
+QMap<QString, QString> langNamesMap();
+
+//------------------------------------------------------------------------------
+//                                Spellchecker
+//------------------------------------------------------------------------------
+
+static const QString dictFileExt(".dic");
+static const QString affixFileExt(".aff");
+
+static QString dictionaryDir()
 {
     return qApp->applicationDirPath() + "/dicts/";
 }
 
-static QString getUserDictionaryPath(const QString& lang)
+static QStringList dictionaries()
+{
+    QStringList dicts;
+
+    QDir dictDir(dictionaryDir());
+    if (!dictDir.exists()) return dicts;
+
+    for (auto fileInfo : dictDir.entryInfoList())
+        if (fileInfo.fileName().endsWith(dictFileExt))
+            dicts << fileInfo.baseName();
+
+    return dicts;
+}
+
+static QString userDictionaryPath(const QString& lang)
 {
     QSharedPointer<QSettings> s(Ori::Settings::open());
-    return QFileInfo(s->fileName()).absoluteDir().path() + "/userdict-" + lang + ".dic";
+    return QFileInfo(s->fileName()).absoluteDir().path() + "/userdict-" + lang + dictFileExt;
 }
 
 // detect encoding analyzing the SET option in the affix file
-static QString getDictionaryEncoding(const QString& affixFilePath)
+static QString dictionaryEncoding(const QString& affixFilePath)
 {
     QFile file(affixFilePath);
     if (!file.open(QIODevice::ReadOnly))
@@ -49,8 +74,8 @@ Spellchecker* Spellchecker::get(const QString& lang)
     static QMap<QString, Spellchecker*> checkers;
     if (!checkers.contains(lang))
     {
-        QString dictionary = getDictionaryDir() + lang;
-        QString userDictionary = getUserDictionaryPath(lang);
+        QString dictionary = dictionaryDir() + lang;
+        QString userDictionary = userDictionaryPath(lang);
         auto checker = new Spellchecker(dictionary, userDictionary);
         if (checker->_hunspell)
         {
@@ -67,10 +92,10 @@ Spellchecker::Spellchecker(const QString &dictionaryPath, const QString &userDic
 {
     _userDictionaryPath = userDictionaryPath;
 
-    QString dictFilePath = dictionaryPath + ".dic";
-    QString affixFilePath = dictionaryPath + ".aff";
+    QString dictFilePath = dictionaryPath + dictFileExt;
+    QString affixFilePath = dictionaryPath + affixFileExt;
 
-    QString encoding = getDictionaryEncoding(affixFilePath);
+    QString encoding = dictionaryEncoding(affixFilePath);
     if (encoding.isEmpty())
     {
         qWarning() << "Unable to detect dictionary encoding in affix file"
@@ -153,4 +178,64 @@ void Spellchecker::loadUserDictionary()
     for (QString word = stream.readLine(); !word.isEmpty(); word = stream.readLine())
         _hunspell->add(_codec->fromUnicode(word).toStdString());
     file.close();
+}
+
+//------------------------------------------------------------------------------
+//                            SpellcheckerControl
+//------------------------------------------------------------------------------
+
+SpellcheckControl::SpellcheckControl(QObject* parent) : QObject(parent)
+{
+    auto dicts = dictionaries();
+    if (dicts.isEmpty()) return;
+
+    _actionGroup = new QActionGroup(parent);
+    _actionGroup->setExclusive(true);
+    connect(_actionGroup, &QActionGroup::triggered, this, &SpellcheckControl::actionGroupTriggered);
+
+    auto actionNone = new QAction(tr("None"), this);
+    actionNone->setCheckable(true);
+    _actionGroup->addAction(actionNone);
+
+    auto langNames = langNamesMap();
+    for (auto lang : dicts)
+    {
+        auto langName = langNames.contains(lang) ? langNames[lang] : lang;
+        auto actionDict = new QAction(langName, this);
+        actionDict->setCheckable(true);
+        actionDict->setData(lang);
+        _actionGroup->addAction(actionDict);
+    }
+}
+
+QMenu* SpellcheckControl::makeMenu(QWidget* parent)
+{
+    if (!_actionGroup) return nullptr;
+
+    auto menu = new QMenu(tr("Spellcheck"), parent);
+    menu->addActions(_actionGroup->actions());
+    return menu;
+}
+
+void SpellcheckControl::showCurrentLang(const QString& lang)
+{
+    if (!_actionGroup) return;
+
+    for (auto action : _actionGroup->actions())
+        if (action->data().toString() == lang)
+        {
+            action->setChecked(true);
+            break;
+        }
+}
+
+void SpellcheckControl::setEnabled(bool on)
+{
+    if (_actionGroup) _actionGroup->setEnabled(on);
+}
+
+void SpellcheckControl::actionGroupTriggered(QAction* action)
+{
+    qDebug() << "FFF" << action->data().toString();
+    emit langSelected(action->data().toString());
 }

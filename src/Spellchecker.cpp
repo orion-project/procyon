@@ -236,6 +236,5 @@ void SpellcheckControl::setEnabled(bool on)
 
 void SpellcheckControl::actionGroupTriggered(QAction* action)
 {
-    qDebug() << "FFF" << action->data().toString();
     emit langSelected(action->data().toString());
 }

@@ -50,6 +50,7 @@ private:
     QAction *_actionOpenMemo, *_actionCreateMemo, *_actionDeleteMemo;
     QString _lastOpenedCatalog;
     SpellcheckControl* _spellcheckControl;
+    QMenu* _spellcheckMenu;
 
     void createMenu();
     void createStatusBar();
@@ -70,9 +71,11 @@ private:
     bool closeAllMemos();
     void openMemoPage(MemoItem* item);
     MemoPage* findMemoPage(MemoItem* item) const;
+    MemoPage* currentMemoPage() const;
     void editStyleSheet();
     void showAbout();
-    void dictsMenuAboutToShow();
+    void optionsMenuAboutToShow();
+    void spellcheckMenuAboutToShow();
     void setMemoSpellcheckLang(const QString& lang);
 };
 

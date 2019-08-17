@@ -1,6 +1,7 @@
 #include "MemoPage.h"
 
 #include "MemoEditor.h"
+#include "TextEditSpellcheck.h"
 #include "PageWidgets.h"
 #include "../Spellchecker.h"
 #include "../TextEditorHelpers.h"
@@ -29,6 +30,7 @@ MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     _memoEditor->setAcceptRichText(false);
     _memoEditor->setWordWrapMode(QTextOption::NoWrap);
     _memoEditor->setProperty("role", "memo_editor");
+    _spellcheck = new TextEditSpellcheck(_memoEditor, this);
 
     _titleEditor = PageWidgets::makeTitleEditor();
 
@@ -96,12 +98,14 @@ void MemoPage::beginEditing()
 {
     toggleEditMode(true);
     _memoEditor->setFocus();
+    _spellcheck->spellcheckAll();
 }
 
 void MemoPage::cancelEditing()
 {
     toggleEditMode(false);
     showMemo();
+    _spellcheck->clearErrorMarks();
 }
 
 bool MemoPage::saveEditing()
@@ -183,20 +187,27 @@ bool MemoPage::isModified() const
     return _memoEditor->document()->isModified() || _titleEditor->isModified();
 }
 
+bool MemoPage::isReadOnly() const
+{
+    return _memoEditor->isReadOnly();
+}
+
 QString MemoPage::spellcheckLang() const
 {
-    return _memoEditor->spellchecker() ? _memoEditor->spellchecker()->lang() : QString();
+    return _spellcheck->spellchecker() ? _spellcheck->spellchecker()->lang() : QString();
 }
 
 void MemoPage::setSpellcheckLang(const QString &lang)
 {
     if (lang.isEmpty())
-        _memoEditor->setSpellchecker(nullptr);
+    {
+        _spellcheck->setSpellchecker(nullptr);
+        _spellcheck->clearErrorMarks();
+    }
     else
     {
-        _memoEditor->setSpellchecker(Spellchecker::get(lang));
-        _memoEditor->spellcheck();
+        _spellcheck->setSpellchecker(Spellchecker::get(lang));
+        if (!_memoEditor->isReadOnly())
+            _spellcheck->spellcheckAll();
     }
 }
-
-

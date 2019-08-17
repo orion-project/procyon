@@ -3,8 +3,6 @@
 
 #include <QTextEdit>
 
-class Spellchecker;
-
 struct TextFormat
 {
     TextFormat() {}
@@ -43,17 +41,6 @@ struct TextEditCursorBackup
 private:
     QTextEdit* _editor;
     QTextCursor _cursor;
-};
-
-struct TextEditSpellcheck
-{
-    TextEditSpellcheck(QTextEdit* editor, Spellchecker* spellchecker);
-
-    void check();
-
-private:
-    QTextEdit* _editor;
-    Spellchecker* _spellchecker;
 };
 
 #endif // TEXT_EDITOR_HELPERS_H

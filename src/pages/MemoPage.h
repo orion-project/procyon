@@ -12,7 +12,7 @@ QT_END_NAMESPACE
 class Catalog;
 class MemoEditor;
 class MemoItem;
-class Spellchecker;
+class TextEditSpellcheck;
 
 class MemoPage : public QWidget
 {
@@ -33,6 +33,7 @@ public:
     void beginEditing();
     bool saveEditing();
     bool isModified() const;
+    bool isReadOnly() const;
     bool canClose();
 
 signals:
@@ -45,7 +46,7 @@ private:
     QLineEdit* _titleEditor;
     QAction *_actionEdit, *_actionSave, *_actionCancel;
     QSyntaxHighlighter* _highlighter = nullptr;
-    Spellchecker* _spellchecker = nullptr;
+    TextEditSpellcheck* _spellcheck;
 
     void showMemo();
     void cancelEditing();

@@ -100,12 +100,13 @@ void MainWindow::createMenu()
     _actionDeleteMemo = m->addAction(tr("Delete memo"), [this](){ _catalogView->deleteMemo(); });
 
     m = menuBar()->addMenu(tr("Options"));
+    connect(m, &QMenu::aboutToShow, this, &MainWindow::optionsMenuAboutToShow);
 
-    auto dictsMenu = _spellcheckControl->makeMenu(this);
-    if (dictsMenu)
+    _spellcheckMenu = _spellcheckControl->makeMenu(this);
+    if (_spellcheckMenu)
     {
-        connect(dictsMenu, &QMenu::aboutToShow, this, &MainWindow::dictsMenuAboutToShow);
-        m->addMenu(dictsMenu);
+        connect(_spellcheckMenu, &QMenu::aboutToShow, this, &MainWindow::spellcheckMenuAboutToShow);
+        m->addMenu(_spellcheckMenu);
     }
 
     m->addAction(tr("Choose Memo Font..."), this, &MainWindow::chooseMemoFont);
@@ -396,6 +397,12 @@ MemoPage* MainWindow::findMemoPage(MemoItem* item) const
     return nullptr;
 }
 
+MemoPage* MainWindow::currentMemoPage() const
+{
+    return dynamic_cast<MemoPage*>(_pagesView->currentWidget());
+}
+
+
 namespace {
 template <typename TPage>
 QVector<TPage*> getPages(QStackedWidget* pagesView)
@@ -490,17 +497,22 @@ void MainWindow::showAbout()
     about.exec();
 }
 
-void MainWindow::dictsMenuAboutToShow()
+void MainWindow::optionsMenuAboutToShow()
 {
-    auto memoPage = dynamic_cast<MemoPage*>(_pagesView->currentWidget());
-    _spellcheckControl->setEnabled(memoPage);
+    if (!_spellcheckMenu) return;
+    auto memoPage = currentMemoPage();
+    _spellcheckMenu->setEnabled(memoPage && !memoPage->isReadOnly());
+}
+
+void MainWindow::spellcheckMenuAboutToShow()
+{
+    auto memoPage = currentMemoPage();
     if (memoPage)
         _spellcheckControl->showCurrentLang(memoPage->spellcheckLang());
 }
 
 void MainWindow::setMemoSpellcheckLang(const QString& lang)
 {
-    qDebug() << "setMemoSpellcheckLang" << lang;
-    auto memoPage = dynamic_cast<MemoPage*>(_pagesView->currentWidget());
+    auto memoPage = currentMemoPage();
     if (memoPage) memoPage->setSpellcheckLang(lang);
 }

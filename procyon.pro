@@ -50,7 +50,8 @@ SOURCES += src/main.cpp\
     src/pages/MemoEditor.cpp \
     src/pages/MemoPage.cpp \
     src/pages/PageWidgets.cpp \
-    src/pages/StyleEditorPage.cpp
+    src/pages/StyleEditorPage.cpp \
+    src/pages/TextEditSpellcheck.cpp
 
 HEADERS  += src/MainWindow.h \
     src/AppSettings.h \
@@ -69,7 +70,8 @@ HEADERS  += src/MainWindow.h \
     src/pages/MemoEditor.h \
     src/pages/MemoPage.h \
     src/pages/PageWidgets.h \
-    src/pages/StyleEditorPage.h
+    src/pages/StyleEditorPage.h \
+    src/pages/TextEditSpellcheck.h
 
 DISTFILES += \
     src/app.qss

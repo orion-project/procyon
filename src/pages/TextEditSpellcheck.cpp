@@ -18,6 +18,10 @@ TextEditSpellcheck::TextEditSpellcheck(QTextEdit *editor, const QString& lang, Q
     _editor->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(_editor, &QTextEdit::customContextMenuRequested, this, &This::contextMenuRequested);
     connect(_editor->document(), QOverload<int, int, int>::of(&QTextDocument::contentsChange), this, &This::documentChanged);
+
+    _timer = new QTimer(this);
+    _timer->setInterval(500);
+    connect(_timer, &QTimer::timeout, this, &This::spellcheckChanges);
 }
 
 TextEditSpellcheck::~TextEditSpellcheck()
@@ -32,15 +36,10 @@ void TextEditSpellcheck::spellcheckAll()
 {
     TextEditCursorBackup cursorBackup(_editor);
 
-    _startPos = -1;
-    _stopPos = -1;
+    _spellcheckStart = -1;
+    _spellcheckStop = -1;
     spellcheck();
-    _editor->setExtraSelections(_spellErrorMarks);
-}
-
-void TextEditSpellcheck::spellcheckChanges()
-{
-    // TODO
+    _editor->setExtraSelections(_errorMarks);
 }
 
 static int selectWord(QTextCursor& cursor)
@@ -79,13 +78,13 @@ void TextEditSpellcheck::spellcheck()
 {
     static auto spellErrorFormat = TextFormat().spellError().get();
 
-    _spellErrorMarks.clear();
+    _errorMarks.clear();
 
     QTextCursor cursor(_editor->document());
 
-    if (_startPos > -1) cursor.setPosition(_startPos);
+    if (_spellcheckStart > -1) cursor.setPosition(_spellcheckStart);
 
-    while ((_stopPos > -1 && cursor.position() < _stopPos) || !cursor.atEnd())
+    while ((_spellcheckStop < 0 || cursor.position() < _spellcheckStop) && !cursor.atEnd())
     {
         cursor.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
         int length = selectWord(cursor);
@@ -122,7 +121,7 @@ void TextEditSpellcheck::spellcheck()
             QString word = cursor.selectedText();
 
             if (!_spellchecker->check(word))
-                _spellErrorMarks << QTextEdit::ExtraSelection {cursor, spellErrorFormat};
+                _errorMarks << QTextEdit::ExtraSelection {cursor, spellErrorFormat};
         }
 
         cursor.movePosition(QTextCursor::NextWord, QTextCursor::MoveAnchor);
@@ -214,28 +213,48 @@ void TextEditSpellcheck::clearErrorMarks()
 
 void TextEditSpellcheck::documentChanged(int position, int charsRemoved, int charsAdded)
 {
+    Q_UNUSED(charsRemoved)
+
     if (_changesLocked) return;
 
-    qDebug() << "changed" << position << charsRemoved << charsAdded;
-
-    if (!_timer)
-    {
-        _timer = new QTimer(this);
-        _timer->setInterval(500);
-        connect(_timer, &QTimer::timeout, this, &TextEditSpellcheck::spellcheckChanges);
-    }
-
-    if (position < _startPos) _startPos = position;
+    if (_changesStart < 0 || position < _changesStart) _changesStart = position;
 
     int stopPos = position + charsAdded;
-    if (stopPos > _stopPos) _stopPos = stopPos;
+    if (stopPos > _changesStop) _changesStop = stopPos;
 
     _timer->start();
+}
 
-//    QTextCursor cursor(document());
-//    cursor.setPosition(position);
-//    cursor.movePosition(QTextCursor::StartOfWord);
-//    cursor.setPosition(position + charsAdded);
-//    cursor.movePosition(QTextCursor::EndOfWord);
-//    qDebug() << "check:" << cursor.selectedText();
+void TextEditSpellcheck::spellcheckChanges()
+{
+    _timer->stop();
+
+    QTextCursor cursor(_editor->document());
+
+    // We could insert spaces and split a word in two.
+    // Then we have to check not only the current word but also the previous one.
+    // That's the reason for shifting to -1 from _changesStart position:
+    cursor.setPosition(_changesStart > 0 ? _changesStart - 1 : _changesStart);
+    cursor.movePosition(QTextCursor::StartOfWord, QTextCursor::MoveAnchor);
+    _spellcheckStart = cursor.position();
+
+    cursor.setPosition(_changesStop);
+    cursor.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
+    _spellcheckStop = cursor.position();
+
+    QList<QTextEdit::ExtraSelection> errorMarks;
+    for (auto es : _editor->extraSelections())
+        if (es.cursor.position() < _spellcheckStart ||
+            es.cursor.anchor() >= _spellcheckStop)
+            errorMarks << es;
+
+    spellcheck();
+
+    errorMarks.append(_errorMarks);
+    _editor->setExtraSelections(errorMarks);
+
+    _spellcheckStart = -1;
+    _spellcheckStop = -1;
+    _changesStart = -1;
+    _changesStop = -1;
 }

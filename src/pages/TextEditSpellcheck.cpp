@@ -10,9 +10,9 @@
 
 using This = TextEditSpellcheck;
 
-TextEditSpellcheck::TextEditSpellcheck(QTextEdit *editor, const QString& lang, QObject *parent): QObject(parent), _editor(editor)
+TextEditSpellcheck::TextEditSpellcheck(QTextEdit *editor, Spellchecker *spellchecker, QObject *parent)
+    : QObject(parent), _editor(editor), _spellchecker(spellchecker)
 {
-    _spellchecker = Spellchecker::get(lang);
     connect(_spellchecker, &Spellchecker::wordIgnored, this, &This::wordIgnored);
 
     _editor->setContextMenuPolicy(Qt::CustomContextMenu);

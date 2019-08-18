@@ -3,6 +3,7 @@
 #include "MemoEditor.h"
 #include "TextEditSpellcheck.h"
 #include "PageWidgets.h"
+#include "../Spellchecker.h"
 #include "../TextEditorHelpers.h"
 #include "../catalog/Catalog.h"
 #include "../catalog/Memo.h"
@@ -154,7 +155,9 @@ void MemoPage::toggleSpellcheck(bool on)
     {
         if (!_spellcheckLang.isEmpty())
         {
-            _spellcheck = new TextEditSpellcheck(_memoEditor, _spellcheckLang, this);
+            auto spellchecker = Spellchecker::get(_spellcheckLang);
+            if (!spellchecker) return; // Unable to open dictionary
+            _spellcheck = new TextEditSpellcheck(_memoEditor, spellchecker, this);
             _spellcheck->spellcheckAll();
         }
     }
@@ -172,6 +175,9 @@ void MemoPage::toggleSpellcheck(bool on)
 void MemoPage::setMemoFont(const QFont& font)
 {
     _memoEditor->setFont(font);
+
+    // TODO: Some styles get reset when font changes at least on macOS
+    // e.g. bold header in shell-memo becomes normal
 }
 
 void MemoPage::setWordWrap(bool wrap)

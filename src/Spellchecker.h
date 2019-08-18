@@ -31,7 +31,7 @@ signals:
     void wordIgnored(const QString& word);
 
 private:
-    Spellchecker(const QString &dictionaryPath, const QString &userDictionaryPath);
+    Spellchecker(const QString &dictFilePath, const QString &affixFilePath, const QString &userDictionaryPath);
 
     QString _lang;
     QString _userDictionaryPath;

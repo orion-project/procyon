@@ -22,19 +22,26 @@ QMap<QString, QString> langNamesMap();
 static const QString dictFileExt(".dic");
 static const QString affixFileExt(".aff");
 
-static QString dictionaryDir()
+static QDir dictionaryDir()
 {
-    return qApp->applicationDirPath() + "/dicts/";
+    QDir dir(qApp->applicationDirPath() + "/dicts");
+
+#ifdef Q_OS_MAC
+    if (!dir.exists())
+    {
+        // Look near the application bundle, it is for development mode
+        return QDir(qApp->applicationDirPath() % "/../../../dicts");
+    }
+#endif
+
+    return dir;
 }
 
 static QStringList dictionaries()
 {
     QStringList dicts;
 
-    QDir dictDir(dictionaryDir());
-    if (!dictDir.exists()) return dicts;
-
-    for (auto fileInfo : dictDir.entryInfoList())
+    for (auto fileInfo : dictionaryDir().entryInfoList())
         if (fileInfo.fileName().endsWith(dictFileExt))
             dicts << fileInfo.baseName();
 
@@ -44,7 +51,9 @@ static QStringList dictionaries()
 static QString userDictionaryPath(const QString& lang)
 {
     QSharedPointer<QSettings> s(Ori::Settings::open());
-    return QFileInfo(s->fileName()).absoluteDir().path() + "/userdict-" + lang + dictFileExt;
+    QDir dictDir = QFileInfo(s->fileName()).absoluteDir();
+    QFileInfo dictFile(dictDir, "userdict-" + lang + dictFileExt);
+    return dictFile.absoluteFilePath();
 }
 
 // detect encoding analyzing the SET option in the affix file
@@ -72,35 +81,53 @@ static QString dictionaryEncoding(const QString& affixFilePath)
 Spellchecker* Spellchecker::get(const QString& lang)
 {
     if (lang.isEmpty()) return nullptr;
+
     static QMap<QString, Spellchecker*> checkers;
+
     if (!checkers.contains(lang))
     {
-        QString dictionary = dictionaryDir() + lang;
-        QString userDictionary = userDictionaryPath(lang);
-        auto checker = new Spellchecker(dictionary, userDictionary);
-        if (checker->_hunspell)
+        QDir dictDir = dictionaryDir();
+
+        QFileInfo dictFile(dictDir, lang + dictFileExt);
+        if (!dictFile.exists())
         {
-            checker->_lang = lang;
-            checkers.insert(lang, checker);
+            qWarning() << "Dictionary file does not exist" << dictFile.filePath();
+            return nullptr;
         }
-        else delete checker;
+
+        QFileInfo affixFile(dictDir, lang + affixFileExt);
+        if (!affixFile.exists())
+        {
+            qWarning() << "Affix file does not exist" << affixFile.filePath();
+            return nullptr;
+        }
+
+        auto checker = new Spellchecker(dictFile.absoluteFilePath(),
+                                        affixFile.absoluteFilePath(),
+                                        userDictionaryPath(lang));
+        if (!checker->_hunspell)
+        {
+            delete checker;
+            return nullptr;
+        }
+
+        checker->_lang = lang;
+        checkers.insert(lang, checker);
     }
-    return checkers.contains(lang) ? checkers[lang] : nullptr;
+
+    return checkers[lang];
 }
 
 
-Spellchecker::Spellchecker(const QString &dictionaryPath, const QString &userDictionaryPath)
+Spellchecker::Spellchecker(const QString &dictFilePath, const QString& affixFilePath, const QString &userDictionaryPath)
 {
     _userDictionaryPath = userDictionaryPath;
-
-    QString dictFilePath = dictionaryPath + dictFileExt;
-    QString affixFilePath = dictionaryPath + affixFileExt;
 
     QString encoding = dictionaryEncoding(affixFilePath);
     if (encoding.isEmpty())
     {
         qWarning() << "Unable to detect dictionary encoding in affix file"
-                   << affixFilePath << "Spell check is unavailable";
+                   << affixFilePath << "Spellcheck is unavailable";
         return;
     }
 
@@ -109,7 +136,7 @@ Spellchecker::Spellchecker(const QString &dictionaryPath, const QString &userDic
     {
         qWarning() << "Codec not found for encoding" << encoding
                    << "detected in dictionary" << affixFilePath
-                   << "Spell check is unavailable";
+                   << "Spellcheck is unavailable";
         return;
     }
 

@@ -16,7 +16,7 @@ class TextEditSpellcheck : public QObject
     Q_OBJECT
 
 public:
-    explicit TextEditSpellcheck(QTextEdit* editor, const QString &lang, QObject *parent = nullptr);
+    explicit TextEditSpellcheck(QTextEdit* editor, Spellchecker* spellchecker, QObject *parent = nullptr);
     ~TextEditSpellcheck();
     void clearErrorMarks();
     void spellcheckAll();

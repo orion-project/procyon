@@ -17,7 +17,7 @@ import os
 import subprocess
 
 def export_image(size, factor):
-  out_filename = 'icon_{size}x{size}{suffix}.png'.format(size = size, suffix = '@2' if factor == 2 else '')
+  out_filename = 'icon_{size}x{size}{suffix}.png'.format(size = size, suffix = '@2x' if factor == 2 else '')
   cmd = ['inkscape',
          '--export-png=procyon.iconset/{}'.format(out_filename),
          '--export-width={}'.format(size * factor),
@@ -30,6 +30,6 @@ def export_image(size, factor):
 
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
-for size in [16, 23, 128, 256, 512]:
+for size in [16, 32, 128, 256, 512]:
   export_image(size, 1)
   export_image(size, 2)

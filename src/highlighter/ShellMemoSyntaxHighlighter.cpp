@@ -1,6 +1,6 @@
 #include "ShellMemoSyntaxHighlighter.h"
 
-#include "../TextEditorHelpers.h"
+#include "../TextEditHelpers.h"
 
 #include <QDebug>
 

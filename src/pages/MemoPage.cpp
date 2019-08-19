@@ -1,10 +1,10 @@
 #include "MemoPage.h"
 
-#include "MemoEditor.h"
-#include "TextEditSpellcheck.h"
+#include "../MemoEditor.h"
+#include "../TextEditSpellcheck.h"
 #include "PageWidgets.h"
 #include "../Spellchecker.h"
-#include "../TextEditorHelpers.h"
+//#include "../TextEditorHelpers.h"
 #include "../catalog/Catalog.h"
 #include "../catalog/Memo.h"
 #include "../highlighter/PythonSyntaxHighlighter.h"

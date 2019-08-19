@@ -1,4 +1,4 @@
-#include "TextEditorHelpers.h"
+#include "TextEditHelpers.h"
 
 #include "Spellchecker.h"
 

@@ -1,7 +1,7 @@
 #include "TextEditSpellcheck.h"
 
-#include "../Spellchecker.h"
-#include "../TextEditorHelpers.h"
+#include "Spellchecker.h"
+#include "TextEditHelpers.h"
 
 #include <QAction>
 #include <QDebug>

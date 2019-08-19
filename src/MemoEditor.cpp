@@ -1,7 +1,7 @@
 #include "MemoEditor.h"
 
-#include "../Spellchecker.h"
-#include "../TextEditorHelpers.h"
+#include "Spellchecker.h"
+#include "TextEditHelpers.h"
 
 #include <QDebug>
 #include <QDesktopServices>

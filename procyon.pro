@@ -37,7 +37,7 @@ SOURCES += src/main.cpp\
     src/MainWindow.cpp \
     src/CatalogWidget.cpp \
     src/Spellchecker.cpp \
-    src/TextEditorHelpers.cpp \
+    src/TextEditHelpers.cpp \
     src/catalog/Catalog.cpp \
     src/catalog/CatalogStore.cpp \
     src/catalog/SqlHelper.cpp \
@@ -47,18 +47,18 @@ SOURCES += src/main.cpp\
     src/highlighter/ShellMemoSyntaxHighlighter.cpp \
     src/CatalogModel.cpp \
     src/OpenedPagesWidget.cpp \
-    src/pages/MemoEditor.cpp \
+    src/MemoEditor.cpp \
     src/pages/MemoPage.cpp \
     src/pages/PageWidgets.cpp \
     src/pages/StyleEditorPage.cpp \
-    src/pages/TextEditSpellcheck.cpp
+    src/TextEditSpellcheck.cpp
 
 HEADERS  += src/MainWindow.h \
     src/AppSettings.h \
     src/CatalogWidget.h \
     src/CatalogModel.h \
     src/Spellchecker.h \
-    src/TextEditorHelpers.h \
+    src/TextEditHelpers.h \
     src/catalog/Catalog.h \
     src/catalog/CatalogStore.h \
     src/catalog/SqlHelper.h \
@@ -67,11 +67,11 @@ HEADERS  += src/MainWindow.h \
     src/highlighter/PythonSyntaxHighlighter.h \
     src/highlighter/ShellMemoSyntaxHighlighter.h \
     src/OpenedPagesWidget.h \
-    src/pages/MemoEditor.h \
+    src/MemoEditor.h \
     src/pages/MemoPage.h \
     src/pages/PageWidgets.h \
     src/pages/StyleEditorPage.h \
-    src/pages/TextEditSpellcheck.h
+    src/TextEditSpellcheck.h
 
 DISTFILES += \
     src/app.qss

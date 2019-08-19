@@ -30,6 +30,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 RESOURCES += src/resources.qrc
 
 win32: RC_FILE = src/app.rc
+macx: ICON = img/icon/main.icns
 
 SOURCES += src/main.cpp\
     src/AppSettings.cpp \

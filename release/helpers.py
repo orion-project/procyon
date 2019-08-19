@@ -2,12 +2,15 @@ from __future__ import print_function
 
 import os
 import subprocess
+import sys
 import platform
 import requests
 import shutil
 import struct
 import errno
 from zipfile import ZipFile, ZIP_DEFLATED
+
+print('Python ' + sys.version + '\n')
 
 IS_WINDOWS = False
 IS_LINUX = False

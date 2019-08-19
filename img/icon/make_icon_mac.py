@@ -8,21 +8,26 @@
 #
 # for Windows cmd do:
 #
-# set PATH=c:\"Program Files"\Inkscape;%PATH%
+# set PATH=c:\Program Files\Inkscape;%PATH%
 #
 
 from __future__ import print_function
 
 import os
+import sys
 import subprocess
+
+print('Python ' + sys.version + '\n')
 
 def export_image(size, factor):
   out_filename = 'icon_{size}x{size}{suffix}.png'.format(size = size, suffix = '@2x' if factor == 2 else '')
+  out_filepath = os.path.join('procyon.iconset', out_filename)
+  
   cmd = ['inkscape',
-         '--export-png=procyon.iconset/{}'.format(out_filename),
+         '--export-png={}'.format(out_filepath),
          '--export-width={}'.format(size * factor),
          '--export-height={}'.format(size * factor),
-         'main_src.svg']
+         'main.svg']
            
   p = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, universal_newlines = True)
   for line in iter(p.stdout.readline, ''): print(line, end = '')

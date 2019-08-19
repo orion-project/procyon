@@ -2,7 +2,6 @@
 
 import glob
 import requests
-from zipfile import ZipFile, ZIP_DEFLATED
 from helpers import *
 
 navigate_to_project_dir()
@@ -40,32 +39,23 @@ def make_package_for_windows():
 
   print_header('Clean some excessive files...')
   remove_files(['libEGL.dll', 'libGLESV2.dll'])
-  remove_files(['sqldrivers\\qsqlmysql.dll',
-                'sqldrivers\\qsqlodbc.dll',
-                'sqldrivers\\qsqlpsql.dll'])
-  remove_files(['imageformats\\qicns.dll',
-                'imageformats\\qtga.dll',
-                'imageformats\\qtiff.dll',
-                'imageformats\\qwbmp.dll',
-                'imageformats\\qwebp.dll'])
+  remove_files_in_dir('sqldrivers', ['qsqlmysql.dll', 'qsqlodbc.dll', 'qsqlpsql.dll'])
+  remove_files_in_dir('imageformats', ['qicns.dll', 'qtga.dll', 'qtiff.dll', 'qwbmp.dll', 'qwebp.dll'])
 
   print_header('Copy project files...')
-  shutil.copyfile('..\\..\\bin\\' + PROJECT_EXE, PROJECT_EXE)
-  
+  copy_file('..\\..\\bin\\' + PROJECT_EXE, '.')
+  copy_file('..\\..\\hunspell-1.7.0\\src\\hunspell\\.libs\\libhunspell-1.7-0.dll', '.')
+  shutil.copytree('..\\..\\bin\\dicts', 'dicts')
+
+  # Seems sometimes windeployqt does copy these files,
+  # but I definitely had cases when they had not been in the the place...
   print_header('Copy additional files ignored by windeployqt...')
-  qt_dir = '' # TODO: find qt dir
-  shutil.copyfile(qt_dir + '\\libgcc_s_seh-1.dll', 'libgcc_s_seh-1.dll')
-  shutil.copyfile(qt_dir + '\\libstdc++-6.dll', 'libstdc++-6.dll')
-  shutil.copyfile(qt_dir + '\\libwinpthread-1.dll', 'libwinpthread-1.dll')
-  # TODO: copy libhunspell-1.7-0.dll from \hunspell-1.7.0\src\hunspell\.libs\
+  copy_files(find_qt_dir(), ['libgcc_s_seh-1.dll', 'libstdc++-6.dll', 'libwinpthread-1.dll'], '.')
 
   print_header('Pack files to zip...')
   global package_name
   package_name = '{}-win-x{}.zip'.format(package_name, get_exe_bits(PROJECT_EXE))
-  with ZipFile('..\\' + package_name, mode='w', compression=ZIP_DEFLATED) as z:
-     for dirname, subdirs, filenames in os.walk('.'):
-        for filename in filenames:
-          z.write(os.path.join(dirname, filename))
+  zip_dir('.', '..\\' + package_name)
 
 
 ########################################################################

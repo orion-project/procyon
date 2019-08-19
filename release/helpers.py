@@ -6,6 +6,7 @@ import platform
 import shutil
 import struct
 import errno
+from zipfile import ZipFile, ZIP_DEFLATED
 
 IS_WINDOWS = False
 IS_LINUX = False
@@ -154,6 +155,23 @@ def remove_files(filenames):
     if os.path.exists(filename):
       os.remove(filename)
 
+def remove_files_in_dir(dir, filenames):
+  for filename in filenames:
+    filepath = os.path.join(dir, filename)
+    if os.path.exists(filepath):
+      os.remove(filepath)
+  
+
+def copy_file(source_file_path, target_dir):
+  (source_dir, filename) = os.path.split(source_file_path)
+  target_file_path = os.path.join(target_dir, filename)
+  shutil.copyfile(source_file_path, target_file_path)
+
+
+def copy_files(source_dir, filenames, target_dir):
+  for filename in filenames:
+    copy_file(os.path.join(source_dir, filename), target_dir)  
+
 
 def remove_dir(dirname):
   if os.path.exists(dirname):
@@ -191,3 +209,19 @@ def get_exe_bits(file_name):
       return 64
     else:
       raise Exception('Invalid exe file {}: unknown magic number {}'.format(file_name, str(arch)))
+
+
+def find_qt_dir():
+  paths = os.getenv('PATH', '').split(';' if IS_WINDOWS else ':')
+  qmake = 'qmake.exe' if IS_WINDOWS else 'qmake'
+  for path in paths:
+    if os.path.exists(os.path.join(path, qmake)):
+      return path
+  return ''
+
+
+def zip_dir(dir_name, zip_name):
+  with ZipFile(zip_name, mode = 'w', compression = ZIP_DEFLATED) as z:
+     for dirname, subdirs, filenames in os.walk(dir_name):
+        for filename in filenames:
+          z.write(os.path.join(dirname, filename))

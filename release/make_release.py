@@ -18,7 +18,6 @@ recreate_dir_if_exists(BUILD_DIR)
 os.chdir(BUILD_DIR)
 
 print_header('Building...')
-exit()
 
 start_time = time.time()
 

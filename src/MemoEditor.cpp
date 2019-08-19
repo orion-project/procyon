@@ -19,26 +19,18 @@ MemoEditor::MemoEditor(QWidget* parent) : QTextEdit(parent)
 // so `anchorAt` returns nothing, we have to enumerate styles to find out a href.
 QString MemoEditor::hyperlinkAt(const QPoint& pos) const
 {
-    auto cursor = cursorForPosition(viewport()->mapFromParent(pos));
-
-    for (auto format : cursor.block().layout()->formats())
-    {
-        int cursorPos = cursor.positionInBlock();
-        if (cursorPos >= format.start and
-            cursorPos < format.start + format.length and
-            format.format.isAnchor())
-        {
-            auto href = format.format.anchorHref();
-            if (not href.isEmpty()) return href;
-        }
-    }
-    return QString();
+    return TextEditHelpers::hyperlinkAt(cursorForPosition(viewport()->mapFromParent(pos)));
 }
 
 void MemoEditor::mousePressEvent(QMouseEvent *e)
 {
-    if (e->button() & Qt::LeftButton && e->modifiers().testFlag(Qt::ControlModifier))
+    if (e->button() == Qt::LeftButton && e->modifiers().testFlag(Qt::ControlModifier))
         _clickedHref = hyperlinkAt(e->pos());
+
+    // There is no selection -> move cursor to the point of click
+    auto cursor = textCursor();
+    if (e->button() == Qt::RightButton && cursor.anchor() == cursor.position())
+        setTextCursor(cursorForPosition(viewport()->mapFromParent(e->pos())));
 
     QTextEdit::mousePressEvent(e);
 }

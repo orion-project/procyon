@@ -27,10 +27,12 @@ private:
     QTimer* _timer = nullptr;
     int _changesStart = -1;
     int _changesStop = -1;
+    bool _isHrefChanged = false;
     int _spellcheckStart = -1;
     int _spellcheckStop = -1;
     QList<QTextEdit::ExtraSelection> _errorMarks;
     bool _changesLocked = false;
+    QString _hyperlinkAtCursor;
 
     void spellcheck();
     QTextCursor spellingAt(const QPoint& pos) const;
@@ -40,6 +42,7 @@ private:
     void documentChanged(int position, int charsRemoved, int charsAdded);
     void spellcheckChanges();
     void wordIgnored(const QString& word);
+    void cursorMoved();
 };
 
 #endif // TEXT_EDIT_SPELLCHECK_H

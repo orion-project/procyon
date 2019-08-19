@@ -1,5 +1,5 @@
-#ifndef TEXT_EDITOR_HELPERS_H
-#define TEXT_EDITOR_HELPERS_H
+#ifndef TEXT_EDIT_HELPERS_H
+#define TEXT_EDIT_HELPERS_H
 
 #include <QTextEdit>
 
@@ -43,4 +43,10 @@ private:
     QTextCursor _cursor;
 };
 
-#endif // TEXT_EDITOR_HELPERS_H
+
+namespace TextEditHelpers
+{
+QString hyperlinkAt(const QTextCursor& cursor);
+}
+
+#endif // TEXT_EDIT_HELPERS_H

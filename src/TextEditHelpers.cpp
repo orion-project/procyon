@@ -2,6 +2,8 @@
 
 #include "Spellchecker.h"
 
+#include <QTextBlock>
+
 //------------------------------------------------------------------------------
 //                                  TextFormat
 //------------------------------------------------------------------------------
@@ -23,3 +25,28 @@ QTextCharFormat TextFormat::get() const
     }
     return f;
 }
+
+//------------------------------------------------------------------------------
+//                                TextEditHelpers
+//------------------------------------------------------------------------------
+
+namespace TextEditHelpers
+{
+
+// Hyperlink made via syntax highlighter doesn't create some 'top level' anchor,
+// so `anchorAt` returns nothing, we have to enumerate styles to find out a href.
+QString hyperlinkAt(const QTextCursor& cursor)
+{
+    int cursorPos = cursor.positionInBlock() - (cursor.position() - cursor.anchor());
+    for (auto format : cursor.block().layout()->formats())
+        if (format.format.isAnchor() &&
+            cursorPos >= format.start &&
+            cursorPos < format.start + format.length)
+        {
+            auto href = format.format.anchorHref();
+            if (not href.isEmpty()) return href;
+        }
+    return QString();
+}
+
+} // namespace TextEditHelpers

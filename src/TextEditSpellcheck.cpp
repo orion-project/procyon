@@ -18,6 +18,7 @@ TextEditSpellcheck::TextEditSpellcheck(QTextEdit *editor, Spellchecker *spellche
     _editor->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(_editor, &QTextEdit::customContextMenuRequested, this, &This::contextMenuRequested);
     connect(_editor->document(), QOverload<int, int, int>::of(&QTextDocument::contentsChange), this, &This::documentChanged);
+    connect(_editor, &QTextEdit::cursorPositionChanged, this, &This::cursorMoved);
 
     _timer = new QTimer(this);
     _timer->setInterval(500);
@@ -34,8 +35,6 @@ TextEditSpellcheck::~TextEditSpellcheck()
 
 void TextEditSpellcheck::spellcheckAll()
 {
-    TextEditCursorBackup cursorBackup(_editor);
-
     _spellcheckStart = -1;
     _spellcheckStop = -1;
     spellcheck();
@@ -116,7 +115,7 @@ void TextEditSpellcheck::spellcheck()
         //
         // It'd be better to check such words as a whole.
         //
-        if (length > 1)
+        if (length > 1 && TextEditHelpers::hyperlinkAt(cursor).isEmpty())
         {
             QString word = cursor.selectedText();
 
@@ -220,6 +219,8 @@ void TextEditSpellcheck::documentChanged(int position, int charsRemoved, int cha
     int stopPos = position + charsAdded;
     if (stopPos > _changesStop) _changesStop = stopPos;
 
+    _isHrefChanged = _isHrefChanged || !_hyperlinkAtCursor.isEmpty();
+
     _timer->start();
 }
 
@@ -231,13 +232,15 @@ void TextEditSpellcheck::spellcheckChanges()
 
     // We could insert spaces and split a word in two.
     // Then we have to check not only the current word but also the previous one.
-    // That's the reason for shifting to -1 from _changesStart position:
+    // That's the reason for shifting to -1 from _changesStart position.
+    // But if there is/was a hyperlink in place of changes,
+    // it can contain arbitrary number of words, then it better to check all the block.
     cursor.setPosition(_changesStart > 0 ? _changesStart - 1 : _changesStart);
-    cursor.movePosition(QTextCursor::StartOfWord, QTextCursor::MoveAnchor);
+    cursor.movePosition(_isHrefChanged ? QTextCursor::StartOfBlock : QTextCursor::StartOfWord, QTextCursor::MoveAnchor);
     _spellcheckStart = cursor.position();
 
     cursor.setPosition(_changesStop);
-    cursor.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
+    cursor.movePosition(_isHrefChanged ? QTextCursor::EndOfBlock : QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
     _spellcheckStop = cursor.position();
 
     // Remove marks which are in checking range, they will be recreated on spellcheck
@@ -256,6 +259,11 @@ void TextEditSpellcheck::spellcheckChanges()
     _spellcheckStop = -1;
     _changesStart = -1;
     _changesStop = -1;
+}
+
+void TextEditSpellcheck::cursorMoved()
+{
+    _hyperlinkAtCursor = TextEditHelpers::hyperlinkAt(_editor->textCursor());
 }
 
 void TextEditSpellcheck::wordIgnored(const QString& word)

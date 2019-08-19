@@ -28,8 +28,15 @@ SettingsListener::~SettingsListener()
 
 void Settings::load(QSettings* s)
 {
+    bool defaultUseNativeMenuBar =
+#ifdef Q_OS_WIN
+        false;
+#else
+        true;
+#endif
+
     Ori::SettingsGroup group(s, "View");
-    LOAD(useNativeMenuBar, Bool, true);
+    LOAD(useNativeMenuBar, Bool, defaultUseNativeMenuBar);
     LOAD(memoWordWrap, Bool, false);
     memoFont = qvariant_cast<QFont>(s->value("memoFont", QFont("Arial", 12)));
 }

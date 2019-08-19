@@ -84,30 +84,26 @@ int main(int argc, char *argv[])
 
     if (!processCommandLine()) return 1;
 
-    MainWindow w;
+    // Load settings
+    auto s1 = Ori::Settings::open();
+    Settings::instance().load(s1);
 
-    { // Settings scope
-        QSharedPointer<QSettings> s(Ori::Settings::open());
+    // Call `setStyleSheet` after setting loaded
+    // to be able to apply custom colors.
+    app.setStyleSheet(loadStyleSheet(s1));
 
-        Settings::instance().load(s.data());
+    MainWindow  w;
+    w.loadSettings(s1);
+    delete s1;
 
-        // Call `setStyleSheet` after setting loaded
-        // to be able to apply custom colors.
-        app.setStyleSheet(loadStyleSheet(s.data()));
-
-        w.loadSettings(s.data());
-        w.show();
-    }
-
+    w.show();
     int res = app.exec();
 
-    { // Settings scope
-        QSharedPointer<QSettings> s(Ori::Settings::open());
-
-        Settings::instance().save(s.data());
-
-        w.saveSettings(s.data());
-    }
+    // Save settings
+    auto s2 = Ori::Settings::open();
+    Settings::instance().save(s2);
+    w.saveSettings(s2);
+    delete s2;
 
     return res;
 }

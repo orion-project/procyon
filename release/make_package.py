@@ -118,14 +118,14 @@ def make_package_for_macos():
   print_header('Run macdeployqt...')
   execute('macdeployqt {}'.format(PROJECT_EXE))
 
+  print_header('Copy project files...')
+  shutil.copytree('../../bin/dicts', PROJECT_EXE + '/Contents/MacOS/dicts')
+
   print_header('Clean some excessive files...')
-  remove_files([PROJECT_EXE + '/Contents/PlugIns/sqldrivers/libqsqlmysql.dylib',
-                PROJECT_EXE + '/Contents/PlugIns/sqldrivers/libqsqlpsql.dylib'])
-  remove_files([PROJECT_EXE + '/Contents/PlugIns/imageformats/libqico.dylib',
-                PROJECT_EXE + '/Contents/PlugIns/imageformats/libqtga.dylib',
-                PROJECT_EXE + '/Contents/PlugIns/imageformats/libqtiff.dylib',
-                PROJECT_EXE + '/Contents/PlugIns/imageformats/libqwbmp.dylib',
-                PROJECT_EXE + '/Contents/PlugIns/imageformats/libqwebp.dylib'])
+  remove_files_in_dir(PROJECT_EXE + '/Contents/PlugIns/sqldrivers', [
+    'libqsqlmysql.dylib', 'libqsqlpsql.dylib'])
+  remove_files_in_dir(PROJECT_EXE + '/Contents/PlugIns/imageformats', [
+    'libqico.dylib', 'libqtga.dylib', 'libqtiff.dylib', 'libqwbmp.dylib', 'libqwebp.dylib'])
 
   print_header('Pack application bundle to dmg...')
   global package_name

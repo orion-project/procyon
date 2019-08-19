@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import glob
-import requests
 from helpers import *
 
 navigate_to_project_dir()
@@ -24,6 +23,7 @@ create_dir_if_none(OUT_DIR)
 os.chdir(OUT_DIR)
 
 recreate_dir_if_exists(REDIST_DIR)
+os.chdir(REDIST_DIR)
 
 package_name = PROJECT_NAME + '-' + version_str
 
@@ -32,8 +32,6 @@ package_name = PROJECT_NAME + '-' + version_str
 #                             Windows
 
 def make_package_for_windows():
-  os.chdir(REDIST_DIR)
-
   print_header('Run windeployqt...')
   execute('windeployqt ..\\..\\bin\\{} --dir . --no-translations --no-system-d3d-compiler --no-opengl-sw'.format(PROJECT_EXE))
 
@@ -62,6 +60,24 @@ def make_package_for_windows():
 #                           Linux
 
 def make_package_for_linux():
+  print_header('Create AppDir structure...')
+  os.makedirs('usr/bin')
+  os.makedirs('usr/lib')
+  os.makedirs('usr/share/applications')
+  os.makedirs('usr/share/icons/hicolor/256x256/apps')
+
+  copy_file('../../bin/' + PROJECT_EXE, 'usr/bin')
+  # There will be error 'Could not determine the path to the executable' otherwise
+  execute('chmod +x usr/bin/' + PROJECT_EXE)
+
+  copy_file('../../release/{}.desktop'.format(PROJECT_NAME), 'usr/share/applications')
+  shutil.copyfile('../../img/icon/main_256.png', 'usr/share/icons/hicolor/256x256/apps/{}.png'.format(PROJECT_NAME))
+
+  print_header('Copy project files...')
+  shutil.copytree('../../bin/dicts', 'usr/bin/dicts')
+
+  os.chdir('..')
+
   print_header('Download linuxdeployqt...')
   # Download linuxdeplyqt if none (https://github.com/probonopd/linuxdeployqt)
   # NOTE: It've broken compatibility with newer OS versions forsing to stick at Ubuntu 14 LTS.
@@ -70,30 +86,7 @@ def make_package_for_linux():
   # (the last supported for Trusty) so have to use a more relaxed 5th version of the tool.
   linuxdeployqt = 'linuxdeployqt-5-x86_64.AppImage'
   linuxdeployqt_url = 'https://github.com/probonopd/linuxdeployqt/releases/download/5/'
-  if os.path.exists(linuxdeployqt):
-    print('Already there')
-  else:
-    r = requests.get(linuxdeployqt_url + linuxdeployqt);
-    with open(linuxdeployqt, 'wb') as f: f.write(r.content)
-    execute('chmod +x ' + linuxdeployqt)
-
-  target_exe = '{}/usr/bin/{}'.format(REDIST_DIR, PROJECT_EXE)
-
-  print_header('Create AppDir structure...')
-  os.makedirs(REDIST_DIR + '/usr/bin')
-  os.makedirs(REDIST_DIR + '/usr/lib')
-  os.makedirs(REDIST_DIR + '/usr/share/applications')
-  os.makedirs(REDIST_DIR + '/usr/share/icons/hicolor/256x256/apps')
-  shutil.copyfile('../bin/{}'.format(PROJECT_EXE), target_exe)
-  shutil.copyfile(
-    '../release/{}.desktop'.format(PROJECT_NAME),
-    '{}/usr/share/applications/{}.desktop'.format(REDIST_DIR, PROJECT_NAME))
-  shutil.copyfile(
-    '../img/icon/main_256.png',
-    '{}/usr/share/icons/hicolor/256x256/apps/{}.png'.format(REDIST_DIR, PROJECT_NAME))
-
-  # There will be error 'Could not determine the path to the executable' otherwise
-  execute('chmod +x ' + target_exe)
+  download_file(linuxdeployqt_url, linuxdeployqt, mark_executable = True)
 
   print_header('Create AppImage...')
   execute((
@@ -109,17 +102,15 @@ def make_package_for_linux():
     print_error_and_exit('Unable to find created AppImage file')
 
   global package_name
-  package_name = '{}-linux-x{}.AppImage'.format(package_name, get_exe_bits(target_exe))
+  package_name = '{}-linux-x{}.AppImage'.format(package_name, get_exe_bits('../bin/' + PROJECT_EXE))
   remove_files([package_name])
   os.rename(default_appimage_names[0], package_name)
 
 
 ########################################################################
-#                              MacOS
+#                              macOS
 
 def make_package_for_macos():
-  os.chdir(REDIST_DIR)
-
   print_header('Copy application bundle...')
   remove_dir(PROJECT_EXE)
   shutil.copytree('../../bin/' + PROJECT_EXE, PROJECT_EXE)

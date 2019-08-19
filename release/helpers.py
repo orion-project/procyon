@@ -3,6 +3,7 @@ from __future__ import print_function
 import os
 import subprocess
 import platform
+import requests
 import shutil
 import struct
 import errno
@@ -160,7 +161,7 @@ def remove_files_in_dir(dir, filenames):
     filepath = os.path.join(dir, filename)
     if os.path.exists(filepath):
       os.remove(filepath)
-  
+
 
 def copy_file(source_file_path, target_dir):
   (source_dir, filename) = os.path.split(source_file_path)
@@ -170,7 +171,7 @@ def copy_file(source_file_path, target_dir):
 
 def copy_files(source_dir, filenames, target_dir):
   for filename in filenames:
-    copy_file(os.path.join(source_dir, filename), target_dir)  
+    copy_file(os.path.join(source_dir, filename), target_dir)
 
 
 def remove_dir(dirname):
@@ -225,3 +226,14 @@ def zip_dir(dir_name, zip_name):
      for dirname, subdirs, filenames in os.walk(dir_name):
         for filename in filenames:
           z.write(os.path.join(dirname, filename))
+
+
+def download_file(url, filename, mark_executable = False):
+  if os.path.exists(filename):
+    print('Already there')
+    return
+
+  r = requests.get(url + filename);
+  with open(filename, 'wb') as f: f.write(r.content)
+  if mark_executable:
+    execute('chmod +x ' + filename)

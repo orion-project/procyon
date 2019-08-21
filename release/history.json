@@ -1,0 +1,13 @@
+{
+  "history": [
+    {
+      "version": "0.9.0",
+      "date": "2019-08-21",
+      "changes": [
+        {
+          "text": "The first public version."
+        }
+      ]
+    }
+  ]
+}

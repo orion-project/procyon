@@ -41,3 +41,14 @@ Target package is in `../out` subdirectory, it's named
 - on Windows `procyon-{version}-win-{x32|x64}.zip`
 - on Linux: `procyon-{version}-linux-{x32|x64}.AppImage`
 - on MacOS `procyon-{version}.dmg`
+
+### Notes
+
+#### `qmake` version
+
+Though the build scripts check if qmake is in PATH, you have to be sure it is proper qmake version. For example, there could be available command `/usr/bin/qmake` on Ubuntu. But in general, for development, I use different Qt version installed in the home directory, e.g., `~/Qt/5.10.0/`. In this case, scripts' check for qmake will pass, but it highly probable won't be able to build the app. If it is the case, add proper Qt version into PATH before running build scripts:
+
+```bash
+export PATH=/home/user/Qt/5.10.0/gcc_64/bin/:$PATH
+./make_release.py
+```

@@ -71,7 +71,7 @@ def make_package_for_linux():
   execute('chmod +x usr/bin/' + PROJECT_EXE)
 
   copy_file('../../release/{}.desktop'.format(PROJECT_NAME), 'usr/share/applications')
-  shutil.copyfile('../../img/icon/main_256.png', 'usr/share/icons/hicolor/256x256/apps/{}.png'.format(PROJECT_NAME))
+  shutil.copyfile('../../img/icon/procyon.iconset/icon_256x256.png', 'usr/share/icons/hicolor/256x256/apps/{}.png'.format(PROJECT_NAME))
 
   print_header('Copy project files...')
   shutil.copytree('../../bin/dicts', 'usr/bin/dicts')

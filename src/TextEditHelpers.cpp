@@ -23,6 +23,8 @@ QTextCharFormat TextFormat::get() const
         f.setUnderlineColor("red");
         f.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
     }
+    if (!_backColorName.isEmpty())
+        f.setBackground(QColor(_backColorName));
     return f;
 }
 

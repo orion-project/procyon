@@ -13,11 +13,13 @@ struct TextFormat
     TextFormat& underline() { _underline = true; return *this; }
     TextFormat& anchor() { _anchor = true; return *this; }
     TextFormat& spellError() { _spellError = true; return *this; }
+    TextFormat& background(const QString& colorName) { _backColorName = colorName; return *this; }
 
     QTextCharFormat get() const;
 
 private:
     QString _colorName;
+    QString _backColorName;
     bool _bold = false;
     bool _italic = false;
     bool _underline = false;

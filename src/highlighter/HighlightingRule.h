@@ -28,8 +28,9 @@ public:
     {
         Options() {}
         Options& hyperlink() { isHyperlink = true; return *this; }
+        Options& group(int g) { matchGroup = g; return *this; }
 
-        int nth = 0;
+        int matchGroup = 0;
         bool isHyperlink = false;
     };
 

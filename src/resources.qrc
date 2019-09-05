@@ -14,5 +14,6 @@
     <qresource prefix="/style">
         <file alias="app_main">app.qss</file>
         <file alias="background">../img/background.png</file>
+        <file alias="about">../img/about.png</file>
     </qresource>
 </RCC>

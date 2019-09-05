@@ -11,6 +11,7 @@ struct TextFormat
     TextFormat& bold() { _bold = true; return *this; }
     TextFormat& italic() { _italic = true; return *this; }
     TextFormat& underline() { _underline = true; return *this; }
+    TextFormat& strikeOut() { _strikeOut = true; return *this; }
     TextFormat& anchor() { _anchor = true; return *this; }
     TextFormat& spellError() { _spellError = true; return *this; }
     TextFormat& background(const QString& colorName) { _backColorName = colorName; return *this; }
@@ -25,6 +26,7 @@ private:
     bool _underline = false;
     bool _anchor = false;
     bool _spellError = false;
+    bool _strikeOut = false;
 };
 
 struct TextEditCursorBackup

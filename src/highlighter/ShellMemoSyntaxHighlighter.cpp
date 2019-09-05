@@ -24,8 +24,23 @@ static QList<HighlightingRule1>* getRules()
         R_("Comment",     "\\s*#.*$",       F_("darkGreen").italic().get()),
 
         R_("Inline code",
-           "[\\s:;.,!?]+(`[^`]+`)[\\s:;.,!?]+",
+           "[\\s:;.,!?()]+(`[^`]+`)[\\s:;.,!?()]+",
            F_("maroon").background("seashell").get(),
+           HighlightingRule1::Options().group(1)),
+
+        R_("Inline bold",
+           "[\\s:;.,!?()]+(\\*[^\\*]+\\*)[\\s:;.,!?()]+",
+           F_().bold().get(),
+           HighlightingRule1::Options().group(1)),
+
+        R_("Inline italic",
+           "[\\s:;.,!?()]+(_[^_]+_)[\\s:;.,!?()]+",
+           F_().italic().get(),
+           HighlightingRule1::Options().group(1)),
+
+        R_("Inline strikeout",
+           "[\\s:;.,!?()]+(~[^~]+~)[\\s:;.,!?()]+",
+           F_().strikeOut().get(),
            HighlightingRule1::Options().group(1)),
 
         R_("Hyperlink",

@@ -18,6 +18,7 @@ QTextCharFormat TextFormat::get() const
     f.setFontItalic(_italic);
     f.setFontUnderline(_underline);
     f.setAnchor(_anchor);
+    f.setFontStrikeOut(_strikeOut);
     if (_spellError)
     {
         f.setUnderlineColor("red");

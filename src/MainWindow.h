@@ -73,7 +73,6 @@ private:
     MemoPage* findMemoPage(MemoItem* item) const;
     MemoPage* currentMemoPage() const;
     void editStyleSheet();
-    void showAbout();
     void optionsMenuAboutToShow();
     void spellcheckMenuAboutToShow();
     void setMemoSpellcheckLang(const QString& lang);

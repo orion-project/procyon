@@ -6,6 +6,7 @@
 #include "Spellchecker.h"
 #include "catalog/Catalog.h"
 #include "catalog/CatalogStore.h"
+#include "pages/HelpPage.h"
 #include "pages/MemoPage.h"
 #include "pages/StyleEditorPage.h"
 
@@ -24,9 +25,7 @@
 #include <QFrame>
 #include <QIcon>
 #include <QLabel>
-#include <QMessageBox>
 #include <QMenuBar>
-#include <QPushButton>
 #include <QSplitter>
 #include <QStatusBar>
 #include <QStackedWidget>
@@ -122,7 +121,7 @@ void MainWindow::createMenu()
     }
 
     m = menuBar()->addMenu(tr("Help"));
-    m->addAction(tr("About %1...").arg(qApp->applicationName()), this, &MainWindow::showAbout);
+    m->addAction(tr("About %1...").arg(qApp->applicationName()), []{ HelpPage::showAbout(); });
 }
 
 namespace  {
@@ -473,28 +472,6 @@ void MainWindow::editStyleSheet()
     _pagesView->addWidget(page);
     _pagesView->setCurrentWidget(page);
     _openedPagesView->addOpenedPage(page);
-}
-
-void MainWindow::showAbout()
-{
-    auto title = tr("About %1").arg(qApp->applicationName());
-    auto text = tr(
-                "<h2>{app} {app_ver}</h2>"
-                "<p>Built: {build_date}"
-                "<p>Copyright: Chunosov N.&nbsp;I. © 2017-{app_year}"
-                "<p>Web: <a href='{www}'>{www}</a>"
-                "<p>&nbsp;")
-            .replace("{app}", qApp->applicationName())
-            .replace("{app_ver}", qApp->applicationVersion())
-            .replace("{app_year}", QString::number(APP_VER_YEAR))
-            .replace("{build_date}", QString("%1 %2").arg(BUILDDATE).arg(BUILDTIME))
-            .replace("{www}", "https://github.com/orion-project/procyon");
-    QMessageBox about(QMessageBox::NoIcon, title, text, QMessageBox::Ok, this);
-    about.setIconPixmap(QPixmap(":/icon/main").
-        scaled(64, 64, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-    auto button = about.addButton(tr("About Qt"), QMessageBox::ActionRole);
-    connect(button, SIGNAL(clicked()), qApp, SLOT(aboutQt()));
-    about.exec();
 }
 
 void MainWindow::optionsMenuAboutToShow()

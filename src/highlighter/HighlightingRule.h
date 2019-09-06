@@ -29,23 +29,21 @@ public:
         Options() {}
         Options& hyperlink() { isHyperlink = true; return *this; }
         Options& group(int g) { matchGroup = g; return *this; }
+        Options& sizeDelta(int d) { fontSizeDelta = d; return *this; }
 
         int matchGroup = 0;
         bool isHyperlink = false;
+        int fontSizeDelta = 0;
     };
 
 
     HighlightingRule1(const QString& name,
-                      const QString &patternStr,
+                      const QStringList &patternStr,
                       const QTextCharFormat& format,
-                      const Options& options = Options())
-        : name(name),
-          pattern(QRegExp(patternStr)),
-          format(format),
-          options(options) {}
+                      const Options& options = Options());
 
     QString name;
-    QRegExp pattern;
+    QVector<QRegExp> patterns;
     QTextCharFormat format;
     Options options;
 };

@@ -11,6 +11,8 @@
 QTextCharFormat TextFormat::get() const
 {
     QTextCharFormat f;
+    if (!_fontFamily.isEmpty())
+        f.setFontFamily(_fontFamily);
     if (!_colorName.isEmpty())
         f.setForeground(QColor(_colorName));
     if (_bold)

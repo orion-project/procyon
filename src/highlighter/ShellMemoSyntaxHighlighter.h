@@ -15,6 +15,7 @@ protected:
 
 private:
     QList<HighlightingRule1>* rules;
+    QTextDocument* _parentDocument;
 };
 
 #endif // SHELL_MEMO_SYNTAX_HIGHLIGHTER_H

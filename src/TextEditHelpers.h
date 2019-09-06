@@ -8,6 +8,7 @@ struct TextFormat
     TextFormat() {}
     TextFormat(const QString& colorName): _colorName(colorName) {}
 
+    TextFormat& family(const QString& family) { _fontFamily = family; return *this; }
     TextFormat& bold() { _bold = true; return *this; }
     TextFormat& italic() { _italic = true; return *this; }
     TextFormat& underline() { _underline = true; return *this; }
@@ -19,6 +20,7 @@ struct TextFormat
     QTextCharFormat get() const;
 
 private:
+    QString _fontFamily;
     QString _colorName;
     QString _backColorName;
     bool _bold = false;

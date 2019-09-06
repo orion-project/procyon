@@ -11,35 +11,19 @@ static QList<HighlightingRule1>* getRules()
 {
     static QList<HighlightingRule1> rules
     {
-        R_("Command",
-           { "^\\s*\\${1}\\s+.*$" },
-           F_("darkBlue").family("'Courier New', monospace").get(),
-           HighlightingRule1::Options().sizeDelta(-1)),
-
-        R_("Subcommand",
-           { "^\\s*\\${2}\\s+.*$" },
-           F_("mediumBlue").family("'Courier New', monospace").get(),
-           HighlightingRule1::Options().sizeDelta(-1)),
-
-        R_("Header",
-           { "^\\s*\\*\\s+.*$" },
-           F_("black").bold().get(),
-           HighlightingRule1::Options().sizeDelta(+2)),
-
-        R_("Subheader",
-           { "^\\s*\\-\\s+.*$" },
-           F_("midnightBlue").bold().get(),
-           HighlightingRule1::Options().sizeDelta(+1)),
-
-        R_("Quote",     { "^\\s*\\|\\s+.*$" }, F_("teal").get()),
-        R_("Section",   { "^\\s*\\+\\s+.*$" }, F_("darkOrchid").bold().get()),
-        R_("Exclame",   { "^\\s*\\!\\s+.*$" }, F_("red").get()),
-        R_("Question",  { "^\\s*\\?\\s+.*$" }, F_("magenta").get()),
-        R_("Output",    { "^\\s*\\>\\s+.*$" }, F_("darkMagenta").get()),
-        R_("Option",    { "^\\s*-{2}.*$" },    F_("darkSlateBlue").get()),
-        R_("Comment",   { "\\s*#.*$" },        F_("darkGreen").italic().get()),
-        R_("Separator", { "^\\s*-{3,}.*$" },   F_("darkGray").get()),
-        R_("Quiet",     { "^\\s*\\..*$" },     F_("gainsboro").get()),
+        R_("Command",    { "^\\s*\\${1}\\s+.*$" }, F_("darkBlue").get()),
+        R_("Subcommand", { "^\\s*\\${2}\\s+.*$" }, F_("mediumBlue").get()),
+        R_("Header",     { "^\\s*\\*\\s+.*$" },    F_("black").bold().get()),
+        R_("Subheader",  { "^\\s*\\-\\s+.*$" },    F_("midnightBlue").bold().get()),
+        R_("Quote",      { "^\\s*\\|\\s+.*$" },    F_("teal").get()),
+        R_("Section",    { "^\\s*\\+\\s+.*$" },    F_("darkOrchid").bold().get()),
+        R_("Exclame",    { "^\\s*\\!\\s+.*$" },    F_("red").get()),
+        R_("Question",   { "^\\s*\\?\\s+.*$" },    F_("magenta").get()),
+        R_("Output",     { "^\\s*\\>\\s+.*$" },    F_("darkMagenta").get()),
+        R_("Option",     { "^\\s*-{2}.*$" },       F_("darkSlateBlue").get()),
+        R_("Comment",    { "\\s*#.*$" },           F_("darkGreen").italic().get()),
+        R_("Separator",  { "^\\s*-{3,}.*$" },      F_("darkGray").get()),
+        R_("Quiet",      { "^\\s*\\..*$" },        F_("gainsboro").get()),
 
         R_("Inline code",
            {
@@ -48,8 +32,8 @@ static QList<HighlightingRule1>* getRules()
                "[\\s:;.,!?()]+(`[^`]+`)$",
                "^(`[^`]+`)$",
            },
-           F_("maroon").family("'Courier New', monospace").background("seashell").get(),
-           HighlightingRule1::Options().group(1).sizeDelta(-1)),
+           F_("maroon").background("seashell").get(),
+           HighlightingRule1::Options().group(1)),
 
         R_("Inline bold",
            {

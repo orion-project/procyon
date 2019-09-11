@@ -9,6 +9,8 @@ class QListWidget;
 class QListWidgetItem;
 QT_END_NAMESPACE
 
+class MemoPage;
+
 class OpenedPagesWidget : public QWidget
 {
     Q_OBJECT
@@ -29,6 +31,9 @@ private:
     void pageTitleChanged(const QString& title);
     void pageIconChanged(const QIcon& icon);
     void currentItemChanged(QListWidgetItem*, QListWidgetItem*);
+    void pageReadOnlyToggled(bool);
+    void pageModified(bool);
+    void updateTooltip(QListWidgetItem*, MemoPage*);
 };
 
 #endif // OPENED_PAGES_WIDGET_H

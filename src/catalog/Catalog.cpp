@@ -186,14 +186,22 @@ QString Catalog::removeFolder(FolderItem* item)
     QVector<CatalogItem*> subitems;
     fillSubitemsFlat(item, subitems);
 
+    // It removes all subfolders too
     QString res = CatalogStore::folderManager()->remove(item);
     if (!res.isEmpty()) return res;
 
     (item->parent() ? item->parent()->asFolder()->_children : _items).removeOne(item);
+
     for (auto subitem : subitems)
         if (subitem->isFolder())
             _allFolders.remove(subitem->id());
-        else _allMemos.remove(subitem->id());
+        else
+        {
+            // Memo in DB was already deleted by FK relation
+            emit memoRemoved(dynamic_cast<MemoItem*>(subitem));
+            _allMemos.remove(subitem->id());
+        }
+
     _allFolders.remove(item->id());
 
     delete item;

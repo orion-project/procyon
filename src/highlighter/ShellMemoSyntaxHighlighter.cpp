@@ -22,8 +22,6 @@ static QList<HighlightingRule1>* getRules()
         R_("Output",     { "^\\s*\\>\\s+.*$" },    F_("darkMagenta").get()),
         R_("Option",     { "^\\s*-{2}.*$" },       F_("darkSlateBlue").get()),
         R_("Comment",    { "\\s*#.*$" },           F_("darkGreen").italic().get()),
-        R_("Separator",  { "^\\s*-{3,}.*$" },      F_("darkGray").get()),
-        R_("Quiet",      { "^\\s*\\..*$" },        F_("gainsboro").get()),
 
         R_("Inline code",
            {
@@ -69,6 +67,10 @@ static QList<HighlightingRule1>* getRules()
            { "\\bhttp(s?)://[^\\s]+\\b" },
            F_("blue").underline().anchor().get(),
            HighlightingRule1::Options().hyperlink()),
+
+        // These are supposed to override all previous formatting, so put at the end
+        R_("Separator",  { "^\\s*-{3,}.*$" },      F_("darkGray").get()),
+        R_("Quiet",      { "^\\s*\\..*$" },        F_("gainsboro").get()),
     };
     return &rules;
 }

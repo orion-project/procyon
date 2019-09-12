@@ -121,6 +121,9 @@ private:
     QString _tableName;
 };
 
+
+QString createTable(TableDef *table);
+
 } // namespace Sql
 } // namespace Ori
 

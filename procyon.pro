@@ -41,6 +41,9 @@ SOURCES += src/main.cpp\
     src/TextEditHelpers.cpp \
     src/catalog/Catalog.cpp \
     src/catalog/CatalogStore.cpp \
+    src/catalog/FolderManager.cpp \
+    src/catalog/MemoManager.cpp \
+    src/catalog/SettingsManager.cpp \
     src/catalog/SqlHelper.cpp \
     src/catalog/Memo.cpp \
     src/highlighter/HighlightingRule.cpp \
@@ -63,6 +66,9 @@ HEADERS  += src/MainWindow.h \
     src/TextEditHelpers.h \
     src/catalog/Catalog.h \
     src/catalog/CatalogStore.h \
+    src/catalog/FolderManager.h \
+    src/catalog/MemoManager.h \
+    src/catalog/SettingsManager.h \
     src/catalog/SqlHelper.h \
     src/catalog/Memo.h \
     src/highlighter/HighlightingRule.h \

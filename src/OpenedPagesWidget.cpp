@@ -25,7 +25,13 @@ public:
     {
         if (index.row() % 2 == 0)
         {
-            static QBrush alternateBrush(QColor(218, 219, 222, 30));
+            static QBrush alternateBrush(QColor(218, 219, 222,
+                                    #ifdef Q_OS_MAC
+                                                10
+                                    #else
+                                                30
+                                    #endif
+                                                ));
             painter->fillRect(option.rect, alternateBrush);
         }
 

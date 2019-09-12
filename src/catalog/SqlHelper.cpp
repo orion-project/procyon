@@ -52,5 +52,16 @@ namespace Sql {
 TableDef::~TableDef()
 {}
 
+QString createTable(TableDef *table)
+{
+    auto res = ActionQuery(table->sqlCreate()).exec();
+    if (!res.isEmpty())
+    {
+        QSqlDatabase::database().rollback();
+        return QString("Unable to create table '%1'.\n\n%2").arg(table->tableName()).arg(res);
+    }
+    return QString();
+}
+
 } // namespace Sql
 } // namespace Ori

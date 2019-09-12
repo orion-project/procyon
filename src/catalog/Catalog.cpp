@@ -129,7 +129,10 @@ CatalorResult Catalog::open(const QString& fileName)
 
 CatalorResult Catalog::create(const QString& fileName)
 {
-    QString res = CatalogStore::newDatabase(fileName);
+    if (QFile::exists(fileName) && !QFile::remove(fileName))
+        return CatalorResult::fail(QString("Unable to overwrite existing file, probably it is locked."));
+
+    QString res = CatalogStore::openDatabase(fileName);
     if (!res.isEmpty())
         return CatalorResult::fail(res);
 
@@ -146,8 +149,6 @@ Catalog::Catalog() : QObject()
 Catalog::~Catalog()
 {
     qDeleteAll(_items);
-
-    CatalogStore::closeDatabase();
 }
 
 QString Catalog::renameFolder(FolderItem* item, const QString& title)

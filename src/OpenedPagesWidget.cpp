@@ -11,6 +11,11 @@
 #include <QTimer>
 
 namespace {
+QImage makeMarker(const QString& path)
+{
+    return QImage(path).scaled(QSize(24, 24), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+}
+
 class OpenedPageItemDelegate : public QStyledItemDelegate
 {
 public:
@@ -20,7 +25,7 @@ public:
     {
         if (index.row() % 2 == 0)
         {
-            static QBrush alternateBrush(QColor(218, 219, 222, 10));
+            static QBrush alternateBrush(QColor(218, 219, 222, 30));
             painter->fillRect(option.rect, alternateBrush);
         }
 
@@ -29,8 +34,8 @@ public:
         auto memoPage = index.data(Qt::UserRole).value<MemoPage*>();
         if (memoPage && !memoPage->isReadOnly())
         {
-            static QImage modifiedMarker(":/icon/modified_overlay"); // TODO: replace with proper icons (black and red pencil)
-            static QImage editModeMarker = QImage(":/toolbar/memo_edit").scaled(QSize(24, 24), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+            static QImage modifiedMarker = makeMarker(":/icon/is_modified");
+            static QImage editModeMarker = makeMarker(":/icon/edit_mode");
             painter->drawImage(option.rect.right() - 28, option.rect.top() + 4,
                 memoPage->isModified() ? modifiedMarker : editModeMarker);
         }

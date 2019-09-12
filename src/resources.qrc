@@ -4,7 +4,8 @@
         <file alias="folder_opend">../img/icon/folder_opened.svg</file>
         <file alias="folder_closed">../img/icon/folder_closed.svg</file>
         <file alias="memo_plain_text">../img/icon/sticky_note.svg</file>
-        <file alias="modified_overlay">../img/icon/modified_overlay_24.png</file>
+        <file alias="is_modified">../img/icon/is_modified.svg</file>
+        <file alias="edit_mode">../img/icon/edit_mode.svg</file>
     </qresource>
     <qresource prefix="/toolbar">
         <file alias="memo_save">../img/toolbar/check_green.svg</file>

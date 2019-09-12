@@ -217,7 +217,7 @@ QScrollBar::sub-line:horizontal {
 ************************************/
 QToolTip {
   font-size: 12px;
-  border: 1px solid silver;
+  border: 1px solid #edf3f8;
   background-color: #edf3f8;
   padding: 2px;
 }

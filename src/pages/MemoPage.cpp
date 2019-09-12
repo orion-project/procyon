@@ -30,6 +30,7 @@ MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     _memoEditor->setAcceptRichText(false);
     _memoEditor->setWordWrapMode(QTextOption::NoWrap);
     _memoEditor->setProperty("role", "memo_editor");
+    connect(_memoEditor, &MemoEditor::undoAvailable, this, &MemoPage::onModified);
 
     _titleEditor = PageWidgets::makeTitleEditor();
 
@@ -97,12 +98,14 @@ void MemoPage::beginEditing()
 {
     toggleEditMode(true);
     _memoEditor->setFocus();
+    emit onReadOnly(false);
 }
 
 void MemoPage::cancelEditing()
 {
     toggleEditMode(false);
     showMemo();
+    emit onReadOnly(true);
 }
 
 bool MemoPage::saveEditing()
@@ -127,6 +130,7 @@ bool MemoPage::saveEditing()
     _memoEditor->document()->setModified(false);
     _titleEditor->setModified(false);
 
+    emit onReadOnly(true);
     return true;
 }
 

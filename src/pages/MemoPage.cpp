@@ -1,25 +1,21 @@
 #include "MemoPage.h"
 
+#include "PageWidgets.h"
 #include "../MemoEditor.h"
 #include "../TextEditSpellcheck.h"
-#include "PageWidgets.h"
 #include "../Spellchecker.h"
-//#include "../TextEditorHelpers.h"
 #include "../catalog/Catalog.h"
 #include "../catalog/Memo.h"
 #include "../highlighter/PythonSyntaxHighlighter.h"
 #include "../highlighter/ShellMemoSyntaxHighlighter.h"
-
 #include "helpers/OriDialogs.h"
 #include "helpers/OriWidgets.h"
 
 #include <QIcon>
 #include <QDebug>
-#include <QFrame>
 #include <QMessageBox>
 #include <QStyle>
 #include <QTimer>
-#include <QToolBar>
 
 MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     _catalog(catalog), _memoItem(memoItem)

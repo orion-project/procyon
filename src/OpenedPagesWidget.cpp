@@ -42,7 +42,7 @@ public:
         {
             static QImage modifiedMarker = makeMarker(":/icon/is_modified");
             static QImage editModeMarker = makeMarker(":/icon/edit_mode");
-            painter->drawImage(option.rect.right() - 28, option.rect.top() + 4,
+            painter->drawImage(option.rect.right() - 26, option.rect.top() + 4,
                 memoPage->isModified() ? modifiedMarker : editModeMarker);
         }
     }

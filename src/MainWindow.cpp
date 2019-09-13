@@ -9,6 +9,7 @@
 #include "pages/HelpPage.h"
 #include "pages/MemoPage.h"
 #include "pages/StyleEditorPage.h"
+#include "pages/SqlConsolePage.h"
 
 #include "helpers/OriDialogs.h"
 #include "helpers/OriLayouts.h"
@@ -30,6 +31,48 @@
 #include <QStatusBar>
 #include <QStackedWidget>
 #include <QTimer>
+
+namespace {
+template <typename TPage>
+QVector<TPage*> getPages(QStackedWidget* pagesView)
+{
+    QVector<TPage*> pages;
+    for (int i = 0; i < pagesView->count(); i++)
+    {
+        auto page = qobject_cast<TPage*>(pagesView->widget(i));
+        if (page) pages << page;
+    }
+    return pages;
+}
+
+template <typename TPage>
+void openNewPage(QStackedWidget* pagesView, OpenedPagesWidget* openedPagesView)
+{
+    auto page = new TPage;
+    pagesView->addWidget(page);
+    pagesView->setCurrentWidget(page);
+    openedPagesView->addOpenedPage(page);
+}
+
+template <typename TPage>
+void activateOrOpenNewPage(QStackedWidget* pagesView, OpenedPagesWidget* openedPagesView)
+{
+    for (int i = 0; i < pagesView->count(); i++)
+    {
+        auto widget = pagesView->widget(i);
+        auto page = qobject_cast<TPage*>(widget);
+        if (page)
+        {
+            pagesView->setCurrentWidget(page);
+            openedPagesView->addOpenedPage(page);
+            return;
+        }
+    }
+    openNewPage<TPage>(pagesView, openedPagesView);
+}
+
+} // namespace
+
 
 MainWindow::MainWindow() : QMainWindow()
 {
@@ -117,7 +160,12 @@ void MainWindow::createMenu()
     if (Settings::instance().isDevMode)
     {
         m->addSeparator();
-        m->addAction(tr("Edit Style Sheet"), this, &MainWindow::editStyleSheet);
+        m->addAction(tr("Edit Style Sheet"), this, [this]{
+            activateOrOpenNewPage<StyleEditorPage>(_pagesView, _openedPagesView);
+        });
+        m->addAction(tr("Open SQL Console"), this, [this]{
+            openNewPage<SqlConsolePage>(_pagesView, _openedPagesView);
+        });
     }
 
     m = menuBar()->addMenu(tr("Help"));
@@ -401,21 +449,6 @@ MemoPage* MainWindow::currentMemoPage() const
     return dynamic_cast<MemoPage*>(_pagesView->currentWidget());
 }
 
-
-namespace {
-template <typename TPage>
-QVector<TPage*> getPages(QStackedWidget* pagesView)
-{
-    QVector<TPage*> pages;
-    for (int i = 0; i < pagesView->count(); i++)
-    {
-        auto page = qobject_cast<MemoPage*>(pagesView->widget(i));
-        if (page) pages << page;
-    }
-    return pages;
-}
-} // namespace
-
 void MainWindow::chooseMemoFont()
 {
     bool ok;
@@ -453,25 +486,6 @@ void MainWindow::memoRemoved(MemoItem* item)
 
     auto page = findMemoPage(item);
     if (page) page->deleteLater();
-}
-
-void MainWindow::editStyleSheet()
-{
-    for (int i = 0; i < _pagesView->count(); i++)
-    {
-        auto widget = _pagesView->widget(i);
-        auto page = qobject_cast<StyleEditorPage*>(widget);
-        if (page)
-        {
-            _pagesView->setCurrentWidget(page);
-            _openedPagesView->addOpenedPage(page);
-            return;
-        }
-    }
-    auto page = new StyleEditorPage;
-    _pagesView->addWidget(page);
-    _pagesView->setCurrentWidget(page);
-    _openedPagesView->addOpenedPage(page);
 }
 
 void MainWindow::optionsMenuAboutToShow()

@@ -55,6 +55,7 @@ SOURCES += src/main.cpp\
     src/pages/HelpPage.cpp \
     src/pages/MemoPage.cpp \
     src/pages/PageWidgets.cpp \
+    src/pages/SqlConsolePage.cpp \
     src/pages/StyleEditorPage.cpp \
     src/TextEditSpellcheck.cpp
 
@@ -79,6 +80,7 @@ HEADERS  += src/MainWindow.h \
     src/pages/HelpPage.h \
     src/pages/MemoPage.h \
     src/pages/PageWidgets.h \
+    src/pages/SqlConsolePage.h \
     src/pages/StyleEditorPage.h \
     src/TextEditSpellcheck.h
 

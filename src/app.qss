@@ -161,6 +161,14 @@ QLabel[role=context_menu_header_text] {
 #memo_header_panel {
   margin-bottom: 4px;
 }
+#code_editor {
+  font-family: Menlo,Monaco,Consolas,'Courier New',monospace;
+  font-size: 17px;
+}
+#sql_console_result {
+  font-family: Menlo,Monaco,Consolas,'Courier New',monospace;
+  font-size: 15px;
+}
 
 /************************************
              Scroll bars

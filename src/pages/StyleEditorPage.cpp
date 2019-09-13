@@ -4,13 +4,16 @@
 #include "helpers/OriLayouts.h"
 
 #include <QApplication>
+#include <QPlainTextEdit>
 
 StyleEditorPage::StyleEditorPage(QWidget *parent) : QWidget(parent)
 {
     setWindowTitle(tr("Style Sheet Editor"));
     setWindowIcon(QIcon(":/icon/main"));
 
-    auto editor = PageWidgets::makeCodeEditor();
+    auto editor = new QPlainTextEdit;
+    editor->setProperty("role", "memo_editor");
+    editor->setObjectName("code_editor");
     editor->setPlainText(qApp->styleSheet());
 
     auto titleEditor = PageWidgets::makeTitleEditor(tr("Style Sheet Editor"));

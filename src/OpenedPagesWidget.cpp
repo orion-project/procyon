@@ -26,8 +26,10 @@ public:
         if (index.row() % 2 == 0)
         {
             static QBrush alternateBrush(QColor(218, 219, 222,
-                                    #ifdef Q_OS_MAC
+                                    #if defined(Q_OS_MAC)
                                                 10
+                                    #elif defined(Q_OS_WIN)
+                                                50
                                     #else
                                                 30
                                     #endif

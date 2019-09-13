@@ -6,6 +6,7 @@
 #include "helpers/OriWidgets.h"
 
 #include <QSplitter>
+#include <QPlainTextEdit>
 
 namespace {
 
@@ -19,15 +20,14 @@ QString runSql(const QString& sql)
     Ori::Sql::SelectQuery query(sql);
     if (query.isFailed())
     {
-        stream << QStringLiteral("<p style='color:red'><pre>")
-               << query.error()
-               << QStringLiteral("</pre>");
+        stream << QStringLiteral("<p style='color:red;white-space:pre'>")
+               << query.error();
         return result;
     }
 
     bool namesExtracted = false;
     stream << QStringLiteral("<table border=1 cellpadding=5 cellspacing=-1 "
-                             "style='border-color:gray;border-style:solid'>");
+                             "style='border-color:silver;border-style:solid'>");
     while (query.next())
     {
         auto r = query.record();
@@ -66,12 +66,14 @@ SqlConsolePage::SqlConsolePage(QWidget *parent) : QWidget(parent)
     setWindowTitle(tr("SQL Console"));
     setWindowIcon(QIcon(":/icon/main"));
 
-    auto editor = PageWidgets::makeCodeEditor();
-    auto result = PageWidgets::makeCodeEditor();
+    auto editor = new QPlainTextEdit;
+    editor->setProperty("role", "memo_editor");
+    editor->setObjectName("code_editor");
+
+    auto result = new QTextEdit;
+    result->setProperty("role", "memo_editor");
+    result->setObjectName("sql_console_result");
     result->setReadOnly(true);
-    auto f = result->font();
-    f.setPointSize(f.pointSize()-1);
-    result->setFont(f);
 
     auto splitter = new QSplitter;
     splitter->setOrientation(Qt::Vertical);

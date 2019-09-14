@@ -9,60 +9,14 @@
 class Catalog;
 class FolderItem;
 class MemoItem;
-class Memo;
 
 //------------------------------------------------------------------------------
 
-class MemoType
+struct MemoUpdateParam
 {
-public:
-    virtual ~MemoType();
-    virtual const char* name() const = 0;
-    virtual const QIcon& icon() const = 0;
-    virtual const QString iconPath() const = 0;
-    virtual Memo* makeMemo() = 0;
+    QString title;
+    QString data;
 };
-
-class PlainTextMemoType : public MemoType
-{
-public:
-    const char* name() const { return QT_TRANSLATE_NOOP("MemoType", "Plain Text"); }
-    const QIcon& icon() const { static QIcon icon(iconPath()); return icon; }
-    const QString iconPath() const { return QStringLiteral(":/icon/memo_plain_text"); }
-    Memo* makeMemo();
-};
-
-class WikiTextMemoType : public MemoType
-{
-public:
-    const char* name() const { return QT_TRANSLATE_NOOP("MemoType", "Wiki Text"); }
-    const QIcon& icon() const { static QIcon icon(iconPath()); return icon; }
-    const QString iconPath() const { return QStringLiteral(":/icon/memo_wiki_text"); }
-    Memo* makeMemo();
-};
-
-class RichTextMemoType : public MemoType
-{
-public:
-    const char* name() const { return QT_TRANSLATE_NOOP("MemoType", "Rich Text"); }
-    const QIcon& icon() const { static QIcon icon(iconPath()); return icon; }
-    const QString iconPath() const { return QStringLiteral(":/icon/memo_rich_text"); }
-    Memo* makeMemo();
-};
-
-inline MemoType* plainTextMemoType() { static PlainTextMemoType t; return &t; }
-inline MemoType* wikiTextMemoType() { static WikiTextMemoType t; return &t; }
-inline MemoType* richTextMemoType() { static RichTextMemoType t; return &t; }
-
-inline const QMap<QString, MemoType*>& memoTypes()
-{
-    static QMap<QString, MemoType*> memoTypes {
-        { plainTextMemoType()->name(), plainTextMemoType() },
-        { wikiTextMemoType()->name(), wikiTextMemoType() },
-        { richTextMemoType()->name(), richTextMemoType() }
-    };
-    return memoTypes;
-}
 
 //------------------------------------------------------------------------------
 
@@ -134,12 +88,13 @@ class MemoItem : public CatalogItem
 public:
     ~MemoItem();
 
-    Memo* memo() const { return _memo; }
-    MemoType* type() { return _type; }
+    const QString& data() const { return _data; }
+    const QString& type() const { return _type; }
+    bool isLoaded() const { return _isLoaded; }
 
 private:
-    Memo* _memo = nullptr;
-    MemoType* _type = nullptr;
+    QString _type, _data;
+    bool _isLoaded = false;
 
     friend class Catalog;
     friend class MemoManager;
@@ -177,8 +132,8 @@ public:
     QString renameFolder(FolderItem* item, const QString& title);
     FolderResult createFolder(FolderItem* parent, const QString& title);
     QString removeFolder(FolderItem* item);
-    MemoResult createMemo(FolderItem* parent, Memo *memo);
-    QString updateMemo(MemoItem* item, Memo* memo);
+    MemoResult createMemo(FolderItem* parent, MemoItem* item);
+    QString updateMemo(MemoItem* item, MemoUpdateParam update);
     QString removeMemo(MemoItem* item);
     QString loadMemo(MemoItem* item);
 

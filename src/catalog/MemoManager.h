@@ -4,8 +4,8 @@
 #include <QString>
 #include <QMap>
 
-class Memo;
 class MemoItem;
+struct MemoUpdateParam;
 
 struct MemosResult
 {
@@ -25,9 +25,9 @@ public:
     QString prepare();
 
     QString create(MemoItem* item) const;
-    QString update(Memo* memo) const;
+    QString update(MemoItem *item, const MemoUpdateParam& update) const;
     QString remove(MemoItem* item) const;
-    QString load(Memo* memo) const;
+    QString load(MemoItem *memo) const;
     MemosResult selectAll() const;
     QString countAll(int* count) const;
 };

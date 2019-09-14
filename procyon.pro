@@ -45,7 +45,6 @@ SOURCES += src/main.cpp\
     src/catalog/MemoManager.cpp \
     src/catalog/SettingsManager.cpp \
     src/catalog/SqlHelper.cpp \
-    src/catalog/Memo.cpp \
     src/highlighter/HighlightingRule.cpp \
     src/highlighter/PythonSyntaxHighlighter.cpp \
     src/highlighter/ShellMemoSyntaxHighlighter.cpp \
@@ -71,7 +70,6 @@ HEADERS  += src/MainWindow.h \
     src/catalog/MemoManager.h \
     src/catalog/SettingsManager.h \
     src/catalog/SqlHelper.h \
-    src/catalog/Memo.h \
     src/highlighter/HighlightingRule.h \
     src/highlighter/PythonSyntaxHighlighter.h \
     src/highlighter/ShellMemoSyntaxHighlighter.h \

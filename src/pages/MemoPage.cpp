@@ -5,7 +5,6 @@
 #include "../TextEditSpellcheck.h"
 #include "../Spellchecker.h"
 #include "../catalog/Catalog.h"
-#include "../catalog/Memo.h"
 #include "../highlighter/PythonSyntaxHighlighter.h"
 #include "../highlighter/ShellMemoSyntaxHighlighter.h"
 #include "helpers/OriDialogs.h"
@@ -65,10 +64,9 @@ MemoPage::~MemoPage()
 
 void MemoPage::showMemo()
 {
-    auto text = _memoItem->memo()->data();
-    _memoEditor->setPlainText(text);
-    _titleEditor->setText(_memoItem->memo()->title());
-    setWindowTitle(_memoItem->memo()->title());
+    _memoEditor->setPlainText(_memoItem->data());
+    _titleEditor->setText(_memoItem->title());
+    setWindowTitle(_memoItem->title());
     applyHighlighter();
 
     _memoEditor->document()->setModified(false);
@@ -79,7 +77,7 @@ bool MemoPage::canClose()
 {
     if (!isModified()) return true;
 
-    int res = Ori::Dlg::yesNoCancel(tr("<b>%1</b><br><br>"
+    int res = Ori::Dlg::yesNoCancel(tr("<b>%1</b><br/><br/>"
                                        "This memo has been changed. "
                                        "Save changes before closing?")
                                     .arg(windowTitle()));
@@ -106,20 +104,18 @@ void MemoPage::cancelEditing()
 
 bool MemoPage::saveEditing()
 {
-    auto memo = _memoItem->type()->makeMemo();
-    // TODO preserve additional non editable data - dates, etc.
-    memo->setId(_memoItem->memo()->id());
-    memo->setTitle(_titleEditor->text().trimmed());
-    memo->setData(_memoEditor->toPlainText());
+    MemoUpdateParam update;
+    update.title = _titleEditor->text().trimmed();
+    update.data = _memoEditor->toPlainText();
 
-    auto res = _catalog->updateMemo(_memoItem, memo);
+    auto res = _catalog->updateMemo(_memoItem, update);
     if (!res.isEmpty())
     {
         Ori::Dlg::error(res);
         return false;
     }
 
-    setWindowTitle(_memoItem->memo()->title());
+    setWindowTitle(_memoItem->title());
     toggleEditMode(false);
     applyHighlighter();
 
@@ -196,7 +192,7 @@ void MemoPage::applyHighlighter()
         _highlighter = nullptr;
     }
 
-    auto text = _memoItem->memo()->data();
+    auto text = _memoItem->data();
 
     // TODO highlighter should be selected by user and saved into catalog
     if (text.startsWith("#!/usr/bin/env python"))

@@ -409,7 +409,7 @@ void MainWindow::openMemo()
 
 void MainWindow::openMemoPage(MemoItem* item)
 {
-    if (!item->memo())
+    if (!item->isLoaded())
     {
         auto res = _catalog->loadMemo(item);
         if (!res.isEmpty()) return Ori::Dlg::error(res);

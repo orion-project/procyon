@@ -1,14 +1,7 @@
 #include "Catalog.h"
 #include "CatalogStore.h"
-#include "Memo.h"
 
 #include <QDebug>
-
-MemoType::~MemoType() {}
-
-Memo* PlainTextMemoType::makeMemo() { return new PlainTextMemo(this); }
-Memo* WikiTextMemoType::makeMemo() { return new WikiTextMemo(this); }
-Memo* RichTextMemoType::makeMemo() { return new RichTextMemo(this); }
 
 //------------------------------------------------------------------------------
 //                                CatalogItem
@@ -47,7 +40,6 @@ FolderItem::~FolderItem()
 
 MemoItem::~MemoItem()
 {
-    if (_memo) delete _memo;
 }
 
 //------------------------------------------------------------------------------
@@ -209,13 +201,9 @@ QString Catalog::removeFolder(FolderItem* item)
     return QString();
 }
 
-MemoResult Catalog::createMemo(FolderItem* parent, Memo *memo)
+MemoResult Catalog::createMemo(FolderItem* parent, MemoItem* item)
 {
-    auto item = new MemoItem;
-    item->_memo = memo;
     item->_parent = parent;
-    item->_type = memo->type();
-    item->_title = memo->title();
 
     auto res = CatalogStore::memoManager()->create(item);
     if (!res.isEmpty())
@@ -233,19 +221,13 @@ MemoResult Catalog::createMemo(FolderItem* parent, Memo *memo)
     return MemoResult::ok(item);
 }
 
-QString Catalog::updateMemo(MemoItem* item, Memo *memo)
+QString Catalog::updateMemo(MemoItem* item, MemoUpdateParam update)
 {
-    QString res = CatalogStore::memoManager()->update(memo);
-    if (!res.isEmpty())
-    {
-        delete memo;
-        return res;
-    }
+    QString res = CatalogStore::memoManager()->update(item, update);
+    if (!res.isEmpty()) return res;
 
-    delete item->_memo;
-    item->_memo = memo;
-    item->_type = memo->type();
-    item->_title = memo->title();
+    item->_title = update.title;
+    item->_data = update.data;
 
     emit memoUpdated(item);
 
@@ -255,16 +237,7 @@ QString Catalog::updateMemo(MemoItem* item, Memo *memo)
 
 QString Catalog::loadMemo(MemoItem* item)
 {
-    Memo* memo = item->type()->makeMemo();
-    memo->_id = item->_id;
-    QString res = CatalogStore::memoManager()->load(memo);
-    if (!res.isEmpty())
-    {
-        delete memo;
-        return res;
-    }
-    item->_memo = memo;
-    return QString();
+    return CatalogStore::memoManager()->load(item);
 }
 
 QString Catalog::removeMemo(MemoItem* item)

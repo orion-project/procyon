@@ -1,7 +1,6 @@
 #include "MemoManager.h"
 
 #include "Catalog.h"
-#include "Memo.h"
 #include "SqlHelper.h"
 
 using namespace Ori::Sql;
@@ -28,6 +27,13 @@ public:
                "Id INTEGER PRIMARY KEY, "
                "Parent REFERENCES Folder(Id) ON DELETE CASCADE, "
                "Title, Type, Data)";
+    }
+
+    const QString sqlSelectAllNoData =
+        "SELECT Id, Parent, Title, Type FROM Memo";
+
+    virtual QString sqlSelectDataById(int id) const {
+        return QString("SELECT Data FROM Memo WHERE Id = %1").arg(id);
     }
 
     const QString sqlInsert =
@@ -62,19 +68,15 @@ QString MemoManager::create(MemoItem* item) const
     if (queryId.isFailed() || !queryId.next())
         return QString("Unable to generate id for new memo.\n\n%1").arg(queryId.error());
 
-    if (!item->memo() || !item->type())
-        return "Bad method usage: poorly defined memo: no content or type is defined";
-
     int newId = queryId.record().value(0).toInt() + 1;
     item->_id = newId;
-    item->memo()->_id = newId;
 
     auto res = ActionQuery(table->sqlInsert)
             .param(table->parent, item->parent() ? item->parent()->asFolder()->id() : 0)
-            .param(table->id, item->memo()->id())
-            .param(table->title, item->memo()->title())
-            .param(table->type, item->memo()->type()->name())
-            .param(table->data, item->memo()->data())
+            .param(table->id, item->id())
+            .param(table->title, item->title())
+            .param(table->type, item->type())
+            .param(table->data, item->data())
             .exec();
     if (!res.isEmpty())
         return QString("Failed to create new memo.\n\n%1").arg(res);
@@ -88,7 +90,7 @@ MemosResult MemoManager::selectAll() const
 
     MemosResult result;
 
-    SelectQuery query(table->sqlSelectAll());
+    SelectQuery query(table->sqlSelectAllNoData);
     if (query.isFailed())
     {
         result.error = QString("Unable to load memos.\n\n%1").arg(query.error());
@@ -99,37 +101,26 @@ MemosResult MemoManager::selectAll() const
     {
         auto r = query.record();
 
-        int id = r.value(table->id).toInt();
-        QString title = r.value(table->title).toString();
-        QString memoType = r.value(table->type).toString();
-        if (!memoTypes().contains(memoType))
-        {
-            result.warnings.append(
-                QString("Skip memo #%1 '%2': unknown memo type '%3'.")
-                    .arg(id).arg(title).arg(memoType));
-            continue;
-        }
-
         MemoItem *item = new MemoItem;
-        item->_id = id;
-        item->_title = title;
-        item->_type = memoTypes()[memoType];
+        item->_id = r.value(table->id).toInt();
+        item->_title = r.value(table->title).toString();
+        item->_type = r.value(table->type).toString();
 
         int parentId = r.value(table->parent).toInt();
         if (!result.items.contains(parentId))
             result.items.insert(parentId, QList<MemoItem*>());
         static_cast<QList<MemoItem*>&>(result.items[parentId]).append(item);
-        result.allMemos.insert(id, item);
+        result.allMemos.insert(item->id(), item);
     }
 
     return result;
 }
 
-QString MemoManager::load(Memo* memo) const
+QString MemoManager::load(MemoItem* memo) const
 {
     auto table = memoTable();
 
-    SelectQuery query(table->sqlSelectById(memo->id()));
+    SelectQuery query(table->sqlSelectDataById(memo->id()));
     if (query.isFailed())
         return QString("Unable to load memo #%1.\n\n%2").arg(memo->id()).arg(query.error());
 
@@ -137,19 +128,18 @@ QString MemoManager::load(Memo* memo) const
         return QString("Memo #%1 does not exist.").arg(memo->id());
 
     QSqlRecord r = query.record();
-    memo->_title = r.value(table->title).toString();
     memo->_data = r.value(table->data).toString();
+    memo->_isLoaded = true;
     return QString();
 }
 
-QString MemoManager::update(Memo* memo) const
+QString MemoManager::update(MemoItem* memo, const MemoUpdateParam& update) const
 {
     auto table = memoTable();
     return ActionQuery(table->sqlUpdate)
             .param(table->id, memo->id())
-            .param(table->title, memo->title())
-            .param(table->type, memo->type()->name())
-            .param(table->data, memo->data())
+            .param(table->title, update.title)
+            .param(table->data, update.data)
             .exec();
 }
 
@@ -159,7 +149,6 @@ QString MemoManager::remove(MemoItem* item) const
     return ActionQuery(table->sqlDelete)
             .param(table->id, item->id())
             .exec();
-    // TODO remove memo specific data
 }
 
 QString MemoManager::countAll(int *count) const

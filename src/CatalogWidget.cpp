@@ -125,7 +125,7 @@ void CatalogWidget::contextMenuRequested(const QPoint &pos)
     else if (selected.memo)
     {
         _memoMenuHeader->setText(selected.item->title());
-        _memoMenuIcon->setPixmap(selected.memo->type()->icon().pixmap(16, 16));
+        _memoMenuIcon->setPixmap(_catalogModel->memoIcon().pixmap(16, 16));
         _memoMenu->popup(_catalogView->mapToGlobal(pos));
     }
 }
@@ -214,11 +214,13 @@ void CatalogWidget::createMemo()
 {
     CatalogSelection parentFolder(_catalogView);
 
-    auto memoType = plainTextMemoType();
-
-    auto memo = memoType->makeMemo();
-    auto res = _catalog->createMemo(parentFolder.folder, memo);
-    if (!res.ok()) return Ori::Dlg::error(res.error());
+    auto memoItem = new MemoItem;
+    auto res = _catalog->createMemo(parentFolder.folder, memoItem);
+    if (!res.ok())
+    {
+        delete memoItem;
+        return Ori::Dlg::error(res.error());
+    }
 
     // TODO do not know about item inserted at the end and select by pointer
     auto newIndex = _catalogModel->itemAdded(parentFolder.index);

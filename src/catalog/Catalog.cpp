@@ -203,7 +203,12 @@ QString Catalog::removeFolder(FolderItem* item)
 
 MemoResult Catalog::createMemo(FolderItem* parent, MemoItem* item)
 {
+    auto now = QDateTime::currentDateTime();
+
     item->_parent = parent;
+    item->_created = now;
+    item->_updated = now;
+    item->_station = _station;
 
     auto res = CatalogStore::memoManager()->create(item);
     if (!res.isEmpty())
@@ -223,11 +228,16 @@ MemoResult Catalog::createMemo(FolderItem* parent, MemoItem* item)
 
 QString Catalog::updateMemo(MemoItem* item, MemoUpdateParam update)
 {
+    update.moment = QDateTime::currentDateTime();
+    update.station = _station;
+
     QString res = CatalogStore::memoManager()->update(item, update);
     if (!res.isEmpty()) return res;
 
     item->_title = update.title;
     item->_data = update.data;
+    item->_updated = update.moment;
+    item->_station = update.station;
 
     emit memoUpdated(item);
 

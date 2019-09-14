@@ -21,27 +21,30 @@ public:
     const QString title = "Title";
     const QString type = "Type";
     const QString data = "Data";
+    const QString created = "Created";
+    const QString updated = "Updated";
+    const QString station = "Station";
 
     QString sqlCreate() const override {
         return "CREATE TABLE IF NOT EXISTS Memo ("
                "Id INTEGER PRIMARY KEY, "
                "Parent REFERENCES Folder(Id) ON DELETE CASCADE, "
-               "Title, Type, Data)";
+               "Title, Type, Data, Created, Updated, Station)";
     }
 
     const QString sqlSelectAllNoData =
-        "SELECT Id, Parent, Title, Type FROM Memo";
+        "SELECT Id, Parent, Title, Type, Created, Updated, Station FROM Memo";
 
     virtual QString sqlSelectDataById(int id) const {
         return QString("SELECT Data FROM Memo WHERE Id = %1").arg(id);
     }
 
     const QString sqlInsert =
-        "INSERT INTO Memo (Id, Parent, Title, Type, Data) "
-        "VALUES (:Id, :Parent, :Title, :Type, :Data)";
+        "INSERT INTO Memo (Id, Parent, Title, Type, Data, Created, Updated, Station) "
+        "VALUES (:Id, :Parent, :Title, :Type, :Data, :Created, :Updated, :Station)";
 
     const QString sqlUpdate =
-        "UPDATE Memo SET Title = :Title, Type = :Type, Data = :Data "
+        "UPDATE Memo SET Title = :Title, Data = :Data, Updated = :Updated, Station = :Station "
         "WHERE Id = :Id";
 
     const QString sqlDelete = "DELETE FROM Memo WHERE Id = :Id";
@@ -77,6 +80,9 @@ QString MemoManager::create(MemoItem* item) const
             .param(table->title, item->title())
             .param(table->type, item->type())
             .param(table->data, item->data())
+            .param(table->created, item->created())
+            .param(table->updated, item->updated())
+            .param(table->station, item->station())
             .exec();
     if (!res.isEmpty())
         return QString("Failed to create new memo.\n\n%1").arg(res);
@@ -105,6 +111,9 @@ MemosResult MemoManager::selectAll() const
         item->_id = r.value(table->id).toInt();
         item->_title = r.value(table->title).toString();
         item->_type = r.value(table->type).toString();
+        item->_created = r.value(table->created).toDateTime();
+        item->_updated = r.value(table->updated).toDateTime();
+        item->_station = r.value(table->station).toString();
 
         int parentId = r.value(table->parent).toInt();
         if (!result.items.contains(parentId))
@@ -140,6 +149,8 @@ QString MemoManager::update(MemoItem* memo, const MemoUpdateParam& update) const
             .param(table->id, memo->id())
             .param(table->title, update.title)
             .param(table->data, update.data)
+            .param(table->updated, update.moment)
+            .param(table->station, update.station)
             .exec();
 }
 

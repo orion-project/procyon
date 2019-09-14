@@ -5,6 +5,7 @@
 #include <QList>
 #include <QMap>
 #include <QIcon>
+#include <QDateTime>
 
 class Catalog;
 class FolderItem;
@@ -16,6 +17,8 @@ struct MemoUpdateParam
 {
     QString title;
     QString data;
+    QDateTime moment;
+    QString station;
 };
 
 //------------------------------------------------------------------------------
@@ -90,11 +93,15 @@ public:
 
     const QString& data() const { return _data; }
     const QString& type() const { return _type; }
+    const QDateTime& created() const { return _created; }
+    const QDateTime& updated() const { return _updated; }
+    const QString& station() const { return _station; }
     bool isLoaded() const { return _isLoaded; }
 
 private:
-    QString _type, _data;
+    QString _type, _data, _station;
     bool _isLoaded = false;
+    QDateTime _created, _updated;
 
     friend class Catalog;
     friend class MemoManager;
@@ -147,6 +154,7 @@ signals:
 
 private:
     QString _fileName;
+    QString _station;
     QList<CatalogItem*> _items;
     QMap<int, MemoItem*> _allMemos;
     QMap<int, FolderItem*> _allFolders;

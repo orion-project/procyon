@@ -67,10 +67,12 @@ SqlConsolePage::SqlConsolePage(QWidget *parent) : QWidget(parent)
     setWindowIcon(QIcon(":/icon/main"));
 
     auto editor = new QPlainTextEdit;
+    editor->setWordWrapMode(QTextOption::NoWrap);
     editor->setProperty("role", "memo_editor");
     editor->setObjectName("code_editor");
 
     auto result = new QTextEdit;
+    result->setWordWrapMode(QTextOption::NoWrap);
     result->setProperty("role", "memo_editor");
     result->setObjectName("sql_console_result");
     result->setReadOnly(true);

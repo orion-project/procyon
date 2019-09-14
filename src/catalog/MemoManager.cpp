@@ -20,7 +20,6 @@ public:
     const QString id = "Id";
     const QString parent = "Parent";
     const QString title = "Title";
-    const QString info = "Info";
     const QString type = "Type";
     const QString data = "Data";
 
@@ -28,15 +27,15 @@ public:
         return "CREATE TABLE IF NOT EXISTS Memo ("
                "Id INTEGER PRIMARY KEY, "
                "Parent REFERENCES Folder(Id) ON DELETE CASCADE, "
-               "Title, Info, Type, Data)";
+               "Title, Type, Data)";
     }
 
     const QString sqlInsert =
-        "INSERT INTO Memo (Id, Parent, Title, Info, Type, Data) "
-        "VALUES (:Id, :Parent, :Title, :Info, :Type, :Data)";
+        "INSERT INTO Memo (Id, Parent, Title, Type, Data) "
+        "VALUES (:Id, :Parent, :Title, :Type, :Data)";
 
     const QString sqlUpdate =
-        "UPDATE Memo SET Title = :Title, Info = :Info, Type = :Type, Data = :Data "
+        "UPDATE Memo SET Title = :Title, Type = :Type, Data = :Data "
         "WHERE Id = :Id";
 
     const QString sqlDelete = "DELETE FROM Memo WHERE Id = :Id";
@@ -74,7 +73,6 @@ QString MemoManager::create(MemoItem* item) const
             .param(table->parent, item->parent() ? item->parent()->asFolder()->id() : 0)
             .param(table->id, item->memo()->id())
             .param(table->title, item->memo()->title())
-            .param(table->info, item->info())
             .param(table->type, item->memo()->type()->name())
             .param(table->data, item->memo()->data())
             .exec();
@@ -115,7 +113,6 @@ MemosResult MemoManager::selectAll() const
         MemoItem *item = new MemoItem;
         item->_id = id;
         item->_title = title;
-        item->_info = r.value(table->info).toString();
         item->_type = memoTypes()[memoType];
 
         int parentId = r.value(table->parent).toInt();
@@ -145,13 +142,12 @@ QString MemoManager::load(Memo* memo) const
     return QString();
 }
 
-QString MemoManager::update(Memo* memo, const QString &info) const
+QString MemoManager::update(Memo* memo) const
 {
     auto table = memoTable();
     return ActionQuery(table->sqlUpdate)
             .param(table->id, memo->id())
             .param(table->title, memo->title())
-            .param(table->info, info)
             .param(table->type, memo->type()->name())
             .param(table->data, memo->data())
             .exec();

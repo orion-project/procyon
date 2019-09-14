@@ -25,7 +25,7 @@ public:
     QString prepare();
 
     QString create(MemoItem* item) const;
-    QString update(Memo* memo, const QString& info) const;
+    QString update(Memo* memo) const;
     QString remove(MemoItem* item) const;
     QString load(Memo* memo) const;
     MemosResult selectAll() const;

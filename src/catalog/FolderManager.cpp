@@ -19,17 +19,16 @@ public:
     const QString id = "Id";
     const QString parent = "Parent";
     const QString title = "Title";
-    const QString info = "Info";
 
     QString sqlCreate() const override {
         return "CREATE TABLE IF NOT EXISTS Folder ("
                "Id INTEGER PRIMARY KEY, "
-               "Parent, Title, Info)";
+               "Parent, Title)";
     }
 
     const QString sqlInsert =
-        "INSERT INTO Folder (Id, Parent, Title, Info) "
-        "VALUES (:Id, :Parent, :Title, :Info)";
+        "INSERT INTO Folder (Id, Parent, Title) "
+        "VALUES (:Id, :Parent, :Title)";
 
     const QString sqlRename = "UPDATE Folder SET Title = :Title WHERE Id = :Id";
     const QString sqlDelete = "DELETE FROM Folder WHERE Id = :Id";
@@ -62,7 +61,6 @@ QString FolderManager::create(FolderItem* folder) const
                 .param(table->id, folder->id())
                 .param(table->parent, folder->parent() ? folder->parent()->asFolder()->id() : 0)
                 .param(table->title, folder->title())
-                .param(table->info, folder->info())
                 .exec();
     if (!res.isEmpty())
         return qApp->tr("Failed to create new folder.\n\n%1").arg(res);
@@ -92,7 +90,6 @@ FoldersResult FolderManager::selectAll() const
         auto item = result.items[id];
         item->_id = id;
         item->_title = r.value(table->title).toString();
-        item->_info = r.value(table->info).toString();
         int parentId = r.value(table->parent).toInt();
         if (parentId > 0)
         {

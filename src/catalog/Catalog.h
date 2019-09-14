@@ -93,7 +93,6 @@ public:
 
     int id() const { return _id; }
     const QString& title() const { return _title; }
-    const QString& info() const { return _info; }
     CatalogItem* parent() const { return _parent; }
     const QString path() const;
 
@@ -104,7 +103,7 @@ public:
 
 private:
     int _id;
-    QString _title, _info;
+    QString _title;
     CatalogItem* _parent = nullptr;
 
     friend class Catalog;

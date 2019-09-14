@@ -216,7 +216,6 @@ MemoResult Catalog::createMemo(FolderItem* parent, Memo *memo)
     item->_parent = parent;
     item->_type = memo->type();
     item->_title = memo->title();
-    item->_info = QString(); // TODO prepare memo info before saving
 
     auto res = CatalogStore::memoManager()->create(item);
     if (!res.isEmpty())
@@ -236,8 +235,7 @@ MemoResult Catalog::createMemo(FolderItem* parent, Memo *memo)
 
 QString Catalog::updateMemo(MemoItem* item, Memo *memo)
 {
-    QString info; // TODO prepage memo info before saving
-    QString res = CatalogStore::memoManager()->update(memo, info);
+    QString res = CatalogStore::memoManager()->update(memo);
     if (!res.isEmpty())
     {
         delete memo;
@@ -248,7 +246,6 @@ QString Catalog::updateMemo(MemoItem* item, Memo *memo)
     item->_memo = memo;
     item->_type = memo->type();
     item->_title = memo->title();
-    item->_info = info;
 
     emit memoUpdated(item);
 

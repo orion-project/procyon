@@ -4,6 +4,36 @@
 #include <QDebug>
 
 //------------------------------------------------------------------------------
+//                                MemoType
+//------------------------------------------------------------------------------
+
+MemoType::~MemoType()
+{
+}
+
+MemoType* plainTextMemoType() { static PlainTextMemoType t; return &t; }
+MemoType* markdownMemoType() { static MarkdownMemoType t; return &t; }
+MemoType* richTextMemoType() { static RichTextMemoType t; return &t; }
+
+const QMap<QString, MemoType*>& memoTypes()
+{
+    static QMap<QString, MemoType*> memoTypes {
+        { plainTextMemoType()->name(), plainTextMemoType() },
+        { markdownMemoType()->name(), markdownMemoType() },
+        { richTextMemoType()->name(), richTextMemoType() }
+    };
+    return memoTypes;
+}
+
+MemoType* getMemoType(const QString& type)
+{
+    auto allTypes = memoTypes();
+    if (!allTypes.contains(type))
+        return plainTextMemoType();
+    return allTypes[type];
+}
+
+//------------------------------------------------------------------------------
 //                                CatalogItem
 //------------------------------------------------------------------------------
 
@@ -209,6 +239,7 @@ MemoResult Catalog::createMemo(FolderItem* parent, MemoItem* item)
     item->_created = now;
     item->_updated = now;
     item->_station = _station;
+    item->_type = plainTextMemoType();
 
     auto res = CatalogStore::memoManager()->create(item);
     if (!res.isEmpty())

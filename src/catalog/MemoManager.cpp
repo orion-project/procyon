@@ -78,7 +78,7 @@ QString MemoManager::create(MemoItem* item) const
             .param(table->parent, item->parent() ? item->parent()->asFolder()->id() : 0)
             .param(table->id, item->id())
             .param(table->title, item->title())
-            .param(table->type, item->type())
+            .param(table->type, item->type()->name())
             .param(table->data, item->data())
             .param(table->created, item->created())
             .param(table->updated, item->updated())
@@ -110,7 +110,7 @@ MemosResult MemoManager::selectAll() const
         MemoItem *item = new MemoItem;
         item->_id = r.value(table->id).toInt();
         item->_title = r.value(table->title).toString();
-        item->_type = r.value(table->type).toString();
+        item->_type = getMemoType(r.value(table->type).toString());
         item->_created = r.value(table->created).toDateTime();
         item->_updated = r.value(table->updated).toDateTime();
         item->_station = r.value(table->station).toString();

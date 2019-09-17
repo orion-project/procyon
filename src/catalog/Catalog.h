@@ -13,6 +13,51 @@ class MemoItem;
 
 //------------------------------------------------------------------------------
 
+class MemoType
+{
+public:
+    virtual ~MemoType();
+    virtual const QString name() const = 0;
+    virtual const char* title() const = 0;
+    virtual const QIcon& icon() const = 0;
+    virtual const QString iconPath() const = 0;
+};
+
+class PlainTextMemoType : public MemoType
+{
+public:
+    const QString name() const override { return QStringLiteral("plain_text"); }
+    const char* title() const override { return QT_TRANSLATE_NOOP("MemoType", "Plain Text"); }
+    const QIcon& icon() const override { static QIcon icon(iconPath()); return icon; }
+    const QString iconPath() const override { return QStringLiteral(":/icon/memo_plain_text"); }
+};
+
+class MarkdownMemoType : public MemoType
+{
+public:
+    const QString name() const override { return QStringLiteral("markdown"); }
+    const char* title() const override { return QT_TRANSLATE_NOOP("MemoType", "Wiki Text"); }
+    const QIcon& icon() const override { static QIcon icon(iconPath()); return icon; }
+    const QString iconPath() const override { return QStringLiteral(":/icon/memo_markdown"); }
+};
+
+class RichTextMemoType : public MemoType
+{
+public:
+    const QString name() const override { return QStringLiteral("rich_text"); }
+    const char* title() const override { return QT_TRANSLATE_NOOP("MemoType", "Rich Text"); }
+    const QIcon& icon() const override { static QIcon icon(iconPath()); return icon; }
+    const QString iconPath() const override { return QStringLiteral(":/icon/memo_rich_text"); }
+};
+
+MemoType* plainTextMemoType();
+MemoType* markdownMemoType();
+MemoType* richTextMemoType();
+const QMap<QString, MemoType*>& memoTypes();
+MemoType* getMemoType(const QString& type);
+
+//------------------------------------------------------------------------------
+
 struct MemoUpdateParam
 {
     QString title;
@@ -91,15 +136,16 @@ class MemoItem : public CatalogItem
 public:
     ~MemoItem();
 
+    MemoType* type() { return _type; }
     const QString& data() const { return _data; }
-    const QString& type() const { return _type; }
     const QDateTime& created() const { return _created; }
     const QDateTime& updated() const { return _updated; }
     const QString& station() const { return _station; }
     bool isLoaded() const { return _isLoaded; }
 
 private:
-    QString _type, _data, _station;
+    MemoType* _type = nullptr;
+    QString _data, _station;
     bool _isLoaded = false;
     QDateTime _created, _updated;
 

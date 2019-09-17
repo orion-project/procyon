@@ -10,9 +10,8 @@ class QSyntaxHighlighter;
 QT_END_NAMESPACE
 
 class Catalog;
-class MemoTextEdit;
+class MemoEditor;
 class MemoItem;
-class TextEditSpellcheck;
 
 class MemoPage : public QWidget
 {
@@ -28,7 +27,7 @@ public:
     void setWordWrap(bool wrap);
 
     void setSpellcheckLang(const QString& lang);
-    QString spellcheckLang() const { return _spellcheckLang; }
+    QString spellcheckLang() const;
 
     void beginEditing();
     bool saveEditing();
@@ -44,18 +43,13 @@ signals:
 private:
     Catalog* _catalog;
     MemoItem* _memoItem;
-    MemoTextEdit* _memoEditor;
+    MemoEditor* _memoEditor;
     QLineEdit* _titleEditor;
     QAction *_actionEdit, *_actionSave, *_actionCancel;
-    QSyntaxHighlighter* _highlighter = nullptr;
-    TextEditSpellcheck* _spellcheck = nullptr;
-    QString _spellcheckLang;
 
     void showMemo();
     void cancelEditing();
     void toggleEditMode(bool on);
-    void toggleSpellcheck(bool on);
-    void applyHighlighter();
 };
 
 #endif // MEMO_PAGE_H

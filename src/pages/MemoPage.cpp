@@ -1,31 +1,23 @@
 #include "MemoPage.h"
 
 #include "PageWidgets.h"
-#include "../editors/MemoTextEdit.h"
-#include "../TextEditSpellcheck.h"
-#include "../Spellchecker.h"
+#include "../editors/PlainTextMemoEditor.h"
 #include "../catalog/Catalog.h"
-#include "../highlighter/PythonSyntaxHighlighter.h"
-#include "../highlighter/ShellMemoSyntaxHighlighter.h"
+
 #include "helpers/OriDialogs.h"
 #include "helpers/OriWidgets.h"
 
 #include <QIcon>
 #include <QDebug>
 #include <QMessageBox>
-#include <QStyle>
-#include <QTimer>
 
 MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     _catalog(catalog), _memoItem(memoItem)
 {
     setWindowIcon(QIcon(":/icon/memo_plain_text"));
 
-    _memoEditor = new MemoTextEdit;
-    _memoEditor->setAcceptRichText(false);
-    _memoEditor->setWordWrapMode(QTextOption::NoWrap);
-    _memoEditor->setProperty("role", "memo_editor");
-    connect(_memoEditor, &MemoTextEdit::undoAvailable, this, &MemoPage::onModified);
+    _memoEditor = new PlainTextMemoEditor(_memoItem);
+    connect(_memoEditor, &MemoEditor::onModified, this, &MemoPage::onModified);
 
     _titleEditor = PageWidgets::makeTitleEditor();
 
@@ -51,11 +43,6 @@ MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     showMemo();
     toggleEditMode(false);
     _memoEditor->setFocus();
-
-    QTimer::singleShot(0, [this](){
-        auto sb = 1.5 * style()->pixelMetric(QStyle::PM_ScrollBarExtent);
-        _memoEditor->document()->setTextWidth(_memoEditor->width() - sb);
-    });
 }
 
 MemoPage::~MemoPage()
@@ -64,12 +51,11 @@ MemoPage::~MemoPage()
 
 void MemoPage::showMemo()
 {
-    _memoEditor->setPlainText(_memoItem->data());
+    _memoEditor->showMemo(_memoItem);
     _titleEditor->setText(_memoItem->title());
     setWindowTitle(_memoItem->title());
-    applyHighlighter();
 
-    _memoEditor->document()->setModified(false);
+    _memoEditor->setUnmodified();
     _titleEditor->setModified(false);
 }
 
@@ -106,7 +92,7 @@ bool MemoPage::saveEditing()
 {
     MemoUpdateParam update;
     update.title = _titleEditor->text().trimmed();
-    update.data = _memoEditor->toPlainText();
+    update.data = _memoEditor->data();
 
     auto res = _catalog->updateMemo(_memoItem, update);
     if (!res.isEmpty())
@@ -117,9 +103,8 @@ bool MemoPage::saveEditing()
 
     setWindowTitle(_memoItem->title());
     toggleEditMode(false);
-    applyHighlighter();
 
-    _memoEditor->document()->setModified(false);
+    _memoEditor->setUnmodified();
     _titleEditor->setModified(false);
 
     emit onReadOnly(true);
@@ -133,79 +118,27 @@ void MemoPage::toggleEditMode(bool on)
     _actionEdit->setVisible(!on);
 
     _memoEditor->setReadOnly(!on);
-    Qt::TextInteractionFlags flags = Qt::LinksAccessibleByMouse |
-        Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard;
-    if (on) flags |= Qt::TextEditable;
-    _memoEditor->setTextInteractionFlags(flags);
 
     _titleEditor->setReadOnly(!on);
     // Force updating editor's style sheet, seems it doesn't note changing of readOnly or a custom property
     _titleEditor->setStyleSheet(QString("QLineEdit { background: %1 }").arg(on ? "white" : "transparent"));
 
-    toggleSpellcheck(on);
-}
-
-void MemoPage::toggleSpellcheck(bool on)
-{
-    if (on)
-    {
-        if (!_spellcheckLang.isEmpty())
-        {
-            auto spellchecker = Spellchecker::get(_spellcheckLang);
-            if (!spellchecker) return; // Unable to open dictionary
-            _spellcheck = new TextEditSpellcheck(_memoEditor, spellchecker, this);
-            _spellcheck->spellcheckAll();
-        }
-    }
-    else
-    {
-        if (_spellcheck)
-        {
-            _spellcheck->clearErrorMarks();
-            delete _spellcheck;
-            _spellcheck = nullptr;
-        }
-    }
+    _memoEditor->toggleSpellcheck(on);
 }
 
 void MemoPage::setMemoFont(const QFont& font)
 {
     _memoEditor->setFont(font);
-
-    // TODO: Some styles get reset when font changes at least on macOS
-    // e.g. bold header in shell-memo becomes normal
 }
 
 void MemoPage::setWordWrap(bool wrap)
 {
-    _memoEditor->setWordWrapMode(wrap ? QTextOption::WrapAtWordBoundaryOrAnywhere : QTextOption::NoWrap);
-}
-
-void MemoPage::applyHighlighter()
-{
-    _memoEditor->setUndoRedoEnabled(false);
-
-    // TODO preserve highlighter if its type is not changed
-    if (_highlighter)
-    {
-        delete _highlighter;
-        _highlighter = nullptr;
-    }
-
-    auto text = _memoItem->data();
-
-    // TODO highlighter should be selected by user and saved into catalog
-    if (text.startsWith("#!/usr/bin/env python"))
-        _highlighter = new PythonSyntaxHighlighter(_memoEditor->document());
-    else if (text.startsWith("#shell-memo"))
-        _highlighter = new ShellMemoSyntaxHighlighter(_memoEditor->document());
-
-    _memoEditor->setUndoRedoEnabled(true);
+    _memoEditor->setWordWrap(wrap);
 }
 
 bool MemoPage::isModified() const
 {
-    return _memoEditor->document()->isModified() || _titleEditor->isModified();
+    return _memoEditor->isModified() || _titleEditor->isModified();
 }
 
 bool MemoPage::isReadOnly() const
@@ -215,7 +148,10 @@ bool MemoPage::isReadOnly() const
 
 void MemoPage::setSpellcheckLang(const QString &lang)
 {
-    toggleSpellcheck(false);
-    _spellcheckLang = lang;
-    toggleSpellcheck(true);
+    _memoEditor->setSpellcheckLang(lang);
+}
+
+QString MemoPage::spellcheckLang() const
+{
+    return _memoEditor->spellcheckLang();
 }

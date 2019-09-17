@@ -1,14 +1,14 @@
-#ifndef MEMO_EDITOR_H
-#define MEMO_EDITOR_H
+#ifndef MEMO_TEXT_EDIT_H
+#define MEMO_TEXT_EDIT_H
 
 #include <QTextEdit>
 
-class MemoEditor : public QTextEdit
+class MemoTextEdit : public QTextEdit
 {
     Q_OBJECT
 
 public:
-    explicit MemoEditor(QWidget* parent = nullptr);
+    explicit MemoTextEdit(QWidget* parent = nullptr);
 
 protected:
     void mousePressEvent(QMouseEvent *e) override;
@@ -21,4 +21,4 @@ private:
     QString hyperlinkAt(const QPoint& pos) const;
 };
 
-#endif // MEMO_EDITOR_H
+#endif // MEMO_TEXT_EDIT_H

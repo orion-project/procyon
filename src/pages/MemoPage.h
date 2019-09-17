@@ -10,7 +10,7 @@ class QSyntaxHighlighter;
 QT_END_NAMESPACE
 
 class Catalog;
-class MemoEditor;
+class MemoTextEdit;
 class MemoItem;
 class TextEditSpellcheck;
 
@@ -44,7 +44,7 @@ signals:
 private:
     Catalog* _catalog;
     MemoItem* _memoItem;
-    MemoEditor* _memoEditor;
+    MemoTextEdit* _memoEditor;
     QLineEdit* _titleEditor;
     QAction *_actionEdit, *_actionSave, *_actionCancel;
     QSyntaxHighlighter* _highlighter = nullptr;

@@ -45,12 +45,13 @@ SOURCES += src/main.cpp\
     src/catalog/MemoManager.cpp \
     src/catalog/SettingsManager.cpp \
     src/catalog/SqlHelper.cpp \
+    src/editors/MemoTextEdit.cpp \
+    src/editors/PlainTextMemoEditor.cpp \
     src/highlighter/HighlightingRule.cpp \
     src/highlighter/PythonSyntaxHighlighter.cpp \
     src/highlighter/ShellMemoSyntaxHighlighter.cpp \
     src/CatalogModel.cpp \
     src/OpenedPagesWidget.cpp \
-    src/MemoEditor.cpp \
     src/pages/HelpPage.cpp \
     src/pages/MemoPage.cpp \
     src/pages/PageWidgets.cpp \
@@ -70,11 +71,12 @@ HEADERS  += src/MainWindow.h \
     src/catalog/MemoManager.h \
     src/catalog/SettingsManager.h \
     src/catalog/SqlHelper.h \
+    src/editors/MemoTextEdit.h \
+    src/editors/PlainTextMemoEditor.h \
     src/highlighter/HighlightingRule.h \
     src/highlighter/PythonSyntaxHighlighter.h \
     src/highlighter/ShellMemoSyntaxHighlighter.h \
     src/OpenedPagesWidget.h \
-    src/MemoEditor.h \
     src/pages/HelpPage.h \
     src/pages/MemoPage.h \
     src/pages/PageWidgets.h \

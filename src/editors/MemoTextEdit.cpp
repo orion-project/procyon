@@ -1,7 +1,6 @@
-#include "MemoEditor.h"
+#include "MemoTextEdit.h"
 
-#include "Spellchecker.h"
-#include "TextEditHelpers.h"
+#include "../TextEditHelpers.h"
 
 #include <QDebug>
 #include <QDesktopServices>
@@ -11,18 +10,18 @@
 #include <QTimer>
 #include <QToolTip>
 
-MemoEditor::MemoEditor(QWidget* parent) : QTextEdit(parent)
+MemoTextEdit::MemoTextEdit(QWidget* parent) : QTextEdit(parent)
 {
 }
 
 // Hyperlink made via syntax highlighter doesn't create some 'top level' anchor,
 // so `anchorAt` returns nothing, we have to enumerate styles to find out a href.
-QString MemoEditor::hyperlinkAt(const QPoint& pos) const
+QString MemoTextEdit::hyperlinkAt(const QPoint& pos) const
 {
     return TextEditHelpers::hyperlinkAt(cursorForPosition(viewport()->mapFromParent(pos)));
 }
 
-void MemoEditor::mousePressEvent(QMouseEvent *e)
+void MemoTextEdit::mousePressEvent(QMouseEvent *e)
 {
     if (e->button() == Qt::LeftButton && e->modifiers().testFlag(Qt::ControlModifier))
         _clickedHref = hyperlinkAt(e->pos());
@@ -35,7 +34,7 @@ void MemoEditor::mousePressEvent(QMouseEvent *e)
     QTextEdit::mousePressEvent(e);
 }
 
-void MemoEditor::mouseReleaseEvent(QMouseEvent *e)
+void MemoTextEdit::mouseReleaseEvent(QMouseEvent *e)
 {
     if (not _clickedHref.isEmpty())
     {
@@ -45,7 +44,7 @@ void MemoEditor::mouseReleaseEvent(QMouseEvent *e)
     QTextEdit::mouseReleaseEvent(e);
 }
 
-bool MemoEditor::event(QEvent *event)
+bool MemoTextEdit::event(QEvent *event)
 {
     if (event->type() != QEvent::ToolTip)
         return QTextEdit::event(event);
@@ -65,5 +64,3 @@ bool MemoEditor::event(QEvent *event)
     event->accept();
     return true;
 }
-
-

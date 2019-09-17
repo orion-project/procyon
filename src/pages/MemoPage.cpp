@@ -1,7 +1,7 @@
 #include "MemoPage.h"
 
 #include "PageWidgets.h"
-#include "../MemoEditor.h"
+#include "../editors/MemoTextEdit.h"
 #include "../TextEditSpellcheck.h"
 #include "../Spellchecker.h"
 #include "../catalog/Catalog.h"
@@ -21,11 +21,11 @@ MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
 {
     setWindowIcon(QIcon(":/icon/memo_plain_text"));
 
-    _memoEditor = new MemoEditor;
+    _memoEditor = new MemoTextEdit;
     _memoEditor->setAcceptRichText(false);
     _memoEditor->setWordWrapMode(QTextOption::NoWrap);
     _memoEditor->setProperty("role", "memo_editor");
-    connect(_memoEditor, &MemoEditor::undoAvailable, this, &MemoPage::onModified);
+    connect(_memoEditor, &MemoTextEdit::undoAvailable, this, &MemoPage::onModified);
 
     _titleEditor = PageWidgets::makeTitleEditor();
 

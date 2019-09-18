@@ -3,7 +3,8 @@
         <file alias="main">../img/icon/main.svg</file>
         <file alias="folder_opend">../img/icon/folder_opened.svg</file>
         <file alias="folder_closed">../img/icon/folder_closed.svg</file>
-        <file alias="memo_plain_text">../img/icon/sticky_note.svg</file>
+        <file alias="memo_plain_text">../img/icon/memo_plain_text.svg</file>
+        <file alias="memo_markdown">../img/icon/memo_markdown.svg</file>
         <file alias="is_modified">../img/icon/is_modified.svg</file>
         <file alias="edit_mode">../img/icon/edit_mode.svg</file>
     </qresource>
@@ -15,6 +16,7 @@
     </qresource>
     <qresource prefix="/style">
         <file alias="app_main">app.qss</file>
+        <file alias="markdown">markdown.css</file>
         <file alias="background">../img/background.png</file>
         <file alias="about">../img/about.png</file>
     </qresource>

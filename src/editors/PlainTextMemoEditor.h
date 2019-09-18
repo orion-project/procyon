@@ -14,8 +14,7 @@ class PlainTextMemoEditor : public TextMemoEditor
 public:
     explicit PlainTextMemoEditor(MemoItem* memoItem, QWidget *parent = nullptr);
 
-    void setReadOnly(bool on) override;
-    void showMemo(MemoItem*) override;
+    void showMemo() override;
 
 private:
     QSyntaxHighlighter* _highlighter = nullptr;

@@ -13,6 +13,7 @@
 PlainTextMemoEditor::PlainTextMemoEditor(MemoItem *memoItem, QWidget *parent) : TextMemoEditor(memoItem, parent)
 {
     setEditor(new MemoTextEdit);
+    _editor->setReadOnly(true);
 
     Ori::Layouts::LayoutV({_editor}).setMargin(0).useFor(this);
 
@@ -22,17 +23,10 @@ PlainTextMemoEditor::PlainTextMemoEditor(MemoItem *memoItem, QWidget *parent) : 
     });
 }
 
-void PlainTextMemoEditor::setReadOnly(bool on)
-{
-    TextMemoEditor::setReadOnly(on);
-
-    if (!on) applyHighlighter();
-}
-
-void PlainTextMemoEditor::showMemo(MemoItem* _memoItem)
+void PlainTextMemoEditor::showMemo()
 {
     _editor->setPlainText(_memoItem->data());
-    applyHighlighter();
+    _editor->document()->setModified(false);
 }
 
 void PlainTextMemoEditor::applyHighlighter()

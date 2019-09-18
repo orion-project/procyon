@@ -424,11 +424,16 @@ void MainWindow::openMemoPage(MemoItem* item)
     }
 
     auto page = new MemoPage(_catalog, item);
-    page->setMemoFont(Settings::instance().memoFont);
-    page->setWordWrap(Settings::instance().memoWordWrap);
     _pagesView->addWidget(page);
     _pagesView->setCurrentWidget(page);
     _openedPagesView->addOpenedPage(page);
+
+    // In some cases, when a page added to the pages view,
+    // page's font can be reset to the parent's one.
+    // For example, it happens with markdown editor.
+    // So assign font _after_ the page added to the pages view.
+    page->setMemoFont(Settings::instance().memoFont);
+    page->setWordWrap(Settings::instance().memoWordWrap);
 }
 
 MemoPage* MainWindow::findMemoPage(MemoItem* item) const
@@ -477,7 +482,7 @@ void MainWindow::memoCreated(MemoItem* item)
     openMemoPage(item);
 
     auto page = findMemoPage(item);
-    if (page) page->beginEditing();
+    if (page) page->beginEdit();
 }
 
 void MainWindow::memoRemoved(MemoItem* item)

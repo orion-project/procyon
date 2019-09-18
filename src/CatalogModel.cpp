@@ -101,6 +101,8 @@ QVariant CatalogModel::data(const QModelIndex &index, int role) const
         // TODO different icons for opened and closed folder
         if (item->isFolder())
             return _iconFolder;
+        if (item->isMemo())
+            return item->asMemo()->type()->icon();
         return _iconMemo;
     }
     return QVariant();

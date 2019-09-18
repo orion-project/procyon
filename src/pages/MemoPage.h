@@ -29,8 +29,8 @@ public:
     void setSpellcheckLang(const QString& lang);
     QString spellcheckLang() const;
 
-    void beginEditing();
-    bool saveEditing();
+    void beginEdit();
+    bool saveEdit();
     bool isModified() const;
     bool isReadOnly() const;
     bool canClose();
@@ -48,7 +48,7 @@ private:
     QAction *_actionEdit, *_actionSave, *_actionCancel;
 
     void showMemo();
-    void cancelEditing();
+    void cancelEdit();
     void toggleEditMode(bool on);
 };
 

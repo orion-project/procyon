@@ -17,16 +17,15 @@ class MemoEditor : public QWidget
 public:
     virtual void setFocus() {}
     virtual void setFont(const QFont&) {}
-    virtual void setUnmodified() = 0;
     virtual bool isModified() const = 0;
-    virtual void setReadOnly(bool on) = 0;
     virtual bool isReadOnly() const = 0;
     virtual void setWordWrap(bool on) = 0;
-    virtual void showMemo(MemoItem*) = 0;
+    virtual void showMemo() = 0;
     virtual QString data() const = 0;
-    virtual void toggleSpellcheck(bool) {}
     virtual void setSpellcheckLang(const QString&) {}
     virtual QString spellcheckLang() const { return QString(); }
+    virtual void beginEdit() {}
+    virtual void endEdit() {}
 
 signals:
     void onModified(bool modified);
@@ -45,24 +44,25 @@ class TextMemoEditor : public MemoEditor
 public:
     void setFocus() override;
     void setFont(const QFont& f) override;
-    void setUnmodified() override;
     bool isModified() const override;
-    void setReadOnly(bool on) override;
     bool isReadOnly() const override;
     void setWordWrap(bool on) override;
     QString data() const override;
-    void toggleSpellcheck(bool on) override;
     void setSpellcheckLang(const QString& lang) override;
     QString spellcheckLang() const override { return _spellcheckLang; }
+    void beginEdit() override;
+    void endEdit() override;
 
 protected:
     explicit TextMemoEditor(MemoItem* memoItem, QWidget *parent = nullptr);
 
-    QTextEdit* _editor;
+    QTextEdit* _editor = nullptr;
     TextEditSpellcheck* _spellcheck = nullptr;
     QString _spellcheckLang;
 
     void setEditor(QTextEdit*);
+    void setReadOnly(bool on);
+    void toggleSpellcheck(bool on);
 };
 
 #endif // MEMO_EDITOR_H

@@ -1,5 +1,6 @@
 #include "MemoEditor.h"
 
+#include "../catalog/Catalog.h"
 #include "../TextEditSpellcheck.h"
 #include "../Spellchecker.h"
 
@@ -44,23 +45,9 @@ void TextMemoEditor::setFont(const QFont& f)
     // e.g. bold header in shell-memo becomes normal
 }
 
-void TextMemoEditor::setUnmodified()
-{
-    _editor->document()->setModified(false);
-}
-
 bool TextMemoEditor::isModified() const
 {
     return _editor->document()->isModified();
-}
-
-void TextMemoEditor::setReadOnly(bool on)
-{
-    _editor->setReadOnly(on);
-    Qt::TextInteractionFlags flags = Qt::LinksAccessibleByMouse |
-        Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard;
-    if (!on) flags |= Qt::TextEditable;
-    _editor->setTextInteractionFlags(flags);
 }
 
 bool TextMemoEditor::isReadOnly() const
@@ -106,4 +93,27 @@ void TextMemoEditor::setSpellcheckLang(const QString &lang)
     toggleSpellcheck(false);
     _spellcheckLang = lang;
     toggleSpellcheck(true);
+}
+
+void TextMemoEditor::beginEdit()
+{
+    setReadOnly(false);
+    toggleSpellcheck(true);
+    _editor->setFocus();
+}
+
+void TextMemoEditor::endEdit()
+{
+    setReadOnly(true);
+    toggleSpellcheck(false);
+    _editor->document()->setModified(false);
+}
+
+void TextMemoEditor::setReadOnly(bool on)
+{
+    _editor->setReadOnly(on);
+    Qt::TextInteractionFlags flags = Qt::LinksAccessibleByMouse |
+        Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard;
+    if (!on) flags |= Qt::TextEditable;
+    _editor->setTextInteractionFlags(flags);
 }

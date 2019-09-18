@@ -117,6 +117,8 @@ bool MemoPage::saveEdit()
 
 void MemoPage::toggleEditMode(bool on)
 {
+    _isEditMode = on;
+
     _actionSave->setVisible(on);
     _actionCancel->setVisible(on);
     _actionEdit->setVisible(!on);
@@ -139,11 +141,6 @@ void MemoPage::setWordWrap(bool wrap)
 bool MemoPage::isModified() const
 {
     return _memoEditor->isModified() || _titleEditor->isModified();
-}
-
-bool MemoPage::isReadOnly() const
-{
-    return _memoEditor->isReadOnly();
 }
 
 void MemoPage::setSpellcheckLang(const QString &lang)

@@ -19,7 +19,6 @@ public:
     void setFocus() override;
     void setFont(const QFont& f) override;
     bool isModified() const override;
-    bool isReadOnly() const override;
     void setWordWrap(bool on) override;
     void beginEdit() override;
     void endEdit() override;

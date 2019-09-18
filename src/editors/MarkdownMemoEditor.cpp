@@ -56,11 +56,6 @@ bool MarkdownMemoEditor::isModified() const
     return _editor && TextMemoEditor::isModified();
 }
 
-bool MarkdownMemoEditor::isReadOnly() const
-{
-    return _tabs->currentWidget() == _view;
-}
-
 void MarkdownMemoEditor::setWordWrap(bool on)
 {
     _view->setWordWrapMode(on ? QTextOption::WrapAtWordBoundaryOrAnywhere : QTextOption::NoWrap);
@@ -73,10 +68,10 @@ void MarkdownMemoEditor::beginEdit()
     if (!_editor)
     {
         setEditor(new MemoTextEdit);
-        _editor->setPlainText(_memoItem->data());
         _editor->setFont(_view->font());
         _editor->setWordWrapMode(_view->wordWrapMode());
         // TODO: set highlighter
+        _editor->setPlainText(_memoItem->data());
         _tabs->addWidget(_editor);
     }
     _tabs->setCurrentWidget(_editor);

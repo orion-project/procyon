@@ -32,7 +32,7 @@ public:
     void beginEdit();
     bool saveEdit();
     bool isModified() const;
-    bool isReadOnly() const;
+    bool isReadOnly() const { return !_isEditMode; }
     bool canClose();
 
 signals:
@@ -46,6 +46,7 @@ private:
     MemoEditor* _memoEditor;
     QLineEdit* _titleEditor;
     QAction *_actionEdit, *_actionSave, *_actionCancel;
+    bool _isEditMode = false;
 
     void showMemo();
     void cancelEdit();

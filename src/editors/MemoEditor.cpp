@@ -50,11 +50,6 @@ bool TextMemoEditor::isModified() const
     return _editor->document()->isModified();
 }
 
-bool TextMemoEditor::isReadOnly() const
-{
-    return _editor->isReadOnly();
-}
-
 void TextMemoEditor::setWordWrap(bool on)
 {
     _editor->setWordWrapMode(on ? QTextOption::WrapAtWordBoundaryOrAnywhere : QTextOption::NoWrap);

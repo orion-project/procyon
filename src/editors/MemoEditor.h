@@ -18,7 +18,6 @@ public:
     virtual void setFocus() {}
     virtual void setFont(const QFont&) {}
     virtual bool isModified() const = 0;
-    virtual bool isReadOnly() const = 0;
     virtual void setWordWrap(bool on) = 0;
     virtual void showMemo() = 0;
     virtual QString data() const = 0;
@@ -45,7 +44,6 @@ public:
     void setFocus() override;
     void setFont(const QFont& f) override;
     bool isModified() const override;
-    bool isReadOnly() const override;
     void setWordWrap(bool on) override;
     QString data() const override;
     void setSpellcheckLang(const QString& lang) override;

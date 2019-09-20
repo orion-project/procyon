@@ -25,6 +25,7 @@ public:
     virtual QString spellcheckLang() const { return QString(); }
     virtual void beginEdit() {}
     virtual void endEdit() {}
+    virtual void saveEdit() {}
 
 signals:
     void onModified(bool modified);
@@ -50,6 +51,7 @@ public:
     QString spellcheckLang() const override { return _spellcheckLang; }
     void beginEdit() override;
     void endEdit() override;
+    void saveEdit() override { endEdit(); }
 
 protected:
     explicit TextMemoEditor(MemoItem* memoItem, QWidget *parent = nullptr);

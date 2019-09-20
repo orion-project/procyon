@@ -10,13 +10,21 @@ TARGET = procyon
 TEMPLATE = app
 DESTDIR = $$_PRO_FILE_PWD_/bin
 
-ORION = $$_PRO_FILE_PWD_/orion/
-include($$ORION"orion.pri")
+#-------------------------------------------------
+#                      Deps
+
+# orion
+include($$_PRO_FILE_PWD_/orion/orion.pri)
 
 # hunspell
 INCLUDEPATH += $$_PRO_FILE_PWD_/deps/hunspell-1.7.0/src
 win32: LIBS += -L$$_PRO_FILE_PWD_/deps/hunspell-1.7.0/src/hunspell/.libs -lhunspell-1.7-0
 else: LIBS += $$_PRO_FILE_PWD_/deps/hunspell-1.7.0/src/hunspell/.libs/libhunspell-1.7.a
+
+# hoedown
+include($$_PRO_FILE_PWD_/deps/hoedown.pri)
+
+#-------------------------------------------------
 
 # Version information
 include(release/version.pri)
@@ -49,6 +57,7 @@ SOURCES += src/main.cpp\
     src/editors/MemoEditor.cpp \
     src/editors/MemoTextEdit.cpp \
     src/editors/PlainTextMemoEditor.cpp \
+    src/editors/ori_html.c \
     src/highlighter/HighlightingRule.cpp \
     src/highlighter/PythonSyntaxHighlighter.cpp \
     src/highlighter/ShellMemoSyntaxHighlighter.cpp \
@@ -77,6 +86,7 @@ HEADERS  += src/MainWindow.h \
     src/editors/MemoEditor.h \
     src/editors/MemoTextEdit.h \
     src/editors/PlainTextMemoEditor.h \
+    src/editors/ori_html.h \
     src/highlighter/HighlightingRule.h \
     src/highlighter/PythonSyntaxHighlighter.h \
     src/highlighter/ShellMemoSyntaxHighlighter.h \

@@ -107,7 +107,7 @@ bool MemoPage::saveEdit()
         return false;
     }
 
-    _memoEditor->endEdit();
+    _memoEditor->saveEdit();
     _titleEditor->setModified(false);
     setWindowTitle(_memoItem->title());
     toggleEditMode(false);

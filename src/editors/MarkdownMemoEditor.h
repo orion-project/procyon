@@ -22,6 +22,7 @@ public:
     void setWordWrap(bool on) override;
     void beginEdit() override;
     void endEdit() override;
+    void saveEdit() override;
 
 private:
     QTextEdit* _view;

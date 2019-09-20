@@ -41,5 +41,5 @@ bin/procyon.app
 bin/dicts
 tmp
 out
-hunspell*
-libreoffice*
+deps/hunspell*
+deps/libreoffice*

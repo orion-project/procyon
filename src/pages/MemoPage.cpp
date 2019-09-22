@@ -11,13 +11,20 @@
 #include <QIcon>
 #include <QDebug>
 #include <QMessageBox>
+#include <QToolButton>
+
+namespace  {
+const int PREVIEW_BUTTON_WIDTH = 100;
+}
 
 MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     _catalog(catalog), _memoItem(memoItem)
 {
-    setWindowIcon(_memoItem->type()->icon());
+    auto memoType = _memoItem->type();
 
-    if (_memoItem->type() == markdownMemoType())
+    setWindowIcon(memoType->icon());
+
+    if (memoType == markdownMemoType())
         _memoEditor = new MarkdownMemoEditor(_memoItem);
     else
         _memoEditor = new PlainTextMemoEditor(_memoItem);
@@ -26,22 +33,23 @@ MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     _titleEditor = PageWidgets::makeTitleEditor();
     connect(_titleEditor, &QLineEdit::textEdited, [this]{ emit onModified(true); });
 
-    auto toolbar = new QToolBar;
-    toolbar->setObjectName("memo_toolbar");
-    toolbar->setContentsMargins(0, 0, 0, 0);
-    toolbar->setIconSize(QSize(24, 24));
-    _actionEdit = toolbar->addAction(QIcon(":/toolbar/memo_edit"), tr("Edit"), this, &MemoPage::beginEdit);
-    _actionSave = toolbar->addAction(QIcon(":/toolbar/memo_save"), tr("Save"), this, &MemoPage::saveEdit);
-    _actionCancel = toolbar->addAction(QIcon(":/toolbar/memo_cancel"), tr("Cancel"), this, &MemoPage::cancelEdit);
+    _toolbar = new QToolBar;
+    _toolbar->setObjectName("memo_toolbar");
+    _toolbar->setContentsMargins(0, 0, 0, 0);
+    _toolbar->setIconSize(QSize(24, 24));
+
+    _actionEdit = _toolbar->addAction(QIcon(":/toolbar/memo_edit"), tr("Edit"), this, &MemoPage::beginEdit);
+    _actionSave = _toolbar->addAction(QIcon(":/toolbar/memo_save"), tr("Save"), this, &MemoPage::saveEdit);
+    _actionCancel = _toolbar->addAction(QIcon(":/toolbar/memo_cancel"), tr("Cancel"), this, &MemoPage::cancelEdit);
     _actionEdit->setShortcut(QKeySequence(Qt::Key_Return, Qt::Key_Return));
     _actionSave->setShortcut(QKeySequence::Save);
     _actionCancel->setShortcut(QKeySequence(Qt::Key_Escape, Qt::Key_Escape));
-    toolbar->addSeparator();
-    toolbar->addAction(QIcon(":/toolbar/memo_close"), tr("Close"), [this](){
+    _toolbar->addSeparator();
+    _toolbar->addAction(QIcon(":/toolbar/memo_close"), tr("Close"), [this](){
         if (canClose()) deleteLater();
     });
 
-    auto toolPanel = PageWidgets::makeHeaderPanel({_titleEditor, toolbar});
+    auto toolPanel = PageWidgets::makeHeaderPanel({_titleEditor, _toolbar});
 
     Ori::Layouts::LayoutV({toolPanel, _memoEditor}).setMargin(0).setSpacing(0).useFor(this);
 
@@ -123,6 +131,33 @@ void MemoPage::toggleEditMode(bool on)
     _actionCancel->setVisible(on);
     _actionEdit->setVisible(!on);
 
+    if (_memoItem->type() == markdownMemoType())
+    {
+        if (on)
+        {
+            _actionPreview = new QAction(tr("Edit"));
+            _actionPreview->setShortcut(Qt::Key_F5);
+            _actionPreview->setToolTip(tr("Switch between Preview and Edit mode"));
+            connect(_actionPreview, &QAction::triggered, this, &MemoPage::togglePreviewMode);
+
+            _previewButton = new QToolButton;
+            _previewButton->setObjectName("button_preview");
+            _previewButton->setDefaultAction(_actionPreview);
+            _previewButton->setFixedWidth(PREVIEW_BUTTON_WIDTH);
+
+            auto firstAction = _toolbar->actions().first();
+            _actionPreviewButton = _toolbar->insertWidget(firstAction, _previewButton);
+            _separatorPreview = _toolbar->insertSeparator(firstAction);
+        }
+        else if (_actionPreview)
+        {
+            delete _actionPreview;
+            delete _previewButton;
+            delete _actionPreviewButton;
+            delete _separatorPreview;
+        }
+    }
+
     _titleEditor->setReadOnly(!on);
     // Force updating editor's style sheet, seems it doesn't note changing of readOnly or a custom property
     _titleEditor->setStyleSheet(QString("QLineEdit { background: %1 }").arg(on ? "white" : "transparent"));
@@ -151,4 +186,14 @@ void MemoPage::setSpellcheckLang(const QString &lang)
 QString MemoPage::spellcheckLang() const
 {
     return _memoEditor->spellcheckLang();
+}
+
+void MemoPage::togglePreviewMode()
+{
+    auto editor = qobject_cast<MarkdownMemoEditor*>(_memoEditor);
+    if (!editor) return;
+
+    bool isPreview = editor->isPreviewMode();
+    _actionPreview->setText(isPreview ? tr("Edit") : tr("Preview"));
+    editor->togglePreviewMode(!isPreview);
 }

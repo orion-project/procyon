@@ -271,3 +271,6 @@ QToolButton {
 QToolButton:hover {
   background: steelBlue;
 }
+#button_preview {
+  font-size: 13px;
+}

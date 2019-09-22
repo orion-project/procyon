@@ -1,13 +1,19 @@
 {
-  "history": [
-    {
-      "version": "0.9.0",
-      "date": "2019-08-21",
-      "changes": [
-        {
-          "text": "The first public version."
-        }
-      ]
-    }
-  ]
+  "history": [{
+    "version": "0.9.1",
+    "date": "????-??-??",
+    "changes": [{
+      "text": "New rules for shell-memo syntax highlighter - inline code, inline font styles."
+    },{
+      "text": "Store memo creation and modification date."
+    },{
+      "text": "New memo type - Markdown."
+    }]
+  },{
+    "version": "0.9.0",
+    "date": "2019-08-21",
+    "changes": [{
+      "text": "The first public version."
+    }]
+  }]
 }

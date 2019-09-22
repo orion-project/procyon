@@ -110,6 +110,29 @@ void MarkdownMemoEditor::endEdit()
 
 void MarkdownMemoEditor::saveEdit()
 {
-    showMemo();
+    // If we are in preview mode, _view already contains the latest html
+    if (_tabs->currentWidget() == _editor)
+        showMemo();
+
     endEdit();
+}
+
+bool MarkdownMemoEditor::isPreviewMode() const
+{
+    return _tabs->currentWidget() == _view;
+}
+
+void MarkdownMemoEditor::togglePreviewMode(bool on)
+{
+    if (on)
+    {
+        if (_editor)
+            _view->setHtml(markdownToHtml(_editor->toPlainText()));
+        _tabs->setCurrentWidget(_view);
+    }
+    else
+    {
+        if (_editor)
+            _tabs->setCurrentWidget(_editor);
+    }
 }

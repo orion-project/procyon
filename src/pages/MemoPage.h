@@ -7,6 +7,8 @@ QT_BEGIN_NAMESPACE
 class QAction;
 class QLineEdit;
 class QSyntaxHighlighter;
+class QToolBar;
+class QToolButton;
 QT_END_NAMESPACE
 
 class Catalog;
@@ -45,12 +47,16 @@ private:
     MemoItem* _memoItem;
     MemoEditor* _memoEditor;
     QLineEdit* _titleEditor;
+    QToolBar* _toolbar;
     QAction *_actionEdit, *_actionSave, *_actionCancel;
+    QAction *_actionPreview = nullptr, *_actionPreviewButton, *_separatorPreview;
+    QToolButton *_previewButton;
     bool _isEditMode = false;
 
     void showMemo();
     void cancelEdit();
     void toggleEditMode(bool on);
+    void togglePreviewMode();
 };
 
 #endif // MEMO_PAGE_H

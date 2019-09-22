@@ -24,6 +24,9 @@ public:
     void endEdit() override;
     void saveEdit() override;
 
+    bool isPreviewMode() const;
+    void togglePreviewMode(bool on);
+
 private:
     QTextEdit* _view;
     QStackedLayout* _tabs;

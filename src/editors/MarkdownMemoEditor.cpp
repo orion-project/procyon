@@ -2,6 +2,7 @@
 
 #include "MemoTextEdit.h"
 #include "ori_html.h"
+#include "../AppSettings.h"
 #include "../catalog/Catalog.h"
 
 #include "helpers/OriLayouts.h"
@@ -38,10 +39,7 @@ MarkdownMemoEditor::MarkdownMemoEditor(MemoItem* memoItem, QWidget *parent) : Te
     _view->setReadOnly(true);
     _view->setWordWrapMode(QTextOption::NoWrap);
     _view->setProperty("role", "memo_editor");
-
-    QFile file(":/style/markdown");
-    file.open(QIODevice::ReadOnly);
-    _view->document()->setDefaultStyleSheet(file.readAll());
+    _view->document()->setDefaultStyleSheet(AppSettings::instance().markdownCss());
     _view->document()->setDocumentMargin(10);
 
     _tabs = new QStackedLayout;
@@ -52,6 +50,13 @@ MarkdownMemoEditor::MarkdownMemoEditor(MemoItem* memoItem, QWidget *parent) : Te
     // Otherwise, the _view splashes for a short time as a popup window.
     _tabs->addWidget(_view);
     _tabs->setCurrentWidget(_view);
+
+    AppSettings::instance().registerListener(this);
+}
+
+MarkdownMemoEditor::~MarkdownMemoEditor()
+{
+    AppSettings::instance().unregisterListener(this);
 }
 
 void MarkdownMemoEditor::showMemo()
@@ -135,4 +140,11 @@ void MarkdownMemoEditor::togglePreviewMode(bool on)
         if (_editor)
             _tabs->setCurrentWidget(_editor);
     }
+}
+
+void MarkdownMemoEditor::optionChanged(AppSettingsOption option)
+{
+    if (option != AppSettingsOption::MARKDOWN_CSS) return;
+    _view->document()->setDefaultStyleSheet(AppSettings::instance().markdownCss());
+    _view->setHtml(markdownToHtml(_editor ? _editor->toPlainText() : _memoItem->data()));
 }

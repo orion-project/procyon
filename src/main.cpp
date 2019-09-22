@@ -1,34 +1,20 @@
 #include "MainWindow.h"
 
 #include "AppSettings.h"
+#include "Utils.h"
 
 #include "tools/OriDebug.h"
 #include "tools/OriSettings.h"
 
 #include <QApplication>
 #include <QDebug>
-#include <QFile>
 #include <QStyleFactory>
 #include <QCommandLineParser>
 #include <QMessageBox>
 
 QString loadStyleSheet(QSettings* s)
 {
-    QFile file(":/style/app_main");
-    bool ok = file.open(QIODevice::ReadOnly);
-    if (!ok)
-    {
-        qWarning() << "Unable to load style from resources" << file.errorString();
-        return QString();
-    }
-    QByteArray data = file.readAll();
-    if (data.isEmpty())
-    {
-        qWarning() << "Unable to load style from resources: read data is empty";
-        return QString();
-    }
-
-    QString styleSheet(data);
+    QString styleSheet = loadTextFromResource(":/style/app_main");
 
     Ori::SettingsGroup group(s, "Theme");
 
@@ -69,7 +55,7 @@ bool processCommandLine()
     if (parser.isSet(optionConsole))
         Ori::Debug::installMessageHandler();
 
-    Settings::instance().isDevMode = parser.isSet(optionDevMode);
+    AppSettings::instance().isDevMode = parser.isSet(optionDevMode);
 
     return true;
 }
@@ -86,7 +72,7 @@ int main(int argc, char *argv[])
 
     // Load settings
     auto s1 = Ori::Settings::open();
-    Settings::instance().load(s1);
+    AppSettings::instance().load(s1);
 
     // Call `setStyleSheet` after setting loaded
     // to be able to apply custom colors.
@@ -101,7 +87,7 @@ int main(int argc, char *argv[])
 
     // Save settings
     auto s2 = Ori::Settings::open();
-    Settings::instance().save(s2);
+    AppSettings::instance().save(s2);
     w.saveSettings(s2);
     delete s2;
 

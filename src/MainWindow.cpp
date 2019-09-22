@@ -7,6 +7,7 @@
 #include "catalog/Catalog.h"
 #include "catalog/CatalogStore.h"
 #include "pages/HelpPage.h"
+#include "pages/MarkdownCssEditorPage.h"
 #include "pages/MemoPage.h"
 #include "pages/StyleEditorPage.h"
 #include "pages/SqlConsolePage.h"
@@ -121,7 +122,7 @@ void MainWindow::createMenu()
 {
     QMenu* m;
 
-    menuBar()->setNativeMenuBar(Settings::instance().useNativeMenuBar);
+    menuBar()->setNativeMenuBar(AppSettings::instance().useNativeMenuBar);
 
     m = menuBar()->addMenu(tr("File"));
     m->addAction(tr("New..."), this, &MainWindow::newCatalog);
@@ -155,13 +156,16 @@ void MainWindow::createMenu()
     auto actionWordWrap = m->addAction(tr("Word Wrap"), this, &MainWindow::toggleWordWrap);
     actionWordWrap->setCheckable(true);
     connect(m, &QMenu::aboutToShow, [actionWordWrap](){
-        actionWordWrap->setChecked(Settings::instance().memoWordWrap);
+        actionWordWrap->setChecked(AppSettings::instance().memoWordWrap);
     });
-    if (Settings::instance().isDevMode)
+    if (AppSettings::instance().isDevMode)
     {
         m->addSeparator();
-        m->addAction(tr("Edit Style Sheet"), this, [this]{
+        m->addAction(tr("Edit Application QSS"), this, [this]{
             activateOrOpenNewPage<StyleEditorPage>(_pagesView, _openedPagesView);
+        });
+        m->addAction(tr("Edit Markdown CSS"), this, [this]{
+            activateOrOpenNewPage<MarkdownCssEditorPage>(_pagesView, _openedPagesView);
         });
         m->addAction(tr("Open SQL Console"), this, [this]{
             openNewPage<SqlConsolePage>(_pagesView, _openedPagesView);
@@ -432,8 +436,8 @@ void MainWindow::openMemoPage(MemoItem* item)
     // page's font can be reset to the parent's one.
     // For example, it happens with markdown editor.
     // So assign font _after_ the page added to the pages view.
-    page->setMemoFont(Settings::instance().memoFont);
-    page->setWordWrap(Settings::instance().memoWordWrap);
+    page->setMemoFont(AppSettings::instance().memoFont);
+    page->setWordWrap(AppSettings::instance().memoWordWrap);
 }
 
 MemoPage* MainWindow::findMemoPage(MemoItem* item) const
@@ -457,19 +461,19 @@ MemoPage* MainWindow::currentMemoPage() const
 void MainWindow::chooseMemoFont()
 {
     bool ok;
-    QFont font = QFontDialog::getFont(&ok, Settings::instance().memoFont,
+    QFont font = QFontDialog::getFont(&ok, AppSettings::instance().memoFont,
         qApp->activeWindow(), tr("Select Memo Font"),
         QFontDialog::ScalableFonts | QFontDialog::NonScalableFonts |
         QFontDialog::MonospacedFonts | QFontDialog::ProportionalFonts);
     if (!ok) return;
-    Settings::instance().memoFont = font;
+    AppSettings::instance().memoFont = font;
     for (auto page : getPages<MemoPage>(_pagesView))
         page->setMemoFont(font);
 }
 
 void MainWindow::toggleWordWrap()
 {
-    auto s = Settings::instancePtr();
+    auto s = AppSettings::instancePtr();
     s->memoWordWrap = !s->memoWordWrap;
     for (auto page : getPages<MemoPage>(_pagesView))
         page->setWordWrap(s->memoWordWrap);

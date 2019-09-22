@@ -1,18 +1,21 @@
 #include "AppSettings.h"
+
+#include "Utils.h"
+
 #include "tools/OriSettings.h"
 
 //------------------------------------------------------------------------------
 //                              SettingsListener
 //------------------------------------------------------------------------------
 
-SettingsListener::SettingsListener()
+AppSettingsListener::AppSettingsListener()
 {
-    Settings::instance().registerListener(this);
+    AppSettings::instance().registerListener(this);
 }
 
-SettingsListener::~SettingsListener()
+AppSettingsListener::~AppSettingsListener()
 {
-    Settings::instance().unregisterListener(this);
+    AppSettings::instance().unregisterListener(this);
 }
 
 
@@ -26,7 +29,7 @@ SettingsListener::~SettingsListener()
 #define SAVE(option)\
     s->setValue(QStringLiteral(#option), option)
 
-void Settings::load(QSettings* s)
+void AppSettings::load(QSettings* s)
 {
     bool defaultUseNativeMenuBar =
 #ifdef Q_OS_WIN
@@ -41,10 +44,23 @@ void Settings::load(QSettings* s)
     memoFont = qvariant_cast<QFont>(s->value("memoFont", QFont("Arial", 12)));
 }
 
-void Settings::save(QSettings* s)
+void AppSettings::save(QSettings* s)
 {
     Ori::SettingsGroup group(s, "View");
     SAVE(useNativeMenuBar);
     SAVE(memoWordWrap);
     SAVE(memoFont);
+}
+
+QString AppSettings::markdownCss()
+{
+    if (_markdownCss.isEmpty())
+        _markdownCss = loadTextFromResource(":/style/markdown");
+    return _markdownCss;
+}
+
+void AppSettings::updateMarkdownCss(const QString css)
+{
+    _markdownCss = css;
+    NOTIFY_LISTENERS_1(optionChanged, AppSettingsOption::MARKDOWN_CSS);
 }

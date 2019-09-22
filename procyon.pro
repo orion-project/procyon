@@ -47,6 +47,7 @@ SOURCES += src/main.cpp\
     src/CatalogWidget.cpp \
     src/Spellchecker.cpp \
     src/TextEditHelpers.cpp \
+    src/Utils.cpp \
     src/catalog/Catalog.cpp \
     src/catalog/CatalogStore.cpp \
     src/catalog/FolderManager.cpp \
@@ -64,6 +65,7 @@ SOURCES += src/main.cpp\
     src/CatalogModel.cpp \
     src/OpenedPagesWidget.cpp \
     src/pages/HelpPage.cpp \
+    src/pages/MarkdownCssEditorPage.cpp \
     src/pages/MemoPage.cpp \
     src/pages/PageWidgets.cpp \
     src/pages/SqlConsolePage.cpp \
@@ -76,6 +78,7 @@ HEADERS  += src/MainWindow.h \
     src/CatalogModel.h \
     src/Spellchecker.h \
     src/TextEditHelpers.h \
+    src/Utils.h \
     src/catalog/Catalog.h \
     src/catalog/CatalogStore.h \
     src/catalog/FolderManager.h \
@@ -92,6 +95,7 @@ HEADERS  += src/MainWindow.h \
     src/highlighter/ShellMemoSyntaxHighlighter.h \
     src/OpenedPagesWidget.h \
     src/pages/HelpPage.h \
+    src/pages/MarkdownCssEditorPage.h \
     src/pages/MemoPage.h \
     src/pages/PageWidgets.h \
     src/pages/SqlConsolePage.h \

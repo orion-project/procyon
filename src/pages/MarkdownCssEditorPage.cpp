@@ -1,26 +1,27 @@
-#include "StyleEditorPage.h"
+#include "MarkdownCssEditorPage.h"
 
 #include "PageWidgets.h"
+#include "../AppSettings.h"
+
 #include "helpers/OriLayouts.h"
 
-#include <QApplication>
 #include <QPlainTextEdit>
 
-StyleEditorPage::StyleEditorPage(QWidget *parent) : QWidget(parent)
+MarkdownCssEditorPage::MarkdownCssEditorPage(QWidget *parent) : QWidget(parent)
 {
-    setWindowTitle("Application QSS Editor");
+    setWindowTitle("Markdown CSS Editor");
     setWindowIcon(QIcon(":/icon/main"));
 
     auto editor = new QPlainTextEdit;
     editor->setProperty("role", "memo_editor");
     editor->setObjectName("code_editor");
-    editor->setPlainText(qApp->styleSheet());
+    editor->setPlainText(AppSettings::instance().markdownCss());
 
-    auto titleEditor = PageWidgets::makeTitleEditor("Application QSS Editor");
+    auto titleEditor = PageWidgets::makeTitleEditor("Markdown CSS Editor");
 
     auto toolbar = new QToolBar;
     toolbar->addAction(QIcon(":/toolbar/memo_save"), "Apply", [editor](){
-        qApp->setStyleSheet(editor->toPlainText());
+        AppSettings::instance().updateMarkdownCss(editor->toPlainText());
     });
     toolbar->addSeparator();
     toolbar->addAction(QIcon(":/toolbar/memo_close"), "Close", [this](){

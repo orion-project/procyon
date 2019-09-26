@@ -25,10 +25,6 @@ TextMemoEditor::TextMemoEditor(MemoItem* memoItem, QWidget *parent) : MemoEditor
 void TextMemoEditor::setEditor(QTextEdit* editor)
 {
     _editor = editor;
-    _editor->setAcceptRichText(false);
-    _editor->setWordWrapMode(QTextOption::NoWrap);
-    _editor->setProperty("role", "memo_editor");
-
     connect(_editor, &QTextEdit::undoAvailable, this, &MemoEditor::onModified);
 }
 

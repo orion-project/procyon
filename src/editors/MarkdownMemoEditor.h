@@ -7,6 +7,7 @@
 QT_BEGIN_NAMESPACE
 class QStackedLayout;
 class QSyntaxHighlighter;
+class QTextBrowser;
 QT_END_NAMESPACE
 
 class MarkdownMemoEditor : public TextMemoEditor, public AppSettingsListener
@@ -15,7 +16,7 @@ class MarkdownMemoEditor : public TextMemoEditor, public AppSettingsListener
 
 public:
     explicit MarkdownMemoEditor(MemoItem* memoItem, QWidget *parent = nullptr);
-    ~MarkdownMemoEditor();
+    ~MarkdownMemoEditor() override;
 
     void showMemo() override;
     void setFocus() override;
@@ -32,7 +33,7 @@ public:
     void optionChanged(AppSettingsOption option) override;
 
 private:
-    QTextEdit* _view;
+    QTextBrowser* _view;
     QStackedLayout* _tabs;
 };
 

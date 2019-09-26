@@ -12,6 +12,9 @@
 
 MemoTextEdit::MemoTextEdit(QWidget* parent) : QTextEdit(parent)
 {
+    setAcceptRichText(false);
+    setWordWrapMode(QTextOption::NoWrap);
+    setProperty("role", "memo_editor");
 }
 
 // Hyperlink made via syntax highlighter doesn't create some 'top level' anchor,

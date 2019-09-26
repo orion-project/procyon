@@ -56,6 +56,7 @@ SOURCES += src/main.cpp\
     src/catalog/SqlHelper.cpp \
     src/editors/MarkdownMemoEditor.cpp \
     src/editors/MemoEditor.cpp \
+    src/editors/MemoTextBrowser.cpp \
     src/editors/MemoTextEdit.cpp \
     src/editors/PlainTextMemoEditor.cpp \
     src/editors/ori_html.c \
@@ -87,6 +88,7 @@ HEADERS  += src/MainWindow.h \
     src/catalog/SqlHelper.h \
     src/editors/MarkdownMemoEditor.h \
     src/editors/MemoEditor.h \
+    src/editors/MemoTextBrowser.h \
     src/editors/MemoTextEdit.h \
     src/editors/PlainTextMemoEditor.h \
     src/editors/ori_html.h \

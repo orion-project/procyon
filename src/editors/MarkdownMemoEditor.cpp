@@ -1,5 +1,6 @@
 #include "MarkdownMemoEditor.h"
 
+#include "MemoTextBrowser.h"
 #include "MemoTextEdit.h"
 #include "ori_html.h"
 #include "../AppSettings.h"
@@ -8,7 +9,6 @@
 #include "helpers/OriLayouts.h"
 
 #include <QStackedLayout>
-#include <QTextEdit>
 
 static QString markdownToHtml(const QString& markdown)
 {
@@ -35,10 +35,7 @@ static QString markdownToHtml(const QString& markdown)
 
 MarkdownMemoEditor::MarkdownMemoEditor(MemoItem* memoItem, QWidget *parent) : TextMemoEditor(memoItem, parent)
 {
-    _view = new QTextEdit;
-    _view->setReadOnly(true);
-    _view->setWordWrapMode(QTextOption::NoWrap);
-    _view->setProperty("role", "memo_editor");
+    _view = new MemoTextBrowser;
     _view->document()->setDefaultStyleSheet(AppSettings::instance().markdownCss());
     _view->document()->setDocumentMargin(10);
 

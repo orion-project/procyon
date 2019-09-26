@@ -11,6 +11,7 @@
 #include <QStyleFactory>
 #include <QCommandLineParser>
 #include <QMessageBox>
+#include <QRegularExpression>
 
 QString loadStyleSheet(QSettings* s)
 {
@@ -21,6 +22,24 @@ QString loadStyleSheet(QSettings* s)
     // General window color, it can be set slightly different than the default, for example,
     // to make it better match the window borders color depending on the desktop theme.
     styleSheet.replace("$base-color", s->value("baseColor", "#dadbde").toString());
+
+    auto options = QRegularExpression::CaseInsensitiveOption | QRegularExpression::MultilineOption;
+    QRegularExpression propWin(QStringLiteral("^\\s*windows:(.*)$"), options);
+    QRegularExpression propLinux(QStringLiteral("^\\s*linux:(.*)$"), options);
+    QRegularExpression propMacos(QStringLiteral("^\\s*macos:(.*)$"), options);
+#if defined(Q_OS_WIN)
+    styleSheet.replace(propWin, QStringLiteral("\\1"));
+    styleSheet.remove(propLinux);
+    styleSheet.remove(propMacos);
+#elif defined(Q_OS_UNIX)
+    styleSheet.replace(propLinux, QStringLiteral("\\1"));
+    styleSheet.remove(propWin);
+    styleSheet.remove(propMacos);
+#elif defined(Q_OS_MAC)
+    styleSheet.replace(propMacos, QStringLiteral("\\1"));
+    styleSheet.remove(propWin);
+    styleSheet.remove(propLinux);
+#endif
 
     return styleSheet;
 }

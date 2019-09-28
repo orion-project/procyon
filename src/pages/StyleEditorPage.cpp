@@ -16,7 +16,7 @@ StyleEditorPage::StyleEditorPage(QWidget *parent) : QWidget(parent)
     editor->setObjectName("code_editor");
     editor->setPlainText(qApp->styleSheet());
 
-    auto titleEditor = PageWidgets::makeTitleEditor("Application QSS Editor");
+    auto titleEditor = PageWidgets::makeTitleEditor(windowTitle());
 
     auto toolbar = new QToolBar;
     toolbar->addAction(QIcon(":/toolbar/memo_save"), "Apply", [editor](){

@@ -173,6 +173,13 @@ void MainWindow::createMenu()
     }
 
     m = menuBar()->addMenu(tr("Help"));
+    m->addAction(tr("Show Help"), [this]{
+        activateOrOpenNewPage<HelpPage>(_pagesView, _openedPagesView);
+    });
+    m->addSeparator();
+    m->addAction(tr("Visit Homepage"), []{ HelpPage::visitHomePage(); });
+    m->addAction(tr("Send Bug Report"), []{ HelpPage::sendBugReport(); });
+    m->addSeparator();
     m->addAction(tr("About %1...").arg(qApp->applicationName()), []{ HelpPage::showAbout(); });
 }
 

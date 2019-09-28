@@ -6,7 +6,7 @@
 MemoTextBrowser::MemoTextBrowser(QWidget *parent) : QTextBrowser(parent)
 {
     setOpenExternalLinks(true);
-    setWordWrapMode(QTextOption::NoWrap);
+    setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
     setProperty("role", "memo_editor");
 }
 

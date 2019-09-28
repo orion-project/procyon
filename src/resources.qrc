@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/icon">
+        <file alias="help">../img/icon/help.svg</file>
         <file alias="main">../img/icon/main.svg</file>
         <file alias="folder_opend">../img/icon/folder_opened.svg</file>
         <file alias="folder_closed">../img/icon/folder_closed.svg</file>
@@ -17,8 +18,11 @@
     </qresource>
     <qresource prefix="/style">
         <file alias="app_main">app.qss</file>
-        <file alias="markdown">markdown.css</file>
         <file alias="background">../img/background.png</file>
         <file alias="about">../img/about.png</file>
+    </qresource>
+    <qresource prefix="/docs">
+        <file alias="help">help.md</file>
+        <file alias="markdown_css">markdown.css</file>
     </qresource>
 </RCC>

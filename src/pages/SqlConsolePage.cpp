@@ -84,7 +84,7 @@ SqlConsolePage::SqlConsolePage(QWidget *parent) : QWidget(parent)
     splitter->setStretchFactor(0, 1);
     splitter->setStretchFactor(1, 9);
 
-    auto titleEditor = PageWidgets::makeTitleEditor(tr("SQL Console"));
+    auto titleEditor = PageWidgets::makeTitleEditor(windowTitle());
 
     auto toolbar = new QToolBar;
     auto actionRun = toolbar->addAction(QIcon(":/toolbar/memo_save"), tr("Execute"), [editor, result](){

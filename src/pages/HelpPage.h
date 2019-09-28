@@ -1,5 +1,5 @@
-#ifndef HELPPAGE_H
-#define HELPPAGE_H
+#ifndef HELP_PAGE_H
+#define HELP_PAGE_H
 
 #include <QWidget>
 
@@ -11,6 +11,8 @@ public:
     explicit HelpPage(QWidget *parent = nullptr);
 
     static void showAbout();
+    static void visitHomePage();
+    static void sendBugReport();
 };
 
-#endif // HELPPAGE_H
+#endif // HELP_PAGE_H

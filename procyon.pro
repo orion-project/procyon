@@ -54,6 +54,7 @@ SOURCES += src/main.cpp\
     src/catalog/MemoManager.cpp \
     src/catalog/SettingsManager.cpp \
     src/catalog/SqlHelper.cpp \
+    src/editors/MarkdownHelper.cpp \
     src/editors/MarkdownMemoEditor.cpp \
     src/editors/MemoEditor.cpp \
     src/editors/MemoTextBrowser.cpp \
@@ -86,6 +87,7 @@ HEADERS  += src/MainWindow.h \
     src/catalog/MemoManager.h \
     src/catalog/SettingsManager.h \
     src/catalog/SqlHelper.h \
+    src/editors/MarkdownHelper.h \
     src/editors/MarkdownMemoEditor.h \
     src/editors/MemoEditor.h \
     src/editors/MemoTextBrowser.h \

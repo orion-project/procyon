@@ -1,5 +1,13 @@
 #include "HelpPage.h"
 
+#include "PageWidgets.h"
+#include "../Utils.h"
+#include "../editors/MarkdownHelper.h"
+#include "../editors/MemoTextBrowser.h"
+
+#include "helpers/OriLayouts.h"
+#include "widgets/OriLabels.h"
+
 #include <QApplication>
 #include <QDesktopServices>
 #include <QMessageBox>
@@ -8,14 +16,26 @@
 #include <QLabel>
 #include <QUrl>
 
-#include "helpers/OriLayouts.h"
-#include "widgets/OriLabels.h"
-
 using namespace Ori::Layouts;
 
 HelpPage::HelpPage(QWidget *parent) : QWidget(parent)
 {
+    setWindowTitle(tr("Reference Manual"));
+    setWindowIcon(QIcon(":/icon/help"));
 
+    auto browser = new MemoTextBrowser;
+    browser->document()->setDefaultStyleSheet(loadTextFromResource(":/docs/markdown_css"));
+    browser->document()->setDocumentMargin(10);
+    browser->setHtml(MarkdownHelper::markdownToHtml(loadTextFromResource(":/docs/help")));
+
+    auto titleEditor = PageWidgets::makeTitleEditor(windowTitle());
+
+    auto toolbar = new QToolBar;
+    toolbar->addAction(QIcon(":/toolbar/memo_close"), tr("Close"), [this]{ deleteLater(); });
+
+    auto toolPanel = PageWidgets::makeHeaderPanel({titleEditor, toolbar});
+
+    Ori::Layouts::LayoutV({toolPanel, browser}).setMargin(0).setSpacing(0).useFor(this);
 }
 
 void HelpPage::showAbout()
@@ -81,4 +101,14 @@ void HelpPage::showAbout()
     }).setMargin(12).setSpacing(0).useFor(w);
 
     w->exec();
+}
+
+void HelpPage::visitHomePage()
+{
+    QDesktopServices::openUrl(QUrl("https://github.com/orion-project/procyon"));
+}
+
+void HelpPage::sendBugReport()
+{
+    QDesktopServices::openUrl(QUrl("https://github.com/orion-project/procyon/issues/new"));
 }

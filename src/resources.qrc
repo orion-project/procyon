@@ -5,6 +5,7 @@
         <file alias="folder_closed">../img/icon/folder_closed.svg</file>
         <file alias="memo_plain_text">../img/icon/memo_plain_text.svg</file>
         <file alias="memo_markdown">../img/icon/memo_markdown.svg</file>
+        <file alias="memo_rich_text">../img/icon/memo_rich_text.svg</file>
         <file alias="is_modified">../img/icon/is_modified.svg</file>
         <file alias="edit_mode">../img/icon/edit_mode.svg</file>
     </qresource>

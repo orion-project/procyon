@@ -231,7 +231,7 @@ QString Catalog::removeFolder(FolderItem* item)
     return QString();
 }
 
-MemoResult Catalog::createMemo(FolderItem* parent, MemoItem* item)
+MemoResult Catalog::createMemo(FolderItem* parent, MemoItem* item, MemoType* memoType)
 {
     auto now = QDateTime::currentDateTime();
 
@@ -239,7 +239,7 @@ MemoResult Catalog::createMemo(FolderItem* parent, MemoItem* item)
     item->_created = now;
     item->_updated = now;
     item->_station = _station;
-    item->_type = plainTextMemoType();
+    item->_type = memoType;
 
     auto res = CatalogStore::memoManager()->create(item);
     if (!res.isEmpty())

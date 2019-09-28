@@ -139,7 +139,7 @@ void MainWindow::createMenu()
     _actionDeleteFolder = m->addAction(tr("Delete Folder"), [this](){ _catalogView->deleteFolder(); });
     m->addSeparator();
     _actionOpenMemo = m->addAction(tr("Open memo"), this, &MainWindow::openMemo);
-    _actionCreateMemo = m->addAction(tr("New memo"), [this](){ _catalogView->createMemo(); });
+    _actionCreateMemo = m->addAction(tr("New memo..."), [this](){ _catalogView->createMemo(); });
     _actionDeleteMemo = m->addAction(tr("Delete memo"), [this](){ _catalogView->deleteMemo(); });
 
     m = menuBar()->addMenu(tr("Options"));

@@ -105,4 +105,5 @@ HEADERS  += src/MainWindow.h \
     src/TextEditSpellcheck.h
 
 DISTFILES += \
-    src/app.qss
+    src/app.qss \
+    src/markdown.css

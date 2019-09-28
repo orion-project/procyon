@@ -1,9 +1,12 @@
 #include "CatalogWidget.h"
+
 #include "CatalogModel.h"
 #include "catalog/Catalog.h"
 #include "helpers/OriLayouts.h"
 #include "helpers/OriDialogs.h"
+#include "widgets/OriSelectableTile.h"
 
+#include <QApplication>
 #include <QFrame>
 #include <QLabel>
 #include <QMenu>
@@ -56,12 +59,12 @@ CatalogWidget::CatalogWidget() : QWidget()
 {
     _rootMenu = new QMenu(this);
     _rootMenu->addAction(tr("New Folder..."), this, &CatalogWidget::createFolder);
-    _rootMenu->addAction(tr("New Memo"), this, &CatalogWidget::createMemo);
+    _rootMenu->addAction(tr("New Memo..."), this, &CatalogWidget::createMemo);
 
     _folderMenu = new QMenu(this);
     _folderMenu->addAction(makeMenuHeader(this, _folderMenuIcon, _folderMenuHeader));
     _folderMenu->addAction(tr("New Subfolder..."), this, &CatalogWidget::createFolder);
-    _folderMenu->addAction(tr("New Memo"), this, &CatalogWidget::createMemo);
+    _folderMenu->addAction(tr("New Memo..."), this, &CatalogWidget::createMemo);
     _folderMenu->addSeparator();
     _folderMenu->addAction(tr("Rename..."), this, &CatalogWidget::renameFolder);
     _folderMenu->addAction(tr("Delete"), this, &CatalogWidget::deleteFolder);
@@ -125,7 +128,7 @@ void CatalogWidget::contextMenuRequested(const QPoint &pos)
     else if (selected.memo)
     {
         _memoMenuHeader->setText(selected.item->title());
-        _memoMenuIcon->setPixmap(_catalogModel->memoIcon().pixmap(16, 16));
+        _memoMenuIcon->setPixmap(selected.memo->type()->icon().pixmap(16, 16));
         _memoMenu->popup(_catalogView->mapToGlobal(pos));
     }
 }
@@ -210,12 +213,47 @@ void CatalogWidget::deleteFolder()
     _catalogView->setCurrentIndex(guard.parentIndex);
 }
 
+static MemoType* selectMemoTypeDlg()
+{
+    Ori::Widgets::SelectableTileRadioGroup tripTypeGroup;
+
+    auto tripTypeLayout = new QHBoxLayout();
+    tripTypeLayout->setMargin(0);
+    tripTypeLayout->setSpacing(12);
+    for (auto memoType : QVector<MemoType*>({plainTextMemoType(), markdownMemoType()}))
+    {
+        auto tile = new Ori::Widgets::SelectableTile;
+        tile->setPixmap(memoType->icon().pixmap(48, 48));
+        tile->setTitle(memoType->title());
+        tile->setData(QVariant::fromValue(reinterpret_cast<void*>(memoType)));
+        tile->setTitleStyleSheet("font-size:15px;margin:0 15px 0 15px;");
+        tile->selectionFollowsFocus = true;
+        tripTypeLayout->addWidget(tile);
+        tripTypeGroup.addTile(tile);
+    }
+
+    QWidget content;
+    Ori::Layouts::LayoutV({tripTypeLayout}).setMargin(0).setSpacing(12).useFor(&content);
+
+    auto dlg = Ori::Dlg::Dialog(&content)
+            .withTitle(qApp->tr("Choose Memo Type"))
+            .withContentToButtonsSpacingFactor(3)
+            .withOkSignal(&tripTypeGroup, SIGNAL(doubleClicked(QVariant)));
+    if (dlg.exec())
+        return reinterpret_cast<MemoType*>(tripTypeGroup.selectedData().value<void*>());
+    return nullptr;
+}
+
+
 void CatalogWidget::createMemo()
 {
+    auto memoType = selectMemoTypeDlg();
+    if (!memoType) return;
+
     CatalogSelection parentFolder(_catalogView);
 
     auto memoItem = new MemoItem;
-    auto res = _catalog->createMemo(parentFolder.folder, memoItem);
+    auto res = _catalog->createMemo(parentFolder.folder, memoItem, memoType);
     if (!res.ok())
     {
         delete memoItem;

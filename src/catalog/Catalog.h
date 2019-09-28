@@ -36,7 +36,7 @@ class MarkdownMemoType : public MemoType
 {
 public:
     const QString name() const override { return QStringLiteral("markdown"); }
-    const char* title() const override { return QT_TRANSLATE_NOOP("MemoType", "Wiki Text"); }
+    const char* title() const override { return QT_TRANSLATE_NOOP("MemoType", "Markdown"); }
     const QIcon& icon() const override { static QIcon icon(iconPath()); return icon; }
     const QString iconPath() const override { return QStringLiteral(":/icon/memo_markdown"); }
 };
@@ -185,7 +185,7 @@ public:
     QString renameFolder(FolderItem* item, const QString& title);
     FolderResult createFolder(FolderItem* parent, const QString& title);
     QString removeFolder(FolderItem* item);
-    MemoResult createMemo(FolderItem* parent, MemoItem* item);
+    MemoResult createMemo(FolderItem* parent, MemoItem* item, MemoType *memoType);
     QString updateMemo(MemoItem* item, MemoUpdateParam update);
     QString removeMemo(MemoItem* item);
     QString loadMemo(MemoItem* item);

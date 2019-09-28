@@ -6,6 +6,7 @@
 #include "Spellchecker.h"
 #include "catalog/Catalog.h"
 #include "catalog/CatalogStore.h"
+#include "highlighter/HighlighterControl.h"
 #include "pages/HelpPage.h"
 #include "pages/MarkdownCssEditorPage.h"
 #include "pages/MemoPage.h"
@@ -84,6 +85,7 @@ MainWindow::MainWindow() : QMainWindow()
     connect(_mruList, &Ori::MruFileList::clicked, this, &MainWindow::openCatalog);
 
     _pagesView = new QStackedWidget;
+    connect(_pagesView, &QStackedWidget::currentChanged, this, &MainWindow::currentPageChanged);
 
     _openedPagesView = new OpenedPagesWidget;
     connect(_openedPagesView, &OpenedPagesWidget::onActivatePage, _pagesView, &QStackedWidget::setCurrentWidget);
@@ -107,6 +109,9 @@ MainWindow::MainWindow() : QMainWindow()
 
     _spellcheckControl = new SpellcheckControl(this);
     connect(_spellcheckControl, &SpellcheckControl::langSelected, this, &MainWindow::setMemoSpellcheckLang);
+
+    _highlighterControl = new HighlighterControl(this);
+    connect(_highlighterControl, &HighlighterControl::selected, this, &MainWindow::setMemoHighlighter);
 
     createMenu();
     createStatusBar();
@@ -150,6 +155,13 @@ void MainWindow::createMenu()
     {
         connect(_spellcheckMenu, &QMenu::aboutToShow, this, &MainWindow::spellcheckMenuAboutToShow);
         m->addMenu(_spellcheckMenu);
+    }
+
+    _highlighterMenu = _highlighterControl->makeMenu(this);
+    if (_highlighterMenu)
+    {
+        connect(_highlighterMenu, &QMenu::aboutToShow, this, &MainWindow::highlighterMenuAboutToShow);
+        m->addMenu(_highlighterMenu);
     }
 
     m->addAction(tr("Choose Memo Font..."), this, &MainWindow::chooseMemoFont);
@@ -518,8 +530,38 @@ void MainWindow::spellcheckMenuAboutToShow()
         _spellcheckControl->showCurrentLang(memoPage->spellcheckLang());
 }
 
+void MainWindow::highlighterMenuAboutToShow()
+{
+    qDebug() << "show current highlighter";
+    //auto memoPage = currentMemoPage();
+    //if (memoPage) TODO
+}
+
 void MainWindow::setMemoSpellcheckLang(const QString& lang)
 {
     auto memoPage = currentMemoPage();
     if (memoPage) memoPage->setSpellcheckLang(lang);
+}
+
+void MainWindow::setMemoHighlighter(const QString& name)
+{
+    qDebug() << "highlighter selected" << name;
+    //auto memoPage = currentMemoPage();
+    //if (memoPage) TODO
+}
+
+void MainWindow::currentPageChanged(int)
+{
+    auto memoPage = currentMemoPage();
+    if (memoPage)
+    {
+        // TODO if plain text then enable highlighter menu
+        _highlighterControl->setEnabled(true);
+        _highlighterMenu->setEnabled(true);
+    }
+    else
+    {
+        _highlighterControl->setEnabled(false);
+        _highlighterMenu->setEnabled(false);
+    }
 }

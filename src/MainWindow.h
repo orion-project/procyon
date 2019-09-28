@@ -15,6 +15,7 @@ class Catalog;
 class CatalogWidget;
 class OpenedPagesWidget;
 class SpellcheckControl;
+class HighlighterControl;
 class InfoWidget;
 class MemoPage;
 class MemoItem;
@@ -50,7 +51,8 @@ private:
     QAction *_actionOpenMemo, *_actionCreateMemo, *_actionDeleteMemo;
     QString _lastOpenedCatalog;
     SpellcheckControl* _spellcheckControl;
-    QMenu* _spellcheckMenu;
+    HighlighterControl* _highlighterControl;
+    QMenu *_spellcheckMenu, *_highlighterMenu;
 
     void createMenu();
     void createStatusBar();
@@ -74,7 +76,10 @@ private:
     MemoPage* currentMemoPage() const;
     void optionsMenuAboutToShow();
     void spellcheckMenuAboutToShow();
+    void highlighterMenuAboutToShow();
     void setMemoSpellcheckLang(const QString& lang);
+    void setMemoHighlighter(const QString& name);
+    void currentPageChanged(int);
 };
 
 #endif // MAIN_WINDOW_H

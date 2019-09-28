@@ -61,6 +61,8 @@ SOURCES += src/main.cpp\
     src/editors/MemoTextEdit.cpp \
     src/editors/PlainTextMemoEditor.cpp \
     src/editors/ori_html.c \
+    src/highlighter/HighlighterControl.cpp \
+    src/highlighter/HighlighterManager.cpp \
     src/highlighter/HighlightingRule.cpp \
     src/highlighter/PythonSyntaxHighlighter.cpp \
     src/highlighter/ShellMemoSyntaxHighlighter.cpp \
@@ -94,6 +96,8 @@ HEADERS  += src/MainWindow.h \
     src/editors/MemoTextEdit.h \
     src/editors/PlainTextMemoEditor.h \
     src/editors/ori_html.h \
+    src/highlighter/HighlighterControl.h \
+    src/highlighter/HighlighterManager.h \
     src/highlighter/HighlightingRule.h \
     src/highlighter/PythonSyntaxHighlighter.h \
     src/highlighter/ShellMemoSyntaxHighlighter.h \

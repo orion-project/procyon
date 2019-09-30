@@ -1,8 +1,8 @@
 #include "MemoEditor.h"
 
 #include "../catalog/Catalog.h"
-#include "../TextEditSpellcheck.h"
-#include "../Spellchecker.h"
+#include "../spellcheck/TextEditSpellcheck.h"
+#include "../spellcheck/Spellchecker.h"
 
 #include <QTextEdit>
 

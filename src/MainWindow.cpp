@@ -3,7 +3,6 @@
 #include "AppSettings.h"
 #include "CatalogWidget.h"
 #include "OpenedPagesWidget.h"
-#include "Spellchecker.h"
 #include "catalog/Catalog.h"
 #include "catalog/CatalogStore.h"
 #include "highlighter/HighlighterControl.h"
@@ -12,6 +11,7 @@
 #include "pages/MemoPage.h"
 #include "pages/StyleEditorPage.h"
 #include "pages/SqlConsolePage.h"
+#include "spellcheck/Spellchecker.h"
 
 #include "helpers/OriDialogs.h"
 #include "helpers/OriLayouts.h"

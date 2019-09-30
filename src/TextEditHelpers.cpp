@@ -1,7 +1,5 @@
 #include "TextEditHelpers.h"
 
-#include "Spellchecker.h"
-
 #include <QTextBlock>
 
 //------------------------------------------------------------------------------

@@ -42,10 +42,10 @@ macx: ICON = img/icon/main.icns
 
 SOURCES += src/main.cpp\
     src/AppSettings.cpp \
-    src/LangCodeAndNames.cpp \
+    src/spellcheck/LangCodeAndNames.cpp \
     src/MainWindow.cpp \
     src/CatalogWidget.cpp \
-    src/Spellchecker.cpp \
+    src/spellcheck/Spellchecker.cpp \
     src/TextEditHelpers.cpp \
     src/Utils.cpp \
     src/catalog/Catalog.cpp \
@@ -74,13 +74,13 @@ SOURCES += src/main.cpp\
     src/pages/PageWidgets.cpp \
     src/pages/SqlConsolePage.cpp \
     src/pages/StyleEditorPage.cpp \
-    src/TextEditSpellcheck.cpp
+    src/spellcheck/TextEditSpellcheck.cpp
 
 HEADERS  += src/MainWindow.h \
     src/AppSettings.h \
     src/CatalogWidget.h \
     src/CatalogModel.h \
-    src/Spellchecker.h \
+    src/spellcheck/Spellchecker.h \
     src/TextEditHelpers.h \
     src/Utils.h \
     src/catalog/Catalog.h \
@@ -108,7 +108,7 @@ HEADERS  += src/MainWindow.h \
     src/pages/PageWidgets.h \
     src/pages/SqlConsolePage.h \
     src/pages/StyleEditorPage.h \
-    src/TextEditSpellcheck.h
+    src/spellcheck/TextEditSpellcheck.h
 
 DISTFILES += \
     src/app.qss \

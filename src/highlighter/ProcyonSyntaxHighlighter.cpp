@@ -1,4 +1,4 @@
-#include "ShellMemoSyntaxHighlighter.h"
+#include "ProcyonSyntaxHighlighter.h"
 
 #include "../TextEditHelpers.h"
 
@@ -75,13 +75,13 @@ static QList<HighlightingRule1>* getRules()
     return &rules;
 }
 
-ShellMemoSyntaxHighlighter::ShellMemoSyntaxHighlighter(QTextDocument *parent) : QSyntaxHighlighter(parent)
+ProcyonSyntaxHighlighter::ProcyonSyntaxHighlighter(QTextDocument *parent) : QSyntaxHighlighter(parent)
 {
     rules = getRules();
     _parentDocument = parent;
 }
 
-void ShellMemoSyntaxHighlighter::highlightBlock(const QString &text)
+void ProcyonSyntaxHighlighter::highlightBlock(const QString &text)
 {
     for (const HighlightingRule1& rule : *rules)
     {

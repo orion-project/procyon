@@ -16,10 +16,11 @@ public:
 
     void showMemo() override;
 
+    QString highlighterName() const;
+    void setHighlighterName(const QString& name);
+
 private:
     QSyntaxHighlighter* _highlighter = nullptr;
-
-    void applyHighlighter();
 };
 
 #endif // PLAIN_TEXT_MEMO_EDITOR_H

@@ -31,6 +31,9 @@ public:
     void setSpellcheckLang(const QString& lang);
     QString spellcheckLang() const;
 
+    void setHighlighter(const QString& name);
+    QString highlighter() const;
+
     void beginEdit();
     bool saveEdit();
     bool isModified() const;

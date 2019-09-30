@@ -64,8 +64,8 @@ SOURCES += src/main.cpp\
     src/highlighter/HighlighterControl.cpp \
     src/highlighter/HighlighterManager.cpp \
     src/highlighter/HighlightingRule.cpp \
+    src/highlighter/ProcyonSyntaxHighlighter.cpp \
     src/highlighter/PythonSyntaxHighlighter.cpp \
-    src/highlighter/ShellMemoSyntaxHighlighter.cpp \
     src/CatalogModel.cpp \
     src/OpenedPagesWidget.cpp \
     src/pages/HelpPage.cpp \
@@ -99,8 +99,8 @@ HEADERS  += src/MainWindow.h \
     src/highlighter/HighlighterControl.h \
     src/highlighter/HighlighterManager.h \
     src/highlighter/HighlightingRule.h \
+    src/highlighter/ProcyonSyntaxHighlighter.h \
     src/highlighter/PythonSyntaxHighlighter.h \
-    src/highlighter/ShellMemoSyntaxHighlighter.h \
     src/OpenedPagesWidget.h \
     src/pages/HelpPage.h \
     src/pages/MarkdownCssEditorPage.h \

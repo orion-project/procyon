@@ -532,9 +532,11 @@ void MainWindow::spellcheckMenuAboutToShow()
 
 void MainWindow::highlighterMenuAboutToShow()
 {
-    qDebug() << "show current highlighter";
-    //auto memoPage = currentMemoPage();
-    //if (memoPage) TODO
+    QString currentHighlighter;
+    auto memoPage = currentMemoPage();
+    if (memoPage)
+        currentHighlighter = memoPage->highlighter();
+    _highlighterControl->showCurrent(currentHighlighter);
 }
 
 void MainWindow::setMemoSpellcheckLang(const QString& lang)
@@ -545,9 +547,8 @@ void MainWindow::setMemoSpellcheckLang(const QString& lang)
 
 void MainWindow::setMemoHighlighter(const QString& name)
 {
-    qDebug() << "highlighter selected" << name;
-    //auto memoPage = currentMemoPage();
-    //if (memoPage) TODO
+    auto memoPage = currentMemoPage();
+    if (memoPage) memoPage->setHighlighter(name);
 }
 
 void MainWindow::currentPageChanged(int)

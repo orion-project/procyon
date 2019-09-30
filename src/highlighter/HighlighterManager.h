@@ -3,6 +3,11 @@
 
 #include "core/OriTemplates.h"
 
+QT_BEGIN_NAMESPACE
+class QSyntaxHighlighter;
+class QTextDocument;
+QT_END_NAMESPACE
+
 struct HighlighterInfo
 {
     QString name;
@@ -12,7 +17,9 @@ struct HighlighterInfo
 class HighlighterManager : public Singleton<HighlighterManager>
 {
 public:
-    const QVector<HighlighterInfo>& highlighters() const;
+    QVector<HighlighterInfo> highlighters() const;
+
+    QSyntaxHighlighter* makeHighlighter(const QString& name, QTextDocument* doc);
 
 private:
     HighlighterManager() {}

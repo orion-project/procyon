@@ -188,6 +188,18 @@ QString MemoPage::spellcheckLang() const
     return _memoEditor->spellcheckLang();
 }
 
+void MemoPage::setHighlighter(const QString& name)
+{
+    auto editor = dynamic_cast<PlainTextMemoEditor*>(_memoEditor);
+    if (editor) editor->setHighlighterName(name);
+}
+
+QString MemoPage::highlighter() const
+{
+    auto editor = dynamic_cast<PlainTextMemoEditor*>(_memoEditor);
+    return editor ? editor->highlighterName() : QString();
+}
+
 void MemoPage::togglePreviewMode()
 {
     auto editor = qobject_cast<MarkdownMemoEditor*>(_memoEditor);

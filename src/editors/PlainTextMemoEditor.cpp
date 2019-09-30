@@ -2,12 +2,12 @@
 
 #include "MemoTextEdit.h"
 #include "../catalog/Catalog.h"
-#include "../highlighter/PythonSyntaxHighlighter.h"
-#include "../highlighter/ShellMemoSyntaxHighlighter.h"
+#include "../highlighter/HighlighterManager.h"
 
 #include "helpers/OriLayouts.h"
 
 #include <QStyle>
+#include <QSyntaxHighlighter>
 #include <QTimer>
 
 PlainTextMemoEditor::PlainTextMemoEditor(MemoItem *memoItem, QWidget *parent) : TextMemoEditor(memoItem, parent)
@@ -29,24 +29,21 @@ void PlainTextMemoEditor::showMemo()
     _editor->document()->setModified(false);
 }
 
-void PlainTextMemoEditor::applyHighlighter()
+QString PlainTextMemoEditor::highlighterName() const
 {
+    return _highlighter ? _highlighter->objectName() : QString();
+}
+
+void PlainTextMemoEditor::setHighlighterName(const QString& name)
+{
+    if (!_highlighter && name.isEmpty()) return;
+    if (_highlighter && _highlighter->objectName() == name) return;
+
     _editor->setUndoRedoEnabled(false);
 
-    // TODO preserve highlighter if its type is not changed
-    if (_highlighter)
-    {
-        delete _highlighter;
-        _highlighter = nullptr;
-    }
+    if (_highlighter) delete _highlighter;
 
-    auto text = _memoItem->data();
-
-    // TODO highlighter should be selected by user and saved into catalog
-    if (text.startsWith("#!/usr/bin/env python"))
-        _highlighter = new PythonSyntaxHighlighter(_editor->document());
-    else if (text.startsWith("#shell-memo"))
-        _highlighter = new ShellMemoSyntaxHighlighter(_editor->document());
+    _highlighter = HighlighterManager::instance().makeHighlighter(name, _editor->document());
 
     _editor->setUndoRedoEnabled(true);
 }

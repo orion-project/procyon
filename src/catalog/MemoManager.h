@@ -3,6 +3,7 @@
 
 #include <QString>
 #include <QMap>
+#include <QVariant>
 
 class MemoItem;
 struct MemoUpdateParam;
@@ -30,6 +31,8 @@ public:
     QString load(MemoItem *memo) const;
     MemosResult selectAll() const;
     QString countAll(int* count) const;
+    QMap<QString, QVariant> selectOptions(int memoId) const;
+    QString updateOption(int memoId, const QString& name, const QVariant& value) const;
 };
 
 #endif // MEMO_MANAGER_H

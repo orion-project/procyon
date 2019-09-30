@@ -50,7 +50,31 @@ public:
     const QString sqlDelete = "DELETE FROM Memo WHERE Id = :Id";
 };
 
+class MemoOptionsTableDef : public Ori::Sql::TableDef
+{
+public:
+    MemoOptionsTableDef() : Ori::Sql::TableDef("MemoOptions") {}
+
+    const QString memoId = "MemoId";
+    const QString name = "Name";
+    const QString value = "Value";
+
+    QString sqlCreate() const override {
+        return "CREATE TABLE IF NOT EXISTS MemoOptions ("
+               "MemoId REFERENCES Memo(Id) ON DELETE CASCADE, "
+               "Name, Value)";
+    }
+
+    const QString sqlSelect(int memoId) const {
+        return QString("SELECT Name, Value from MemoOptions WHERE MemoId = %1").arg(memoId);
+    }
+
+    const QString sqlUpdate =
+        "REPLACE INTO MemoOptions (MemoId, Name, Value) VALUES (:MemoId, :Name, :Value)";
+};
+
 MemoTableDef* memoTable() { static MemoTableDef t; return &t; }
+MemoOptionsTableDef* memoOptionsTable() { static MemoOptionsTableDef t; return &t; }
 
 } // namespace
 
@@ -60,7 +84,10 @@ MemoTableDef* memoTable() { static MemoTableDef t; return &t; }
 
 QString MemoManager::prepare()
 {
-    return createTable(memoTable());
+    QString res = createTable(memoTable());
+    if (!res.isEmpty()) return res;
+
+    return createTable(memoOptionsTable());
 }
 
 QString MemoManager::create(MemoItem* item) const
@@ -171,4 +198,35 @@ QString MemoManager::countAll(int *count) const
     query.next();
     *count = query.record().value(0).toInt();
     return QString();
+}
+
+QMap<QString, QVariant> MemoManager::selectOptions(int memoId) const
+{
+    QMap<QString, QVariant> options;
+    auto table = memoOptionsTable();
+
+    SelectQuery query(table->sqlSelect(memoId));
+    if (query.isFailed())
+    {
+        qWarning() << "Unable to select options for memo" << memoId << query.error();
+        return options;
+    }
+
+    while (query.next())
+    {
+        auto r = query.record();
+        options[r.value(table->name).toString()] = r.value(table->value);
+    }
+
+    return options;
+}
+
+QString MemoManager::updateOption(int memoId, const QString& name, const QVariant& value) const
+{
+    auto table = memoOptionsTable();
+    return ActionQuery(table->sqlUpdate)
+            .param(table->memoId, memoId)
+            .param(table->name, name)
+            .param(table->value, value)
+            .exec();
 }

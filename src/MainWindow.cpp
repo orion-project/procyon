@@ -165,11 +165,10 @@ void MainWindow::createMenu()
     }
 
     m->addAction(tr("Choose Memo Font..."), this, &MainWindow::chooseMemoFont);
-    auto actionWordWrap = m->addAction(tr("Word Wrap"), this, &MainWindow::toggleWordWrap);
-    actionWordWrap->setCheckable(true);
-    connect(m, &QMenu::aboutToShow, [actionWordWrap](){
-        actionWordWrap->setChecked(AppSettings::instance().memoWordWrap);
-    });
+
+    _actionWordWrap = m->addAction(tr("Word Wrap"), this, &MainWindow::toggleWordWrap);
+    _actionWordWrap->setCheckable(true);
+
     if (AppSettings::instance().isDevMode)
     {
         m->addSeparator();
@@ -455,8 +454,7 @@ void MainWindow::openMemoPage(MemoItem* item)
     // page's font can be reset to the parent's one.
     // For example, it happens with markdown editor.
     // So assign font _after_ the page added to the pages view.
-    page->setMemoFont(AppSettings::instance().memoFont);
-    page->setWordWrap(AppSettings::instance().memoWordWrap);
+    page->loadSettings();
 }
 
 MemoPage* MainWindow::findMemoPage(MemoItem* item) const
@@ -479,23 +477,24 @@ MemoPage* MainWindow::currentMemoPage() const
 
 void MainWindow::chooseMemoFont()
 {
+    auto memoPage = currentMemoPage();
+    if (!memoPage) return;
+
     bool ok;
-    QFont font = QFontDialog::getFont(&ok, AppSettings::instance().memoFont,
+    QFont font = QFontDialog::getFont(&ok, memoPage->memoFont(),
         qApp->activeWindow(), tr("Select Memo Font"),
         QFontDialog::ScalableFonts | QFontDialog::NonScalableFonts |
         QFontDialog::MonospacedFonts | QFontDialog::ProportionalFonts);
-    if (!ok) return;
-    AppSettings::instance().memoFont = font;
-    for (auto page : getPages<MemoPage>(_pagesView))
-        page->setMemoFont(font);
+    if (ok)
+        memoPage->setMemoFont(font);
 }
 
 void MainWindow::toggleWordWrap()
 {
-    auto s = AppSettings::instancePtr();
-    s->memoWordWrap = !s->memoWordWrap;
-    for (auto page : getPages<MemoPage>(_pagesView))
-        page->setWordWrap(s->memoWordWrap);
+    auto memoPage = currentMemoPage();
+    if (!memoPage) return;
+
+    memoPage->setWordWrap(!memoPage->wordWrap());
 }
 
 void MainWindow::memoCreated(MemoItem* item)
@@ -521,6 +520,8 @@ void MainWindow::optionsMenuAboutToShow()
     if (!_spellcheckMenu) return;
     auto memoPage = currentMemoPage();
     _spellcheckMenu->setEnabled(memoPage && !memoPage->isReadOnly());
+    _highlighterMenu->setEnabled(memoPage->memoItem()->type() == plainTextMemoType());
+    _actionWordWrap->setChecked(memoPage->wordWrap());
 }
 
 void MainWindow::spellcheckMenuAboutToShow()

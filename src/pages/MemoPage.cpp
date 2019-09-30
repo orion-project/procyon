@@ -4,6 +4,7 @@
 #include "../editors/MarkdownMemoEditor.h"
 #include "../editors/PlainTextMemoEditor.h"
 #include "../catalog/Catalog.h"
+#include "../catalog/CatalogStore.h"
 
 #include "helpers/OriDialogs.h"
 #include "helpers/OriWidgets.h"
@@ -13,9 +14,34 @@
 #include <QMessageBox>
 #include <QToolButton>
 
-namespace  {
+namespace {
 const int PREVIEW_BUTTON_WIDTH = 100;
+
+namespace MemoOptions {
+    const QString font =
+#if defined (Q_OS_WIN)
+        "fontWin"
+#elif defined (Q_OS_LINUX)
+        "fontLinux"
+#elif defined (Q_OS_MAC)
+        "fontMacos"
+#else
+        "font"
+#endif
+    ;
+    const QString wordWrap = "wordWrap";
+    const QString spellcheck = "spellcheck";
+    const QString highlighter = "highlighter";
+};
+
+void updateOption(MemoItem* memo, const QString& name, const QVariant& value)
+{
+    QString res = CatalogStore::memoManager()->updateOption(memo->id(), name, value);
+    if (!res.isEmpty())
+        Ori::Dlg::error(QString("Unable to store memo option in catalog.\n\n%1").arg(res));
 }
+}
+
 
 MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     _catalog(catalog), _memoItem(memoItem)
@@ -163,14 +189,32 @@ void MemoPage::toggleEditMode(bool on)
     _titleEditor->setStyleSheet(QString("QLineEdit { background: %1 }").arg(on ? "white" : "transparent"));
 }
 
+QFont MemoPage::memoFont() const
+{
+    // TODO: get font from memo
+    return AppSettings::instance().memoFont;
+}
+
 void MemoPage::setMemoFont(const QFont& font)
 {
     _memoEditor->setFont(font);
+    // TODO: choose default memo from in different place
+    //AppSettings::instance().memoFont = font;
+    updateOption(_memoItem, MemoOptions::font, font.toString());
+}
+
+bool MemoPage::wordWrap() const
+{
+    // TODO: get option from memo
+    return AppSettings::instance().memoWordWrap;
 }
 
 void MemoPage::setWordWrap(bool wrap)
 {
     _memoEditor->setWordWrap(wrap);
+    // TODO: don't store this flag in settings (?)
+    //AppSettings::instance().memoWordWrap = wrap;
+    updateOption(_memoItem, MemoOptions::wordWrap, wrap);
 }
 
 bool MemoPage::isModified() const
@@ -181,6 +225,7 @@ bool MemoPage::isModified() const
 void MemoPage::setSpellcheckLang(const QString &lang)
 {
     _memoEditor->setSpellcheckLang(lang);
+    updateOption(_memoItem, MemoOptions::spellcheck, lang);
 }
 
 QString MemoPage::spellcheckLang() const
@@ -191,7 +236,11 @@ QString MemoPage::spellcheckLang() const
 void MemoPage::setHighlighter(const QString& name)
 {
     auto editor = dynamic_cast<PlainTextMemoEditor*>(_memoEditor);
-    if (editor) editor->setHighlighterName(name);
+    if (editor)
+    {
+        editor->setHighlighterName(name);
+        updateOption(_memoItem, MemoOptions::highlighter, name);
+    }
 }
 
 QString MemoPage::highlighter() const
@@ -208,4 +257,26 @@ void MemoPage::togglePreviewMode()
     bool isPreview = editor->isPreviewMode();
     _actionPreview->setText(isPreview ? tr("Edit") : tr("Preview"));
     editor->togglePreviewMode(!isPreview);
+}
+
+void MemoPage::loadSettings()
+{
+    auto options = CatalogStore::memoManager()->selectOptions(_memoItem->id());
+
+    auto memoFont = AppSettings::instance().memoFont;
+    if (options.contains(MemoOptions::font))
+        memoFont.fromString(options[MemoOptions::font].toString());
+    _memoEditor->setFont(memoFont);
+
+    _memoEditor->setWordWrap(options.contains(MemoOptions::wordWrap)
+        ? options[MemoOptions::wordWrap].toBool() : AppSettings::instance().memoWordWrap);
+
+    if (options.contains(MemoOptions::spellcheck))
+        _memoEditor->setSpellcheckLang(options[MemoOptions::spellcheck].toString());
+
+    if (options.contains(MemoOptions::highlighter))
+    {
+        auto editor = dynamic_cast<PlainTextMemoEditor*>(_memoEditor);
+        if (editor) editor->setHighlighterName(options[MemoOptions::highlighter].toString());
+    }
 }

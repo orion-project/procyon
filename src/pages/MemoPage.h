@@ -25,7 +25,12 @@ public:
 
     MemoItem* memoItem() const { return _memoItem; }
 
+    void loadSettings();
+
+    QFont memoFont() const;
     void setMemoFont(const QFont& font);
+
+    bool wordWrap() const;
     void setWordWrap(bool wrap);
 
     void setSpellcheckLang(const QString& lang);

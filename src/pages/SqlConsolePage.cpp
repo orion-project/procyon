@@ -25,6 +25,7 @@ QString runSql(const QString& sql)
         return result;
     }
 
+    int recordCount = 0;
     bool namesExtracted = false;
     stream << QStringLiteral("<table border=1 cellpadding=5 cellspacing=-1 "
                              "style='border-color:silver;border-style:solid'>");
@@ -54,8 +55,10 @@ QString runSql(const QString& sql)
             stream << QStringLiteral("</td>");
         }
         stream << QStringLiteral("</tr>");
+
+        recordCount++;
     }
-    stream << QStringLiteral("</table>");
+    stream << QStringLiteral("</table><p>Rows selected: ") << recordCount;
     return result;
 }
 

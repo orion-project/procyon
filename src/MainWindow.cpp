@@ -85,7 +85,6 @@ MainWindow::MainWindow() : QMainWindow()
     connect(_mruList, &Ori::MruFileList::clicked, this, &MainWindow::openCatalog);
 
     _pagesView = new QStackedWidget;
-    connect(_pagesView, &QStackedWidget::currentChanged, this, &MainWindow::currentPageChanged);
 
     _openedPagesView = new OpenedPagesWidget;
     connect(_openedPagesView, &OpenedPagesWidget::onActivatePage, _pagesView, &QStackedWidget::setCurrentWidget);
@@ -550,20 +549,4 @@ void MainWindow::setMemoHighlighter(const QString& name)
 {
     auto memoPage = currentMemoPage();
     if (memoPage) memoPage->setHighlighter(name);
-}
-
-void MainWindow::currentPageChanged(int)
-{
-    auto memoPage = currentMemoPage();
-    if (memoPage)
-    {
-        // TODO if plain text then enable highlighter menu
-        _highlighterControl->setEnabled(true);
-        _highlighterMenu->setEnabled(true);
-    }
-    else
-    {
-        _highlighterControl->setEnabled(false);
-        _highlighterMenu->setEnabled(false);
-    }
 }

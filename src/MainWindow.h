@@ -80,7 +80,6 @@ private:
     void highlighterMenuAboutToShow();
     void setMemoSpellcheckLang(const QString& lang);
     void setMemoHighlighter(const QString& name);
-    void currentPageChanged(int);
 };
 
 #endif // MAIN_WINDOW_H

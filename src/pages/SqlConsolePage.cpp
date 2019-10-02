@@ -58,7 +58,7 @@ QString runSql(const QString& sql)
 
         recordCount++;
     }
-    stream << QStringLiteral("</table><p>Rows selected: ") << recordCount;
+    stream << QStringLiteral("</table><br/><p>Rows selected: ") << recordCount;
     return result;
 }
 

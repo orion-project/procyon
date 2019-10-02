@@ -123,6 +123,7 @@ private:
 
 
 QString createTable(TableDef *table);
+QString addColumnIfNotExist(const QString& tableName, const QString& columnName);
 
 } // namespace Sql
 } // namespace Ori

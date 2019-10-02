@@ -84,7 +84,18 @@ MemoOptionsTableDef* memoOptionsTable() { static MemoOptionsTableDef t; return &
 
 QString MemoManager::prepare()
 {
-    QString res = createTable(memoTable());
+    auto table = memoTable();
+
+    QString res = createTable(table);
+    if (!res.isEmpty()) return res;
+
+    res = addColumnIfNotExist(table->tableName(), table->updated);
+    if (!res.isEmpty()) return res;
+
+    res = addColumnIfNotExist(table->tableName(), table->created);
+    if (!res.isEmpty()) return res;
+
+    res = addColumnIfNotExist(table->tableName(), table->station);
     if (!res.isEmpty()) return res;
 
     return createTable(memoOptionsTable());

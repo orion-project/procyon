@@ -161,7 +161,7 @@ void MemoPage::toggleEditMode(bool on)
     {
         if (on)
         {
-            _actionPreview = new QAction(tr("Edit"));
+            _actionPreview = new QAction(tr("Edit Mode"));
             _actionPreview->setShortcut(Qt::Key_F5);
             _actionPreview->setToolTip(tr("Switch between Preview and Edit mode"));
             connect(_actionPreview, &QAction::triggered, this, &MemoPage::togglePreviewMode);
@@ -255,7 +255,7 @@ void MemoPage::togglePreviewMode()
     if (!editor) return;
 
     bool isPreview = editor->isPreviewMode();
-    _actionPreview->setText(isPreview ? tr("Edit") : tr("Preview"));
+    _actionPreview->setText(isPreview ? tr("Edit Mode") : tr("Preview Mode"));
     editor->togglePreviewMode(!isPreview);
 }
 

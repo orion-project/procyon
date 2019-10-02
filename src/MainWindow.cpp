@@ -102,7 +102,7 @@ MainWindow::MainWindow() : QMainWindow()
     _splitter->setStretchFactor(2, 0);
 
 #ifndef Q_OS_WIN
-    if (Settings::instance().useNativeMenuBar)
+    if (AppSettings::instance().useNativeMenuBar)
         setContentsMargins(0, 3, 0, 0);
 #endif
     setCentralWidget(_splitter);

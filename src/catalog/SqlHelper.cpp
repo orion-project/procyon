@@ -63,5 +63,30 @@ QString createTable(TableDef *table)
     return QString();
 }
 
+QString addColumnIfNotExist(const QString& tableName, const QString& columnName)
+{
+    SelectQuery query(QString("SELECT * FROM sqlite_master WHERE type = 'table' "
+                              "AND name = '%1' AND sql LIKE '%%%2%%'").arg(tableName, columnName));
+    if (query.isFailed())
+    {
+        QSqlDatabase::database().rollback();
+        return QString("Failed to check if column '%1' exists in table '%2'.\n\n%3")
+                .arg(tableName, columnName, query.error());
+    }
+
+    // There should be a row containing 'CREATE TABLE' statement including the given column name
+    if (query.next())
+        return QString();
+
+    auto res = ActionQuery(QString("ALTER TABLE %1 ADD COLUMN %2").arg(tableName, columnName)).exec();
+    if (!res.isEmpty())
+    {
+        QSqlDatabase::database().rollback();
+        return QString("Unable to add column '%1' into table '%2'.\n\n%3").arg(columnName, tableName, res);
+    }
+
+    return QString();
+}
+
 } // namespace Sql
 } // namespace Ori

@@ -64,14 +64,14 @@ MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     _toolbar->setContentsMargins(0, 0, 0, 0);
     _toolbar->setIconSize(QSize(24, 24));
 
-    _actionEdit = _toolbar->addAction(QIcon(":/toolbar/memo_edit"), tr("Edit"), this, &MemoPage::beginEdit);
-    _actionSave = _toolbar->addAction(QIcon(":/toolbar/memo_save"), tr("Save"), this, &MemoPage::saveEdit);
-    _actionCancel = _toolbar->addAction(QIcon(":/toolbar/memo_cancel"), tr("Cancel"), this, &MemoPage::cancelEdit);
+    _actionEdit = _toolbar->addAction(QIcon(":/toolbar/edit"), tr("Edit"), this, &MemoPage::beginEdit);
+    _actionSave = _toolbar->addAction(QIcon(":/toolbar/apply"), tr("Save"), this, &MemoPage::saveEdit);
+    _actionCancel = _toolbar->addAction(QIcon(":/toolbar/cancel"), tr("Cancel"), this, &MemoPage::cancelEdit);
     _actionEdit->setShortcut(QKeySequence(Qt::Key_Return, Qt::Key_Return));
     _actionSave->setShortcut(QKeySequence::Save);
     _actionCancel->setShortcut(QKeySequence(Qt::Key_Escape, Qt::Key_Escape));
     _toolbar->addSeparator();
-    _toolbar->addAction(QIcon(":/toolbar/memo_close"), tr("Close"), [this](){
+    _toolbar->addAction(QIcon(":/toolbar/close"), tr("Close"), [this](){
         if (canClose()) deleteLater();
     });
 

@@ -93,7 +93,7 @@ void AppSettings::save(QSettings* s)
 QString AppSettings::markdownCss()
 {
     if (_markdownCss.isEmpty())
-        _markdownCss = loadTextFromResource(":/docs/markdown_css");
+        _markdownCss = loadTextFromResource(":/style/markdown_css");
     return _markdownCss;
 }
 

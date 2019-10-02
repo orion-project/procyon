@@ -20,11 +20,11 @@ MarkdownCssEditorPage::MarkdownCssEditorPage(QWidget *parent) : QWidget(parent)
     auto titleEditor = PageWidgets::makeTitleEditor("Markdown CSS Editor");
 
     auto toolbar = new QToolBar;
-    toolbar->addAction(QIcon(":/toolbar/memo_save"), "Apply", [editor](){
+    toolbar->addAction(QIcon(":/toolbar/apply"), "Apply", [editor](){
         AppSettings::instance().updateMarkdownCss(editor->toPlainText());
     });
     toolbar->addSeparator();
-    toolbar->addAction(QIcon(":/toolbar/memo_close"), "Close", [this](){
+    toolbar->addAction(QIcon(":/toolbar/close"), "Close", [this](){
         deleteLater();
     });
 

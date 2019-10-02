@@ -24,14 +24,14 @@ HelpPage::HelpPage(QWidget *parent) : QWidget(parent)
     setWindowIcon(QIcon(":/icon/help"));
 
     auto browser = new MemoTextBrowser;
-    browser->document()->setDefaultStyleSheet(loadTextFromResource(":/docs/markdown_css"));
+    browser->document()->setDefaultStyleSheet(loadTextFromResource(":/style/markdown_css"));
     browser->document()->setDocumentMargin(10);
     browser->setHtml(MarkdownHelper::markdownToHtml(loadTextFromResource(":/docs/help")));
 
     auto titleEditor = PageWidgets::makeTitleEditor(windowTitle());
 
     auto toolbar = new QToolBar;
-    toolbar->addAction(QIcon(":/toolbar/memo_close"), tr("Close"), [this]{ deleteLater(); });
+    toolbar->addAction(QIcon(":/toolbar/close"), tr("Close"), [this]{ deleteLater(); });
 
     auto toolPanel = PageWidgets::makeHeaderPanel({titleEditor, toolbar});
 

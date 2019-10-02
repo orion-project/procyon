@@ -48,7 +48,7 @@ private:
     Ori::MruFileList *_mruList;
     QLabel *_statusMemoCount, *_statusFileName;
     QAction *_actionCreateTopLevelFolder, *_actionCreateFolder, *_actionRenameFolder, *_actionDeleteFolder;
-    QAction *_actionWordWrap;
+    QAction *_actionMemoFont, *_actionWordWrap;
     QAction *_actionOpenMemo, *_actionCreateMemo, *_actionDeleteMemo;
     QString _lastOpenedCatalog;
     SpellcheckControl* _spellcheckControl;

@@ -42,6 +42,7 @@ macx: ICON = img/icon/main.icns
 
 SOURCES += src/main.cpp\
     src/AppSettings.cpp \
+    src/pages/AppSettingsPage.cpp \
     src/spellcheck/LangCodeAndNames.cpp \
     src/MainWindow.cpp \
     src/CatalogWidget.cpp \
@@ -80,6 +81,7 @@ HEADERS  += src/MainWindow.h \
     src/AppSettings.h \
     src/CatalogWidget.h \
     src/CatalogModel.h \
+    src/pages/AppSettingsPage.h \
     src/spellcheck/Spellchecker.h \
     src/TextEditHelpers.h \
     src/Utils.h \

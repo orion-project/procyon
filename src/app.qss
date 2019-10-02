@@ -226,7 +226,7 @@ QScrollBar::sub-line:horizontal {
 QToolTip {
   font-size: 13px;
   windows: border: 1px solid silver;
-  linux: border: 1px solid #edf3f8;
+  linux: border: 1px solid silver;
   macos: border: 1px solid #edf3f8;
   background-color: #edf3f8;
   padding: 2px;
@@ -275,4 +275,30 @@ QToolButton:hover {
 }
 #button_preview {
   font-size: 13px;
+}
+
+/************************************
+             AppSettings view
+************************************/
+#settings_category_list {
+  font-size: 13px;
+  border: none;
+  margin-left: 3px;
+  margin-top: 3px;
+}
+#settings_category_list::item {
+  height: 32px;
+  border-radius: 4px;
+}
+#settings_category_list::item:hover {
+  background-color: #334682b4;
+}
+#settings_category_list::item:selected {
+  background-color: steelBlue;
+  color: white;
+}
+
+#settings_options_list {
+  border: none;
+  background-color: white;
 }

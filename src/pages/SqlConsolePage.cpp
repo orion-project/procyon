@@ -90,11 +90,11 @@ SqlConsolePage::SqlConsolePage(QWidget *parent) : QWidget(parent)
     auto titleEditor = PageWidgets::makeTitleEditor(windowTitle());
 
     auto toolbar = new QToolBar;
-    auto actionRun = toolbar->addAction(QIcon(":/toolbar/memo_save"), tr("Execute"), [editor, result](){
+    auto actionRun = toolbar->addAction(QIcon(":/toolbar/apply"), tr("Execute"), [editor, result](){
         result->setHtml(runSql(editor->toPlainText()));
     });
     toolbar->addSeparator();
-    toolbar->addAction(QIcon(":/toolbar/memo_close"), tr("Close"), [this](){
+    toolbar->addAction(QIcon(":/toolbar/close"), tr("Close"), [this](){
         deleteLater();
     });
 

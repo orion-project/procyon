@@ -54,6 +54,8 @@ public:
         Options(const std::initializer_list<Option*> options);
         ~Options();
         const QVector<Option*>& items() const { return _options; }
+        Options operator =(Options& other) { return Options(other); }
+        Options operator =(Options&& other) { return Options(other); }
     private:
         QVector<Option*> _options;
     };

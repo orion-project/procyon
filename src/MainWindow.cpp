@@ -6,11 +6,12 @@
 #include "catalog/Catalog.h"
 #include "catalog/CatalogStore.h"
 #include "highlighter/HighlighterControl.h"
+#include "pages/AppSettingsPage.h"
 #include "pages/HelpPage.h"
 #include "pages/MarkdownCssEditorPage.h"
 #include "pages/MemoPage.h"
-#include "pages/StyleEditorPage.h"
 #include "pages/SqlConsolePage.h"
+#include "pages/StyleEditorPage.h"
 #include "spellcheck/Spellchecker.h"
 
 #include "helpers/OriDialogs.h"
@@ -149,6 +150,11 @@ void MainWindow::createMenu()
     m = menuBar()->addMenu(tr("Options"));
     connect(m, &QMenu::aboutToShow, this, &MainWindow::optionsMenuAboutToShow);
 
+    m->addAction(tr("Show Application Settings"), this, [this]{
+        activateOrOpenNewPage<AppSettingsPage>(_pagesView, _openedPagesView);
+    });
+    m->addSeparator();
+
     _spellcheckMenu = _spellcheckControl->makeMenu(this);
     if (_spellcheckMenu)
     {
@@ -163,7 +169,7 @@ void MainWindow::createMenu()
         m->addMenu(_highlighterMenu);
     }
 
-    m->addAction(tr("Choose Memo Font..."), this, &MainWindow::chooseMemoFont);
+    _actionMemoFont = m->addAction(tr("Choose Memo Font..."), this, &MainWindow::chooseMemoFont);
 
     _actionWordWrap = m->addAction(tr("Word Wrap"), this, &MainWindow::toggleWordWrap);
     _actionWordWrap->setCheckable(true);
@@ -519,8 +525,11 @@ void MainWindow::optionsMenuAboutToShow()
     if (!_spellcheckMenu) return;
     auto memoPage = currentMemoPage();
     _spellcheckMenu->setEnabled(memoPage && !memoPage->isReadOnly());
-    _highlighterMenu->setEnabled(memoPage->memoItem()->type() == plainTextMemoType());
-    _actionWordWrap->setChecked(memoPage->wordWrap());
+    _highlighterMenu->setEnabled(memoPage && memoPage->memoItem()->type() == plainTextMemoType());
+    _actionMemoFont->setEnabled(memoPage);
+    _actionMemoFont->setChecked(memoPage && memoPage->wordWrap());
+    _actionWordWrap->setEnabled(memoPage);
+    _actionWordWrap->setChecked(memoPage && memoPage->wordWrap());
 }
 
 void MainWindow::spellcheckMenuAboutToShow()

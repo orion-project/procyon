@@ -82,11 +82,12 @@ CatalogWidget::CatalogWidget() : QWidget()
     _rootMenu->addAction(tr("New Memo..."), this, &CatalogWidget::createMemo);
 
     _folderMenu = new QMenu(this);
-    _folderMenu->addAction(tr("New Subfolder..."), this, &CatalogWidget::createFolder);
-    _folderMenu->addAction(tr("New Memo..."), this, &CatalogWidget::createMemo);
-    _folderMenu->addSeparator();
     _folderMenu->addAction(tr("Rename..."), this, &CatalogWidget::renameFolder);
     _folderMenu->addAction(tr("Delete"), this, &CatalogWidget::deleteFolder);
+    _folderMenu->addSeparator();
+    _folderMenu->addAction(tr("New Memo..."), this, &CatalogWidget::createMemo);
+    _folderMenu->addAction(tr("New Subfolder..."), this, &CatalogWidget::createFolder);
+    _folderMenu->addAction(tr("New Top Level Folder..."), this, &CatalogWidget::createTopLevelFolder);
 
     auto openMemo = new QAction(tr("Open"));
     connect(openMemo, &QAction::triggered, this, &CatalogWidget::openSelectedMemo);
@@ -96,8 +97,9 @@ CatalogWidget::CatalogWidget() : QWidget()
     _memoMenu->addSeparator();
     _memoMenu->addAction(tr("Delete"), this, &CatalogWidget::deleteMemo);
     _memoMenu->addSeparator();
-    _memoMenu->addAction(tr("New Subfolder..."), this, &CatalogWidget::createFolder);
     _memoMenu->addAction(tr("New Memo..."), this, &CatalogWidget::createMemo);
+    _memoMenu->addAction(tr("New Subfolder..."), this, &CatalogWidget::createFolder);
+    _memoMenu->addAction(tr("New Top Level Folder..."), this, &CatalogWidget::createTopLevelFolder);
 
     _catalogView = new QTreeView;
     _catalogView->setObjectName("notebook_view");

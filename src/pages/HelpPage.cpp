@@ -57,7 +57,7 @@ void HelpPage::showAbout()
     //f.setFamily("sans-serif");
 
     auto labelVersion = new QLabel(qApp->applicationVersion());
-    f.setPixelSize(47);
+    f.setPixelSize(40);
     labelVersion->setFont(f);
     labelVersion->setStyleSheet("color:#2e2f33");
 

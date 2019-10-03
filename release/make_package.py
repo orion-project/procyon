@@ -42,7 +42,7 @@ def make_package_for_windows():
 
   print_header('Copy project files...')
   copy_file('..\\..\\bin\\' + PROJECT_EXE, '.')
-  copy_file('..\\..\\hunspell-1.7.0\\src\\hunspell\\.libs\\libhunspell-1.7-0.dll', '.')
+  copy_file('..\\..\\deps\\hunspell-1.7.0\\src\\hunspell\\.libs\\libhunspell-1.7-0.dll', '.')
   shutil.copytree('..\\..\\bin\\dicts', 'dicts')
 
   # Seems sometimes windeployqt does copy these files,

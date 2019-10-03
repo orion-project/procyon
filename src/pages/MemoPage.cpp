@@ -191,29 +191,23 @@ void MemoPage::toggleEditMode(bool on)
 
 QFont MemoPage::memoFont() const
 {
-    // TODO: get font from memo
-    return AppSettings::instance().memoFont;
+    return _memoEditor->font();
 }
 
 void MemoPage::setMemoFont(const QFont& font)
 {
     _memoEditor->setFont(font);
-    // TODO: choose default memo from in different place
-    //AppSettings::instance().memoFont = font;
     updateOption(_memoItem, MemoOptions::font, font.toString());
 }
 
 bool MemoPage::wordWrap() const
 {
-    // TODO: get option from memo
-    return AppSettings::instance().memoWordWrap;
+    return _memoEditor->wordWrap();
 }
 
 void MemoPage::setWordWrap(bool wrap)
 {
     _memoEditor->setWordWrap(wrap);
-    // TODO: don't store this flag in settings (?)
-    //AppSettings::instance().memoWordWrap = wrap;
     updateOption(_memoItem, MemoOptions::wordWrap, wrap);
 }
 

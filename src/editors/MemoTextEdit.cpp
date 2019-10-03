@@ -67,3 +67,13 @@ bool MemoTextEdit::event(QEvent *event)
     event->accept();
     return true;
 }
+
+bool MemoTextEdit::wordWrap() const
+{
+    return wordWrapMode() != QTextOption::NoWrap;
+}
+
+void MemoTextEdit::setWordWrap(bool on)
+{
+    setWordWrapMode(on ? QTextOption::WrapAtWordBoundaryOrAnywhere : QTextOption::NoWrap);
+}

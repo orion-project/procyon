@@ -20,8 +20,10 @@ public:
 
     void showMemo() override;
     void setFocus() override;
+    QFont font() const override;
     void setFont(const QFont& f) override;
     bool isModified() const override;
+    bool wordWrap() const override;
     void setWordWrap(bool on) override;
     void beginEdit() override;
     void endEdit() override;
@@ -35,6 +37,8 @@ public:
 private:
     QTextBrowser* _view;
     QStackedLayout* _tabs;
+    QFont _memoFont;
+    bool _wordWrap = false;
 };
 
 #endif // MARKDOWN_MEMO_EDITOR_H

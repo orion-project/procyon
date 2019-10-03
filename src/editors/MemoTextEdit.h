@@ -10,6 +10,9 @@ class MemoTextEdit : public QTextEdit
 public:
     explicit MemoTextEdit(QWidget* parent = nullptr);
 
+    bool wordWrap() const;
+    void setWordWrap(bool on);
+
 protected:
     void mousePressEvent(QMouseEvent *e) override;
     void mouseReleaseEvent(QMouseEvent *e) override;

@@ -46,11 +46,17 @@ void MarkdownMemoEditor::setFocus()
         _editor->setFocus();
 }
 
+QFont MarkdownMemoEditor::font() const
+{
+    return _editor ? _editor->font() : _memoFont;
+}
+
 void MarkdownMemoEditor::setFont(const QFont& f)
 {
-    _view->setFont(f);
     if (_editor)
         TextMemoEditor::setFont(f);
+    else
+        _memoFont = f;
 }
 
 bool MarkdownMemoEditor::isModified() const
@@ -58,10 +64,17 @@ bool MarkdownMemoEditor::isModified() const
     return _editor && TextMemoEditor::isModified();
 }
 
+bool MarkdownMemoEditor::wordWrap() const
+{
+    return _editor ? _editor->wordWrap() : _wordWrap;
+}
+
 void MarkdownMemoEditor::setWordWrap(bool on)
 {
     if (_editor)
         TextMemoEditor::setWordWrap(on);
+    else
+        _wordWrap = on;
 }
 
 void MarkdownMemoEditor::beginEdit()
@@ -69,8 +82,8 @@ void MarkdownMemoEditor::beginEdit()
     if (!_editor)
     {
         setEditor(new MemoTextEdit);
-        _editor->setFont(_view->font());
-        _editor->setWordWrapMode(_view->wordWrapMode());
+        _editor->setFont(_memoFont);
+        _editor->setWordWrap(_wordWrap);
         // TODO: set highlighter
         _editor->setPlainText(_memoItem->data());
         _tabs->addWidget(_editor);

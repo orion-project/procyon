@@ -1,10 +1,10 @@
 #include "MemoEditor.h"
 
+#include "MemoTextEdit.h"
+
 #include "../catalog/Catalog.h"
 #include "../spellcheck/TextEditSpellcheck.h"
 #include "../spellcheck/Spellchecker.h"
-
-#include <QTextEdit>
 
 //------------------------------------------------------------------------------
 //                                 MemoEditor
@@ -22,15 +22,20 @@ TextMemoEditor::TextMemoEditor(MemoItem* memoItem, QWidget *parent) : MemoEditor
 {
 }
 
-void TextMemoEditor::setEditor(QTextEdit* editor)
+void TextMemoEditor::setEditor(MemoTextEdit *editor)
 {
     _editor = editor;
-    connect(_editor, &QTextEdit::undoAvailable, this, &MemoEditor::onModified);
+    connect(_editor, &MemoTextEdit::undoAvailable, this, &MemoEditor::onModified);
 }
 
 void TextMemoEditor::setFocus()
 {
     _editor->setFocus();
+}
+
+QFont TextMemoEditor::font() const
+{
+    return _editor->font();
 }
 
 void TextMemoEditor::setFont(const QFont& f)
@@ -46,9 +51,14 @@ bool TextMemoEditor::isModified() const
     return _editor->document()->isModified();
 }
 
+bool TextMemoEditor::wordWrap() const
+{
+    return _editor->wordWrap();
+}
+
 void TextMemoEditor::setWordWrap(bool on)
 {
-    _editor->setWordWrapMode(on ? QTextOption::WrapAtWordBoundaryOrAnywhere : QTextOption::NoWrap);
+    _editor->setWordWrap(on);
 }
 
 QString TextMemoEditor::data() const

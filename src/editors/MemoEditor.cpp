@@ -92,7 +92,8 @@ void TextMemoEditor::setSpellcheckLang(const QString &lang)
 {
     toggleSpellcheck(false);
     _spellcheckLang = lang;
-    toggleSpellcheck(true);
+    if (_editor && !_editor->isReadOnly())
+        toggleSpellcheck(true);
 }
 
 void TextMemoEditor::beginEdit()

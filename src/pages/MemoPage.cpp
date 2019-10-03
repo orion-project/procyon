@@ -18,7 +18,7 @@ namespace {
 const int PREVIEW_BUTTON_WIDTH = 100;
 
 namespace MemoOptions {
-    const QString font =
+    const QString FONT =
 #if defined (Q_OS_WIN)
         "fontWin"
 #elif defined (Q_OS_LINUX)
@@ -29,9 +29,9 @@ namespace MemoOptions {
         "font"
 #endif
     ;
-    const QString wordWrap = "wordWrap";
-    const QString spellcheck = "spellcheck";
-    const QString highlighter = "highlighter";
+    const QString WORD_WRAP = "wordWrap";
+    const QString SPELLCHECK = "spellcheck";
+    const QString HIGHLIGHTER = "highlighter";
 };
 
 void updateOption(MemoItem* memo, const QString& name, const QVariant& value)
@@ -197,7 +197,7 @@ QFont MemoPage::memoFont() const
 void MemoPage::setMemoFont(const QFont& font)
 {
     _memoEditor->setFont(font);
-    updateOption(_memoItem, MemoOptions::font, font.toString());
+    updateOption(_memoItem, MemoOptions::FONT, font.toString());
 }
 
 bool MemoPage::wordWrap() const
@@ -208,7 +208,7 @@ bool MemoPage::wordWrap() const
 void MemoPage::setWordWrap(bool wrap)
 {
     _memoEditor->setWordWrap(wrap);
-    updateOption(_memoItem, MemoOptions::wordWrap, wrap);
+    updateOption(_memoItem, MemoOptions::WORD_WRAP, wrap);
 }
 
 bool MemoPage::isModified() const
@@ -219,7 +219,7 @@ bool MemoPage::isModified() const
 void MemoPage::setSpellcheckLang(const QString &lang)
 {
     _memoEditor->setSpellcheckLang(lang);
-    updateOption(_memoItem, MemoOptions::spellcheck, lang);
+    updateOption(_memoItem, MemoOptions::SPELLCHECK, lang);
 }
 
 QString MemoPage::spellcheckLang() const
@@ -233,7 +233,7 @@ void MemoPage::setHighlighter(const QString& name)
     if (editor)
     {
         editor->setHighlighterName(name);
-        updateOption(_memoItem, MemoOptions::highlighter, name);
+        updateOption(_memoItem, MemoOptions::HIGHLIGHTER, name);
     }
 }
 
@@ -258,19 +258,19 @@ void MemoPage::loadSettings()
     auto options = CatalogStore::memoManager()->selectOptions(_memoItem->id());
 
     auto memoFont = AppSettings::instance().memoFont;
-    if (options.contains(MemoOptions::font))
-        memoFont.fromString(options[MemoOptions::font].toString());
+    if (options.contains(MemoOptions::FONT))
+        memoFont.fromString(options[MemoOptions::FONT].toString());
     _memoEditor->setFont(memoFont);
 
-    _memoEditor->setWordWrap(options.contains(MemoOptions::wordWrap)
-        ? options[MemoOptions::wordWrap].toBool() : AppSettings::instance().memoWordWrap);
+    _memoEditor->setWordWrap(options.contains(MemoOptions::WORD_WRAP)
+        ? options[MemoOptions::WORD_WRAP].toBool() : AppSettings::instance().memoWordWrap);
 
-    if (options.contains(MemoOptions::spellcheck))
-        _memoEditor->setSpellcheckLang(options[MemoOptions::spellcheck].toString());
+    if (options.contains(MemoOptions::SPELLCHECK))
+        _memoEditor->setSpellcheckLang(options[MemoOptions::SPELLCHECK].toString());
 
-    if (options.contains(MemoOptions::highlighter))
+    if (options.contains(MemoOptions::HIGHLIGHTER))
     {
         auto editor = dynamic_cast<PlainTextMemoEditor*>(_memoEditor);
-        if (editor) editor->setHighlighterName(options[MemoOptions::highlighter].toString());
+        if (editor) editor->setHighlighterName(options[MemoOptions::HIGHLIGHTER].toString());
     }
 }

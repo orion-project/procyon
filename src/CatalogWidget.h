@@ -53,15 +53,13 @@ private:
     CatalogModel* _catalogModel = nullptr;
     QMenu *_rootMenu, *_folderMenu, *_memoMenu;
     QAction *_openMemo;
-    QLabel *_folderMenuHeader, *_memoMenuHeader;
-    QLabel *_folderMenuIcon, *_memoMenuIcon;
 
     void contextMenuRequested(const QPoint &pos);
     void doubleClicked(const QModelIndex &);
     void openSelectedMemo();
 
     void memoUpdated(MemoItem*);
-    void createFolderInternal(const CatalogSelection& parentFolder);
+    void createFolderInternal(const CatalogSelection& selection);
 
     void fillExpandedIds(QStringList& ids, const QModelIndex& parentIndex) const;
     void setExpandedIds(const QStringList& ids, const QModelIndex& parentIndex);

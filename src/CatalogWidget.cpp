@@ -33,15 +33,36 @@ struct CatalogSelection
         folder = item->asFolder();
         memo = item->asMemo();
     }
+
+    void selectFolderIfNone()
+    {
+        if (folder) return;
+
+        if (!index.isValid()) return;
+        index = index.parent();
+        if (!index.isValid()) return;
+
+        item = CatalogModel::catalogItem(index);
+        if (!item) return;
+
+        folder = item->asFolder();
+        memo = nullptr;
+    }
 };
 
-namespace {
-QAction* makeMenuHeader(QWidget* parent, QLabel*& iconLabel, QLabel*& titleLabel)
+// We have to recreate the menu header at each menu open as it only takes the correct size when created.
+// Retaining the header action, we stick to the original calculated size, and it can be unsuitable
+// for subsequent menu open at items having longer titles.
+static void makeMenuHeader(QMenu* menu, const QIcon& icon, const QString& title)
 {
-    iconLabel = new QLabel;
+    auto prevHeader = qobject_cast<QWidgetAction*>(menu->actions().first());
+    if (prevHeader) delete prevHeader;
+
+    auto iconLabel = new QLabel;
+    iconLabel->setPixmap(icon.pixmap(16, 16));
     iconLabel->setProperty("role", "context_menu_header_icon");
 
-    titleLabel = new QLabel;
+    auto titleLabel = new QLabel(title);
     titleLabel->setProperty("role", "context_menu_header_text");
 
     auto panel = new QFrame;
@@ -49,11 +70,10 @@ QAction* makeMenuHeader(QWidget* parent, QLabel*& iconLabel, QLabel*& titleLabel
     Ori::Layouts::LayoutH({iconLabel, titleLabel,
         Ori::Layouts::Stretch()}).setSpacing(0).setMargin(0).useFor(panel);
 
-    auto action = new QWidgetAction(parent);
-    action->setDefaultWidget(panel);
-    return action;
+    auto headerAction = new QWidgetAction(menu);
+    headerAction->setDefaultWidget(panel);
+    menu->insertAction(menu->actions().first(), headerAction);
 }
-} // namespace
 
 CatalogWidget::CatalogWidget() : QWidget()
 {
@@ -62,7 +82,6 @@ CatalogWidget::CatalogWidget() : QWidget()
     _rootMenu->addAction(tr("New Memo..."), this, &CatalogWidget::createMemo);
 
     _folderMenu = new QMenu(this);
-    _folderMenu->addAction(makeMenuHeader(this, _folderMenuIcon, _folderMenuHeader));
     _folderMenu->addAction(tr("New Subfolder..."), this, &CatalogWidget::createFolder);
     _folderMenu->addAction(tr("New Memo..."), this, &CatalogWidget::createMemo);
     _folderMenu->addSeparator();
@@ -73,10 +92,12 @@ CatalogWidget::CatalogWidget() : QWidget()
     connect(openMemo, &QAction::triggered, this, &CatalogWidget::openSelectedMemo);
 
     _memoMenu = new QMenu(this);
-    _memoMenu->addAction(makeMenuHeader(this, _memoMenuIcon, _memoMenuHeader));
     _memoMenu->addAction(openMemo);
     _memoMenu->addSeparator();
     _memoMenu->addAction(tr("Delete"), this, &CatalogWidget::deleteMemo);
+    _memoMenu->addSeparator();
+    _memoMenu->addAction(tr("New Subfolder..."), this, &CatalogWidget::createFolder);
+    _memoMenu->addAction(tr("New Memo..."), this, &CatalogWidget::createMemo);
 
     _catalogView = new QTreeView;
     _catalogView->setObjectName("notebook_view");
@@ -114,23 +135,24 @@ void CatalogWidget::contextMenuRequested(const QPoint &pos)
 {
     if (!_catalogModel) return;
 
+    QMenu* menu = nullptr;
     CatalogSelection selected(_catalogView);
     if (!selected.item)
     {
-        _rootMenu->popup(_catalogView->mapToGlobal(pos));
+        menu = _rootMenu;
     }
     else if (selected.folder)
     {
-        _folderMenuHeader->setText(selected.item->title());
-        _folderMenuIcon->setPixmap(_catalogModel->folderIcon().pixmap(16, 16));
-        _folderMenu->popup(_catalogView->mapToGlobal(pos));
+        makeMenuHeader(_folderMenu, _catalogModel->folderIcon(), selected.item->title());
+        menu = _folderMenu;
     }
     else if (selected.memo)
     {
-        _memoMenuHeader->setText(selected.item->title());
-        _memoMenuIcon->setPixmap(selected.memo->type()->icon().pixmap(16, 16));
-        _memoMenu->popup(_catalogView->mapToGlobal(pos));
+        makeMenuHeader(_memoMenu, selected.memo->type()->icon(), selected.item->title());
+        menu = _memoMenu;
     }
+    if (menu)
+        menu->popup(_catalogView->mapToGlobal(pos));
 }
 
 void CatalogWidget::openSelectedMemo()
@@ -157,7 +179,10 @@ SelectedItems CatalogWidget::selection() const
 
 void CatalogWidget::createFolder()
 {
-    createFolderInternal(CatalogSelection(_catalogView));
+    CatalogSelection selection(_catalogView);
+    selection.selectFolderIfNone();
+    if (selection.folder)
+        createFolderInternal(selection);
 }
 
 void CatalogWidget::createTopLevelFolder()
@@ -165,19 +190,18 @@ void CatalogWidget::createTopLevelFolder()
     createFolderInternal(CatalogSelection());
 }
 
-void CatalogWidget::createFolderInternal(const CatalogSelection& parentFolder)
+void CatalogWidget::createFolderInternal(const CatalogSelection& selection)
 {
-
     auto title = Ori::Dlg::inputText(tr("Enter a title for new folder"), "");
     if (title.isEmpty()) return;
 
-    auto res = _catalog->createFolder(parentFolder.folder, title);
+    auto res = _catalog->createFolder(selection.folder, title);
     if (!res.ok()) return Ori::Dlg::error(res.error());
 
     // TODO do not know about item inserted at the end and select by pointer
-    auto newIndex = _catalogModel->itemAdded(parentFolder.index);
-    if (!_catalogView->isExpanded(parentFolder.index))
-        _catalogView->expand(parentFolder.index);
+    auto newIndex = _catalogModel->itemAdded(selection.index);
+    if (!_catalogView->isExpanded(selection.index))
+        _catalogView->expand(selection.index);
     _catalogView->setCurrentIndex(newIndex);
 }
 
@@ -247,13 +271,15 @@ static MemoType* selectMemoTypeDlg()
 
 void CatalogWidget::createMemo()
 {
+    CatalogSelection selection(_catalogView);
+    selection.selectFolderIfNone();
+    if (!selection.folder) return;
+
     auto memoType = selectMemoTypeDlg();
     if (!memoType) return;
 
-    CatalogSelection parentFolder(_catalogView);
-
     auto memoItem = new MemoItem;
-    auto res = _catalog->createMemo(parentFolder.folder, memoItem, memoType);
+    auto res = _catalog->createMemo(selection.folder, memoItem, memoType);
     if (!res.ok())
     {
         delete memoItem;
@@ -261,9 +287,9 @@ void CatalogWidget::createMemo()
     }
 
     // TODO do not know about item inserted at the end and select by pointer
-    auto newIndex = _catalogModel->itemAdded(parentFolder.index);
-    if (!_catalogView->isExpanded(parentFolder.index))
-        _catalogView->expand(parentFolder.index);
+    auto newIndex = _catalogModel->itemAdded(selection.index);
+    if (!_catalogView->isExpanded(selection.index))
+        _catalogView->expand(selection.index);
     _catalogView->setCurrentIndex(newIndex);
 }
 

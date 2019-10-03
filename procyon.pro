@@ -55,13 +55,13 @@ SOURCES += src/main.cpp\
     src/catalog/MemoManager.cpp \
     src/catalog/SettingsManager.cpp \
     src/catalog/SqlHelper.cpp \
-    src/editors/MarkdownHelper.cpp \
+    src/markdown/MarkdownHelper.cpp \
     src/editors/MarkdownMemoEditor.cpp \
     src/editors/MemoEditor.cpp \
-    src/editors/MemoTextBrowser.cpp \
-    src/editors/MemoTextEdit.cpp \
+    src/widgets/MemoTextBrowser.cpp \
+    src/widgets/MemoTextEdit.cpp \
     src/editors/PlainTextMemoEditor.cpp \
-    src/editors/ori_html.c \
+    src/markdown/ori_html.c \
     src/highlighter/HighlighterControl.cpp \
     src/highlighter/HighlighterManager.cpp \
     src/highlighter/HighlightingRule.cpp \
@@ -91,13 +91,13 @@ HEADERS  += src/MainWindow.h \
     src/catalog/MemoManager.h \
     src/catalog/SettingsManager.h \
     src/catalog/SqlHelper.h \
-    src/editors/MarkdownHelper.h \
+    src/markdown/MarkdownHelper.h \
     src/editors/MarkdownMemoEditor.h \
     src/editors/MemoEditor.h \
-    src/editors/MemoTextBrowser.h \
-    src/editors/MemoTextEdit.h \
+    src/widgets/MemoTextBrowser.h \
+    src/widgets/MemoTextEdit.h \
     src/editors/PlainTextMemoEditor.h \
-    src/editors/ori_html.h \
+    src/markdown/ori_html.h \
     src/highlighter/HighlighterControl.h \
     src/highlighter/HighlighterManager.h \
     src/highlighter/HighlightingRule.h \
@@ -114,4 +114,4 @@ HEADERS  += src/MainWindow.h \
 
 DISTFILES += \
     src/app.qss \
-    src/markdown.css
+    src/markdown/markdown.css

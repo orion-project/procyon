@@ -169,7 +169,7 @@ void MainWindow::createMenu()
         m->addMenu(_highlighterMenu);
     }
 
-    _actionMemoFont = m->addAction(tr("Choose Memo Font..."), this, &MainWindow::chooseMemoFont);
+    _actionMemoFont = m->addAction(tr("Choose Font..."), this, &MainWindow::chooseMemoFont);
 
     _actionWordWrap = m->addAction(tr("Word Wrap"), this, &MainWindow::toggleWordWrap);
     _actionWordWrap->setCheckable(true);

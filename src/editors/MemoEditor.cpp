@@ -1,10 +1,9 @@
 #include "MemoEditor.h"
 
-#include "MemoTextEdit.h"
-
 #include "../catalog/Catalog.h"
 #include "../spellcheck/TextEditSpellcheck.h"
 #include "../spellcheck/Spellchecker.h"
+#include "../widgets/MemoTextEdit.h"
 
 //------------------------------------------------------------------------------
 //                                 MemoEditor

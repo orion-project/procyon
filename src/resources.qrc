@@ -21,7 +21,7 @@
         <file alias="about">../img/about.png</file>
         <file alias="app_main">app.qss</file>
         <file alias="background">../img/background.png</file>
-        <file alias="markdown_css">markdown.css</file>
+        <file alias="markdown_css">markdown/markdown.css</file>
     </qresource>
     <qresource prefix="/docs">
         <file alias="help">help.md</file>

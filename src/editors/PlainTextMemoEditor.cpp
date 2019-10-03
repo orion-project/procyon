@@ -1,8 +1,8 @@
 #include "PlainTextMemoEditor.h"
 
-#include "MemoTextEdit.h"
 #include "../catalog/Catalog.h"
 #include "../highlighter/HighlighterManager.h"
+#include "../widgets/MemoTextEdit.h"
 
 #include "helpers/OriLayouts.h"
 

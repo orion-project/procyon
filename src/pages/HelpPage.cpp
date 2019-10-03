@@ -2,8 +2,8 @@
 
 #include "PageWidgets.h"
 #include "../Utils.h"
-#include "../editors/MarkdownHelper.h"
-#include "../editors/MemoTextBrowser.h"
+#include "../markdown/MarkdownHelper.h"
+#include "../widgets/MemoTextBrowser.h"
 
 #include "helpers/OriLayouts.h"
 #include "widgets/OriLabels.h"

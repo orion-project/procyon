@@ -139,7 +139,7 @@ void MainWindow::createMenu()
     m = menuBar()->addMenu(tr("Notebook"));
     connect(m, &QMenu::aboutToShow, this, &MainWindow::updateMenuCatalog);
     _actionCreateTopLevelFolder = m->addAction(tr("New Top Level Folder..."), [this](){ _catalogView->createTopLevelFolder(); });
-    _actionCreateFolder = m->addAction(tr("New Folder..."), [this](){ _catalogView->createFolder(); });
+    _actionCreateFolder = m->addAction(tr("New Subfolder..."), [this](){ _catalogView->createFolder(); });
     _actionRenameFolder = m->addAction(tr("Rename Folder..."), [this](){ _catalogView->renameFolder(); });
     _actionDeleteFolder = m->addAction(tr("Delete Folder"), [this](){ _catalogView->deleteFolder(); });
     m->addSeparator();
@@ -150,10 +150,12 @@ void MainWindow::createMenu()
     m = menuBar()->addMenu(tr("Options"));
     connect(m, &QMenu::aboutToShow, this, &MainWindow::optionsMenuAboutToShow);
 
-    m->addAction(tr("Show Application Settings"), this, [this]{
+    /* TODO
+    m->addAction(tr("Application Settings"), this, [this]{
         activateOrOpenNewPage<AppSettingsPage>(_pagesView, _openedPagesView);
     });
     m->addSeparator();
+    */
 
     _spellcheckMenu = _spellcheckControl->makeMenu(this);
     if (_spellcheckMenu)
@@ -189,10 +191,12 @@ void MainWindow::createMenu()
     }
 
     m = menuBar()->addMenu(tr("Help"));
+    /* TODO
     m->addAction(tr("Show Help"), [this]{
         activateOrOpenNewPage<HelpPage>(_pagesView, _openedPagesView);
     });
     m->addSeparator();
+    */
     m->addAction(tr("Visit Homepage"), []{ HelpPage::visitHomePage(); });
     m->addAction(tr("Send Bug Report"), []{ HelpPage::sendBugReport(); });
     m->addSeparator();

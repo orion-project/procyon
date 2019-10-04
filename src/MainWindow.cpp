@@ -199,7 +199,9 @@ void MainWindow::createMenu()
     */
     m->addAction(tr("Visit Homepage"), []{ HelpPage::visitHomePage(); });
     m->addAction(tr("Send Bug Report"), []{ HelpPage::sendBugReport(); });
-    m->addSeparator();
+#ifndef Q_OS_MAC
+    m->addSeparator(); // "About" item will be extracted to the system menu, se we don't need the separator
+#endif
     m->addAction(tr("About %1...").arg(qApp->applicationName()), []{ HelpPage::showAbout(); });
 }
 
@@ -360,10 +362,10 @@ bool MainWindow::closeCatalog()
     {
         saveSession();
         if (!closeAllMemos()) return false;
+        _catalogView->setCatalog(nullptr);
         delete _catalog;
         _catalog = nullptr;
     }
-    _catalogView->setCatalog(nullptr);
     setWindowTitle(qApp->applicationName());
     _statusFileName->setText(tr("(n/a)"));
     _statusMemoCount->setText(tr("(none)"));

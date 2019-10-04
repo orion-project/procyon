@@ -31,7 +31,7 @@ QString loadStyleSheet(QSettings* s)
     styleSheet.replace(propWin, QStringLiteral("\\1"));
     styleSheet.remove(propLinux);
     styleSheet.remove(propMacos);
-#elif defined(Q_OS_UNIX)
+#elif defined(Q_OS_LINUX)
     styleSheet.replace(propLinux, QStringLiteral("\\1"));
     styleSheet.remove(propWin);
     styleSheet.remove(propMacos);

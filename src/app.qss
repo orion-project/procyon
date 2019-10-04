@@ -163,11 +163,15 @@ QLabel[role=context_menu_header_text] {
 }
 #code_editor {
   font-family: Menlo,Monaco,Consolas,'Courier New',monospace;
-  font-size: 17px;
+  windows:font-size: 17px;
+  linux:font-size: 17px;
+  macos:font-size: 14px;
 }
 #sql_console_result {
   font-family: Menlo,Monaco,Consolas,'Courier New',monospace;
-  font-size: 15px;
+  windows:font-size: 15px;
+  linux:font-size: 15px;
+  macos:font-size: 13px;
 }
 
 /************************************

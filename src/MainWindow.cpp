@@ -133,6 +133,12 @@ void MainWindow::createMenu()
     m->addAction(tr("New..."), this, &MainWindow::newCatalog);
     m->addAction(tr("Open..."), this, &MainWindow::openCatalogViaDialog, QKeySequence::Open);
     m->addSeparator();
+    /* TODO
+    m->addAction(tr("Application Settings"), this, [this]{
+        activateOrOpenNewPage<AppSettingsPage>(_pagesView, _openedPagesView);
+    });
+    m->addSeparator();
+    */
     auto actionExit = m->addAction(tr("Exit"), this, &MainWindow::close, QKeySequence::Quit);
     new Ori::Widgets::MruMenuPart(_mruList, m, actionExit, this);
 
@@ -143,19 +149,15 @@ void MainWindow::createMenu()
     _actionRenameFolder = m->addAction(tr("Rename Folder..."), [this](){ _catalogView->renameFolder(); });
     _actionDeleteFolder = m->addAction(tr("Delete Folder"), [this](){ _catalogView->deleteFolder(); });
     m->addSeparator();
-    _actionOpenMemo = m->addAction(tr("Open memo"), this, &MainWindow::openMemo);
-    _actionCreateMemo = m->addAction(tr("New memo..."), [this](){ _catalogView->createMemo(); });
-    _actionDeleteMemo = m->addAction(tr("Delete memo"), [this](){ _catalogView->deleteMemo(); });
+    _actionOpenMemo = m->addAction(tr("Open Memo"), this, &MainWindow::openMemo);
+    _actionCreateMemo = m->addAction(tr("New Memo..."), [this](){ _catalogView->createMemo(); });
+    _actionDeleteMemo = m->addAction(tr("Delete Memo"), [this](){ _catalogView->deleteMemo(); });
 
-    m = menuBar()->addMenu(tr("Options"));
+    m = menuBar()->addMenu(tr("Memo"));
     connect(m, &QMenu::aboutToShow, this, &MainWindow::optionsMenuAboutToShow);
 
-    /* TODO
-    m->addAction(tr("Application Settings"), this, [this]{
-        activateOrOpenNewPage<AppSettingsPage>(_pagesView, _openedPagesView);
-    });
+    _actionMemoExportPdf = m->addAction(tr("Export to PDF..."), this, &MainWindow::exportToPdf);
     m->addSeparator();
-    */
 
     _spellcheckMenu = _spellcheckControl->makeMenu(this);
     if (_spellcheckMenu)
@@ -486,6 +488,14 @@ MemoPage* MainWindow::currentMemoPage() const
     return dynamic_cast<MemoPage*>(_pagesView->currentWidget());
 }
 
+void MainWindow::exportToPdf()
+{
+    auto memoPage = currentMemoPage();
+    if (!memoPage) return;
+
+    memoPage->exportToPdf();
+}
+
 void MainWindow::chooseMemoFont()
 {
     auto memoPage = currentMemoPage();
@@ -532,6 +542,7 @@ void MainWindow::optionsMenuAboutToShow()
     auto memoPage = currentMemoPage();
     _spellcheckMenu->setEnabled(memoPage && !memoPage->isReadOnly());
     _highlighterMenu->setEnabled(memoPage && memoPage->memoItem()->type() == plainTextMemoType());
+    _actionMemoExportPdf->setEnabled(memoPage);
     _actionMemoFont->setEnabled(memoPage);
     _actionMemoFont->setChecked(memoPage && memoPage->wordWrap());
     _actionWordWrap->setEnabled(memoPage);

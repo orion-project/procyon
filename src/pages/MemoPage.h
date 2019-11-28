@@ -45,6 +45,8 @@ public:
     bool isReadOnly() const { return !_isEditMode; }
     bool canClose();
 
+    void exportToPdf();
+
 signals:
     bool onAboutToBeClosed();
     void onReadOnly(bool readOnly);

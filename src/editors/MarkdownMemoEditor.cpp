@@ -134,3 +134,12 @@ void MarkdownMemoEditor::optionChanged(AppSettingsOption option)
     _view->document()->setDefaultStyleSheet(AppSettings::instance().markdownCss());
     _view->setHtml(MarkdownHelper::markdownToHtml(_editor ? _editor->toPlainText() : _memoItem->data()));
 }
+
+void MarkdownMemoEditor::exportToPdf(const QString& fileName)
+{
+    QTextEdit *editor = (_tabs->currentWidget() == _view)
+            ? qobject_cast<QTextEdit*>(_view)
+            : qobject_cast<QTextEdit*>(_editor);
+
+    TextMemoEditor::exportToPdf(editor->document(), fileName);
+}

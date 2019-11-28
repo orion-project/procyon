@@ -28,6 +28,7 @@ public:
     void beginEdit() override;
     void endEdit() override;
     void saveEdit() override;
+    void exportToPdf(const QString& fileName) override;
 
     bool isPreviewMode() const;
     void togglePreviewMode(bool on);

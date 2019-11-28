@@ -274,3 +274,15 @@ void MemoPage::loadSettings()
         if (editor) editor->setHighlighterName(options[MemoOptions::HIGHLIGHTER].toString());
     }
 }
+
+void MemoPage::exportToPdf()
+{
+    auto editor = dynamic_cast<TextMemoEditor*>(_memoEditor);
+    if (!editor) return;
+
+    QString fileName = Ori::Dlg::getSaveFileName(
+        tr("Export memo as PDF"), tr("PDF documents (*.pdf);;All files (*.*)"), "pdf");
+    if (fileName.isEmpty()) return;
+
+    editor->exportToPdf(fileName);
+}

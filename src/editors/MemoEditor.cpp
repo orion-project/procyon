@@ -5,6 +5,8 @@
 #include "../spellcheck/Spellchecker.h"
 #include "../widgets/MemoTextEdit.h"
 
+#include <QPrinter>
+
 //------------------------------------------------------------------------------
 //                                 MemoEditor
 //------------------------------------------------------------------------------
@@ -117,4 +119,19 @@ void TextMemoEditor::setReadOnly(bool on)
         Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard;
     if (!on) flags |= Qt::TextEditable;
     _editor->setTextInteractionFlags(flags);
+}
+
+void TextMemoEditor::exportToPdf(const QString& fileName)
+{
+    exportToPdf(_editor->document(), fileName);
+}
+
+void TextMemoEditor::exportToPdf(QTextDocument* doc, const QString& fileName)
+{
+    QPrinter printer(QPrinter::PrinterResolution);
+    printer.setOutputFormat(QPrinter::PdfFormat);
+    printer.setPaperSize(QPrinter::A4);
+    printer.setOutputFileName(fileName);
+
+    doc->print(&printer);
 }

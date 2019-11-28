@@ -7,6 +7,10 @@ class MemoItem;
 class MemoTextEdit;
 class TextEditSpellcheck;
 
+QT_BEGIN_NAMESPACE
+class QTextDocument;
+QT_END_NAMESPACE
+
 // TODO: all text related options (font, word-wrap, etc.) should be removed
 // from base edior class when non-text memo types will happen
 class MemoEditor : public QWidget
@@ -55,9 +59,12 @@ public:
     void beginEdit() override;
     void endEdit() override;
     void saveEdit() override { endEdit(); }
+    virtual void exportToPdf(const QString& fileName);
 
 protected:
     explicit TextMemoEditor(MemoItem* memoItem, QWidget *parent = nullptr);
+
+    static void exportToPdf(QTextDocument* doc, const QString& fileName);
 
     MemoTextEdit* _editor = nullptr;
     TextEditSpellcheck* _spellcheck = nullptr;

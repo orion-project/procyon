@@ -48,7 +48,7 @@ private:
     Ori::MruFileList *_mruList;
     QLabel *_statusMemoCount, *_statusFileName;
     QAction *_actionCreateTopLevelFolder, *_actionCreateFolder, *_actionRenameFolder, *_actionDeleteFolder;
-    QAction *_actionMemoFont, *_actionWordWrap;
+    QAction *_actionMemoFont, *_actionWordWrap, *_actionMemoExportPdf;
     QAction *_actionOpenMemo, *_actionCreateMemo, *_actionDeleteMemo;
     QString _lastOpenedCatalog;
     SpellcheckControl* _spellcheckControl;
@@ -73,6 +73,7 @@ private:
     void memoRemoved(MemoItem* item);
     bool closeAllMemos();
     void openMemoPage(MemoItem* item);
+    void exportToPdf();
     MemoPage* findMemoPage(MemoItem* item) const;
     MemoPage* currentMemoPage() const;
     void optionsMenuAboutToShow();

@@ -337,13 +337,12 @@ void CatalogWidget::fillExpandedIds(QStringList& ids, const QModelIndex& parentI
     for (int row = 0; row < rowCount; row++)
     {
         auto index = _catalogModel->index(row, 0, parentIndex);
-        if (_catalogView->isExpanded(index))
+        if (_catalogModel->catalogItem(index)->isFolder())
         {
-            auto data = _catalogModel->data(index, Qt::UserRole);
-            if (data.isNull()) continue;
-            ids << QString::number(data.toInt());
+            if (_catalogView->isExpanded(index))
+                ids << QString::number(_catalogModel->data(index, Qt::UserRole).toInt());
+            fillExpandedIds(ids, index);
         }
-        fillExpandedIds(ids, index);
     }
 }
 

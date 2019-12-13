@@ -2,6 +2,9 @@
 #include "CatalogStore.h"
 
 #include <QDebug>
+#include <QUuid>
+
+static const QString KEY_UID("UID");
 
 //------------------------------------------------------------------------------
 //                                MemoType
@@ -353,3 +356,18 @@ void Catalog::fillMemoIdsFlat(FolderItem* root, QVector<int> &ids)
     }
 }
 
+QString Catalog::uid() const
+{
+    return CatalogStore::settingsManager()->readString(KEY_UID);
+}
+
+QString Catalog::getOrMakeUid()
+{
+    QString uid = CatalogStore::settingsManager()->readString(KEY_UID);
+    if (uid.isEmpty())
+    {
+        uid = QUuid::createUuid().toString();
+        CatalogStore::settingsManager()->writeString(KEY_UID, uid);
+    }
+    return uid;
+}

@@ -15,6 +15,9 @@ public:
     void writeValue(const QString& id, const QVariant& value) const;
     QVariant readValue(const QString& id, const QVariant& defValue = QVariant(), bool *hasValue = nullptr) const;
 
+    void writeString(const QString& id, const QString& value) const;
+    QString readString(const QString& id, const QString& defValue = QString()) const;
+
     void writeBool(const QString& id, bool value) const;
     bool readBool(const QString& id, bool defValue) const;
 

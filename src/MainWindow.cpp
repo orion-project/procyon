@@ -262,9 +262,16 @@ void MainWindow::loadSettings(QSettings* s)
 
 void MainWindow::loadSession()
 {
+    auto catalogUid = _catalog->uid();
+    if (catalogUid.isEmpty())
+    {
+        qWarning() << "Unable to get catalog uid, session will not be restored:" << _catalog->fileName();
+        return;
+    }
+
     Ori::Settings settings;
 
-    settings.beginGroup(QFileInfo(_catalog->fileName()).baseName());
+    settings.beginGroup(catalogUid);
     QStringList expandedIds = settings.value("expandedFolders").toString().split(',');
     _catalogView->setExpandedIds(expandedIds);
 
@@ -283,6 +290,13 @@ void MainWindow::loadSession()
 
 void MainWindow::saveSession()
 {
+    auto catalogUid = _catalog->getOrMakeUid();
+    if (catalogUid.isEmpty())
+    {
+        qWarning() << "Unable to get catalog uid, session will not be saved:" << _catalog->fileName();
+        return;
+    }
+
     Ori::Settings settings;
 
     QStringList openedIds;
@@ -299,7 +313,8 @@ void MainWindow::saveSession()
             activeId = memoId;
     }
     QStringList expandedIds = _catalogView->getExpandedIds();
-    settings.beginGroup(QFileInfo(_catalog->fileName()).baseName());
+    settings.beginGroup(catalogUid);
+    settings.setValue("path", _catalog->fileName());
     settings.setValue("expandedFolders", expandedIds.join(','));
     settings.setValue("openedMemos", openedIds.join(','));
     settings.setValue("activeMemo", activeId);

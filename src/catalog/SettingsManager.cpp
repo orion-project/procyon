@@ -79,6 +79,19 @@ QVariant SettingsManager::readValue(const QString& id, const QVariant& defValue,
     return query.record().field(table->value).value();
 }
 
+void SettingsManager::writeString(const QString& id, const QString& value) const
+{
+    bool hasValue;
+    QString oldValue = readValue(id, QVariant(), &hasValue).toString();
+    if (!hasValue || oldValue != value)
+        writeValue(id, value);
+}
+
+QString SettingsManager::readString(const QString& id, const QString& defValue) const
+{
+    return readValue(id, defValue).toString();
+}
+
 void SettingsManager::writeBool(const QString& id, bool value) const
 {
     bool hasValue;

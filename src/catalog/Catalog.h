@@ -180,6 +180,9 @@ public:
     MemoItem* findMemoById(int id) const;
     FolderItem* findFolderById(int id) const;
 
+    QString uid() const;
+    QString getOrMakeUid();
+
     IntResult countMemos() const;
 
     QString renameFolder(FolderItem* item, const QString& title);

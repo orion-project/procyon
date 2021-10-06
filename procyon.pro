@@ -4,7 +4,12 @@
 #
 #-------------------------------------------------
 
-QT += core gui widgets sql printsupport
+QT += core gui widgets sql printsupport core5compat
+
+# core5compat is only needed for QTextCodec
+# which is needed for opening LibreOffice dictionaries for hunspell
+# which are in strange encodings sometimes (e.g. KOI8-R)
+greaterThan(QT_MAJOR_VERSION,5): QT += core5compat
 
 TARGET = procyon
 TEMPLATE = app
@@ -17,10 +22,8 @@ DESTDIR = $$_PRO_FILE_PWD_/bin
 include($$_PRO_FILE_PWD_/orion/orion.pri)
 
 # hunspell
-exists($$_PRO_FILE_PWD_/deps/hunspell-1.7.0) {
-    INCLUDEPATH += $$_PRO_FILE_PWD_/deps/hunspell-1.7.0/src
-    win32: LIBS += -L$$_PRO_FILE_PWD_/deps/hunspell-1.7.0/src/hunspell/.libs -lhunspell-1.7-0
-    else: LIBS += $$_PRO_FILE_PWD_/deps/hunspell-1.7.0/src/hunspell/.libs/libhunspell-1.7.a
+exists($$_PRO_FILE_PWD_/deps/hunspell) {
+    include($$_PRO_FILE_PWD_/deps/hunspell.pri)
     DEFINES += ENABLE_SPELLCHECK
 }
 

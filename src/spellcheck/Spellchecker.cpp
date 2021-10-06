@@ -11,6 +11,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QMenu>
+#include <QRegularExpression>
 #include <QTextCodec>
 
 #include "tools/OriSettings.h"
@@ -21,8 +22,10 @@ QMap<QString, QString> langNamesMap();
 //                                Spellchecker
 //------------------------------------------------------------------------------
 
+namespace  {
 static const QString dictFileExt(".dic");
 static const QString affixFileExt(".aff");
+}
 
 static QDir dictionaryDir()
 {
@@ -43,7 +46,7 @@ static QStringList dictionaries()
 {
     QStringList dicts;
 
-    for (auto fileInfo : dictionaryDir().entryInfoList())
+    for (auto& fileInfo : dictionaryDir().entryInfoList())
         if (fileInfo.fileName().endsWith(dictFileExt))
             dicts << fileInfo.baseName();
 
@@ -69,13 +72,16 @@ static QString dictionaryEncoding(const QString& affixFilePath)
     }
     QString encoding;
     QTextStream stream(&file);
-    QRegExp enc_detector("^\\s*SET\\s+([A-Z0-9\\-]+)\\s*", Qt::CaseInsensitive);
+    QRegularExpression enc_detector("^\\s*SET\\s+([A-Z0-9\\-]+)\\s*", QRegularExpression::CaseInsensitiveOption);
     for (QString line = stream.readLine(); !line.isEmpty(); line = stream.readLine())
-        if (enc_detector.indexIn(line) > -1)
+    {
+        auto m = enc_detector.match(line);
+        if (m.hasMatch())
         {
-            encoding = enc_detector.cap(1);
+            encoding = m.captured(1);
             break;
         }
+    }
     file.close();
     return encoding;
 }
@@ -177,7 +183,11 @@ void Spellchecker::save(const QString &word)
     }
 
     QTextStream stream(&file);
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    stream.setEncoding(QStringConverter::Utf8);
+#else
     stream.setCodec("UTF-8");
+#endif
     stream << word << "\n";
     file.close();
 }
@@ -185,7 +195,7 @@ void Spellchecker::save(const QString &word)
 QStringList Spellchecker::suggest(const QString &word) const
 {
     QStringList variants;
-    for (auto variant : _hunspell->suggest(_codec->fromUnicode(word).toStdString()))
+    for (auto& variant : _hunspell->suggest(_codec->fromUnicode(word).toStdString()))
         variants << _codec->toUnicode(QByteArray::fromStdString(variant));
     return variants;
 }
@@ -204,7 +214,11 @@ void Spellchecker::loadUserDictionary()
     }
 
     QTextStream stream(&file);
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    stream.setEncoding(QStringConverter::Utf8);
+#else
     stream.setCodec("UTF-8");
+#endif
     for (QString word = stream.readLine(); !word.isEmpty(); word = stream.readLine())
         _hunspell->add(_codec->fromUnicode(word).toStdString());
     file.close();
@@ -228,7 +242,7 @@ SpellcheckControl::SpellcheckControl(QObject* parent) : QObject(parent)
     _actionGroup->addAction(actionNone);
 
     auto langNames = langNamesMap();
-    for (auto lang : dicts)
+    for (auto& lang : dicts)
     {
         auto langName = langNames.contains(lang) ? langNames[lang] : lang;
         auto actionDict = new QAction(langName, this);

@@ -9,5 +9,5 @@ HighlightingRule1::HighlightingRule1(const QString& name,
                          options(options)
 {
     for (auto patternStr : patternStrs)
-        patterns << QRegExp(patternStr);
+        patterns << QRegularExpression(patternStr);
 }

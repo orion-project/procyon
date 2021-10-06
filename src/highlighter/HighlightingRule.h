@@ -2,6 +2,7 @@
 #define HIGHLIGHTING_RULE_H
 
 #include <QSyntaxHighlighter>
+#include <QRegularExpression>
 
 class HighlightingRule
 {
@@ -9,14 +10,14 @@ public:
     HighlightingRule(const QString &patternStr, int styleId, int nth = 0)
     {
         this->patternStr = patternStr;
-        this->pattern = QRegExp(patternStr);
+        this->pattern = QRegularExpression(patternStr);
         this->styleId = styleId;
         this->nth = nth;
     }
 
     int id;
     QString patternStr;
-    QRegExp pattern;
+    QRegularExpression pattern;
     int styleId;
     int nth;
 };
@@ -43,7 +44,7 @@ public:
                       const Options& options = Options());
 
     QString name;
-    QVector<QRegExp> patterns;
+    QVector<QRegularExpression> patterns;
     QTextCharFormat format;
     Options options;
 };

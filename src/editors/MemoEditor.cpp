@@ -69,6 +69,7 @@ QString TextMemoEditor::data() const
 
 void TextMemoEditor::toggleSpellcheck(bool on)
 {
+#ifdef ENABLE_SPELLCHECK
     if (on)
     {
         if (!_spellcheckLang.isEmpty())
@@ -88,6 +89,9 @@ void TextMemoEditor::toggleSpellcheck(bool on)
             _spellcheck = nullptr;
         }
     }
+#else
+    Q_UNUSED(on)
+#endif
 }
 
 void TextMemoEditor::setSpellcheckLang(const QString &lang)
@@ -130,7 +134,12 @@ void TextMemoEditor::exportToPdf(QTextDocument* doc, const QString& fileName)
 {
     QPrinter printer(QPrinter::PrinterResolution);
     printer.setOutputFormat(QPrinter::PdfFormat);
+
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 15, 0))
+    printer.setPageSize(QPageSize(QPageSize::A4));
+#else
     printer.setPaperSize(QPrinter::A4);
+#endif
     printer.setOutputFileName(fileName);
 
     doc->print(&printer);

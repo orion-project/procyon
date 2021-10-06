@@ -1,6 +1,8 @@
 #ifndef SPELL_CHECKER_H
 #define SPELL_CHECKER_H
 
+#ifdef ENABLE_SPELLCHECK
+
 #include <QObject>
 
 QT_BEGIN_NAMESPACE
@@ -8,6 +10,7 @@ class QAction;
 class QActionGroup;
 class QMenu;
 class QWidget;
+class QTextCodec;
 QT_END_NAMESPACE
 
 class Hunspell;
@@ -62,5 +65,7 @@ private:
 
     void actionGroupTriggered(QAction* action);
 };
+
+#endif // ENABLE_SPELLCHECK
 
 #endif // SPELL_CHECKER_H

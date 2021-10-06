@@ -14,7 +14,7 @@ struct HighlighterInfo
     QString title;
 };
 
-class HighlighterManager : public Singleton<HighlighterManager>
+class HighlighterManager : public Ori::Singleton<HighlighterManager>
 {
 public:
     QVector<HighlighterInfo> highlighters() const;
@@ -24,7 +24,7 @@ public:
 private:
     HighlighterManager() {}
 
-    friend class Singleton<HighlighterManager>;
+    friend class Ori::Singleton<HighlighterManager>;
 };
 
 #endif // HIGHLIGHTER_MANAGER_H

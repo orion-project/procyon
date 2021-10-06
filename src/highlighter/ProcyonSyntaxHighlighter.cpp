@@ -101,22 +101,21 @@ void ProcyonSyntaxHighlighter::highlightBlock(const QString &text)
 {
     for (const HighlightingRule1& rule : *rules)
     {
-        for (const QRegExp& pattern : rule.patterns)
+        for (const auto& pattern : rule.patterns)
         {
-            int idx = pattern.indexIn(text);
-            while (idx >= 0)
+            auto m = pattern.match(text);
+            if (m.hasMatch())
             {
-                int pos = pattern.pos(rule.options.matchGroup);
-                int length = pattern.cap(rule.options.matchGroup).length();
+                int pos = m.capturedStart(rule.options.matchGroup);
+                int length = m.capturedLength(rule.options.matchGroup);
 
                 // Font style is applied correctly but highlighter can't make anchors and apply tooltips.
                 // We do it manually overriding event handlers in MemoEditor.
                 // There is the bug but seems nobody cares: https://bugreports.qt.io/browse/QTBUG-21553
                 if (rule.options.isHyperlink)
                 {
-                    QStringRef href(&text, pos, length);
                     QTextCharFormat format(rule.format);
-                    format.setAnchorHref(href.toString());
+                    format.setAnchorHref(m.captured(rule.options.matchGroup));
                     setFormat(pos, length, format);
                 }
                 else if (rule.options.fontSizeDelta != 0)
@@ -127,7 +126,7 @@ void ProcyonSyntaxHighlighter::highlightBlock(const QString &text)
                 }
                 else
                     setFormat(pos, length, rule.format);
-                idx = pattern.indexIn(text, pos + length);
+                m = pattern.match(text, pos + length);
             }
         }
     }

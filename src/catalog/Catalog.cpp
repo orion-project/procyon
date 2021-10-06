@@ -3,6 +3,7 @@
 
 #include <QDebug>
 #include <QUuid>
+#include <QFile>
 
 static const QString KEY_UID("UID");
 

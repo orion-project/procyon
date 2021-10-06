@@ -1,5 +1,7 @@
 #include "Spellchecker.h"
 
+#ifdef ENABLE_SPELLCHECK
+
 #include "hunspell/hunspell.hxx"
 
 #include <QActionGroup>
@@ -266,3 +268,5 @@ void SpellcheckControl::actionGroupTriggered(QAction* action)
 {
     emit langSelected(action->data().toString());
 }
+
+#endif // ENABLE_SPELLCHECK

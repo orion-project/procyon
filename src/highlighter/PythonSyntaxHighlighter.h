@@ -46,12 +46,12 @@ private:
     QStringList braces;
 
     //! Highlighst multi-line strings, returns true if after processing we are still within the multi-line section.
-    bool matchMultiline(const QString &text, const QRegExp &delimiter, const int inState, const QTextCharFormat &style);
+    bool matchMultiline(const QString &text, const QRegularExpression &delimiter, const int inState, const QTextCharFormat &style);
 
     HighlightingStyleSet* styles;
     QList<HighlightingRule> rules;
-    QRegExp triSingleQuote;
-    QRegExp triDoubleQuote;
+    QRegularExpression triSingleQuote;
+    QRegularExpression triDoubleQuote;
 };
 
 #endif

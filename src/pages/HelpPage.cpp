@@ -50,7 +50,7 @@ void HelpPage::showAbout()
     w->resize(bckgnd.size());
 
     auto p = w->palette();
-    p.setBrush(QPalette::Background, QBrush(bckgnd));
+    p.setBrush(QPalette::Window, QBrush(bckgnd));
     w->setPalette(p);
 
     auto f = w->font();

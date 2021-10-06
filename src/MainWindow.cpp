@@ -12,7 +12,10 @@
 #include "pages/MemoPage.h"
 #include "pages/SqlConsolePage.h"
 #include "pages/StyleEditorPage.h"
+
+#ifdef ENABLE_SPELLCHECK
 #include "spellcheck/Spellchecker.h"
+#endif
 
 #include "helpers/OriDialogs.h"
 #include "helpers/OriLayouts.h"
@@ -22,6 +25,7 @@
 #include "tools/OriWaitCursor.h"
 #include "widgets/OriMruMenu.h"
 
+#include <QCloseEvent>
 #include <QDebug>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -107,8 +111,10 @@ MainWindow::MainWindow() : QMainWindow()
 #endif
     setCentralWidget(_splitter);
 
+#ifdef ENABLE_SPELLCHECK
     _spellcheckControl = new SpellcheckControl(this);
     connect(_spellcheckControl, &SpellcheckControl::langSelected, this, &MainWindow::setMemoSpellcheckLang);
+#endif
 
     _highlighterControl = new HighlighterControl(this);
     connect(_highlighterControl, &HighlighterControl::selected, this, &MainWindow::setMemoHighlighter);
@@ -159,12 +165,14 @@ void MainWindow::createMenu()
     _actionMemoExportPdf = m->addAction(tr("Export to PDF..."), this, &MainWindow::exportToPdf);
     m->addSeparator();
 
+#ifdef ENABLE_SPELLCHECK
     _spellcheckMenu = _spellcheckControl->makeMenu(this);
     if (_spellcheckMenu)
     {
         connect(_spellcheckMenu, &QMenu::aboutToShow, this, &MainWindow::spellcheckMenuAboutToShow);
         m->addMenu(_spellcheckMenu);
     }
+#endif
 
     _highlighterMenu = _highlighterControl->makeMenu(this);
     if (_highlighterMenu)
@@ -553,9 +561,9 @@ void MainWindow::memoRemoved(MemoItem* item)
 
 void MainWindow::optionsMenuAboutToShow()
 {
-    if (!_spellcheckMenu) return;
     auto memoPage = currentMemoPage();
-    _spellcheckMenu->setEnabled(memoPage && !memoPage->isReadOnly());
+    if (_spellcheckMenu)
+        _spellcheckMenu->setEnabled(memoPage && !memoPage->isReadOnly());
     _highlighterMenu->setEnabled(memoPage && memoPage->memoItem()->type() == plainTextMemoType());
     _actionMemoExportPdf->setEnabled(memoPage);
     _actionMemoFont->setEnabled(memoPage);
@@ -566,9 +574,11 @@ void MainWindow::optionsMenuAboutToShow()
 
 void MainWindow::spellcheckMenuAboutToShow()
 {
+#ifdef ENABLE_SPELLCHECK
     auto memoPage = currentMemoPage();
     if (memoPage)
         _spellcheckControl->showCurrentLang(memoPage->spellcheckLang());
+#endif
 }
 
 void MainWindow::highlighterMenuAboutToShow()

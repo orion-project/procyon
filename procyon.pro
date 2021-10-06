@@ -17,9 +17,12 @@ DESTDIR = $$_PRO_FILE_PWD_/bin
 include($$_PRO_FILE_PWD_/orion/orion.pri)
 
 # hunspell
-INCLUDEPATH += $$_PRO_FILE_PWD_/deps/hunspell-1.7.0/src
-win32: LIBS += -L$$_PRO_FILE_PWD_/deps/hunspell-1.7.0/src/hunspell/.libs -lhunspell-1.7-0
-else: LIBS += $$_PRO_FILE_PWD_/deps/hunspell-1.7.0/src/hunspell/.libs/libhunspell-1.7.a
+exists($$_PRO_FILE_PWD_/deps/hunspell-1.7.0) {
+    INCLUDEPATH += $$_PRO_FILE_PWD_/deps/hunspell-1.7.0/src
+    win32: LIBS += -L$$_PRO_FILE_PWD_/deps/hunspell-1.7.0/src/hunspell/.libs -lhunspell-1.7-0
+    else: LIBS += $$_PRO_FILE_PWD_/deps/hunspell-1.7.0/src/hunspell/.libs/libhunspell-1.7.a
+    DEFINES += ENABLE_SPELLCHECK
+}
 
 # hoedown
 include($$_PRO_FILE_PWD_/deps/hoedown.pri)

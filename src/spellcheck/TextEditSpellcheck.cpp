@@ -1,5 +1,7 @@
 #include "TextEditSpellcheck.h"
 
+#ifdef ENABLE_SPELLCHECK
+
 #include "Spellchecker.h"
 #include "../TextEditHelpers.h"
 
@@ -274,3 +276,5 @@ void TextEditSpellcheck::wordIgnored(const QString& word)
             errorMarks << es;
     _editor->setExtraSelections(errorMarks);
 }
+
+#endif // ENABLE_SPELLCHECK

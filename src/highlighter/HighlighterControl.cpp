@@ -3,6 +3,7 @@
 
 #include <QAction>
 #include <QMenu>
+#include <QActionGroup>
 
 HighlighterControl::HighlighterControl(QObject *parent) : QObject(parent)
 {
@@ -14,7 +15,7 @@ HighlighterControl::HighlighterControl(QObject *parent) : QObject(parent)
     actionNone->setCheckable(true);
     _actionGroup->addAction(actionNone);
 
-    for (auto h : HighlighterManager::instance().highlighters())
+    for (auto& h : HighlighterManager::instance().highlighters())
     {
         auto actionDict = new QAction(h.title, this);
         actionDict->setCheckable(true);

@@ -244,7 +244,7 @@ static MemoType* selectMemoTypeDlg()
     Ori::Widgets::SelectableTileRadioGroup tripTypeGroup;
 
     auto tripTypeLayout = new QHBoxLayout();
-    tripTypeLayout->setMargin(0);
+    tripTypeLayout->setContentsMargins(0, 0, 0, 0);
     tripTypeLayout->setSpacing(12);
     for (auto memoType : QVector<MemoType*>({plainTextMemoType(), markdownMemoType()}))
     {
@@ -261,7 +261,7 @@ static MemoType* selectMemoTypeDlg()
     QWidget content;
     Ori::Layouts::LayoutV({tripTypeLayout}).setMargin(0).setSpacing(12).useFor(&content);
 
-    auto dlg = Ori::Dlg::Dialog(&content)
+    auto dlg = Ori::Dlg::Dialog(&content, false)
             .withTitle(qApp->tr("Choose Memo Type"))
             .withContentToButtonsSpacingFactor(3)
             .withOkSignal(&tripTypeGroup, SIGNAL(doubleClicked(QVariant)));

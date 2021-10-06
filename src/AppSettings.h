@@ -26,8 +26,8 @@ public:
     virtual void optionChanged(AppSettingsOption) {}
 };
 
-class AppSettings : public Singleton<AppSettings>,
-                    public Notifier<AppSettingsListener>
+class AppSettings : public Ori::Singleton<AppSettings>,
+                    public Ori::Notifier<AppSettingsListener>
 {
 public:
     class Option

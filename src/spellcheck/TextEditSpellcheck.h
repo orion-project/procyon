@@ -1,6 +1,8 @@
 #ifndef TEXT_EDIT_SPELLCHECK_H
 #define TEXT_EDIT_SPELLCHECK_H
 
+#ifdef ENABLE_SPELLCHECK
+
 #include <QPointer>
 #include <QTextEdit>
 
@@ -44,5 +46,7 @@ private:
     void wordIgnored(const QString& word);
     void cursorMoved();
 };
+
+#endif // ENABLE_SPELLCHECK
 
 #endif // TEXT_EDIT_SPELLCHECK_H

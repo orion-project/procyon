@@ -53,7 +53,8 @@ private:
     QString _lastOpenedCatalog;
     SpellcheckControl* _spellcheckControl;
     HighlighterControl* _highlighterControl;
-    QMenu *_spellcheckMenu, *_highlighterMenu;
+    QMenu *_spellcheckMenu = nullptr;
+    QMenu *_highlighterMenu;
 
     void createMenu();
     void createStatusBar();

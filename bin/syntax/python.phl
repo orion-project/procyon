@@ -1,0 +1,28 @@
+name: python
+title: Python code
+
+rule: Keywords
+terms: and,assert,break,class,continue,def,del,elif,else,except,exec,finally
+terms: for,from,global,if,import,in,is,lambda,not,or,pass,print,raise,return
+terms: try,while,yield,None,True,False
+color: blue
+
+# Single-quoted string, possibly containing escaped quote \'
+rule: String (double-quoted)
+expr: '[^\\']*(\\.[^\\']*)*'
+color: magenta
+
+# Double-quoted string, possibly containing escaped quote \"
+rule: String (double-quoted)
+expr: "[^\\"]*(\\.[^\\"]*)*"
+color: magenta
+
+rule: Triple-quoted string (single)
+style: multiline
+expr: '''
+color: darkMagenta
+
+rule: Triple-quoted string (double)
+style: multiline
+expr: """
+color: darkMagenta

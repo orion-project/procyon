@@ -11,22 +11,6 @@
 namespace Ori {
 namespace Highlighter {
 
-struct Rule
-{
-    QString name;
-    QVector<QRegularExpression> exprs;
-    QTextCharFormat format;
-    int group = 0;
-    bool hyperlink = false;
-    int fontSizeDelta = 0;
-};
-
-struct Spec
-{
-    Meta meta;
-    QVector<Rule> rules;
-};
-
 //------------------------------------------------------------------------------
 //                                SpecLoader
 //------------------------------------------------------------------------------
@@ -39,7 +23,7 @@ private:
     int lineNo = 0;
     QString key, val;
 
-    void error(QString msg)
+    void warning(QString msg)
     {
         qWarning() << "Highlighter" << file.fileName() << "| line" << lineNo << "|" << msg;
     }
@@ -53,13 +37,37 @@ private:
         auto keyLen = line.indexOf(':');
         if (keyLen < 1)
         {
-            error("key not found");
+            warning("key not found");
             return false;
         }
         key = line.first(keyLen).trimmed();
         val = line.sliced(keyLen+1).trimmed();
         //qDebug() << "Highlighter" << file.fileName() << "| line" << lineNo << "| key" << key << "| value" << val;
         return true;
+    }
+
+    void finalizeRule(Spec& spec, Rule& rule)
+    {
+        if (!rule.terms.isEmpty())
+        {
+            rule.exprs.clear();
+            for (const auto& term : rule.terms)
+                rule.exprs << QRegularExpression(QString("\\b%1\\b").arg(term));
+        }
+        if (rule.multiline)
+        {
+            if (rule.exprs.isEmpty())
+            {
+                qWarning() << "Highlighter" << file.fileName() << "| rule"
+                           << rule.name << "| must be at least one \"expr\" when multiline";
+                rule.multiline = false;
+            }
+            else if (rule.exprs.size() == 1)
+                rule.exprs << QRegularExpression(rule.exprs.first());
+            else if (rule.exprs.size() > 2)
+                rule.exprs.resize(2);
+        }
+        spec.rules << rule;
     }
 
 public:
@@ -99,7 +107,7 @@ public:
             {
                 return suffice;
             }
-            else error("unknown key");
+            else warning("unknown key");
         }
         return false;
     }
@@ -118,23 +126,27 @@ public:
                 continue;
             if (key == "rule")
             {
-                spec.rules << rule;
+                finalizeRule(spec, rule);
                 rule = Rule();
                 rule.name = val;
             }
             else if (key == "expr")
             {
-                QRegularExpression expr(val);
-                if (!expr.isValid())
-                    error("invalid expression");
-                else
-                    rule.exprs << expr;
+                if (rule.terms.isEmpty())
+                {
+                    QRegularExpression expr(val);
+                    if (!expr.isValid())
+                        warning("invalid expression");
+                    else
+                        rule.exprs << expr;
+                }
+                else warning("can't have \"expr\" and \"terms\" in the same rule");
             }
             else if (key == "color")
             {
                 QColor c(val);
                 if (!c.isValid())
-                    error("invalid color value");
+                    warning("invalid color value");
                 else
                     rule.format.setForeground(c);
             }
@@ -142,7 +154,7 @@ public:
             {
                 QColor c(val);
                 if (!c.isValid())
-                    error("invalid color value");
+                    warning("invalid color value");
                 else
                     rule.format.setBackground(c);
             }
@@ -151,7 +163,7 @@ public:
                 bool ok;
                 int group = val.toInt(&ok);
                 if (!ok)
-                    error("invalid integer value");
+                    warning("invalid integer value");
                 else
                     rule.group = group;
             }
@@ -173,12 +185,23 @@ public:
                         rule.format.setAnchor(true);
                         rule.hyperlink = true;
                     }
-                    else error("unknown style " + s);
+                    else if (s == "multiline")
+                        rule.multiline = true;
+                    else warning("unknown style " + s);
                 }
             }
-            else error("unknown key");
+            else if (key == "terms")
+            {
+                if (rule.exprs.isEmpty())
+                {
+                    for (const auto& term : val.split(',', Qt::SkipEmptyParts))
+                        rule.terms << term.trimmed();
+                }
+                else warning("can't have \"expr\" and \"terms\" in the same rule");
+            }
+            else warning("unknown key");
         }
-        spec.rules << rule;
+        finalizeRule(spec, rule);
     }
 };
 
@@ -233,6 +256,11 @@ void loadHighlighters()
             SpecLoader loader(fileInfo.absoluteFilePath());
             if (loader.loadMeta(meta))
             {
+                if (specCache().allMetas.contains(meta.name))
+                {
+                    qWarning() << "Highlighter is already registered" << meta.name;
+                    continue;
+                }
                 specCache().allMetas[meta.name] = meta;
                 qDebug() << "Highlighter loaded" << meta.name << meta.file;
             }
@@ -264,8 +292,14 @@ Highlighter::Highlighter(QTextDocument *parent, QString name)
 
 void Highlighter::highlightBlock(const QString &text)
 {
+    bool hasMultilines = false;
     for (const auto& rule : _spec.rules)
     {
+        if (rule.multiline && rule.exprs.size() >= 1)
+        {
+            hasMultilines = true;
+            continue;
+        }
         for (const auto& expr : rule.exprs)
         {
             auto m = expr.match(text);
@@ -295,10 +329,62 @@ void Highlighter::highlightBlock(const QString &text)
             }
         }
     }
+    if (hasMultilines)
+    {
+        int offset = 0;
+        setCurrentBlockState(0);
+        for (const auto& rule : _spec.rules)
+        {
+            if (!rule.multiline) continue;
+            offset = matchMultiline(text, rule, offset);
+            if (offset < 0) break;
+        }
+    }
+}
+
+int Highlighter::matchMultiline(const QString &text, const Rule& rule, int initialOffset)
+{
+    const auto& exprBeg = rule.exprs[0];
+    const auto& exprEnd = rule.exprs[1];
+    QRegularExpressionMatch m;
+
+    int start = 0;
+    int offset = initialOffset;
+    bool matchEnd = previousBlockState() > 0;
+    while (true)
+    {
+        m = (matchEnd ? exprEnd : exprBeg).match(text, offset);
+        if (m.hasMatch())
+        {
+            if (matchEnd)
+            {
+                setFormat(start, m.capturedEnd()-start, rule.format);
+                setCurrentBlockState(0);
+                matchEnd = false;
+            }
+            else
+            {
+                start = m.capturedStart();
+                matchEnd = true;
+            }
+            offset = m.capturedEnd();
+        }
+        else
+        {
+            if (matchEnd)
+            {
+                setFormat(start, text.length()-start, rule.format);
+                setCurrentBlockState(1);
+                offset = -1;
+            }
+            break;
+        }
+    }
+    return offset;
 }
 
 //------------------------------------------------------------------------------
-//                                SpecLoader
+//                                 Control
 //------------------------------------------------------------------------------
 
 Control::Control(QObject *parent) : QObject(parent)

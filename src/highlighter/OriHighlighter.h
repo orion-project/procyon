@@ -20,6 +20,24 @@ struct Meta
     QString displayTitle() const { return title.isEmpty() ? name : title; }
 };
 
+struct Rule
+{
+    QString name;
+    QVector<QRegularExpression> exprs;
+    QTextCharFormat format;
+    QStringList terms;
+    int group = 0;
+    bool hyperlink = false;
+    bool multiline = false;
+    int fontSizeDelta = 0;
+};
+
+struct Spec
+{
+    Meta meta;
+    QVector<Rule> rules;
+};
+
 void loadHighlighters();
 QVector<Meta> availableHighlighters();
 bool exists(QString name);
@@ -37,6 +55,8 @@ protected:
 private:
     const struct Spec& _spec;
     QTextDocument* _document;
+
+    int matchMultiline(const QString &text, const Rule& rule, int initialOffset);
 };
 
 class Control : public QObject

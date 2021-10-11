@@ -48,6 +48,7 @@ macx: ICON = img/icon/main.icns
 
 SOURCES += src/main.cpp\
     src/AppSettings.cpp \
+    src/highlighter/OriHighlighter.cpp \
     src/pages/AppSettingsPage.cpp \
     src/spellcheck/LangCodeAndNames.cpp \
     src/MainWindow.cpp \
@@ -68,10 +69,7 @@ SOURCES += src/main.cpp\
     src/widgets/MemoTextEdit.cpp \
     src/editors/PlainTextMemoEditor.cpp \
     src/markdown/ori_html.c \
-    src/highlighter/HighlighterControl.cpp \
-    src/highlighter/HighlighterManager.cpp \
     src/highlighter/HighlightingRule.cpp \
-    src/highlighter/ProcyonSyntaxHighlighter.cpp \
     src/highlighter/PythonSyntaxHighlighter.cpp \
     src/CatalogModel.cpp \
     src/OpenedPagesWidget.cpp \
@@ -87,6 +85,7 @@ HEADERS  += src/MainWindow.h \
     src/AppSettings.h \
     src/CatalogWidget.h \
     src/CatalogModel.h \
+    src/highlighter/OriHighlighter.h \
     src/pages/AppSettingsPage.h \
     src/spellcheck/Spellchecker.h \
     src/TextEditHelpers.h \
@@ -104,10 +103,7 @@ HEADERS  += src/MainWindow.h \
     src/widgets/MemoTextEdit.h \
     src/editors/PlainTextMemoEditor.h \
     src/markdown/ori_html.h \
-    src/highlighter/HighlighterControl.h \
-    src/highlighter/HighlighterManager.h \
     src/highlighter/HighlightingRule.h \
-    src/highlighter/ProcyonSyntaxHighlighter.h \
     src/highlighter/PythonSyntaxHighlighter.h \
     src/OpenedPagesWidget.h \
     src/pages/HelpPage.h \

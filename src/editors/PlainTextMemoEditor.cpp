@@ -1,7 +1,7 @@
 #include "PlainTextMemoEditor.h"
 
 #include "../catalog/Catalog.h"
-#include "../highlighter/HighlighterManager.h"
+#include "../highlighter/OriHighlighter.h"
 #include "../widgets/MemoTextEdit.h"
 
 #include "helpers/OriLayouts.h"
@@ -17,7 +17,7 @@ PlainTextMemoEditor::PlainTextMemoEditor(MemoItem *memoItem, QWidget *parent) : 
 
     Ori::Layouts::LayoutV({_editor}).setMargin(0).useFor(this);
 
-    QTimer::singleShot(0, [this](){
+    QTimer::singleShot(0, this, [this](){
         auto sb = 1.5 * style()->pixelMetric(QStyle::PM_ScrollBarExtent);
         _editor->document()->setTextWidth(_editor->width() - sb);
     });
@@ -42,8 +42,8 @@ void PlainTextMemoEditor::setHighlighterName(const QString& name)
     _editor->setUndoRedoEnabled(false);
 
     if (_highlighter) delete _highlighter;
-
-    _highlighter = HighlighterManager::instance().makeHighlighter(name, _editor->document());
+    if (!name.isEmpty() && Ori::Highlighter::exists(name))
+        _highlighter = new Ori::Highlighter::Highlighter(_editor->document(), name);
 
     _editor->setUndoRedoEnabled(true);
 }

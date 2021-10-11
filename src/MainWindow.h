@@ -15,14 +15,17 @@ class Catalog;
 class CatalogWidget;
 class OpenedPagesWidget;
 class SpellcheckControl;
-class HighlighterControl;
 class InfoWidget;
 class MemoPage;
 class MemoItem;
 
 namespace Ori {
 class MruFileList;
-}
+
+namespace Highlighter {
+    class Control;
+} // namespace Highlighter
+} // namespace Ori
 
 
 class MainWindow : public QMainWindow
@@ -52,7 +55,7 @@ private:
     QAction *_actionOpenMemo, *_actionCreateMemo, *_actionDeleteMemo;
     QString _lastOpenedCatalog;
     SpellcheckControl* _spellcheckControl;
-    HighlighterControl* _highlighterControl;
+    Ori::Highlighter::Control* _highlighterControl;
     QMenu *_spellcheckMenu = nullptr;
     QMenu *_highlighterMenu;
 

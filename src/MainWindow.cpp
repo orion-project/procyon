@@ -5,7 +5,7 @@
 #include "OpenedPagesWidget.h"
 #include "catalog/Catalog.h"
 #include "catalog/CatalogStore.h"
-#include "highlighter/HighlighterControl.h"
+#include "highlighter/OriHighlighter.h"
 #include "pages/AppSettingsPage.h"
 #include "pages/HelpPage.h"
 #include "pages/MarkdownCssEditorPage.h"
@@ -116,8 +116,8 @@ MainWindow::MainWindow() : QMainWindow()
     connect(_spellcheckControl, &SpellcheckControl::langSelected, this, &MainWindow::setMemoSpellcheckLang);
 #endif
 
-    _highlighterControl = new HighlighterControl(this);
-    connect(_highlighterControl, &HighlighterControl::selected, this, &MainWindow::setMemoHighlighter);
+    _highlighterControl = new Ori::Highlighter::Control(this);
+    connect(_highlighterControl, &Ori::Highlighter::Control::selected, this, &MainWindow::setMemoHighlighter);
 
     createMenu();
     createStatusBar();
@@ -174,7 +174,7 @@ void MainWindow::createMenu()
     }
 #endif
 
-    _highlighterMenu = _highlighterControl->makeMenu(this);
+    _highlighterMenu = _highlighterControl->makeMenu(tr("Highlighter"), this);
     if (_highlighterMenu)
     {
         connect(_highlighterMenu, &QMenu::aboutToShow, this, &MainWindow::highlighterMenuAboutToShow);

@@ -1,0 +1,109 @@
+name: procyon
+title: Procyon memo
+
+rule: Command
+expr: ^\s*\${1}.*$
+color: darkBlue
+
+rule: Subcommand
+expr: ^\s*\${2}.*$
+color: mediumBlue
+
+rule: Header
+expr: ^\s*\*.*$
+color: black
+style: bold
+        
+rule: Subheader
+expr: ^\s*\-.*$
+color: midnightBlue
+style: bold
+
+rule: Quote
+expr: ^\s*\|.*$
+color: teal
+
+rule: Section
+expr: ^\s*\+.*$
+color: darkOrchid
+style: bold
+
+rule: Exclame
+expr: ^\s*\!.*$
+color: red
+
+rule: Question
+expr: ^\s*\?.*$
+color: magenta
+
+rule: Output
+expr: ^\s*\>.*$
+color: darkMagenta
+
+rule: Option
+expr: ^\s*-{2}.*$
+color: darkSlateBlue
+
+rule: Comment
+expr: \s*#.*$
+color: darkGreen
+style: italic
+
+rule: Inline exclame
+expr: [\s:;.,?`()]+(![^!]+!)[\s:;.,`?()]+
+expr: [\s:;.,?`()]+(![^!]+!)$
+color: red
+group: 1
+
+rule: Inline question
+expr: [\s:;.,!`()]+(\?[^\?]+\?)[\s:;.,`!()]+
+expr: [\s:;.,!`()]+(\?[^\?]+\?)$
+color: magenta
+group: 1
+
+rule: Inline code
+expr: [\s:;.,!?()]+(`[^`]+`)[\s:;.,!?()]+
+expr: ^(`[^`]+`)[\s:;.,!?()]+
+expr: [\s:;.,!?()]+(`[^`]+`)$
+expr: ^(`[^`]+`)$
+color: maroon
+back: seashell
+group: 1
+
+rule: Inline bold
+expr: [\s:;.,!?()]+(\*[^\*]+\*)[\s:;.,!?()]+
+expr: ^(\*[^\*]+\*)[\s:;.,!?()]+
+expr: [\s:;.,!?()]+(\*[^\*]+\*)$
+expr: ^(\*[^\*]+\*)$
+style: bold
+group: 1
+
+rule: Inline italic
+expr: [\s:;.,!?()]+(_[^_]+_)[\s:;.,!?()]+
+expr: ^(_[^_]+_)[\s:;.,!?()]+
+expr: [\s:;.,!?()]+(_[^_]+_)$
+expr: ^(_[^_]+_)$
+style: italic
+group: 1
+
+rule: Inline strikeout
+expr: [\s:;.,!?()]+(~[^~]+~)[\s:;.,!?()]+
+expr: ^(~[^~]+~)[\s:;.,!?()]+
+expr: [\s:;.,!?()]+(~[^~]+~)$
+expr: ^(~[^~]+~)$
+style: strikeout
+group: 1
+
+rule: Hyperlink
+expr: \bhttp(s?)://[^\s]+\b
+color: blue
+style: underline,hyperlink
+
+# These are supposed to override all previous formatting, so put at the end
+rule: Separator
+expr: ^\s*-{3,}.*$
+color: darkGray
+
+rule: Quiet
+expr: ^\s*\..*$
+color: gainsboro

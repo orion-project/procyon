@@ -1,6 +1,7 @@
 #ifndef ORI_HIGHLIGHTER_H
 #define ORI_HIGHLIGHTER_H
 
+#include <QWidget>
 #include <QSyntaxHighlighter>
 
 QT_BEGIN_NAMESPACE
@@ -11,14 +12,20 @@ QT_END_NAMESPACE
 namespace Ori {
 namespace Highlighter {
 
+
+class SpecStorage;
+
+
 struct Meta
 {
     QString name;
     QString title;
-    QString file;
+    QString source;
+    QSharedPointer<SpecStorage> storage;
 
     QString displayTitle() const { return title.isEmpty() ? name : title; }
 };
+
 
 struct Rule
 {
@@ -32,15 +39,39 @@ struct Rule
     int fontSizeDelta = 0;
 };
 
+
 struct Spec
 {
     Meta meta;
     QVector<Rule> rules;
 };
 
-void loadHighlighters();
+
+class SpecStorage
+{
+public:
+    virtual ~SpecStorage() {}
+    virtual bool readOnly() const = 0;
+    virtual QVector<Meta> load() const = 0;
+    virtual Spec load(const QString& source) const = 0;
+};
+
+
+class DefaultStorage : public SpecStorage
+{
+public:
+    bool readOnly() const override;
+    QVector<Meta> load() const override;
+    Spec load(const QString &source) const override;
+
+    static QSharedPointer<SpecStorage> create();
+};
+
+
+void loadHighlighters(const QVector<QSharedPointer<SpecStorage>>& storages);
 QVector<Meta> availableHighlighters();
 bool exists(QString name);
+
 
 class Highlighter : public QSyntaxHighlighter
 {
@@ -59,17 +90,19 @@ private:
     int matchMultiline(const QString &text, const Rule& rule, int initialOffset);
 };
 
+
 class Control : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit Control(QObject *parent = nullptr);
+    explicit Control(const QVector<QSharedPointer<SpecStorage>>& storages, QObject *parent = nullptr);
 
     QMenu* makeMenu(QString title, QWidget* parent = nullptr);
 
     void showCurrent(const QString& name);
     void setEnabled(bool on);
+    QString currentHighlighter() const;
 
 signals:
     void selected(const QString& highlighter);
@@ -78,6 +111,17 @@ private:
     QActionGroup* _actionGroup = nullptr;
 
     void actionGroupTriggered(QAction* action);
+    void editHighlighter();
+    void newHighlighter();
+};
+
+
+class EditDialog : public QWidget
+{
+    Q_OBJECT
+
+public:
+    explicit EditDialog(QString name);
 };
 
 } // namespace Highlighter

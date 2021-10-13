@@ -116,7 +116,7 @@ MainWindow::MainWindow() : QMainWindow()
     connect(_spellcheckControl, &SpellcheckControl::langSelected, this, &MainWindow::setMemoSpellcheckLang);
 #endif
 
-    _highlighterControl = new Ori::Highlighter::Control(this);
+    _highlighterControl = new Ori::Highlighter::Control({Ori::Highlighter::DefaultStorage::create()}, this);
     connect(_highlighterControl, &Ori::Highlighter::Control::selected, this, &MainWindow::setMemoHighlighter);
 
     createMenu();

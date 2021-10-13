@@ -8,11 +8,13 @@
 #include <QRegularExpression>
 #include <QTextDocument>
 
+#include "orion/helpers/OriDialogs.h"
+
 namespace Ori {
 namespace Highlighter {
 
 //------------------------------------------------------------------------------
-//                                SpecLoader
+//                                 SpecLoader
 //------------------------------------------------------------------------------
 
 struct SpecLoader
@@ -86,8 +88,6 @@ public:
     {
         if (!file.isOpen())
             return false;
-
-        meta.file = file.fileName();
 
         bool suffice = false;
         while (!stream.atEnd())
@@ -206,7 +206,63 @@ public:
 };
 
 //------------------------------------------------------------------------------
-//                                    SpecCache
+//                              DefaultSpecStorage
+//------------------------------------------------------------------------------
+
+QSharedPointer<SpecStorage> DefaultStorage::create()
+{
+    return QSharedPointer<SpecStorage>(new DefaultStorage());
+}
+
+bool DefaultStorage::readOnly() const
+{
+    return true;
+}
+
+QVector<Meta> DefaultStorage::load() const
+{
+    QVector<Meta> metas;
+    QDir dir(qApp->applicationDirPath() + "/syntax");
+#ifdef Q_OS_MAC
+    if (!dir.exists())
+    {
+        // Look near the application bundle, it is for development mode
+        return QDir(qApp->applicationDirPath() % "/../../../syntax");
+    }
+#endif
+    if (!dir.exists())
+    {
+        qWarning() << "Syntax highlighter directory doesn't exist" << dir.path();
+        return metas;
+    }
+    qDebug() << "Hightlighters dir" << dir.path();
+    for (auto& fileInfo : dir.entryInfoList())
+    {
+        if (fileInfo.fileName().endsWith(".phl"))
+        {
+            Meta meta;
+            auto filename = fileInfo.absoluteFilePath();
+            SpecLoader loader(filename);
+            if (loader.loadMeta(meta))
+            {
+                meta.source = filename;
+                metas << meta;
+            }
+        }
+    }
+    return metas;
+}
+
+Spec DefaultStorage::load(const QString& source) const
+{
+    Spec spec;
+    SpecLoader loader(source);
+    loader.load(spec);
+    return spec;
+}
+
+//------------------------------------------------------------------------------
+//                                 SpecCache
 //------------------------------------------------------------------------------
 
 struct SpecCache
@@ -218,9 +274,10 @@ struct SpecCache
     {
         if (!loadedSpecs.contains(name))
         {
-            Spec spec;
-            SpecLoader loader(allMetas[name].file);
-            loader.load(spec);
+            const auto& meta = allMetas[name];
+            Spec spec = meta.storage->load(meta.source);
+            spec.meta.source = meta.source;
+            spec.meta.storage = meta.storage;
             loadedSpecs[name] = spec;
         }
         return loadedSpecs[name];
@@ -233,38 +290,22 @@ static SpecCache& specCache()
     return cache;
 }
 
-void loadHighlighters()
+void loadHighlighters(const QVector<QSharedPointer<SpecStorage>>& storages)
 {
-    QDir dir(qApp->applicationDirPath() + "/syntax");
-#ifdef Q_OS_MAC
-    if (!dir.exists())
+    for (const auto& storage : storages)
     {
-        // Look near the application bundle, it is for development mode
-        return QDir(qApp->applicationDirPath() % "/../../../syntax");
-    }
-#endif
-    if (!dir.exists())
-    {
-        qWarning() << "Syntax highlighter directory doesn't exist" << dir.path();
-        return;
-    }
-    qDebug() << "Hightlighters dir" << dir.path();
-    for (auto& fileInfo : dir.entryInfoList())
-        if (fileInfo.fileName().endsWith(".phl"))
+        for (auto& meta : storage->load())
         {
-            Meta meta;
-            SpecLoader loader(fileInfo.absoluteFilePath());
-            if (loader.loadMeta(meta))
+            if (specCache().allMetas.contains(meta.name))
             {
-                if (specCache().allMetas.contains(meta.name))
-                {
-                    qWarning() << "Highlighter is already registered" << meta.name;
-                    continue;
-                }
-                specCache().allMetas[meta.name] = meta;
-                qDebug() << "Highlighter loaded" << meta.name << meta.file;
+                qWarning() << "Highlighter is already registered" << meta.name;
+                continue;
             }
+            meta.storage = storage;
+            specCache().allMetas[meta.name] = meta;
+            qDebug() << "Highlighter registered" << meta.name << meta.source;
         }
+    }
 }
 
 QVector<Meta> availableHighlighters()
@@ -387,7 +428,7 @@ int Highlighter::matchMultiline(const QString &text, const Rule& rule, int initi
 //                                 Control
 //------------------------------------------------------------------------------
 
-Control::Control(QObject *parent) : QObject(parent)
+Control::Control(const QVector<QSharedPointer<SpecStorage>>& storages, QObject *parent) : QObject(parent)
 {
     _actionGroup = new QActionGroup(parent);
     _actionGroup->setExclusive(true);
@@ -397,7 +438,7 @@ Control::Control(QObject *parent) : QObject(parent)
     actionNone->setCheckable(true);
     _actionGroup->addAction(actionNone);
 
-    Ori::Highlighter::loadHighlighters();
+    Ori::Highlighter::loadHighlighters(storages);
     for (const auto& h : Ori::Highlighter::availableHighlighters())
     {
         auto actionDict = new QAction(h.displayTitle(), this);
@@ -409,18 +450,19 @@ Control::Control(QObject *parent) : QObject(parent)
 
 QMenu* Control::makeMenu(QString title, QWidget* parent)
 {
-    if (!_actionGroup) return nullptr;
-
     auto menu = new QMenu(title, parent);
     menu->addActions(_actionGroup->actions());
+    menu->addSeparator();
+    auto actnEdit = menu->addAction(tr("Edit highlighter..."));
+    auto actnNew = menu->addAction(tr("New highlighter..."));
+    connect(actnEdit, &QAction::triggered, this, &Control::editHighlighter);
+    connect(actnNew, &QAction::triggered, this, &Control::newHighlighter);
     return menu;
 }
 
 void Control::showCurrent(const QString& name)
 {
-    if (!_actionGroup) return;
-
-    for (auto action : _actionGroup->actions())
+    for (const auto& action : _actionGroup->actions())
         if (action->data().toString() == name)
         {
             action->setChecked(true);
@@ -430,12 +472,49 @@ void Control::showCurrent(const QString& name)
 
 void Control::setEnabled(bool on)
 {
-    if (_actionGroup) _actionGroup->setEnabled(on);
+    _actionGroup->setEnabled(on);
 }
 
 void Control::actionGroupTriggered(QAction* action)
 {
     emit selected(action->data().toString());
+}
+
+QString Control::currentHighlighter() const
+{
+    for (const auto& action : _actionGroup->actions())
+        if (action->isChecked())
+            return action->data().toString();
+    return QString();
+}
+
+void Control::editHighlighter()
+{
+    auto name = currentHighlighter();
+    if (name.isEmpty())
+    {
+        Ori::Dlg::info(tr("No highlighter is selected"));
+        return;
+    }
+    (new EditDialog(name))->show();
+}
+
+void Control::newHighlighter()
+{
+    (new EditDialog(""))->show();
+}
+
+//------------------------------------------------------------------------------
+//                                 Control
+//------------------------------------------------------------------------------
+
+EditDialog::EditDialog(QString name) : QWidget()
+{
+    if (name.isEmpty())
+        setWindowTitle(tr("Create Highlighter"));
+    else
+        setWindowTitle(tr("Edit Highlighter: %s").arg(name));
+    setAttribute(Qt::WA_DeleteOnClose);
 }
 
 } // namespace Highlighter

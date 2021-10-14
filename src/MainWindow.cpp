@@ -308,7 +308,7 @@ void MainWindow::loadSession()
     _catalogView->setExpandedIds(expandedIds);
 
     QStringList openedIds = settings.value("openedMemos").toString().split(',');
-    for (auto idStr : openedIds)
+    for (const auto& idStr : openedIds)
     {
         auto memoItem = _catalog->findMemoById(idStr.toInt());
         if (!memoItem) continue;

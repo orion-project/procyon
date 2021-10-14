@@ -256,7 +256,7 @@ QSharedPointer<SpecStorage> DefaultStorage::create()
 
 bool DefaultStorage::readOnly() const
 {
-    return true;
+    return false;
 }
 
 QVector<Meta> DefaultStorage::loadMetas() const
@@ -553,8 +553,8 @@ void Control::editHighlighter()
     const auto& spec = cache.loadedSpecs[name];
     if (!spec->meta.storage->readOnly())
     {
-        // reload spec with code an sample text
-        auto fullSpec = spec->meta.storage->loadSpec(spec->meta.name, true);
+        // reload spec with code and sample text
+        auto fullSpec = spec->meta.storage->loadSpec(spec->meta.source, true);
         emit editorRequested(fullSpec);
         return;
     }
@@ -584,7 +584,12 @@ void Control::newHighlighter()
                          "as a base for your new one?").arg(spec->meta.displayTitle())))
     {
         newHighlighterWithBase(spec);
+        return;
     }
+
+    QSharedPointer<Spec> newSpec(new Spec);
+    newSpec->meta.storage = cache.customStorage;
+    emit editorRequested(newSpec);
 }
 
 void Control::newHighlighterWithBase(const QSharedPointer<Spec>& base)

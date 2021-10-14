@@ -41,7 +41,7 @@ include(release/version.pri)
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
 
-RESOURCES += src/resources.qrc
+RESOURCES += resources.qrc
 
 win32: RC_FILE = src/app.rc
 macx: ICON = img/icon/main.icns

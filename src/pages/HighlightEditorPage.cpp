@@ -16,38 +16,49 @@ HighlightEditorPage::HighlightEditorPage(const QSharedPointer<Ori::Highlighter::
         setWindowTitle(tr("Edit Highlighter: %1").arg(spec->meta.displayTitle()));
     setWindowIcon(QIcon(":/icon/main"));
 
-    auto editor = new CodeTextEdit;
-    editor->setPlainText(spec->code);
+    _editor = new CodeTextEdit;
+    _editor->setPlainText(spec->code);
     auto hl = Ori::Highlighter::getSpec("highlighter");
     if (hl)
-        new Ori::Highlighter::Highlighter(editor->document(), hl);
+        new Ori::Highlighter::Highlighter(_editor->document(), hl);
 
-    auto sample = new QPlainTextEdit;
-    sample->setWordWrapMode(QTextOption::NoWrap);
-    sample->setProperty("role", "memo_editor");
-    sample->setFont(AppSettings::instance().memoFont);
-    sample->setPlainText(spec->sample);
-    new Ori::Highlighter::Highlighter(sample->document(), spec);
+    _sample = new QPlainTextEdit;
+    _sample->setWordWrapMode(QTextOption::NoWrap);
+    _sample->setProperty("role", "memo_editor");
+    _sample->setFont(AppSettings::instance().memoFont);
+    _sample->setPlainText(spec->sample);
+    new Ori::Highlighter::Highlighter(_sample->document(), spec);
 
     auto splitter = new QSplitter;
-    splitter->addWidget(editor);
-    splitter->addWidget(sample);
+    splitter->addWidget(_editor);
+    splitter->addWidget(_sample);
     splitter->setSizePolicy(splitter->sizePolicy().horizontalPolicy(),
                             QSizePolicy::Expanding);
 
     auto titleEditor = PageWidgets::makeTitleEditor(windowTitle());
 
     auto toolbar = new QToolBar;
-    auto actionCheck = toolbar->addAction(QIcon(":/toolbar/edit"), tr("Check"));
-    auto actionApply = toolbar->addAction(QIcon(":/toolbar/apply"), tr("Apply"));
+    auto actionCheck = toolbar->addAction(QIcon(":/toolbar/update"), tr("Check"), this, &HighlightEditorPage::checkHighlighter);
+    auto actionApply = toolbar->addAction(QIcon(":/toolbar/apply"), tr("Apply"), this, &HighlightEditorPage::applyHighlighter);
     toolbar->addSeparator();
     toolbar->addAction(QIcon(":/toolbar/close"), tr("Close"), [this](){
         deleteLater();
     });
 
     actionCheck->setShortcut(Qt::Key_F5);
+    actionApply->setShortcut(QKeySequence::Save);
 
     auto toolPanel = PageWidgets::makeHeaderPanel({titleEditor, toolbar});
 
     Ori::Layouts::LayoutV({toolPanel, splitter}).setMargin(0).setSpacing(0).useFor(this);
+}
+
+void HighlightEditorPage::checkHighlighter()
+{
+    _editor->setLineHints({{3, "something"}, {5, "went"}, {15, "wrong"}});
+}
+
+void HighlightEditorPage::applyHighlighter()
+{
+    _editor->setLineHints({});
 }

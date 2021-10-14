@@ -2,6 +2,7 @@
 
 #include <QPainter>
 #include <QTextBlock>
+#include <QToolTip>
 
 namespace {
 
@@ -11,15 +12,30 @@ public:
     LineNumberArea(CodeTextEdit *editor) : QWidget(editor), _editor(editor)
     {}
 
-    QSize sizeHint() const override
-    {
+    QSize sizeHint() const override {
         return QSize(_editor->lineNumberAreaWidth(), 0);
     }
 
 protected:
-    void paintEvent(QPaintEvent *event) override
-    {
+    void paintEvent(QPaintEvent *event) override {
         _editor->lineNumberAreaPaintEvent(event);
+    }
+
+    bool event(QEvent *event) override
+    {
+        if (event->type() != QEvent::ToolTip)
+            return QWidget::event(event);
+
+        auto helpEvent = dynamic_cast<QHelpEvent*>(event);
+        if (!helpEvent) return false;
+
+        auto hint = _editor->getLineHint(helpEvent->pos().y());
+        if (hint.isEmpty())
+            QToolTip::hideText();
+        else
+            QToolTip::showText(helpEvent->globalPos(), hint);
+        event->accept();
+        return true;
     }
 
 private:
@@ -29,8 +45,10 @@ private:
 struct EditorStyle
 {
     QBrush currentLineColor = QColor("steelBlue").lighter(220);
-    QPen lineNumTextPen = QPen(Qt::gray);
-    QColor lineNumBorderColor = QColor("silver");
+    QPen lineNumTextColor = QPen(Qt::gray);
+    QPen lineNumTextColorErr = QPen(Qt::white);
+    QPen lineNumBorderColor = QColor("silver");
+    QBrush lineNumBackColorErr = QColor(Qt::red).lighter(130);
     int lineNumRightMargin = 4;
     int lineNumLeftMargin = 6;
 };
@@ -63,7 +81,7 @@ CodeTextEdit::CodeTextEdit(QWidget *parent) : QPlainTextEdit(parent)
         editor->setFont(f);
     */
 
-    _lineNumberArea = new LineNumberArea(this);
+    _lineNumArea = new LineNumberArea(this);
 
     connect(this, &CodeTextEdit::blockCountChanged, this, &CodeTextEdit::updateLineNumberAreaWidth);
     connect(this, &CodeTextEdit::updateRequest, this, &CodeTextEdit::updateLineNumberArea);
@@ -78,7 +96,7 @@ void CodeTextEdit::resizeEvent(QResizeEvent *e)
     QPlainTextEdit::resizeEvent(e);
 
     QRect cr = contentsRect();
-    _lineNumberArea->setGeometry(QRect(cr.left(), cr.top(), lineNumberAreaWidth(), cr.height()));
+    _lineNumArea->setGeometry(QRect(cr.left(), cr.top(), lineNumberAreaWidth(), cr.height()));
 }
 
 int CodeTextEdit::lineNumberAreaWidth() const
@@ -105,9 +123,9 @@ void CodeTextEdit::updateLineNumberAreaWidth(int blockCount)
 void CodeTextEdit::updateLineNumberArea(const QRect &rect, int dy)
 {
     if (dy)
-        _lineNumberArea->scroll(0, dy);
+        _lineNumArea->scroll(0, dy);
     else
-        _lineNumberArea->update(0, rect.y(), _lineNumberArea->width(), rect.height());
+        _lineNumArea->update(0, rect.y(), _lineNumArea->width(), rect.height());
 
     if (rect.contains(viewport()->rect()))
         updateLineNumberAreaWidth(0);
@@ -127,10 +145,10 @@ void CodeTextEdit::lineNumberAreaPaintEvent(QPaintEvent *event)
 {
     const auto& style = editorStyle();
 
-    QPainter painter(_lineNumberArea);
+    QPainter painter(_lineNumArea);
     painter.fillRect(event->rect(), Qt::white);
     const auto& r = event->rect();
-    int lineNumW = _lineNumberArea->width();
+    int lineNumW = _lineNumArea->width();
     painter.setPen(style.lineNumBorderColor);
     painter.drawLine(lineNumW-1, r.top(), lineNumW-1, r.bottom());
 
@@ -143,7 +161,13 @@ void CodeTextEdit::lineNumberAreaPaintEvent(QPaintEvent *event)
     {
         if (block.isVisible() && lineBot >= r.top())
         {
-            painter.setPen(style.lineNumTextPen);
+            if (_lineHints.contains(lineNum))
+            {
+                painter.setPen(style.lineNumTextColorErr);
+                painter.fillRect(0, lineTop, lineNumW, lineH, style.lineNumBackColorErr);
+            }
+            else
+                painter.setPen(style.lineNumTextColor);
             painter.drawText(0, lineTop, lineNumW - style.lineNumRightMargin, lineH,
                 Qt::AlignRight|Qt::AlignVCenter, QString::number(lineNum));
         }
@@ -153,4 +177,33 @@ void CodeTextEdit::lineNumberAreaPaintEvent(QPaintEvent *event)
         lineBot = lineTop + lineH;
         lineNum++;
     }
+}
+
+void CodeTextEdit::setLineHints(const QMap<int, QString>& hints)
+{
+    _lineHints = hints;
+    update();
+}
+
+int CodeTextEdit::findLineNumber(int y) const
+{
+    QTextBlock block = firstVisibleBlock();
+    int lineNum = block.blockNumber() + 1;
+    int lineTop = qRound(blockBoundingGeometry(block).translated(contentOffset()).top());
+    int lineBot = lineTop + qRound(blockBoundingRect(block).height());
+    while (block.isValid())
+    {
+        if (y >= lineTop && y < lineBot)
+            return lineNum;
+        block = block.next();
+        lineTop = lineBot;
+        lineBot = lineTop + qRound(blockBoundingRect(block).height());
+        lineNum++;
+    }
+    return 0;
+}
+
+QString CodeTextEdit::getLineHint(int y) const
+{
+    return _lineHints.isEmpty() ? QString() : _lineHints[findLineNumber(y)];
 }

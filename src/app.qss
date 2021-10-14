@@ -163,7 +163,7 @@ QLabel[role=context_menu_header_text] {
 }
 #code_editor {
   font-family: Menlo,Monaco,Consolas,'Courier New',monospace;
-  windows:font-size: 17px;
+  windows:font-size: 15px;
   linux:font-size: 17px;
   macos:font-size: 14px;
 }

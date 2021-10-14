@@ -13,7 +13,7 @@ MemoTextBrowser::MemoTextBrowser(QWidget *parent) : QTextBrowser(parent)
 bool MemoTextBrowser::event(QEvent *event)
 {
     if (event->type() != QEvent::ToolTip)
-        return QTextEdit::event(event);
+        return QTextBrowser::event(event);
 
     auto helpEvent = dynamic_cast<QHelpEvent*>(event);
     if (not helpEvent) return false;

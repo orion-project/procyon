@@ -108,6 +108,7 @@ public:
 
 signals:
     void selected(const QString& highlighter);
+    void editorRequested(const QSharedPointer<Spec>& spec);
 
 private:
     QActionGroup* _actionGroup = nullptr;
@@ -115,6 +116,7 @@ private:
     void actionGroupTriggered(QAction* action);
     void editHighlighter();
     void newHighlighter();
+    void newHighlighterWithBase(const QSharedPointer<Spec>& base);
 };
 
 } // namespace Highlighter

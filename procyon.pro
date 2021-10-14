@@ -49,8 +49,8 @@ macx: ICON = img/icon/main.icns
 SOURCES += src/main.cpp\
     src/AppSettings.cpp \
     src/highlighter/OriHighlighter.cpp \
-    src/highlighter/OriHighlighterEditor.cpp \
     src/pages/AppSettingsPage.cpp \
+    src/pages/HighlightEditorPage.cpp \
     src/spellcheck/LangCodeAndNames.cpp \
     src/MainWindow.cpp \
     src/CatalogWidget.cpp \
@@ -87,8 +87,8 @@ HEADERS  += src/MainWindow.h \
     src/CatalogWidget.h \
     src/CatalogModel.h \
     src/highlighter/OriHighlighter.h \
-    src/highlighter/OriHighlighterEditor.h \
     src/pages/AppSettingsPage.h \
+    src/pages/HighlightEditorPage.h \
     src/spellcheck/Spellchecker.h \
     src/TextEditHelpers.h \
     src/Utils.h \

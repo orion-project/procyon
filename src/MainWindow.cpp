@@ -8,6 +8,7 @@
 #include "highlighter/OriHighlighter.h"
 #include "pages/AppSettingsPage.h"
 #include "pages/HelpPage.h"
+#include "pages/HighlightEditorPage.h"
 #include "pages/MarkdownCssEditorPage.h"
 #include "pages/MemoPage.h"
 #include "pages/SqlConsolePage.h"
@@ -78,6 +79,26 @@ void activateOrOpenNewPage(QStackedWidget* pagesView, OpenedPagesWidget* openedP
     openNewPage<TPage>(pagesView, openedPagesView);
 }
 
+void activateOrOpenHighlighEditorPage(QStackedWidget* pagesView, OpenedPagesWidget* openedPagesView,
+                                      QSharedPointer<Ori::Highlighter::Spec> spec)
+{
+    for (int i = 0; i < pagesView->count(); i++)
+    {
+        auto widget = pagesView->widget(i);
+        auto page = qobject_cast<HighlightEditorPage*>(widget);
+        if (page && page->spec == spec)
+        {
+            pagesView->setCurrentWidget(page);
+            openedPagesView->addOpenedPage(page);
+            return;
+        }
+    }
+    auto page = new HighlightEditorPage(spec);
+    pagesView->addWidget(page);
+    pagesView->setCurrentWidget(page);
+    openedPagesView->addOpenedPage(page);
+}
+
 } // namespace
 
 
@@ -118,6 +139,9 @@ MainWindow::MainWindow() : QMainWindow()
 
     _highlighterControl = new Ori::Highlighter::Control({Ori::Highlighter::DefaultStorage::create()}, this);
     connect(_highlighterControl, &Ori::Highlighter::Control::selected, this, &MainWindow::setMemoHighlighter);
+    connect(_highlighterControl, &Ori::Highlighter::Control::editorRequested, this, [this](const QSharedPointer<Ori::Highlighter::Spec>& spec){
+        activateOrOpenHighlighEditorPage(_pagesView, _openedPagesView, spec);
+    });
 
     createMenu();
     createStatusBar();
@@ -150,14 +174,14 @@ void MainWindow::createMenu()
 
     m = menuBar()->addMenu(tr("Notebook"));
     connect(m, &QMenu::aboutToShow, this, &MainWindow::updateMenuCatalog);
-    _actionCreateTopLevelFolder = m->addAction(tr("New Top Level Folder..."), [this](){ _catalogView->createTopLevelFolder(); });
-    _actionCreateFolder = m->addAction(tr("New Subfolder..."), [this](){ _catalogView->createFolder(); });
-    _actionRenameFolder = m->addAction(tr("Rename Folder..."), [this](){ _catalogView->renameFolder(); });
-    _actionDeleteFolder = m->addAction(tr("Delete Folder"), [this](){ _catalogView->deleteFolder(); });
+    _actionCreateTopLevelFolder = m->addAction(tr("New Top Level Folder..."), this, [this](){ _catalogView->createTopLevelFolder(); });
+    _actionCreateFolder = m->addAction(tr("New Subfolder..."), this, [this](){ _catalogView->createFolder(); });
+    _actionRenameFolder = m->addAction(tr("Rename Folder..."), this, [this](){ _catalogView->renameFolder(); });
+    _actionDeleteFolder = m->addAction(tr("Delete Folder"), this, [this](){ _catalogView->deleteFolder(); });
     m->addSeparator();
     _actionOpenMemo = m->addAction(tr("Open Memo"), this, &MainWindow::openMemo);
-    _actionCreateMemo = m->addAction(tr("New Memo..."), [this](){ _catalogView->createMemo(); });
-    _actionDeleteMemo = m->addAction(tr("Delete Memo"), [this](){ _catalogView->deleteMemo(); });
+    _actionCreateMemo = m->addAction(tr("New Memo..."), this, [this](){ _catalogView->createMemo(); });
+    _actionDeleteMemo = m->addAction(tr("Delete Memo"), this, [this](){ _catalogView->deleteMemo(); });
 
     m = menuBar()->addMenu(tr("Memo"));
     connect(m, &QMenu::aboutToShow, this, &MainWindow::optionsMenuAboutToShow);

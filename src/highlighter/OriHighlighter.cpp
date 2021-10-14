@@ -435,7 +435,7 @@ int Highlighter::matchMultiline(const QString &text, const Rule& rule, int ruleI
     const auto& exprEnd = rule.exprs[1];
     QRegularExpressionMatch m;
 
-    qDebug() << rule.name << previousBlockState() << "|" << initialOffset << "|" << text;
+    //qDebug() << rule.name << previousBlockState() << "|" << initialOffset << "|" << text;
 
     int start = 0;
     int offset = initialOffset;
@@ -540,9 +540,6 @@ QString Control::currentHighlighter() const
     return QString();
 }
 
-void createHighlighterDlg(const QSharedPointer<SpecStorage>& storage, const QSharedPointer<Spec>& base);
-void editHighlighterDlg(const QSharedPointer<Spec>& spec);
-
 void Control::editHighlighter()
 {
     auto& cache = specCache();
@@ -555,26 +552,49 @@ void Control::editHighlighter()
 
     const auto& spec = cache.loadedSpecs[name];
     if (!spec->meta.storage->readOnly())
-        return editHighlighterDlg(spec);
+    {
+        // reload spec with code an sample text
+        auto fullSpec = spec->meta.storage->loadSpec(spec->meta.name, true);
+        emit editorRequested(fullSpec);
+        return;
+    }
 
     if (Ori::Dlg::yes(tr("Highlighter \"%1\" is built-in and can not be edited. "
                          "Do you want to create a new highlighter on its base instead?"
                          ).arg(spec->meta.displayTitle())))
-        return createHighlighterDlg(cache.customStorage, spec);
+    {
+        newHighlighterWithBase(spec);
+    }
 }
 
 void Control::newHighlighter()
 {
     auto& cache = specCache();
     auto name = currentHighlighter();
-    if (!name.isEmpty() && cache.loadedSpecs.contains(name))
+    if (name.isEmpty() || !cache.loadedSpecs.contains(name))
     {
-        const auto& spec = cache.loadedSpecs[name];
-        if (Ori::Dlg::yes(tr("Do you want to use the current highlighter \"%1\" "
-                             "as a base for your new one?").arg(spec->meta.displayTitle())))
-            return createHighlighterDlg(cache.customStorage, spec);
+        QSharedPointer<Spec> spec(new Spec);
+        spec->meta.storage = cache.customStorage;
+        emit editorRequested(spec);
+        return;
     }
-    createHighlighterDlg(cache.customStorage, QSharedPointer<Spec>());
+
+    const auto& spec = cache.loadedSpecs[name];
+    if (Ori::Dlg::yes(tr("Do you want to use the current highlighter \"%1\" "
+                         "as a base for your new one?").arg(spec->meta.displayTitle())))
+    {
+        newHighlighterWithBase(spec);
+    }
+}
+
+void Control::newHighlighterWithBase(const QSharedPointer<Spec>& base)
+{
+    auto spec = base->meta.storage->loadSpec(base->meta.source, true);
+    spec->meta.name = "";
+    spec->meta.source = "";
+    spec->meta.title = "";
+    spec->meta.storage = specCache().customStorage;
+    emit editorRequested(spec);
 }
 
 } // namespace Highlighter

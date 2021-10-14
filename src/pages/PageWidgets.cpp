@@ -30,7 +30,9 @@ QTextEdit* makeCodeEditor()
     auto editor = new QTextEdit;
     editor->setAcceptRichText(false);
     editor->setProperty("role", "memo_editor");
+    editor->setObjectName("code_editor");
     editor->setWordWrapMode(QTextOption::NoWrap);
+/*
     auto f = editor->font();
 #if defined(Q_OS_WIN)
     f.setFamily("Courier New");
@@ -43,6 +45,7 @@ QTextEdit* makeCodeEditor()
     f.setPointSize(11);
 #endif
     editor->setFont(f);
+*/
     return editor;
 }
 

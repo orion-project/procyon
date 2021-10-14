@@ -24,6 +24,10 @@ private:
     QTextStream stream;
     int lineNo = 0;
     QString key, val;
+    QStringList code;
+    QStringList sample;
+    int sampleLineNo = -1;
+    bool withRawData = false;
 
     void warning(QString msg)
     {
@@ -33,7 +37,24 @@ private:
     bool readLine()
     {
         lineNo++;
-        auto line = stream.readLine().trimmed();
+        auto line = stream.readLine();
+
+        if (sampleLineNo >= 0)
+        {
+            val = line;
+            sampleLineNo++;
+            return true;
+        }
+
+        if (line.startsWith(QStringLiteral("---")))
+        {
+            sampleLineNo = 0;
+            return true;
+        }
+
+        code << line;
+
+        line = line.trimmed();
         if (line.isEmpty() || line[0] == '#')
             return false;
         auto keyLen = line.indexOf(':');
@@ -48,7 +69,7 @@ private:
         return true;
     }
 
-    void finalizeRule(Spec& spec, Rule& rule)
+    void finalizeRule(Spec* spec, Rule& rule)
     {
         if (!rule.terms.isEmpty())
         {
@@ -69,12 +90,13 @@ private:
             else if (rule.exprs.size() > 2)
                 rule.exprs.resize(2);
         }
-        spec.rules << rule;
+        spec->rules << rule;
     }
 
 public:
-    SpecLoader(QString fileName)
+    SpecLoader(QString fileName, bool withRawData)
     {
+        this->withRawData = withRawData;
         file.setFileName(fileName);
         if (!file.open(QFile::ReadOnly | QFile::Text))
         {
@@ -94,16 +116,20 @@ public:
         {
             if (!readLine())
                 continue;
-            if (key == "name")
+            if (sampleLineNo >= 0)
+            {
+                return suffice;
+            }
+            else if (key == QStringLiteral("name"))
             {
                 meta.name = val;
                 suffice = true;
             }
-            else if (key == "title")
+            else if (key == QStringLiteral("title"))
             {
                 meta.title = val;
             }
-            else if (key == "rule")
+            else if (key == QStringLiteral("rule"))
             {
                 return suffice;
             }
@@ -112,9 +138,9 @@ public:
         return false;
     }
 
-    void load(Spec& spec)
+    void load(Spec* spec)
     {
-        if (!loadMeta(spec.meta))
+        if (!loadMeta(spec->meta))
             return;
 
         Rule rule;
@@ -124,13 +150,22 @@ public:
         {
             if (!readLine())
                 continue;
-            if (key == "rule")
+            if (sampleLineNo == 0)
+            {
+                if (!withRawData) break;
+                // rules-to-sample separator, just skip it
+            }
+            else if (sampleLineNo > 0)
+            {
+                sample << val;
+            }
+            else if (key == QStringLiteral("rule"))
             {
                 finalizeRule(spec, rule);
                 rule = Rule();
                 rule.name = val;
             }
-            else if (key == "expr")
+            else if (key == QStringLiteral("expr"))
             {
                 if (rule.terms.isEmpty())
                 {
@@ -142,7 +177,7 @@ public:
                 }
                 else warning("can't have \"expr\" and \"terms\" in the same rule");
             }
-            else if (key == "color")
+            else if (key == QStringLiteral("color"))
             {
                 QColor c(val);
                 if (!c.isValid())
@@ -150,7 +185,7 @@ public:
                 else
                     rule.format.setForeground(c);
             }
-            else if (key == "back")
+            else if (key == QStringLiteral("back"))
             {
                 QColor c(val);
                 if (!c.isValid())
@@ -158,7 +193,7 @@ public:
                 else
                     rule.format.setBackground(c);
             }
-            else if (key == "group")
+            else if (key == QStringLiteral("group"))
             {
                 bool ok;
                 int group = val.toInt(&ok);
@@ -167,30 +202,30 @@ public:
                 else
                     rule.group = group;
             }
-            else if (key == "style")
+            else if (key == QStringLiteral("style"))
             {
                 for (const auto& style : val.split(',', Qt::SkipEmptyParts))
                 {
                     auto s = style.trimmed();
-                    if (s == "bold")
+                    if (s == QStringLiteral("bold"))
                         rule.format.setFontWeight(QFont::Bold);
-                    else if (s == "italic")
+                    else if (s == QStringLiteral("italic"))
                         rule.format.setFontItalic(true);
-                    else if (s == "underline")
+                    else if (s == QStringLiteral("underline"))
                         rule.format.setFontUnderline(true);
-                    else if (s == "strikeout")
+                    else if (s == QStringLiteral("strikeout"))
                         rule.format.setFontStrikeOut(true);
-                    else if (s == "hyperlink")
+                    else if (s == QStringLiteral("hyperlink"))
                     {
                         rule.format.setAnchor(true);
                         rule.hyperlink = true;
                     }
-                    else if (s == "multiline")
+                    else if (s == QStringLiteral("multiline"))
                         rule.multiline = true;
                     else warning("unknown style " + s);
                 }
             }
-            else if (key == "terms")
+            else if (key == QStringLiteral("terms"))
             {
                 if (rule.exprs.isEmpty())
                 {
@@ -202,6 +237,11 @@ public:
             else warning("unknown key");
         }
         finalizeRule(spec, rule);
+        if (withRawData)
+        {
+            spec->code = code.join('\n');
+            spec->sample = sample.join('\n');
+        }
     }
 };
 
@@ -219,7 +259,7 @@ bool DefaultStorage::readOnly() const
     return true;
 }
 
-QVector<Meta> DefaultStorage::load() const
+QVector<Meta> DefaultStorage::loadMetas() const
 {
     QVector<Meta> metas;
     QDir dir(qApp->applicationDirPath() + "/syntax");
@@ -242,7 +282,7 @@ QVector<Meta> DefaultStorage::load() const
         {
             Meta meta;
             auto filename = fileInfo.absoluteFilePath();
-            SpecLoader loader(filename);
+            SpecLoader loader(filename, false);
             if (loader.loadMeta(meta))
             {
                 meta.source = filename;
@@ -253,11 +293,11 @@ QVector<Meta> DefaultStorage::load() const
     return metas;
 }
 
-Spec DefaultStorage::load(const QString& source) const
+QSharedPointer<Spec> DefaultStorage::loadSpec(const QString& source, bool withRawData) const
 {
-    Spec spec;
-    SpecLoader loader(source);
-    loader.load(spec);
+    QSharedPointer<Spec> spec(new Spec());
+    SpecLoader loader(source, withRawData);
+    loader.load(spec.get());
     return spec;
 }
 
@@ -268,16 +308,22 @@ Spec DefaultStorage::load(const QString& source) const
 struct SpecCache
 {
     QMap<QString, Meta> allMetas;
-    QMap<QString, Spec> loadedSpecs;
+    QMap<QString, QSharedPointer<Spec>> loadedSpecs;
+    QSharedPointer<SpecStorage> customStorage;
 
-    const Spec& getSpec(QString name)
+    QSharedPointer<Spec> getSpec(QString name)
     {
+        if (!allMetas.contains(name))
+        {
+            qWarning() << "Unknown highlighter" << name;
+            return QSharedPointer<Spec>();
+        }
         if (!loadedSpecs.contains(name))
         {
             const auto& meta = allMetas[name];
-            Spec spec = meta.storage->load(meta.source);
-            spec.meta.source = meta.source;
-            spec.meta.storage = meta.storage;
+            auto spec = meta.storage->loadSpec(meta.source);
+            spec->meta.source = meta.source;
+            spec->meta.storage = meta.storage;
             loadedSpecs[name] = spec;
         }
         return loadedSpecs[name];
@@ -290,51 +336,49 @@ static SpecCache& specCache()
     return cache;
 }
 
-void loadHighlighters(const QVector<QSharedPointer<SpecStorage>>& storages)
+void loadMetas(const QVector<QSharedPointer<SpecStorage>>& storages)
 {
+    auto& cache = specCache();
     for (const auto& storage : storages)
     {
-        for (auto& meta : storage->load())
+        // The first writable storage becomes a default storage
+        // for new highlighters, this enough for now
+        if (!storage->readOnly() && !cache.customStorage)
+            cache.customStorage = storage;
+
+        for (auto& meta : storage->loadMetas())
         {
-            if (specCache().allMetas.contains(meta.name))
+            if (cache.allMetas.contains(meta.name))
             {
                 qWarning() << "Highlighter is already registered" << meta.name;
                 continue;
             }
             meta.storage = storage;
-            specCache().allMetas[meta.name] = meta;
+            cache.allMetas[meta.name] = meta;
             qDebug() << "Highlighter registered" << meta.name << meta.source;
         }
     }
 }
 
-QVector<Meta> availableHighlighters()
+QSharedPointer<Spec> getSpec(const QString& name)
 {
-    return specCache().allMetas.values();
-}
-
-bool exists(QString name)
-{
-    if (specCache().allMetas.contains(name))
-        return true;
-    qWarning() << "Unknown highlighter" << name;
-    return false;
+    return specCache().getSpec(name);
 }
 
 //------------------------------------------------------------------------------
 //                                 Highlighter
 //------------------------------------------------------------------------------
 
-Highlighter::Highlighter(QTextDocument *parent, QString name)
-    : QSyntaxHighlighter(parent), _spec(specCache().getSpec(name)), _document(parent)
+Highlighter::Highlighter(QTextDocument *parent, const QSharedPointer<Spec>& spec)
+    : QSyntaxHighlighter(parent), _spec(spec), _document(parent)
 {
-    setObjectName(name);
+    setObjectName(spec->meta.name);
 }
 
 void Highlighter::highlightBlock(const QString &text)
 {
     bool hasMultilines = false;
-    for (const auto& rule : _spec.rules)
+    for (const auto& rule : _spec->rules)
     {
         if (rule.multiline && rule.exprs.size() >= 1)
         {
@@ -373,25 +417,29 @@ void Highlighter::highlightBlock(const QString &text)
     if (hasMultilines)
     {
         int offset = 0;
-        setCurrentBlockState(0);
-        for (const auto& rule : _spec.rules)
+        setCurrentBlockState(-1);
+        int size = _spec->rules.size();
+        for (int i = 0; i < size; i++)
         {
+            const auto& rule = _spec->rules.at(i);
             if (!rule.multiline) continue;
-            offset = matchMultiline(text, rule, offset);
+            offset = matchMultiline(text, rule, i, offset);
             if (offset < 0) break;
         }
     }
 }
 
-int Highlighter::matchMultiline(const QString &text, const Rule& rule, int initialOffset)
+int Highlighter::matchMultiline(const QString &text, const Rule& rule, int ruleIndex, int initialOffset)
 {
     const auto& exprBeg = rule.exprs[0];
     const auto& exprEnd = rule.exprs[1];
     QRegularExpressionMatch m;
 
+    qDebug() << rule.name << previousBlockState() << "|" << initialOffset << "|" << text;
+
     int start = 0;
     int offset = initialOffset;
-    bool matchEnd = previousBlockState() > 0;
+    bool matchEnd = previousBlockState() == ruleIndex;
     while (true)
     {
         m = (matchEnd ? exprEnd : exprBeg).match(text, offset);
@@ -415,7 +463,7 @@ int Highlighter::matchMultiline(const QString &text, const Rule& rule, int initi
             if (matchEnd)
             {
                 setFormat(start, text.length()-start, rule.format);
-                setCurrentBlockState(1);
+                setCurrentBlockState(ruleIndex);
                 offset = -1;
             }
             break;
@@ -438,13 +486,17 @@ Control::Control(const QVector<QSharedPointer<SpecStorage>>& storages, QObject *
     actionNone->setCheckable(true);
     _actionGroup->addAction(actionNone);
 
-    Ori::Highlighter::loadHighlighters(storages);
-    for (const auto& h : Ori::Highlighter::availableHighlighters())
+    loadMetas(storages);
+    const auto& allMetas = specCache().allMetas;
+    auto it = allMetas.constBegin();
+    while (it != allMetas.constEnd())
     {
-        auto actionDict = new QAction(h.displayTitle(), this);
+        const auto& meta = it.value();
+        auto actionDict = new QAction(meta.displayTitle(), this);
         actionDict->setCheckable(true);
-        actionDict->setData(h.name);
+        actionDict->setData(meta.name);
         _actionGroup->addAction(actionDict);
+        it++;
     }
 }
 
@@ -453,8 +505,8 @@ QMenu* Control::makeMenu(QString title, QWidget* parent)
     auto menu = new QMenu(title, parent);
     menu->addActions(_actionGroup->actions());
     menu->addSeparator();
-    auto actnEdit = menu->addAction(tr("Edit highlighter..."));
-    auto actnNew = menu->addAction(tr("New highlighter..."));
+    auto actnEdit = menu->addAction(tr("Edit Highlighter..."));
+    auto actnNew = menu->addAction(tr("New Highlighter..."));
     connect(actnEdit, &QAction::triggered, this, &Control::editHighlighter);
     connect(actnNew, &QAction::triggered, this, &Control::newHighlighter);
     return menu;
@@ -488,33 +540,41 @@ QString Control::currentHighlighter() const
     return QString();
 }
 
+void createHighlighterDlg(const QSharedPointer<SpecStorage>& storage, const QSharedPointer<Spec>& base);
+void editHighlighterDlg(const QSharedPointer<Spec>& spec);
+
 void Control::editHighlighter()
 {
+    auto& cache = specCache();
     auto name = currentHighlighter();
-    if (name.isEmpty())
+    if (name.isEmpty() || !cache.loadedSpecs.contains(name))
     {
         Ori::Dlg::info(tr("No highlighter is selected"));
         return;
     }
-    (new EditDialog(name))->show();
+
+    const auto& spec = cache.loadedSpecs[name];
+    if (!spec->meta.storage->readOnly())
+        return editHighlighterDlg(spec);
+
+    if (Ori::Dlg::yes(tr("Highlighter \"%1\" is built-in and can not be edited. "
+                         "Do you want to create a new highlighter on its base instead?"
+                         ).arg(spec->meta.displayTitle())))
+        return createHighlighterDlg(cache.customStorage, spec);
 }
 
 void Control::newHighlighter()
 {
-    (new EditDialog(""))->show();
-}
-
-//------------------------------------------------------------------------------
-//                                 Control
-//------------------------------------------------------------------------------
-
-EditDialog::EditDialog(QString name) : QWidget()
-{
-    if (name.isEmpty())
-        setWindowTitle(tr("Create Highlighter"));
-    else
-        setWindowTitle(tr("Edit Highlighter: %s").arg(name));
-    setAttribute(Qt::WA_DeleteOnClose);
+    auto& cache = specCache();
+    auto name = currentHighlighter();
+    if (!name.isEmpty() && cache.loadedSpecs.contains(name))
+    {
+        const auto& spec = cache.loadedSpecs[name];
+        if (Ori::Dlg::yes(tr("Do you want to use the current highlighter \"%1\" "
+                             "as a base for your new one?").arg(spec->meta.displayTitle())))
+            return createHighlighterDlg(cache.customStorage, spec);
+    }
+    createHighlighterDlg(cache.customStorage, QSharedPointer<Spec>());
 }
 
 } // namespace Highlighter

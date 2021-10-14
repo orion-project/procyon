@@ -42,8 +42,12 @@ void PlainTextMemoEditor::setHighlighterName(const QString& name)
     _editor->setUndoRedoEnabled(false);
 
     if (_highlighter) delete _highlighter;
-    if (!name.isEmpty() && Ori::Highlighter::exists(name))
-        _highlighter = new Ori::Highlighter::Highlighter(_editor->document(), name);
+    if (!name.isEmpty())
+    {
+        auto spec = Ori::Highlighter::getSpec(name);
+        if (spec)
+            _highlighter = new Ori::Highlighter::Highlighter(_editor->document(), spec);
+    }
 
     _editor->setUndoRedoEnabled(true);
 }

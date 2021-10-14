@@ -2,6 +2,7 @@
 #define ORI_HIGHLIGHTER_H
 
 #include <QWidget>
+#include <QRegularExpression>
 #include <QSyntaxHighlighter>
 
 QT_BEGIN_NAMESPACE
@@ -43,6 +44,8 @@ struct Rule
 struct Spec
 {
     Meta meta;
+    QString code;           // not empty only when spec is loaded withRawData
+    QString sample;         // not empty only when spec is loaded withRawData
     QVector<Rule> rules;
 };
 
@@ -52,8 +55,8 @@ class SpecStorage
 public:
     virtual ~SpecStorage() {}
     virtual bool readOnly() const = 0;
-    virtual QVector<Meta> load() const = 0;
-    virtual Spec load(const QString& source) const = 0;
+    virtual QVector<Meta> loadMetas() const = 0;
+    virtual QSharedPointer<Spec> loadSpec(const QString& source, bool withRawData = false) const = 0;
 };
 
 
@@ -61,16 +64,15 @@ class DefaultStorage : public SpecStorage
 {
 public:
     bool readOnly() const override;
-    QVector<Meta> load() const override;
-    Spec load(const QString &source) const override;
+    QVector<Meta> loadMetas() const override;
+    QSharedPointer<Spec> loadSpec(const QString &source, bool withRawData = false) const override;
 
     static QSharedPointer<SpecStorage> create();
 };
 
 
-void loadHighlighters(const QVector<QSharedPointer<SpecStorage>>& storages);
-QVector<Meta> availableHighlighters();
-bool exists(QString name);
+void loadMetas(const QVector<QSharedPointer<SpecStorage>>& storages);
+QSharedPointer<Spec> getSpec(const QString& name);
 
 
 class Highlighter : public QSyntaxHighlighter
@@ -78,16 +80,16 @@ class Highlighter : public QSyntaxHighlighter
     Q_OBJECT
 
 public:
-    explicit Highlighter(QTextDocument *parent, QString name);
+    explicit Highlighter(QTextDocument *parent, const QSharedPointer<Spec>& spec);
 
 protected:
     void highlightBlock(const QString &text);
 
 private:
-    const struct Spec& _spec;
+    QSharedPointer<Spec> _spec;
     QTextDocument* _document;
 
-    int matchMultiline(const QString &text, const Rule& rule, int initialOffset);
+    int matchMultiline(const QString &text, const Rule& rule, int ruleIndex, int initialOffset);
 };
 
 
@@ -113,15 +115,6 @@ private:
     void actionGroupTriggered(QAction* action);
     void editHighlighter();
     void newHighlighter();
-};
-
-
-class EditDialog : public QWidget
-{
-    Q_OBJECT
-
-public:
-    explicit EditDialog(QString name);
 };
 
 } // namespace Highlighter

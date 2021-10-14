@@ -15,7 +15,7 @@
 //                                 MemoEditor
 //------------------------------------------------------------------------------
 
-MemoEditor::MemoEditor(MemoItem *memoItem, QWidget *parent) : QWidget(parent), _memoItem(memoItem)
+MemoEditor::MemoEditor(MemoItem *memoItem) : QWidget(), _memoItem(memoItem)
 {
 }
 
@@ -23,8 +23,14 @@ MemoEditor::MemoEditor(MemoItem *memoItem, QWidget *parent) : QWidget(parent), _
 //                                TextMemoEditor
 //------------------------------------------------------------------------------
 
-TextMemoEditor::TextMemoEditor(MemoItem* memoItem, QWidget *parent) : MemoEditor(memoItem, parent)
+TextMemoEditor::TextMemoEditor(MemoItem* memoItem) : TextMemoEditor(memoItem, true)
 {
+}
+
+TextMemoEditor::TextMemoEditor(MemoItem* memoItem, bool createEditor) : MemoEditor(memoItem)
+{
+    if (!createEditor) return;
+
     setEditor(new MemoTextEdit);
     _editor->setReadOnly(true);
 

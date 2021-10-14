@@ -8,7 +8,6 @@ class MemoTextEdit;
 class TextEditSpellcheck;
 
 QT_BEGIN_NAMESPACE
-class QTextDocument;
 class QSyntaxHighlighter;
 QT_END_NAMESPACE
 
@@ -37,7 +36,7 @@ signals:
     void onModified(bool modified);
 
 protected:
-    explicit MemoEditor(MemoItem* memoItem, QWidget *parent = nullptr);
+    explicit MemoEditor(MemoItem* memoItem);
 
     MemoItem* _memoItem;
 };
@@ -66,8 +65,10 @@ public:
     QString highlighterName() const;
     void setHighlighterName(const QString& name);
 
-    explicit TextMemoEditor(MemoItem* memoItem, QWidget *parent = nullptr);
+    explicit TextMemoEditor(MemoItem* memoItem);
 protected:
+    explicit TextMemoEditor(MemoItem* memoItem, bool createEditor);
+
     MemoTextEdit* _editor = nullptr;
     TextEditSpellcheck* _spellcheck = nullptr;
     QString _spellcheckLang;

@@ -11,7 +11,7 @@
 
 #include <QStackedLayout>
 
-MarkdownMemoEditor::MarkdownMemoEditor(MemoItem* memoItem, QWidget *parent) : TextMemoEditor(memoItem, parent)
+MarkdownMemoEditor::MarkdownMemoEditor(MemoItem* memoItem) : TextMemoEditor(memoItem, false)
 {
     _view = new MemoTextBrowser;
     _view->document()->setDefaultStyleSheet(AppSettings::instance().markdownCss());

@@ -2,19 +2,19 @@
 
 #include "PageWidgets.h"
 #include "../AppSettings.h"
+#include "../widgets/CodeTextEdit.h"
 
 #include "helpers/OriLayouts.h"
 
-#include <QPlainTextEdit>
+#include <QIcon>
+#include <QToolBar>
 
 MarkdownCssEditorPage::MarkdownCssEditorPage(QWidget *parent) : QWidget(parent)
 {
     setWindowTitle("Markdown CSS Editor");
     setWindowIcon(QIcon(":/icon/main"));
 
-    auto editor = new QPlainTextEdit;
-    editor->setProperty("role", "memo_editor");
-    editor->setObjectName("code_editor");
+    auto editor = new CodeTextEdit;
     editor->setPlainText(AppSettings::instance().markdownCss());
 
     auto titleEditor = PageWidgets::makeTitleEditor("Markdown CSS Editor");

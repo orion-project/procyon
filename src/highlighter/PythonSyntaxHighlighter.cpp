@@ -108,7 +108,7 @@ PythonSyntaxHighlighter::PythonSyntaxHighlighter(QTextDocument *parent) : QSynta
     rules.append(HighlightingRule("\\bclass\\b\\s*(\\w+)", STYLE_DEFCLASS, 1));
 
     // From '#' until a newline
-    // FF: originally: r'#[^\\n]*'
+    // FF: originally: r''
     rules.append(HighlightingRule("#[^\\n]*", STYLE_COMMENT));
 
     // Numeric literals

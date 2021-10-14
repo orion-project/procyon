@@ -4,9 +4,9 @@
 #include "helpers/OriLayouts.h"
 
 #include <QDebug>
-#include <QFrame>
 #include <QListWidget>
 #include <QScrollArea>
+#include <QToolBar>
 
 AppSettingsPage::AppSettingsPage(QWidget *parent) : QWidget(parent)
 {

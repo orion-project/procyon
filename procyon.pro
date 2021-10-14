@@ -66,6 +66,7 @@ SOURCES += src/main.cpp\
     src/markdown/MarkdownHelper.cpp \
     src/editors/MarkdownMemoEditor.cpp \
     src/editors/MemoEditor.cpp \
+    src/widgets/CodeTextEdit.cpp \
     src/widgets/MemoTextBrowser.cpp \
     src/widgets/MemoTextEdit.cpp \
     src/markdown/ori_html.c \
@@ -100,6 +101,7 @@ HEADERS  += src/MainWindow.h \
     src/markdown/MarkdownHelper.h \
     src/editors/MarkdownMemoEditor.h \
     src/editors/MemoEditor.h \
+    src/widgets/CodeTextEdit.h \
     src/widgets/MemoTextBrowser.h \
     src/widgets/MemoTextEdit.h \
     src/markdown/ori_html.h \

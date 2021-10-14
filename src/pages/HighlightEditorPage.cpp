@@ -1,10 +1,11 @@
 #include "HighlightEditorPage.h"
 #include "PageWidgets.h"
 #include "../AppSettings.h"
+#include "../highlighter/OriHighlighter.h"
+#include "../widgets/CodeTextEdit.h"
 
 #include <QIcon>
 #include <QSplitter>
-#include <QPlainTextEdit>
 #include <QToolBar>
 
 HighlightEditorPage::HighlightEditorPage(const QSharedPointer<Ori::Highlighter::Spec>& spec) : QWidget(), spec(spec)
@@ -13,11 +14,13 @@ HighlightEditorPage::HighlightEditorPage(const QSharedPointer<Ori::Highlighter::
         setWindowTitle(tr("Create Highlighter"));
     else
         setWindowTitle(tr("Edit Highlighter: %1").arg(spec->meta.displayTitle()));
-
     setWindowIcon(QIcon(":/icon/main"));
 
-    auto editor = PageWidgets::makeCodeEditor();
+    auto editor = new CodeTextEdit;
     editor->setPlainText(spec->code);
+    auto hl = Ori::Highlighter::getSpec("highlighter");
+    if (hl)
+        new Ori::Highlighter::Highlighter(editor->document(), hl);
 
     auto sample = new QPlainTextEdit;
     sample->setWordWrapMode(QTextOption::NoWrap);

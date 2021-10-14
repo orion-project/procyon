@@ -2,11 +2,12 @@
 
 #include "PageWidgets.h"
 #include "../catalog/SqlHelper.h"
+#include "../widgets/CodeTextEdit.h"
 #include "helpers/OriLayouts.h"
 #include "helpers/OriWidgets.h"
 
 #include <QSplitter>
-#include <QPlainTextEdit>
+#include <QToolBar>
 
 namespace {
 
@@ -69,10 +70,7 @@ SqlConsolePage::SqlConsolePage(QWidget *parent) : QWidget(parent)
     setWindowTitle(tr("SQL Console"));
     setWindowIcon(QIcon(":/icon/main"));
 
-    auto editor = new QPlainTextEdit;
-    editor->setWordWrapMode(QTextOption::NoWrap);
-    editor->setProperty("role", "memo_editor");
-    editor->setObjectName("code_editor");
+    auto editor = new CodeTextEdit;
 
     auto result = new QTextEdit;
     result->setWordWrapMode(QTextOption::NoWrap);

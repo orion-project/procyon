@@ -13,6 +13,7 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <QToolButton>
+#include <QToolBar>
 
 namespace {
 const int PREVIEW_BUTTON_WIDTH = 100;

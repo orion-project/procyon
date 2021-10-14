@@ -3,6 +3,10 @@
 
 #include <QTextEdit>
 
+QT_BEGIN_NAMESPACE
+class QTextDocument;
+QT_END_NAMESPACE
+
 struct TextFormat
 {
     TextFormat() {}
@@ -53,6 +57,7 @@ private:
 namespace TextEditHelpers
 {
 QString hyperlinkAt(const QTextCursor& cursor);
+void exportToPdf(QTextDocument* doc, const QString& fileName);
 }
 
 #endif // TEXT_EDIT_HELPERS_H

@@ -5,6 +5,7 @@
 #include "../markdown/MarkdownHelper.h"
 #include "../widgets/MemoTextBrowser.h"
 #include "../widgets/MemoTextEdit.h"
+#include "../TextEditHelpers.h"
 
 #include "helpers/OriLayouts.h"
 
@@ -141,5 +142,5 @@ void MarkdownMemoEditor::exportToPdf(const QString& fileName)
             ? qobject_cast<QTextEdit*>(_view)
             : qobject_cast<QTextEdit*>(_editor);
 
-    TextMemoEditor::exportToPdf(editor->document(), fileName);
+    TextEditHelpers::exportToPdf(editor->document(), fileName);
 }

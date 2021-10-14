@@ -2,7 +2,7 @@
 
 #include "PageWidgets.h"
 #include "../editors/MarkdownMemoEditor.h"
-#include "../editors/PlainTextMemoEditor.h"
+#include "../editors/MemoEditor.h"
 #include "../catalog/Catalog.h"
 #include "../catalog/CatalogStore.h"
 
@@ -53,7 +53,7 @@ MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     if (memoType == markdownMemoType())
         _memoEditor = new MarkdownMemoEditor(_memoItem);
     else
-        _memoEditor = new PlainTextMemoEditor(_memoItem);
+        _memoEditor = new TextMemoEditor(_memoItem);
     connect(_memoEditor, &MemoEditor::onModified, this, &MemoPage::onModified);
 
     _titleEditor = PageWidgets::makeTitleEditor();
@@ -229,7 +229,7 @@ QString MemoPage::spellcheckLang() const
 
 void MemoPage::setHighlighter(const QString& name)
 {
-    auto editor = dynamic_cast<PlainTextMemoEditor*>(_memoEditor);
+    auto editor = dynamic_cast<TextMemoEditor*>(_memoEditor);
     if (editor)
     {
         editor->setHighlighterName(name);
@@ -239,7 +239,7 @@ void MemoPage::setHighlighter(const QString& name)
 
 QString MemoPage::highlighter() const
 {
-    auto editor = dynamic_cast<PlainTextMemoEditor*>(_memoEditor);
+    auto editor = dynamic_cast<TextMemoEditor*>(_memoEditor);
     return editor ? editor->highlighterName() : QString();
 }
 
@@ -270,7 +270,7 @@ void MemoPage::loadSettings()
 
     if (options.contains(MemoOptions::HIGHLIGHTER))
     {
-        auto editor = dynamic_cast<PlainTextMemoEditor*>(_memoEditor);
+        auto editor = dynamic_cast<TextMemoEditor*>(_memoEditor);
         if (editor) editor->setHighlighterName(options[MemoOptions::HIGHLIGHTER].toString());
     }
 }

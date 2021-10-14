@@ -68,7 +68,6 @@ SOURCES += src/main.cpp\
     src/editors/MemoEditor.cpp \
     src/widgets/MemoTextBrowser.cpp \
     src/widgets/MemoTextEdit.cpp \
-    src/editors/PlainTextMemoEditor.cpp \
     src/markdown/ori_html.c \
     src/highlighter/HighlightingRule.cpp \
     src/highlighter/PythonSyntaxHighlighter.cpp \
@@ -103,7 +102,6 @@ HEADERS  += src/MainWindow.h \
     src/editors/MemoEditor.h \
     src/widgets/MemoTextBrowser.h \
     src/widgets/MemoTextEdit.h \
-    src/editors/PlainTextMemoEditor.h \
     src/markdown/ori_html.h \
     src/highlighter/HighlightingRule.h \
     src/highlighter/PythonSyntaxHighlighter.h \

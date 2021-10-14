@@ -9,6 +9,7 @@ class TextEditSpellcheck;
 
 QT_BEGIN_NAMESPACE
 class QTextDocument;
+class QSyntaxHighlighter;
 QT_END_NAMESPACE
 
 // TODO: all text related options (font, word-wrap, etc.) should be removed
@@ -59,16 +60,18 @@ public:
     void beginEdit() override;
     void endEdit() override;
     void saveEdit() override { endEdit(); }
+    void showMemo() override;
     virtual void exportToPdf(const QString& fileName);
 
-protected:
+    QString highlighterName() const;
+    void setHighlighterName(const QString& name);
+
     explicit TextMemoEditor(MemoItem* memoItem, QWidget *parent = nullptr);
-
-    static void exportToPdf(QTextDocument* doc, const QString& fileName);
-
+protected:
     MemoTextEdit* _editor = nullptr;
     TextEditSpellcheck* _spellcheck = nullptr;
     QString _spellcheckLang;
+    QSyntaxHighlighter* _highlighter = nullptr;
 
     void setEditor(MemoTextEdit*);
     void setReadOnly(bool on);

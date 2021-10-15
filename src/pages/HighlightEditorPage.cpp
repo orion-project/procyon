@@ -27,7 +27,7 @@ HighlightEditorPage::HighlightEditorPage(const QSharedPointer<Ori::Highlighter::
     _sample->setProperty("role", "memo_editor");
     _sample->setFont(AppSettings::instance().memoFont);
     _sample->setPlainText(spec->sample);
-    new Ori::Highlighter::Highlighter(_sample->document(), spec);
+    _highlight = new Ori::Highlighter::Highlighter(_sample->document(), spec);
 
     auto splitter = new QSplitter;
     splitter->addWidget(_editor);
@@ -55,7 +55,10 @@ HighlightEditorPage::HighlightEditorPage(const QSharedPointer<Ori::Highlighter::
 
 void HighlightEditorPage::checkHighlighter()
 {
-    _editor->setLineHints({{3, "something"}, {5, "went"}, {15, "wrong"}});
+    auto code = _editor->toPlainText();
+    auto warnings = Ori::Highlighter::loadSpecRaw(spec, QStringLiteral("HighlightEditor"), &code, false);
+    _editor->setLineHints(warnings);
+    _highlight->rehighlight();
 }
 
 void HighlightEditorPage::applyHighlighter()

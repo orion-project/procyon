@@ -20,7 +20,7 @@ namespace Highlighter {
 struct SpecLoader
 {
 private:
-    QFile file;
+    QString source;
     QTextStream stream;
     int lineNo = 0;
     QString key, val;
@@ -28,10 +28,14 @@ private:
     QStringList sample;
     int sampleLineNo = -1;
     bool withRawData = false;
+    QMap<int, QString> warnings;
+    QMap<QString, int> ruleStarts;
 
-    void warning(QString msg)
+    void warning(const QString& msg, int overrideLineNo = 0)
     {
-        qWarning() << "Highlighter" << file.fileName() << "| line" << lineNo << "|" << msg;
+        int reportedLineNo = (overrideLineNo > 0) ? overrideLineNo : lineNo;
+        qWarning() << "Highlighter" << source << "| line" << reportedLineNo << "|" << msg;
+        warnings[reportedLineNo] = msg;
     }
 
     bool readLine()
@@ -65,7 +69,7 @@ private:
         }
         key = line.first(keyLen).trimmed();
         val = line.sliced(keyLen+1).trimmed();
-        //qDebug() << "Highlighter" << file.fileName() << "| line" << lineNo << "| key" << key << "| value" << val;
+        //qDebug() << "Highlighter" << source << "| line" << lineNo << "| key" << key << "| value" << val;
         return true;
     }
 
@@ -81,8 +85,7 @@ private:
         {
             if (rule.exprs.isEmpty())
             {
-                qWarning() << "Highlighter" << file.fileName() << "| rule"
-                           << rule.name << "| must be at least one \"expr\" when multiline";
+                warning(QStringLiteral("must be at least one \"expr\" when multiline"), ruleStarts[rule.name]);
                 rule.multiline = false;
             }
             else if (rule.exprs.size() == 1)
@@ -94,23 +97,16 @@ private:
     }
 
 public:
-    SpecLoader(QString fileName, bool withRawData)
-    {
-        this->withRawData = withRawData;
-        file.setFileName(fileName);
-        if (!file.open(QFile::ReadOnly | QFile::Text))
-        {
-            qWarning() << "Unable to open" << fileName << "|" << file.errorString();
-            return;
-        }
-        stream.setDevice(&file);
-    }
+    explicit SpecLoader(const QString& source, QString* data, bool withRawData)
+        : source(source), stream(QTextStream(data)), withRawData(withRawData)
+    {}
+
+    explicit SpecLoader(const QString& source, QByteArray* data, bool withRawData)
+        : source(source), stream(QTextStream(data)), withRawData(withRawData)
+    {}
 
     bool loadMeta(Meta& meta)
     {
-        if (!file.isOpen())
-            return false;
-
         bool suffice = false;
         while (!stream.atEnd())
         {
@@ -118,7 +114,7 @@ public:
                 continue;
             if (sampleLineNo >= 0)
             {
-                return suffice;
+                break;
             }
             else if (key == QStringLiteral("name"))
             {
@@ -131,17 +127,26 @@ public:
             }
             else if (key == QStringLiteral("rule"))
             {
-                return suffice;
+                break;
             }
-            else warning("unknown key");
+            else warning(QStringLiteral("unknown key"));
         }
-        return false;
+        if (!suffice)
+            warning(QStringLiteral("not all required top-level properties set, required: \"name\""), 1);
+        return suffice;
     }
 
-    void load(Spec* spec)
+    QMap<int, QString> loadSpec(Spec* spec)
     {
+        // ! Don't clear meta.source and meta.storage
+        spec->meta.name.clear();
+        spec->meta.title.clear();
+        spec->code.clear();
+        spec->sample.clear();
+        spec->rules.clear();
+
         if (!loadMeta(spec->meta))
-            return;
+            return warnings;
 
         Rule rule;
         rule.name = val;
@@ -164,6 +169,7 @@ public:
                 finalizeRule(spec, rule);
                 rule = Rule();
                 rule.name = val;
+                ruleStarts[val] = lineNo;
             }
             else if (key == QStringLiteral("expr"))
             {
@@ -171,17 +177,17 @@ public:
                 {
                     QRegularExpression expr(val);
                     if (!expr.isValid())
-                        warning("invalid expression");
+                        warning(QStringLiteral("invalid expression"));
                     else
                         rule.exprs << expr;
                 }
-                else warning("can't have \"expr\" and \"terms\" in the same rule");
+                else warning(QStringLiteral("can't have \"expr\" and \"terms\" in the same rule"));
             }
             else if (key == QStringLiteral("color"))
             {
                 QColor c(val);
                 if (!c.isValid())
-                    warning("invalid color value");
+                    warning(QStringLiteral("invalid color value"));
                 else
                     rule.format.setForeground(c);
             }
@@ -189,7 +195,7 @@ public:
             {
                 QColor c(val);
                 if (!c.isValid())
-                    warning("invalid color value");
+                    warning(QStringLiteral("invalid color value"));
                 else
                     rule.format.setBackground(c);
             }
@@ -198,7 +204,7 @@ public:
                 bool ok;
                 int group = val.toInt(&ok);
                 if (!ok)
-                    warning("invalid integer value");
+                    warning(QStringLiteral("invalid integer value"));
                 else
                     rule.group = group;
             }
@@ -222,7 +228,7 @@ public:
                     }
                     else if (s == QStringLiteral("multiline"))
                         rule.multiline = true;
-                    else warning("unknown style " + s);
+                    else warning(QStringLiteral("unknown style ") + s);
                 }
             }
             else if (key == QStringLiteral("terms"))
@@ -232,9 +238,9 @@ public:
                     for (const auto& term : val.split(',', Qt::SkipEmptyParts))
                         rule.terms << term.trimmed();
                 }
-                else warning("can't have \"expr\" and \"terms\" in the same rule");
+                else warning(QStringLiteral("can't have \"expr\" and \"terms\" in the same rule"));
             }
-            else warning("unknown key");
+            else warning(QStringLiteral("unknown key"));
         }
         finalizeRule(spec, rule);
         if (withRawData)
@@ -242,8 +248,15 @@ public:
             spec->code = code.join('\n');
             spec->sample = sample.join('\n');
         }
+        return warnings;
     }
 };
+
+QMap<int, QString> loadSpecRaw(QSharedPointer<Spec> spec, const QString& source, QString* data, bool withRawData)
+{
+    SpecLoader loader(source, data, withRawData);
+    return loader.loadSpec(spec.get());
+}
 
 //------------------------------------------------------------------------------
 //                              DefaultSpecStorage
@@ -257,6 +270,23 @@ QSharedPointer<SpecStorage> DefaultStorage::create()
 bool DefaultStorage::readOnly() const
 {
     return false;
+}
+
+QByteArray loadSpecFile(const QString& fileName)
+{
+    QFile file(fileName);
+    if (!file.open(QFile::ReadOnly | QFile::Text))
+    {
+        qWarning() << "Unable to open highlighter" << fileName << "|" << file.errorString();
+        return QByteArray();
+    }
+    auto data = file.readAll();
+    if (data.isEmpty())
+    {
+        qWarning() << "Highlighter file is empty" << fileName;
+        return QByteArray();
+    }
+    return data;
 }
 
 QVector<Meta> DefaultStorage::loadMetas() const
@@ -275,19 +305,23 @@ QVector<Meta> DefaultStorage::loadMetas() const
         qWarning() << "Syntax highlighter directory doesn't exist" << dir.path();
         return metas;
     }
-    qDebug() << "Hightlighters dir" << dir.path();
+    qDebug() << "Hightlighters::DefaultStorage: dir" << dir.path();
     for (auto& fileInfo : dir.entryInfoList())
     {
         if (fileInfo.fileName().endsWith(".phl"))
         {
+            auto fileName = fileInfo.absoluteFilePath();
+            auto fileData = loadSpecFile(fileName);
+            if (fileData.isNull()) continue;
+            SpecLoader loader(fileName, &fileData, false);
             Meta meta;
-            auto filename = fileInfo.absoluteFilePath();
-            SpecLoader loader(filename, false);
             if (loader.loadMeta(meta))
             {
-                meta.source = filename;
+                meta.source = fileName;
                 metas << meta;
             }
+            else
+                qWarning() << "Highlighters::DefaultStorage: meta not loaded" << fileName;
         }
     }
     return metas;
@@ -295,9 +329,12 @@ QVector<Meta> DefaultStorage::loadMetas() const
 
 QSharedPointer<Spec> DefaultStorage::loadSpec(const QString& source, bool withRawData) const
 {
+    auto fileData = loadSpecFile(source);
+    if (fileData.isEmpty())
+        return QSharedPointer<Spec>();
     QSharedPointer<Spec> spec(new Spec());
-    SpecLoader loader(source, withRawData);
-    loader.load(spec.get());
+    SpecLoader loader(source, &fileData, withRawData);
+    loader.loadSpec(spec.get());
     return spec;
 }
 
@@ -315,13 +352,14 @@ struct SpecCache
     {
         if (!allMetas.contains(name))
         {
-            qWarning() << "Unknown highlighter" << name;
+            qWarning() << "Highlighters::SpecCache: unknown name" << name;
             return QSharedPointer<Spec>();
         }
         if (!loadedSpecs.contains(name))
         {
             const auto& meta = allMetas[name];
             auto spec = meta.storage->loadSpec(meta.source);
+            if (!spec) return QSharedPointer<Spec>();
             spec->meta.source = meta.source;
             spec->meta.storage = meta.storage;
             loadedSpecs[name] = spec;
@@ -342,7 +380,7 @@ void loadMetas(const QVector<QSharedPointer<SpecStorage>>& storages)
     for (const auto& storage : storages)
     {
         // The first writable storage becomes a default storage
-        // for new highlighters, this enough for now
+        // for new highlighters, this is enough for now
         if (!storage->readOnly() && !cache.customStorage)
             cache.customStorage = storage;
 
@@ -555,6 +593,8 @@ void Control::editHighlighter()
     {
         // reload spec with code and sample text
         auto fullSpec = spec->meta.storage->loadSpec(spec->meta.source, true);
+        if (!fullSpec)
+            return Ori::Dlg::error("Failed to load highlighter");
         emit editorRequested(fullSpec);
         return;
     }
@@ -595,6 +635,11 @@ void Control::newHighlighter()
 void Control::newHighlighterWithBase(const QSharedPointer<Spec>& base)
 {
     auto spec = base->meta.storage->loadSpec(base->meta.source, true);
+    if (!spec)
+    {
+        Ori::Dlg::error("Failed to load base highlighter");
+        spec.reset(new Spec());
+    }
     spec->meta.name = "";
     spec->meta.source = "";
     spec->meta.title = "";

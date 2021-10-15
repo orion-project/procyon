@@ -23,6 +23,7 @@ public:
 private:
     CodeTextEdit *_editor;
     QPlainTextEdit *_sample;
+    QSyntaxHighlighter *_highlight;
 
     void checkHighlighter();
     void applyHighlighter();

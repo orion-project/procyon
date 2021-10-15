@@ -73,7 +73,7 @@ public:
 
 void loadMetas(const QVector<QSharedPointer<SpecStorage>>& storages);
 QSharedPointer<Spec> getSpec(const QString& name);
-
+QMap<int, QString> loadSpecRaw(QSharedPointer<Spec> spec, const QString& source, QString* data, bool withRawData);
 
 class Highlighter : public QSyntaxHighlighter
 {

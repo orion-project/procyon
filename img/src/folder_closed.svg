@@ -1,0 +1,35 @@
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xmlns:dc="http://purl.org/dc/elements/1.1/">
+<defs>
+<linearGradient id="linearGradient4672">
+<stop stop-color="#f3c668" offset="0"/>
+<stop stop-color="#f9f398" offset="1"/>
+</linearGradient>
+<linearGradient id="linearGradient5059">
+<stop stop-color="#705526" offset="0"/>
+<stop stop-color="#c69c59" offset="1"/>
+</linearGradient>
+<linearGradient id="linearGradient9061" y2="20" xlink:href="#linearGradient4672" gradientUnits="userSpaceOnUse" x2="17" gradientTransform="matrix(21.694915,0,0,21.694915,-4.0346374e-5,535.07407)" y1="13" x1="6"/>
+<linearGradient id="linearGradient9069" y2="11" xlink:href="#linearGradient5059" gradientUnits="userSpaceOnUse" x2="21" gradientTransform="matrix(21.694915,0,0,21.694915,-4.0346374e-5,535.07407)" y1="20" x1="3"/>
+<linearGradient id="linearGradient5431" y2="8" xlink:href="#linearGradient4672" gradientUnits="userSpaceOnUse" y1="13" gradientTransform="matrix(21.694915,0,0,21.694915,-4.0346374e-5,535.07407)" x2="10" x1="3"/>
+<linearGradient id="linearGradient5433" y2="7" xlink:href="#linearGradient5059" gradientUnits="userSpaceOnUse" y1="17" gradientTransform="matrix(21.694915,0,0,21.694915,-4.0346374e-5,535.07407)" x2="16" x1="1"/>
+<linearGradient id="linearGradient6002" y2="20" xlink:href="#linearGradient4672" gradientUnits="userSpaceOnUse" x2="17" gradientTransform="matrix(21.694915,0,4.7555495,24.313962,-100.2355,-61.335719)" y1="13" x1="6"/>
+<linearGradient id="linearGradient6004" y2="11" xlink:href="#linearGradient5059" gradientUnits="userSpaceOnUse" x2="21" gradientTransform="matrix(21.694915,0,4.7555495,24.313962,-100.2355,-61.335719)" y1="20" x1="3"/>
+</defs>
+<metadata>
+<rdf:RDF>
+<cc:Work rdf:about="">
+<dc:format>image/svg+xml</dc:format>
+<dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+<dc:title/>
+</cc:Work>
+</rdf:RDF>
+</metadata>
+<g transform="translate(0,-540.36218)">
+<path stroke-linejoin="round" d="m13.017,999.35,0-312.41,52.068-95.458,151.86,0,21.695,60.746,151.86,0,0,347.12-377.49,0z" fill-rule="evenodd" stroke="url(#linearGradient5433)" stroke-linecap="butt" stroke-miterlimit="4" stroke-dasharray="none" stroke-width="20" fill="url(#linearGradient5431)"/>
+</g>
+<g display="none">
+<path stroke-linejoin="round" d="m13.017,999.35,377.49,0,108.47-260.34-282.03,0-21.695,43.39-86.78,0-95.458,216.95z" fill-rule="evenodd" transform="translate(0,-540.36218)" stroke="url(#linearGradient9069)" stroke-linecap="butt" stroke-miterlimit="4" stroke-dasharray="none" stroke-width="20" fill="url(#linearGradient9061)"/>
+</g>
+<path stroke-linejoin="round" d="m14.55,458.98,377.49,0,51.408-291.77-282.03,0-12.184,48.628-86.78,0-47.902,243.14z" fill-rule="evenodd" stroke="url(#linearGradient6004)" stroke-linecap="butt" stroke-miterlimit="4" stroke-dasharray="none" stroke-width="20" fill="url(#linearGradient6002)"/>
+</svg>

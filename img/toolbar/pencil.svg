@@ -1,86 +1,16 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
-<svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:xlink="http://www.w3.org/1999/xlink"
-   version="1.1"
-   width="512"
-   height="512"
-   id="svg3015">
-  <defs
-     id="defs3017">
-    <linearGradient
-       id="linearGradient3923">
-      <stop
-         id="stop3925"
-         style="stop-color:#fcaf00;stop-opacity:1"
-         offset="0" />
-      <stop
-         id="stop3927"
-         style="stop-color:#ffd066;stop-opacity:1"
-         offset="1" />
-    </linearGradient>
-    <linearGradient
-       x1="254.82855"
-       y1="-138.86598"
-       x2="160.03409"
-       y2="-240.49767"
-       id="linearGradient3929"
-       xlink:href="#linearGradient3923"
-       gradientUnits="userSpaceOnUse" />
-    <linearGradient
-       x1="317.11584"
-       y1="63.993942"
-       x2="519.26404"
-       y2="63.993942"
-       id="linearGradient3945"
-       xlink:href="#linearGradient3923"
-       gradientUnits="userSpaceOnUse" />
-  </defs>
-  <metadata
-     id="metadata3020">
-    <rdf:RDF>
-      <cc:Work
-         rdf:about="">
-        <dc:format>image/svg+xml</dc:format>
-        <dc:type
-           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
-      </cc:Work>
-    </rdf:RDF>
-  </metadata>
-  <g
-     transform="translate(0,496)"
-     id="layer1">
-    <path
-       d="m 47.194883,-79.154618 c 4.729016,20.383004 26.411909,42.511497 45.384484,48.988444 L 216.30142,-79.078364 490.20241,-351.43609 c 31.55211,-36.16749 -85.17748,-160.68503 -122.45839,-122.4584 l -267.31219,268.85545 z"
-       id="path4312"
-       style="fill:url(#linearGradient3929);fill-opacity:1;stroke:#c18600;stroke-width:10;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
-    <path
-       d="M 97.485741,-27.0111 C 69.681126,-39.342173 52.65504,-58.708929 44.552172,-83.900315 -4.0635498,14.00313 10.025577,20.226432 97.485741,-27.0111 z"
-       id="path4314"
-       style="fill:#000000;fill-opacity:1;stroke:none" />
-    <path
-       d="m 108.4515,-212.43267 68.07502,-0.50968 206.8069,-200.52176 -15.77804,-60.11115 z"
-       id="path3931"
-       style="fill:#5f9dff;fill-opacity:1;stroke:#3a6ec1;stroke-width:10;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
-    <path
-       d="m 177.9681,-212.94235 -17.27359,51.82078 69.09436,0 202.3729,-208.05005 -49.84771,-45.01328 z"
-       id="path3933"
-       style="fill:#1d75ff;fill-opacity:1;stroke:#274f8d;stroke-width:10;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
-    <path
-       d="m 229.25026,-161.12157 -5.04554,74.139912 265.16878,-264.149422 -57.21869,-18.29591 z"
-       id="path3800"
-       style="fill:#0049bd;fill-opacity:1;stroke:#1b3c70;stroke-width:10;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
-    <path
-       d="m 520.3802,29.08107 a 31.854811,12.487085 0 1 1 -63.70962,0 31.854811,12.487085 0 1 1 63.70962,0 z"
-       transform="matrix(0.75767467,0.65263244,-0.65263244,0.75767467,80.277509,-761.39984)"
-       id="path3935"
-       style="fill:#000000;fill-opacity:1;stroke:none" />
+<svg height="512" width="512" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <linearGradient id="a" gradientUnits="userSpaceOnUse" x1="254.83" x2="160.03" y1="-138.87" y2="-240.5">
+    <stop offset="0" stop-color="#fcaf00"/>
+    <stop offset="1" stop-color="#ffd066"/>
+  </linearGradient>
+  <g transform="translate(0 496)">
+    <path d="m47.19-79.15c4.73 20.38 26.41 42.51 45.38 48.99l123.73-48.92 273.9-272.36c31.55-36.17-85.18-160.69-122.46-122.46l-267.31 268.86z" fill="url(#a)" stroke="#c18600" stroke-width="10"/>
+    <path d="m97.49-27.01c-27.81-12.33-44.83-31.7-52.94-56.89-48.61 97.9-34.52 104.13 52.94 56.89z"/>
+    <g stroke-width="10">
+      <path d="m108.45-212.43 68.08-.51 206.81-200.52-15.78-60.11z" fill="#5f9dff" stroke="#3a6ec1"/>
+      <path d="m177.97-212.94-17.27 51.82h69.09l202.37-208.05-49.85-45.01z" fill="#1d75ff" stroke="#274f8d"/>
+      <path d="m229.25-161.12-5.05 74.14 265.17-264.15-57.22-18.3z" fill="#0049bd" stroke="#1b3c70"/>
+    </g>
+    <path d="m520.38 29.08a31.85 12.49 0 1 1 -63.71 0 31.85 12.49 0 1 1 63.71 0z" transform="matrix(.76 .65 -.65 .76 80.28 -761.4)"/>
   </g>
 </svg>

@@ -5,7 +5,7 @@
 CatalogModel::CatalogModel(Catalog* catalog) : _catalog(catalog)
 {
     _iconMemo = QIcon(":/icon/memo_plain_text");
-    _iconFolder = QIcon(":/icon/folder_closed");
+    _iconFolder = QIcon(":/icon/folder");
 }
 
 CatalogItem* CatalogModel::catalogItem(const QModelIndex &index)

@@ -1,10 +1,9 @@
 <RCC>
     <qresource prefix="/icon">
-        <file alias="edit_mode">img/icon/edit_mode.svg</file>
-        <file alias="folder_opend">img/icon/folder_opened.svg</file>
-        <file alias="folder_closed">img/icon/folder_closed.svg</file>
+        <file alias="edit_mode">img/icon/pencil_black.svg</file>
+        <file alias="folder">img/icon/folder_closed.svg</file>
         <file alias="help">img/icon/help.svg</file>
-        <file alias="is_modified">img/icon/is_modified.svg</file>
+        <file alias="is_modified">img/icon/pencil_red.svg</file>
         <file alias="main">img/icon/main.svg</file>
         <file alias="memo_plain_text">img/icon/memo_plain_text.svg</file>
         <file alias="memo_markdown">img/icon/memo_markdown.svg</file>

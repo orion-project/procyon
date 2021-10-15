@@ -47,6 +47,8 @@ struct Spec
     QString code;           // not empty only when spec is loaded withRawData
     QString sample;         // not empty only when spec is loaded withRawData
     QVector<Rule> rules;
+
+    QString storableString() const;
 };
 
 
@@ -54,18 +56,22 @@ class SpecStorage
 {
 public:
     virtual ~SpecStorage() {}
+    virtual QString name() const = 0;
     virtual bool readOnly() const = 0;
     virtual QVector<Meta> loadMetas() const = 0;
     virtual QSharedPointer<Spec> loadSpec(const QString& source, bool withRawData = false) const = 0;
+    virtual QString saveSpec(const QSharedPointer<Spec>& spec) = 0;
 };
 
 
 class DefaultStorage : public SpecStorage
 {
 public:
+    QString name() const override;
     bool readOnly() const override;
     QVector<Meta> loadMetas() const override;
     QSharedPointer<Spec> loadSpec(const QString &source, bool withRawData = false) const override;
+    QString saveSpec(const QSharedPointer<Spec>& spec) override;
 
     static QSharedPointer<SpecStorage> create();
 };

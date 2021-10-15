@@ -14,6 +14,15 @@ namespace Ori {
 namespace Highlighter {
 
 //------------------------------------------------------------------------------
+//                                    Spec
+//------------------------------------------------------------------------------
+
+QString Spec::storableString() const
+{
+    return code.trimmed() + "\n\n---\n" + sample.trimmed();
+}
+
+//------------------------------------------------------------------------------
 //                                 SpecLoader
 //------------------------------------------------------------------------------
 
@@ -21,7 +30,7 @@ struct SpecLoader
 {
 private:
     QString source;
-    QTextStream stream;
+    QTextStream& stream;
     int lineNo = 0;
     QString key, val;
     QStringList code;
@@ -97,12 +106,8 @@ private:
     }
 
 public:
-    explicit SpecLoader(const QString& source, QString* data, bool withRawData)
-        : source(source), stream(QTextStream(data)), withRawData(withRawData)
-    {}
-
-    explicit SpecLoader(const QString& source, QByteArray* data, bool withRawData)
-        : source(source), stream(QTextStream(data)), withRawData(withRawData)
+    explicit SpecLoader(const QString& source, QTextStream& stream, bool withRawData)
+        : source(source), stream(stream), withRawData(withRawData)
     {}
 
     bool loadMeta(Meta& meta)
@@ -254,8 +259,18 @@ public:
 
 QMap<int, QString> loadSpecRaw(QSharedPointer<Spec> spec, const QString& source, QString* data, bool withRawData)
 {
-    SpecLoader loader(source, data, withRawData);
+    QTextStream stream(data);
+    SpecLoader loader(source, stream, withRawData);
     return loader.loadSpec(spec.get());
+}
+
+QSharedPointer<Spec> createSpec(const Meta& meta, bool withRawData)
+{
+    auto spec = meta.storage->loadSpec(meta.source, withRawData);
+    if (!spec) return QSharedPointer<Spec>();
+    spec->meta.source = meta.source;
+    spec->meta.storage = meta.storage;
+    return spec;
 }
 
 //------------------------------------------------------------------------------
@@ -267,26 +282,14 @@ QSharedPointer<SpecStorage> DefaultStorage::create()
     return QSharedPointer<SpecStorage>(new DefaultStorage());
 }
 
+QString DefaultStorage::name() const
+{
+    return QStringLiteral("default-storage");
+}
+
 bool DefaultStorage::readOnly() const
 {
     return false;
-}
-
-QByteArray loadSpecFile(const QString& fileName)
-{
-    QFile file(fileName);
-    if (!file.open(QFile::ReadOnly | QFile::Text))
-    {
-        qWarning() << "Unable to open highlighter" << fileName << "|" << file.errorString();
-        return QByteArray();
-    }
-    auto data = file.readAll();
-    if (data.isEmpty())
-    {
-        qWarning() << "Highlighter file is empty" << fileName;
-        return QByteArray();
-    }
-    return data;
 }
 
 QVector<Meta> DefaultStorage::loadMetas() const
@@ -311,9 +314,14 @@ QVector<Meta> DefaultStorage::loadMetas() const
         if (fileInfo.fileName().endsWith(".phl"))
         {
             auto fileName = fileInfo.absoluteFilePath();
-            auto fileData = loadSpecFile(fileName);
-            if (fileData.isNull()) continue;
-            SpecLoader loader(fileName, &fileData, false);
+            QFile file(fileName);
+            if (!file.open(QFile::ReadOnly | QFile::Text))
+            {
+                qWarning() << "Highlighter::DefaultStorage.loadMetas" << fileName << "|" << file.errorString();
+                continue;
+            }
+            QTextStream stream(&file);
+            SpecLoader loader(fileName, stream, false);
             Meta meta;
             if (loader.loadMeta(meta))
             {
@@ -329,13 +337,27 @@ QVector<Meta> DefaultStorage::loadMetas() const
 
 QSharedPointer<Spec> DefaultStorage::loadSpec(const QString& source, bool withRawData) const
 {
-    auto fileData = loadSpecFile(source);
-    if (fileData.isEmpty())
+    QFile file(source);
+    if (!file.open(QFile::ReadOnly | QFile::Text))
+    {
+        qWarning() << "Highlighter::DefaultStorage.loadSpec" << source << "|" << file.errorString();
         return QSharedPointer<Spec>();
+    }
+    QTextStream stream(&file);
     QSharedPointer<Spec> spec(new Spec());
-    SpecLoader loader(source, &fileData, withRawData);
+    SpecLoader loader(source, stream, withRawData);
     loader.loadSpec(spec.get());
     return spec;
+}
+
+QString DefaultStorage::saveSpec(const QSharedPointer<Spec>& spec)
+{
+    QFile file(spec->meta.source);
+    if (!file.open(QFile::WriteOnly | QFile::Text | QFile::Truncate))
+        return QString("Failed to open highlighter file \"%1\" for writing: %2").arg(spec->meta.source, file.errorString());
+    if (file.write(spec->storableString().toUtf8()) == -1)
+        return QString("Failed to write highlighter file \"%1\": %2").arg(spec->meta.source, file.errorString());
+    return "";
 }
 
 //------------------------------------------------------------------------------
@@ -358,10 +380,13 @@ struct SpecCache
         if (!loadedSpecs.contains(name))
         {
             const auto& meta = allMetas[name];
-            auto spec = meta.storage->loadSpec(meta.source);
+            if (!meta.storage)
+            {
+                qWarning() << "Highlighters::SpecCache: storage not set" << name;
+                return QSharedPointer<Spec>();
+            }
+            auto spec = createSpec(meta, false);
             if (!spec) return QSharedPointer<Spec>();
-            spec->meta.source = meta.source;
-            spec->meta.storage = meta.storage;
             loadedSpecs[name] = spec;
         }
         return loadedSpecs[name];
@@ -388,12 +413,14 @@ void loadMetas(const QVector<QSharedPointer<SpecStorage>>& storages)
         {
             if (cache.allMetas.contains(meta.name))
             {
-                qWarning() << "Highlighter is already registered" << meta.name;
+                const auto& existedMeta = cache.allMetas[meta.name];
+                qWarning() << "Highlighter is already registered" << existedMeta.name << existedMeta.source
+                           << (existedMeta.storage ? existedMeta.storage->name() : QString("null-storage"));
                 continue;
             }
             meta.storage = storage;
             cache.allMetas[meta.name] = meta;
-            qDebug() << "Highlighter registered" << meta.name << meta.source;
+            qDebug() << "Highlighter registered" << meta.name << meta.source << meta.storage->name();
         }
     }
 }
@@ -592,7 +619,7 @@ void Control::editHighlighter()
     if (!spec->meta.storage->readOnly())
     {
         // reload spec with code and sample text
-        auto fullSpec = spec->meta.storage->loadSpec(spec->meta.source, true);
+        auto fullSpec = createSpec(spec->meta, true);
         if (!fullSpec)
             return Ori::Dlg::error("Failed to load highlighter");
         emit editorRequested(fullSpec);
@@ -634,7 +661,7 @@ void Control::newHighlighter()
 
 void Control::newHighlighterWithBase(const QSharedPointer<Spec>& base)
 {
-    auto spec = base->meta.storage->loadSpec(base->meta.source, true);
+    auto spec = createSpec(base->meta, true);
     if (!spec)
     {
         Ori::Dlg::error("Failed to load base highlighter");

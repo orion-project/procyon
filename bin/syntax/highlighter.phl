@@ -1,11 +1,6 @@
 name: highlighter
 title: Highlighter spec
 
-rule: Comment
-expr: \s*#.*$
-color: darkGreen
-style: italic
-
 rule: Separator
 expr: ^\s*-{3,}.*$
 color: darkGray
@@ -13,6 +8,11 @@ color: darkGray
 rule: Key
 expr: ^\s*(name|title|rule|expr|color|style|group|terms):
 color: blue
+
+rule: Comment
+expr: ^\s*#.*$
+color: darkGreen
+style: italic
 
 ---
 # These are supposed to override all previous formatting, so put at the end

@@ -4,6 +4,8 @@
 #include "../highlighter/OriHighlighter.h"
 #include "../widgets/CodeTextEdit.h"
 
+#include "orion/helpers/OriDialogs.h"
+
 #include <QIcon>
 #include <QSplitter>
 #include <QToolBar>
@@ -63,5 +65,22 @@ void HighlightEditorPage::checkHighlighter()
 
 void HighlightEditorPage::applyHighlighter()
 {
-    _editor->setLineHints({});
+    if (!spec->meta.storage)
+    {
+        Ori::Dlg::error("Highlighter has no storage assigned");
+        return;
+    }
+    auto code = _editor->toPlainText();
+    auto warnings = Ori::Highlighter::loadSpecRaw(spec, QStringLiteral("HighlightEditor"), &code, true);
+    _editor->setLineHints(warnings);
+    _highlight->rehighlight();
+    if (!warnings.isEmpty())
+    {
+        Ori::Dlg::error(tr("There are errors in the highlighter code, fix them before saving"));
+        return;
+    }
+    spec->sample = _sample->toPlainText();
+    auto err = spec->meta.storage->saveSpec(spec);
+    if (!err.isEmpty())
+        Ori::Dlg::error(tr("Failed to apply highlighter\n\n%1").arg(err));
 }

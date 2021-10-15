@@ -10,22 +10,33 @@ color: blue
 # Single-quoted string, possibly containing escaped quote \'
 rule: String (double-quoted)
 expr: '[^\\']*(\\.[^\\']*)*'
-color: magenta
+color: purple
 
 # Double-quoted string, possibly containing escaped quote \"
 rule: String (double-quoted)
 expr: "[^\\"]*(\\.[^\\"]*)*"
-color: magenta
+color: purple
 
 rule: Triple-quoted string (single)
 style: multiline
 expr: '''
-color: darkMagenta
+color: DarkOrchid
 
 rule: Triple-quoted string (double)
 style: multiline
 expr: """
-color: darkMagenta
+color: DarkOrchid
+
+rule: Numbers
+expr: \b[+-]?[0-9]+[lL]?\b
+expr: \b[+-]?0[xX][0-9A-Fa-f]+[lL]?\b
+expr: \b[+-]?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\b
+color: brown
+
+rule: Comment
+expr: #[^\n]*
+color: darkGreen
+style: italic
 
 ---
 #!/usr/bin/env python

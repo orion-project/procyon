@@ -70,8 +70,6 @@ SOURCES += src/main.cpp\
     src/widgets/MemoTextBrowser.cpp \
     src/widgets/MemoTextEdit.cpp \
     src/markdown/ori_html.c \
-    src/highlighter/HighlightingRule.cpp \
-    src/highlighter/PythonSyntaxHighlighter.cpp \
     src/CatalogModel.cpp \
     src/OpenedPagesWidget.cpp \
     src/pages/HelpPage.cpp \
@@ -80,7 +78,8 @@ SOURCES += src/main.cpp\
     src/pages/PageWidgets.cpp \
     src/pages/SqlConsolePage.cpp \
     src/pages/StyleEditorPage.cpp \
-    src/spellcheck/TextEditSpellcheck.cpp
+    src/spellcheck/TextEditSpellcheck.cpp \
+    src/widgets/PopupMessage.cpp
 
 HEADERS  += src/MainWindow.h \
     src/AppSettings.h \
@@ -105,8 +104,6 @@ HEADERS  += src/MainWindow.h \
     src/widgets/MemoTextBrowser.h \
     src/widgets/MemoTextEdit.h \
     src/markdown/ori_html.h \
-    src/highlighter/HighlightingRule.h \
-    src/highlighter/PythonSyntaxHighlighter.h \
     src/OpenedPagesWidget.h \
     src/pages/HelpPage.h \
     src/pages/MarkdownCssEditorPage.h \
@@ -114,7 +111,8 @@ HEADERS  += src/MainWindow.h \
     src/pages/PageWidgets.h \
     src/pages/SqlConsolePage.h \
     src/pages/StyleEditorPage.h \
-    src/spellcheck/TextEditSpellcheck.h
+    src/spellcheck/TextEditSpellcheck.h \
+    src/widgets/PopupMessage.h
 
 DISTFILES += \
     src/app.qss \

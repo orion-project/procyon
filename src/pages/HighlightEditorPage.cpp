@@ -3,6 +3,7 @@
 #include "../AppSettings.h"
 #include "../highlighter/OriHighlighter.h"
 #include "../widgets/CodeTextEdit.h"
+#include "../widgets/PopupMessage.h"
 
 #include "orion/helpers/OriDialogs.h"
 
@@ -27,6 +28,7 @@ HighlightEditorPage::HighlightEditorPage(const QSharedPointer<Ori::Highlighter::
     _sample = new QPlainTextEdit;
     _sample->setWordWrapMode(QTextOption::NoWrap);
     _sample->setProperty("role", "memo_editor");
+    _sample->setObjectName("code_editor");
     _sample->setFont(AppSettings::instance().memoFont);
     _sample->setPlainText(spec->sample);
     _highlight = new Ori::Highlighter::Highlighter(_sample->document(), spec);
@@ -83,4 +85,6 @@ void HighlightEditorPage::applyHighlighter()
     auto err = spec->meta.storage->saveSpec(spec);
     if (!err.isEmpty())
         Ori::Dlg::error(tr("Failed to apply highlighter\n\n%1").arg(err));
+    else
+        PopupMessage::showAffirm(tr("Highlighter successfully applied"));
 }

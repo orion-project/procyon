@@ -4,9 +4,12 @@
 #include <QApplication>
 #include <QDir>
 #include <QFile>
+#include <QListWidget>
 #include <QMenu>
+#include <QPushButton>
 #include <QRegularExpression>
 #include <QTextDocument>
+#include <QBoxLayout>
 
 #include "orion/helpers/OriDialogs.h"
 
@@ -73,7 +76,7 @@ private:
         auto keyLen = line.indexOf(':');
         if (keyLen < 1)
         {
-            warning("key not found");
+            warning("Key not found");
             return false;
         }
         key = line.first(keyLen).trimmed();
@@ -94,7 +97,7 @@ private:
         {
             if (rule.exprs.isEmpty())
             {
-                warning(QStringLiteral("must be at least one \"expr\" when multiline"), ruleStarts[rule.name]);
+                warning(QStringLiteral("Must be at least one \"expr\" when multiline"), ruleStarts[rule.name]);
                 rule.multiline = false;
             }
             else if (rule.exprs.size() == 1)
@@ -134,10 +137,10 @@ public:
             {
                 break;
             }
-            else warning(QStringLiteral("unknown key"));
+            else warning(QStringLiteral("Unknown key"));
         }
         if (!suffice)
-            warning(QStringLiteral("not all required top-level properties set, required: \"name\""), 1);
+            warning(QStringLiteral("Not all required top-level properties set, required: \"name\""), 1);
         return suffice;
     }
 
@@ -172,6 +175,13 @@ public:
             else if (key == QStringLiteral("rule"))
             {
                 finalizeRule(spec, rule);
+
+                for (const auto& r : spec->rules)
+                    if (r.name == val)
+                    {
+                        warning(QStringLiteral("Dupilicated rule name"));
+                        warning(QStringLiteral("Dupilicated rule name"), ruleStarts[r.name]);
+                    }
                 rule = Rule();
                 rule.name = val;
                 ruleStarts[val] = lineNo;
@@ -186,13 +196,13 @@ public:
                     else
                         rule.exprs << expr;
                 }
-                else warning(QStringLiteral("can't have \"expr\" and \"terms\" in the same rule"));
+                else warning(QStringLiteral("Can't have \"expr\" and \"terms\" in the same rule"));
             }
             else if (key == QStringLiteral("color"))
             {
                 QColor c(val);
                 if (!c.isValid())
-                    warning(QStringLiteral("invalid color value"));
+                    warning(QStringLiteral("Invalid color value"));
                 else
                     rule.format.setForeground(c);
             }
@@ -200,7 +210,7 @@ public:
             {
                 QColor c(val);
                 if (!c.isValid())
-                    warning(QStringLiteral("invalid color value"));
+                    warning(QStringLiteral("Invalid color value"));
                 else
                     rule.format.setBackground(c);
             }
@@ -209,7 +219,7 @@ public:
                 bool ok;
                 int group = val.toInt(&ok);
                 if (!ok)
-                    warning(QStringLiteral("invalid integer value"));
+                    warning(QStringLiteral("Invalid integer value"));
                 else
                     rule.group = group;
             }
@@ -233,7 +243,7 @@ public:
                     }
                     else if (s == QStringLiteral("multiline"))
                         rule.multiline = true;
-                    else warning(QStringLiteral("unknown style ") + s);
+                    else warning(QStringLiteral("Unknown style ") + s);
                 }
             }
             else if (key == QStringLiteral("terms"))
@@ -243,9 +253,9 @@ public:
                     for (const auto& term : val.split(',', Qt::SkipEmptyParts))
                         rule.terms << term.trimmed();
                 }
-                else warning(QStringLiteral("can't have \"expr\" and \"terms\" in the same rule"));
+                else warning(QStringLiteral("Can't have \"expr\" and \"terms\" in the same rule"));
             }
-            else warning(QStringLiteral("unknown key"));
+            else warning(QStringLiteral("Unknown key"));
         }
         finalizeRule(spec, rule);
         if (withRawData)
@@ -569,11 +579,6 @@ QMenu* Control::makeMenu(QString title, QWidget* parent)
 {
     auto menu = new QMenu(title, parent);
     menu->addActions(_actionGroup->actions());
-    menu->addSeparator();
-    auto actnEdit = menu->addAction(tr("Edit Highlighter..."));
-    auto actnNew = menu->addAction(tr("New Highlighter..."));
-    connect(actnEdit, &QAction::triggered, this, &Control::editHighlighter);
-    connect(actnNew, &QAction::triggered, this, &Control::newHighlighter);
     return menu;
 }
 
@@ -597,71 +602,135 @@ void Control::actionGroupTriggered(QAction* action)
     emit selected(action->data().toString());
 }
 
-QString Control::currentHighlighter() const
+void Control::showManager()
 {
-    for (const auto& action : _actionGroup->actions())
-        if (action->isChecked())
-            return action->data().toString();
-    return QString();
+    if (!_managerDlg)
+        _managerDlg = new ManagerDlg(this);
+    _managerDlg->show();
+    _managerDlg->activateWindow();
 }
 
-void Control::editHighlighter()
+//------------------------------------------------------------------------------
+//                                 Control
+//------------------------------------------------------------------------------
+
+ManagerDlg::ManagerDlg(Control *parent) : QWidget(), _parent(parent)
 {
-    auto& cache = specCache();
-    auto name = currentHighlighter();
-    if (name.isEmpty() || !cache.loadedSpecs.contains(name))
+    setAttribute(Qt::WA_DeleteOnClose);
+    setWindowFlags(Qt::Dialog | Qt::WindowStaysOnTopHint);
+
+    _specList = new QListWidget;
+    _specList->setObjectName("pages_list");
+    auto it = specCache().allMetas.constBegin();
+    while (it != specCache().allMetas.constEnd())
     {
-        Ori::Dlg::info(tr("No highlighter is selected"));
-        return;
+        const auto& meta = it.value();
+        QString title = meta.displayTitle();
+        if (!meta.storage)
+            title += " (invalid, no storage)";
+        else if (meta.storage->readOnly())
+            title += " (built-in, read only)";
+        auto item = new QListWidgetItem(title, _specList);
+        item->setData(Qt::UserRole, meta.name);
+        it++;
     }
 
-    const auto& spec = cache.loadedSpecs[name];
-    if (!spec->meta.storage->readOnly())
+    auto buttonEdit = new QPushButton(tr("Edit"));
+    connect(buttonEdit, &QPushButton::clicked, this, &ManagerDlg::editHighlighter);
+
+    auto buttonNewEmpty = new QPushButton(tr("New Empty"));
+    connect(buttonNewEmpty, &QPushButton::clicked, this, &ManagerDlg::createHighlighterEmpty);
+
+    auto buttonNewCopy = new QPushButton(tr("New As Copy"));
+    connect(buttonNewCopy, &QPushButton::clicked, this, &ManagerDlg::createHighlighterCopy);
+
+    auto buttonDelete = new QPushButton(tr("Delete"));
+    connect(buttonDelete, &QPushButton::clicked, this, &ManagerDlg::deleteHighlighter);
+
+    auto buttonClose = new QPushButton(tr("Close"));
+    connect(buttonClose, &QPushButton::clicked, this, &ManagerDlg::close);
+
+    auto layoutButtons = new QVBoxLayout;
+    layoutButtons->addWidget(buttonEdit);
+    layoutButtons->addWidget(buttonNewEmpty);
+    layoutButtons->addWidget(buttonNewCopy);
+    layoutButtons->addSpacing(50);
+    layoutButtons->addWidget(buttonDelete);
+    layoutButtons->addSpacing(50);
+    layoutButtons->addStretch();
+    layoutButtons->addWidget(buttonClose);
+
+    auto layout = new QHBoxLayout(this);
+    layout->addWidget(_specList);
+    layout->addLayout(layoutButtons);
+    layout->setContentsMargins(7, 10, 10, 10);
+}
+
+QString ManagerDlg::selectedSpecName() const
+{
+    auto items = _specList->selectedItems();
+    if (items.isEmpty()) return QString();
+    return items.first()->data(Qt::UserRole).toString();
+}
+
+void ManagerDlg::editHighlighter()
+{
+    auto& cache = specCache();
+    auto name = selectedSpecName();
+    if (name.isEmpty())
+        return Ori::Dlg::info(tr("No highlighter is selected"));
+
+    const auto& meta = cache.allMetas[name];
+    if (!meta.storage)
+        return Ori::Dlg::warning(tr("Hihghlighter storage is not set"));
+
+    if (!meta.storage->readOnly())
     {
         // reload spec with code and sample text
-        auto fullSpec = createSpec(spec->meta, true);
+        auto fullSpec = createSpec(meta, true);
         if (!fullSpec)
             return Ori::Dlg::error("Failed to load highlighter");
-        emit editorRequested(fullSpec);
+        emit _parent->editorRequested(fullSpec);
+        close();
         return;
     }
 
     if (Ori::Dlg::yes(tr("Highlighter \"%1\" is built-in and can not be edited. "
                          "Do you want to create a new highlighter on its base instead?"
-                         ).arg(spec->meta.displayTitle())))
+                         ).arg(meta.displayTitle())))
     {
-        newHighlighterWithBase(spec);
+        newHighlighterWithBase(meta);
+        close();
     }
 }
 
-void Control::newHighlighter()
+void ManagerDlg::createHighlighterEmpty()
 {
     auto& cache = specCache();
-    auto name = currentHighlighter();
-    if (name.isEmpty() || !cache.loadedSpecs.contains(name))
-    {
-        QSharedPointer<Spec> spec(new Spec);
-        spec->meta.storage = cache.customStorage;
-        emit editorRequested(spec);
-        return;
-    }
-
-    const auto& spec = cache.loadedSpecs[name];
-    if (Ori::Dlg::yes(tr("Do you want to use the current highlighter \"%1\" "
-                         "as a base for your new one?").arg(spec->meta.displayTitle())))
-    {
-        newHighlighterWithBase(spec);
-        return;
-    }
-
-    QSharedPointer<Spec> newSpec(new Spec);
-    newSpec->meta.storage = cache.customStorage;
-    emit editorRequested(newSpec);
+    QSharedPointer<Spec> spec(new Spec);
+    spec->meta.storage = cache.customStorage;
+    emit _parent->editorRequested(spec);
+    close();
 }
 
-void Control::newHighlighterWithBase(const QSharedPointer<Spec>& base)
+void ManagerDlg::createHighlighterCopy()
 {
-    auto spec = createSpec(base->meta, true);
+    auto& cache = specCache();
+    auto name = selectedSpecName();
+    if (name.isEmpty())
+        return Ori::Dlg::info(tr("No highlighter is selected"));
+
+    const auto& meta = cache.allMetas[name];
+    if (!meta.storage)
+        return Ori::Dlg::warning(tr("Hihghlighter storage is not set"));
+
+    newHighlighterWithBase(meta);
+    close();
+}
+
+void ManagerDlg::newHighlighterWithBase(const Meta &meta)
+{
+    auto spec = createSpec(meta, true);
     if (!spec)
     {
         Ori::Dlg::error("Failed to load base highlighter");
@@ -671,7 +740,27 @@ void Control::newHighlighterWithBase(const QSharedPointer<Spec>& base)
     spec->meta.source = "";
     spec->meta.title = "";
     spec->meta.storage = specCache().customStorage;
-    emit editorRequested(spec);
+    emit _parent->editorRequested(spec);
+}
+
+void ManagerDlg::deleteHighlighter()
+{
+    auto& cache = specCache();
+    auto name = selectedSpecName();
+    if (name.isEmpty())
+        return Ori::Dlg::info(tr("No highlighter is selected"));
+
+    const auto& meta = cache.allMetas[name];
+    if (!meta.storage)
+        return Ori::Dlg::warning(tr("Hihghlighter storage is not set"));
+
+    if (meta.storage->readOnly())
+        return Ori::Dlg::info(tr("Highlighter \"%1\" is built-in and can not be deleted").arg(meta.displayTitle()));
+
+    if (!Ori::Dlg::yes(tr("Delete highlighter \"%1\"?").arg(meta.displayTitle())))
+        return;
+
+    Ori::Dlg::info("TODO");
 }
 
 } // namespace Highlighter

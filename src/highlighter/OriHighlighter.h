@@ -7,7 +7,9 @@
 
 QT_BEGIN_NAMESPACE
 class QActionGroup;
+class QListWidget;
 class QMenu;
+class QPushButton;
 QT_END_NAMESPACE
 
 namespace Ori {
@@ -108,9 +110,9 @@ public:
 
     QMenu* makeMenu(QString title, QWidget* parent = nullptr);
 
+    void showManager();
     void showCurrent(const QString& name);
     void setEnabled(bool on);
-    QString currentHighlighter() const;
 
 signals:
     void selected(const QString& highlighter);
@@ -118,11 +120,28 @@ signals:
 
 private:
     QActionGroup* _actionGroup = nullptr;
+    QPointer<class ManagerDlg> _managerDlg;
 
     void actionGroupTriggered(QAction* action);
+};
+
+
+class ManagerDlg : public QWidget
+{
+private:
+    QListWidget *_specList;
+    Control *_parent;
+
+    ManagerDlg(Control *parent);
+    friend class Control;
+
+    QString selectedSpecName() const;
+
     void editHighlighter();
-    void newHighlighter();
-    void newHighlighterWithBase(const QSharedPointer<Spec>& base);
+    void createHighlighterEmpty();
+    void createHighlighterCopy();
+    void deleteHighlighter();
+    void newHighlighterWithBase(const Meta& meta);
 };
 
 } // namespace Highlighter

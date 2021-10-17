@@ -224,6 +224,8 @@ void MainWindow::createMenu()
         });
     }
 
+    m->addAction(tr("Highlighter Manager..."), this, [this]{ _highlighterControl->showManager(); });
+
     m = menuBar()->addMenu(tr("Help"));
     /* TODO
     m->addAction(tr("Show Help"), [this]{
@@ -231,12 +233,12 @@ void MainWindow::createMenu()
     });
     m->addSeparator();
     */
-    m->addAction(tr("Visit Homepage"), []{ HelpPage::visitHomePage(); });
-    m->addAction(tr("Send Bug Report"), []{ HelpPage::sendBugReport(); });
+    m->addAction(tr("Visit Homepage"), this, []{ HelpPage::visitHomePage(); });
+    m->addAction(tr("Send Bug Report"), this, []{ HelpPage::sendBugReport(); });
 #ifndef Q_OS_MAC
     m->addSeparator(); // "About" item will be extracted to the system menu, se we don't need the separator
 #endif
-    m->addAction(tr("About %1...").arg(qApp->applicationName()), []{ HelpPage::showAbout(); });
+    m->addAction(tr("About %1...").arg(qApp->applicationName()), this, []{ HelpPage::showAbout(); });
 }
 
 namespace  {
@@ -289,7 +291,7 @@ void MainWindow::loadSettings(QSettings* s)
 
     auto lastFile = s->value("database").toString();
     if (!lastFile.isEmpty())
-        QTimer::singleShot(200, [this, lastFile](){ openCatalog(lastFile); });
+        QTimer::singleShot(200, this, [this, lastFile](){ openCatalog(lastFile); });
 }
 
 void MainWindow::loadSession()

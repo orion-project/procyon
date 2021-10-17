@@ -1,14 +1,6 @@
 name: procyon
 title: Procyon memo
 
-rule: Command
-expr: ^\s*\${1}.*$
-color: darkBlue
-
-rule: Subcommand
-expr: ^\s*\${2}.*$
-color: mediumBlue
-
 rule: Header
 expr: ^\s*\*.*$
 color: black
@@ -18,6 +10,14 @@ rule: Subheader
 expr: ^\s*\-.*$
 color: midnightBlue
 style: bold
+
+rule: Command
+expr: ^\s*\${1}.*$
+color: darkBlue
+
+rule: Subcommand
+expr: ^\s*\${2}.*$
+color: mediumBlue
 
 rule: Quote
 expr: ^\s*\|.*$
@@ -107,3 +107,43 @@ color: darkGray
 rule: Quiet
 expr: ^\s*\..*$
 color: gainsboro
+
+---
+* Simple highlighter for personal notes
+
++ Commands and output:
+
+A command, e.g. connect to `psql`:
+$ sudo -u postgres psql
+
+"Subcommand" is a command running inside of another command
+So e.g. here we describe some commands of `psql`:
+
+$$ show hba_file;
+# command output:
+> /etc/postgresql/11/main/pg_hba.conf
+
++ Full-line colorization:
+
+! the whole line of exclamations
+
+? the whole line of questions
+
+| quote is something important spoken by someone other
+
+. this is the "quiet" style, e.g. to mark some lines as DONE
+
+Separator line:
+-----------------------------
+
++ Inline formattings:
+
+Text can contain _inline italic_ style, or *inline bold* style.
+Text can contain ~inline strikeout~ style, or some `inline code` text.
+Text can contain !inline exclames! or ? inline question ? formats.
+Text can contain hyperlinks https://google.com to some web pages.
+
+- options:
+-- option 1
+-- option 2
+-- option 3

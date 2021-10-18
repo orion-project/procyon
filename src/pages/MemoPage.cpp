@@ -231,10 +231,12 @@ QString MemoPage::spellcheckLang() const
 void MemoPage::setHighlighter(const QString& name)
 {
     auto editor = dynamic_cast<TextMemoEditor*>(_memoEditor);
-    if (editor)
+    if (editor && editor->highlighterName() != name)
     {
+        bool modified = editor->isModified();
         editor->setHighlighterName(name);
         updateOption(_memoItem, MemoOptions::HIGHLIGHTER, name);
+        editor->setModified(modified);
     }
 }
 

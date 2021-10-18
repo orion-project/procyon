@@ -409,32 +409,6 @@ static SpecCache& specCache()
     return cache;
 }
 
-void loadMetas(const QVector<QSharedPointer<SpecStorage>>& storages)
-{
-    auto& cache = specCache();
-    for (const auto& storage : storages)
-    {
-        // The first writable storage becomes a default storage
-        // for new highlighters, this is enough for now
-        if (!storage->readOnly() && !cache.customStorage)
-            cache.customStorage = storage;
-
-        for (auto& meta : storage->loadMetas())
-        {
-            if (cache.allMetas.contains(meta.name))
-            {
-                const auto& existedMeta = cache.allMetas[meta.name];
-                qWarning() << "Highlighter is already registered" << existedMeta.name << existedMeta.source
-                           << (existedMeta.storage ? existedMeta.storage->name() : QString("null-storage"));
-                continue;
-            }
-            meta.storage = storage;
-            cache.allMetas[meta.name] = meta;
-            qDebug() << "Highlighter registered" << meta.name << meta.source << meta.storage->name();
-        }
-    }
-}
-
 QSharedPointer<Spec> getSpec(const QString& name)
 {
     return specCache().getSpec(name);
@@ -551,39 +525,72 @@ int Highlighter::matchMultiline(const QString &text, const Rule& rule, int ruleI
 //                                 Control
 //------------------------------------------------------------------------------
 
-Control::Control(const QVector<QSharedPointer<SpecStorage>>& storages, QObject *parent) : QObject(parent)
+Control::Control(QMenu *menu, QObject *parent) : QObject(parent), _menu(menu)
 {
-    _actionGroup = new QActionGroup(parent);
-    _actionGroup->setExclusive(true);
+}
+
+void Control::loadMetas(const QVector<QSharedPointer<SpecStorage>>& storages)
+{
+    if (_managerDlg)
+        _managerDlg->close();
+
+    auto& cache = specCache();
+    cache.allMetas.clear();
+    cache.loadedSpecs.clear();
+    for (const auto& storage : storages)
+    {
+        // The first writable storage becomes a default storage
+        // for new highlighters, this is enough for now
+        if (!storage->readOnly() && !cache.customStorage)
+            cache.customStorage = storage;
+
+        for (auto& meta : storage->loadMetas())
+        {
+            if (cache.allMetas.contains(meta.name))
+            {
+                const auto& existedMeta = cache.allMetas[meta.name];
+                qWarning() << "Highlighter is already registered" << existedMeta.name << existedMeta.source
+                           << (existedMeta.storage ? existedMeta.storage->name() : QString("null-storage"));
+                continue;
+            }
+            meta.storage = storage;
+            cache.allMetas[meta.name] = meta;
+            qDebug() << "Highlighter registered" << meta.name << meta.source << meta.storage->name();
+        }
+    }
+
+    makeMenu();
+}
+
+void Control::makeMenu()
+{
+    if (_actionGroup) delete _actionGroup;
+
+    _actionGroup = new QActionGroup(this);
     connect(_actionGroup, &QActionGroup::triggered, this, &Control::actionGroupTriggered);
 
     auto actionNone = new QAction(tr("None"), this);
     actionNone->setCheckable(true);
     _actionGroup->addAction(actionNone);
 
-    loadMetas(storages);
     const auto& allMetas = specCache().allMetas;
     auto it = allMetas.constBegin();
     while (it != allMetas.constEnd())
     {
         const auto& meta = it.value();
-        auto actionDict = new QAction(meta.displayTitle(), this);
+        auto actionDict = new QAction(meta.displayTitle(), _actionGroup);
         actionDict->setCheckable(true);
         actionDict->setData(meta.name);
-        _actionGroup->addAction(actionDict);
         it++;
     }
-}
 
-QMenu* Control::makeMenu(QString title, QWidget* parent)
-{
-    auto menu = new QMenu(title, parent);
-    menu->addActions(_actionGroup->actions());
-    return menu;
+    _menu->clear();
+    _menu->addActions(_actionGroup->actions());
 }
 
 void Control::showCurrent(const QString& name)
 {
+    if (!_actionGroup) return;
     for (const auto& action : _actionGroup->actions())
         if (action->data().toString() == name)
         {

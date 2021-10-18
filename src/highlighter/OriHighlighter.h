@@ -78,8 +78,6 @@ public:
     static QSharedPointer<SpecStorage> create();
 };
 
-
-void loadMetas(const QVector<QSharedPointer<SpecStorage>>& storages);
 QSharedPointer<Spec> getSpec(const QString& name);
 QMap<int, QString> loadSpecRaw(QSharedPointer<Spec> spec, const QString& source, QString* data, bool withRawData);
 
@@ -106,23 +104,26 @@ class Control : public QObject
     Q_OBJECT
 
 public:
-    explicit Control(const QVector<QSharedPointer<SpecStorage>>& storages, QObject *parent = nullptr);
+    explicit Control(QMenu* menu, QObject *parent = nullptr);
 
-    QMenu* makeMenu(QString title, QWidget* parent = nullptr);
 
     void showManager();
     void showCurrent(const QString& name);
     void setEnabled(bool on);
+
+    void loadMetas(const QVector<QSharedPointer<SpecStorage>>& storages);
 
 signals:
     void selected(const QString& highlighter);
     void editorRequested(const QSharedPointer<Spec>& spec);
 
 private:
+    QMenu* _menu;
     QActionGroup* _actionGroup = nullptr;
     QPointer<class ManagerDlg> _managerDlg;
 
     void actionGroupTriggered(QAction* action);
+    void makeMenu();
 };
 
 

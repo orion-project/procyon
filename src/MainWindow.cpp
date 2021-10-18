@@ -137,13 +137,14 @@ MainWindow::MainWindow() : QMainWindow()
     connect(_spellcheckControl, &SpellcheckControl::langSelected, this, &MainWindow::setMemoSpellcheckLang);
 #endif
 
-    _highlighterControl = new Ori::Highlighter::Control({Ori::Highlighter::DefaultStorage::create()}, this);
+    createMenu();
+
+    _highlighterControl = new Ori::Highlighter::Control(_highlighterMenu, this);
     connect(_highlighterControl, &Ori::Highlighter::Control::selected, this, &MainWindow::setMemoHighlighter);
     connect(_highlighterControl, &Ori::Highlighter::Control::editorRequested, this, [this](const QSharedPointer<Ori::Highlighter::Spec>& spec){
         activateOrOpenHighlighEditorPage(_pagesView, _openedPagesView, spec);
     });
 
-    createMenu();
     createStatusBar();
 }
 
@@ -198,12 +199,8 @@ void MainWindow::createMenu()
     }
 #endif
 
-    _highlighterMenu = _highlighterControl->makeMenu(tr("Highlighter"), this);
-    if (_highlighterMenu)
-    {
-        connect(_highlighterMenu, &QMenu::aboutToShow, this, &MainWindow::highlighterMenuAboutToShow);
-        m->addMenu(_highlighterMenu);
-    }
+    _highlighterMenu = m->addMenu(tr("Highlighter"));
+    connect(_highlighterMenu, &QMenu::aboutToShow, this, &MainWindow::highlighterMenuAboutToShow);
 
     _actionMemoFont = m->addAction(tr("Choose Font..."), this, &MainWindow::chooseMemoFont);
 
@@ -403,6 +400,7 @@ void MainWindow::catalogOpened(Catalog* catalog)
     _mruList->append(filePath);
     _statusFileName->setText(QDir::toNativeSeparators(filePath));
     _lastOpenedCatalog = filePath;
+    _highlighterControl->loadMetas({Ori::Highlighter::DefaultStorage::create()});
     updateCounter();
     loadSession();
 }
@@ -429,6 +427,12 @@ bool MainWindow::closeAllMemos()
     for (int i = 0; i < _pagesView->count(); i++)
     {
         auto widget = _pagesView->widget(i);
+
+        auto hleditPage = qobject_cast<HighlightEditorPage*>(widget);
+        if (hleditPage)
+            // TODO: check if was modified
+            deletingPages << hleditPage;
+
         auto page = qobject_cast<MemoPage*>(widget);
         if (!page) continue;
         if (!page->canClose())

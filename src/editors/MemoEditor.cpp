@@ -71,6 +71,11 @@ bool TextMemoEditor::isModified() const
     return _editor->document()->isModified();
 }
 
+void TextMemoEditor::setModified(bool on)
+{
+    _editor->document()->setModified(on);
+}
+
 bool TextMemoEditor::wordWrap() const
 {
     return _editor->wordWrap();

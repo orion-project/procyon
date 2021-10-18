@@ -22,6 +22,7 @@ public:
     virtual QFont font() const = 0;
     virtual void setFont(const QFont&) = 0;
     virtual bool isModified() const = 0;
+    virtual void setModified(bool on) = 0;
     virtual bool wordWrap() const = 0;
     virtual void setWordWrap(bool on) = 0;
     virtual void showMemo() = 0;
@@ -51,6 +52,7 @@ public:
     QFont font() const override;
     void setFont(const QFont& f) override;
     bool isModified() const override;
+    void setModified(bool on) override;
     bool wordWrap() const override;
     void setWordWrap(bool on) override;
     QString data() const override;

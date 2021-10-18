@@ -48,6 +48,7 @@ macx: ICON = img/icon/main.icns
 
 SOURCES += src/main.cpp\
     src/AppSettings.cpp \
+    src/highlighter/EnotStorage.cpp \
     src/highlighter/OriHighlighter.cpp \
     src/pages/AppSettingsPage.cpp \
     src/pages/HighlightEditorPage.cpp \
@@ -85,6 +86,7 @@ HEADERS  += src/MainWindow.h \
     src/AppSettings.h \
     src/CatalogWidget.h \
     src/CatalogModel.h \
+    src/highlighter/EnotStorage.h \
     src/highlighter/OriHighlighter.h \
     src/pages/AppSettingsPage.h \
     src/pages/HighlightEditorPage.h \

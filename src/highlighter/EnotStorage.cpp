@@ -3,14 +3,16 @@
 
 using namespace Ori::Highlighter;
 
-QString EnotHighlighterStorage::name() const
+namespace  {
+QString metaKey(const QString& name)
 {
-    return QStringLiteral("enot-storage");
+    return QStringLiteral("highlighter/%1/meta").arg(name);
 }
 
-bool EnotHighlighterStorage::readOnly() const
+QString specKey(const QString& name)
 {
-    return false;
+    return QStringLiteral("highlighter/%1/spec").arg(name);
+}
 }
 
 QVector<Meta> EnotHighlighterStorage::loadMetas() const
@@ -23,27 +25,37 @@ QVector<Meta> EnotHighlighterStorage::loadMetas() const
         Meta meta;
         meta.name = it.key().split('/')[1];
         meta.title = it.value().toString();
-        meta.source = QStringLiteral("highlighter/%1/spec").arg(meta.name);
+        meta.source = specKey(meta.name);
         metas << meta;
         it++;
     }
     return metas;
 }
 
-QSharedPointer<Spec> EnotHighlighterStorage::loadSpec(const QString &source, bool withRawData) const
+QSharedPointer<Spec> EnotHighlighterStorage::loadSpec(const Meta &meta, bool withRawData) const
 {
-    auto text = CatalogStore::settingsManager()->readString(source, QStringLiteral("doen not exist"));
-    if (text == QStringLiteral("doen not exist"))
-        return QSharedPointer<Spec>();
+    auto sm = CatalogStore::settingsManager();
+    auto text = sm->readString(specKey(meta.name), QStringLiteral("---"));
+    if (text == QStringLiteral("---")) return QSharedPointer<Spec>();
     QSharedPointer<Spec> spec(new Spec);
-    loadSpecRaw(spec, source, &text, withRawData);
+    loadSpecRaw(spec, meta.source, &text, withRawData);
     return spec;
 }
 
 QString EnotHighlighterStorage::saveSpec(const QSharedPointer<Spec>& spec)
 {
-    auto res = CatalogStore::settingsManager()->writeString(QStringLiteral("highlighter/%1/meta").arg(spec->meta.name), spec->meta.title);
+    auto sm = CatalogStore::settingsManager();
+    auto res = sm->writeString(metaKey(spec->meta.name), spec->meta.title);
     if (res.isEmpty())
-        res = CatalogStore::settingsManager()->writeString(QStringLiteral("highlighter/%1/spec").arg(spec->meta.name), spec->storableString());
+        res = sm->writeString(specKey(spec->meta.name), spec->storableString());
+    return res;
+}
+
+QString EnotHighlighterStorage::deleteSpec(const Meta &meta)
+{
+    auto sm = CatalogStore::settingsManager();
+    auto res = sm->remove(specKey(meta.name));
+    if (res.isEmpty())
+        res = sm->remove(metaKey(meta.name));
     return res;
 }

@@ -26,7 +26,7 @@ private:
     QSyntaxHighlighter *_highlight;
 
     void checkHighlighter();
-    void applyHighlighter();
+    void saveHighlighter();
 };
 
 #endif // HIGHLIGHT_EDITOR_PAGE_H

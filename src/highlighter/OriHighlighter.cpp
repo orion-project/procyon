@@ -1,4 +1,5 @@
 #include "OriHighlighter.h"
+#include "../widgets/PopupMessage.h"
 
 #include <QActionGroup>
 #include <QApplication>
@@ -276,7 +277,7 @@ QMap<int, QString> loadSpecRaw(QSharedPointer<Spec> spec, const QString& source,
 
 QSharedPointer<Spec> createSpec(const Meta& meta, bool withRawData)
 {
-    auto spec = meta.storage->loadSpec(meta.source, withRawData);
+    auto spec = meta.storage->loadSpec(meta, withRawData);
     if (!spec) return QSharedPointer<Spec>();
     spec->meta.source = meta.source;
     spec->meta.storage = meta.storage;
@@ -286,16 +287,6 @@ QSharedPointer<Spec> createSpec(const Meta& meta, bool withRawData)
 //------------------------------------------------------------------------------
 //                              DefaultSpecStorage
 //------------------------------------------------------------------------------
-
-QString DefaultStorage::name() const
-{
-    return QStringLiteral("default-storage");
-}
-
-bool DefaultStorage::readOnly() const
-{
-    return true;
-}
 
 QVector<Meta> DefaultStorage::loadMetas() const
 {
@@ -340,17 +331,17 @@ QVector<Meta> DefaultStorage::loadMetas() const
     return metas;
 }
 
-QSharedPointer<Spec> DefaultStorage::loadSpec(const QString& source, bool withRawData) const
+QSharedPointer<Spec> DefaultStorage::loadSpec(const Meta &meta, bool withRawData) const
 {
-    QFile file(source);
+    QFile file(meta.source);
     if (!file.open(QFile::ReadOnly | QFile::Text))
     {
-        qWarning() << "Highlighter::DefaultStorage.loadSpec" << source << "|" << file.errorString();
+        qWarning() << "Highlighter::DefaultStorage.loadSpec" << meta.source << "|" << file.errorString();
         return QSharedPointer<Spec>();
     }
     QTextStream stream(&file);
     QSharedPointer<Spec> spec(new Spec());
-    SpecLoader loader(source, stream, withRawData);
+    SpecLoader loader(meta.source, stream, withRawData);
     loader.loadSpec(spec.get());
     return spec;
 }
@@ -670,9 +661,8 @@ ManagerDlg::ManagerDlg(Control *parent) : QWidget(), _parent(parent)
 
 QString ManagerDlg::selectedSpecName() const
 {
-    auto items = _specList->selectedItems();
-    if (items.isEmpty()) return QString();
-    return items.first()->data(Qt::UserRole).toString();
+    auto item = _specList->currentItem();
+    return item ? item->data(Qt::UserRole).toString() : QString();
 }
 
 void ManagerDlg::editHighlighter()
@@ -762,7 +752,15 @@ void ManagerDlg::deleteHighlighter()
     if (!Ori::Dlg::yes(tr("Delete highlighter \"%1\"?").arg(meta.displayTitle())))
         return;
 
-    Ori::Dlg::info("TODO");
+    auto res = meta.storage->deleteSpec(meta);
+    if (!res.isEmpty())
+        Ori::Dlg::error(tr("There is an error during highlighter deletion\n\n%1").arg(res));
+
+    PopupMessage::showAffirm(tr("Highlighter successfully deleted\n\n"
+        "Application is required to be restarted to reflect changes"));
+
+    delete _specList->currentItem();
+    _specList->setCurrentItem(_specList->item(0));
 }
 
 } // namespace Highlighter

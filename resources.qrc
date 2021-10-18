@@ -16,6 +16,7 @@
         <file alias="cancel">img/toolbar/revert_red.svg</file>
         <file alias="edit">img/toolbar/pencil.svg</file>
         <file alias="update">img/toolbar/update.svg</file>
+        <file alias="save">img/toolbar/save.svg</file>
     </qresource>
     <qresource prefix="/style">
         <file alias="about">img/about.png</file>

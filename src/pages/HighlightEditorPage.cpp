@@ -42,8 +42,8 @@ HighlightEditorPage::HighlightEditorPage(const QSharedPointer<Ori::Highlighter::
     auto titleEditor = PageWidgets::makeTitleEditor(windowTitle());
 
     auto toolbar = new QToolBar;
-    auto actionCheck = toolbar->addAction(QIcon(":/toolbar/update"), tr("Check"), this, &HighlightEditorPage::checkHighlighter);
-    auto actionApply = toolbar->addAction(QIcon(":/toolbar/apply"), tr("Apply"), this, &HighlightEditorPage::applyHighlighter);
+    auto actionCheck = toolbar->addAction(QIcon(":/toolbar/apply"), tr("Check"), this, &HighlightEditorPage::checkHighlighter);
+    auto actionApply = toolbar->addAction(QIcon(":/toolbar/save"), tr("Save"), this, &HighlightEditorPage::saveHighlighter);
     toolbar->addSeparator();
     toolbar->addAction(QIcon(":/toolbar/close"), tr("Close"), [this](){
         deleteLater();
@@ -65,7 +65,7 @@ void HighlightEditorPage::checkHighlighter()
     _highlight->rehighlight();
 }
 
-void HighlightEditorPage::applyHighlighter()
+void HighlightEditorPage::saveHighlighter()
 {
     if (!spec->meta.storage)
     {
@@ -84,7 +84,8 @@ void HighlightEditorPage::applyHighlighter()
     spec->sample = _sample->toPlainText();
     auto err = spec->meta.storage->saveSpec(spec);
     if (!err.isEmpty())
-        Ori::Dlg::error(tr("Failed to apply highlighter\n\n%1").arg(err));
+        Ori::Dlg::error(tr("Failed to save highlighter\n\n%1").arg(err));
     else
-        PopupMessage::showAffirm(tr("Highlighter successfully applied"));
+        PopupMessage::showAffirm(tr("Highlighter successfully saved\n\n"
+            "Application is required to be restarted to reflect changes"));
 }

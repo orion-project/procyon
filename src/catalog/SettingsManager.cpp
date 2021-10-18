@@ -58,6 +58,18 @@ QMap<QString, QVariant> SettingsManager::readSettings(const QString& idPattern) 
     return values;
 }
 
+QString SettingsManager::remove(const QString& id)
+{
+    auto table = settingsTable();
+    auto res = ActionQuery(QString("DELETE FROM %1 WHERE id = '%2'").arg(table->tableName(), id)).exec();
+    if (!res.isEmpty())
+    {
+        qWarning() << "Error while delete setting" << id << res;
+        return res;
+    }
+    return QString();
+}
+
 QString SettingsManager::writeValue(const QString& id, const QVariant& value) const
 {
     auto table = settingsTable();

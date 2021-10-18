@@ -61,19 +61,21 @@ public:
     virtual QString name() const = 0;
     virtual bool readOnly() const = 0;
     virtual QVector<Meta> loadMetas() const = 0;
-    virtual QSharedPointer<Spec> loadSpec(const QString& source, bool withRawData = false) const = 0;
+    virtual QSharedPointer<Spec> loadSpec(const Meta& meta, bool withRawData = false) const = 0;
     virtual QString saveSpec(const QSharedPointer<Spec>& spec) = 0;
+    virtual QString deleteSpec(const Meta& meta) = 0;
 };
 
 
 class DefaultStorage : public SpecStorage
 {
 public:
-    QString name() const override;
-    bool readOnly() const override;
+    QString name() const override { return QStringLiteral("default-storage"); }
+    bool readOnly() const override { return true; }
     QVector<Meta> loadMetas() const override;
-    QSharedPointer<Spec> loadSpec(const QString &source, bool withRawData = false) const override;
+    QSharedPointer<Spec> loadSpec(const Meta &meta, bool withRawData = false) const override;
     QString saveSpec(const QSharedPointer<Spec>& spec) override;
+    QString deleteSpec(const Meta&) override { return QString(); }
 };
 
 QSharedPointer<Spec> getSpec(const QString& name);
@@ -103,7 +105,6 @@ class Control : public QObject
 
 public:
     explicit Control(QMenu* menu, QObject *parent = nullptr);
-
 
     void showManager();
     void showCurrent(const QString& name);

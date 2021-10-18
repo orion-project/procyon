@@ -14,6 +14,8 @@ public:
 
     QMap<QString, QVariant> readSettings(const QString& idPattern) const;
 
+    QString remove(const QString& id);
+
     QString writeValue(const QString& id, const QVariant& value) const;
     QVariant readValue(const QString& id, const QVariant& defValue = QVariant(), bool *hasValue = nullptr) const;
 

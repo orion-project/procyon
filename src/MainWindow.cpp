@@ -6,6 +6,7 @@
 #include "catalog/Catalog.h"
 #include "catalog/CatalogStore.h"
 #include "highlighter/OriHighlighter.h"
+#include "highlighter/EnotStorage.h"
 #include "pages/AppSettingsPage.h"
 #include "pages/HelpPage.h"
 #include "pages/HighlightEditorPage.h"
@@ -400,7 +401,10 @@ void MainWindow::catalogOpened(Catalog* catalog)
     _mruList->append(filePath);
     _statusFileName->setText(QDir::toNativeSeparators(filePath));
     _lastOpenedCatalog = filePath;
-    _highlighterControl->loadMetas({Ori::Highlighter::DefaultStorage::create()});
+    _highlighterControl->loadMetas({
+        QSharedPointer<Ori::Highlighter::SpecStorage>(new Ori::Highlighter::DefaultStorage()),
+        QSharedPointer<Ori::Highlighter::SpecStorage>(new EnotHighlighterStorage()),
+    });
     updateCounter();
     loadSession();
 }

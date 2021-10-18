@@ -287,11 +287,6 @@ QSharedPointer<Spec> createSpec(const Meta& meta, bool withRawData)
 //                              DefaultSpecStorage
 //------------------------------------------------------------------------------
 
-QSharedPointer<SpecStorage> DefaultStorage::create()
-{
-    return QSharedPointer<SpecStorage>(new DefaultStorage());
-}
-
 QString DefaultStorage::name() const
 {
     return QStringLiteral("default-storage");
@@ -299,7 +294,7 @@ QString DefaultStorage::name() const
 
 bool DefaultStorage::readOnly() const
 {
-    return false;
+    return true;
 }
 
 QVector<Meta> DefaultStorage::loadMetas() const

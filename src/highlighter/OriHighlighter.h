@@ -74,8 +74,6 @@ public:
     QVector<Meta> loadMetas() const override;
     QSharedPointer<Spec> loadSpec(const QString &source, bool withRawData = false) const override;
     QString saveSpec(const QSharedPointer<Spec>& spec) override;
-
-    static QSharedPointer<SpecStorage> create();
 };
 
 QSharedPointer<Spec> getSpec(const QString& name);

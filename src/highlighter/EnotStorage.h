@@ -3,10 +3,14 @@
 
 #include "OriHighlighter.h"
 
-class EnotStorage : public Ori::Highlighter::SpecStorage
+class EnotHighlighterStorage : public Ori::Highlighter::SpecStorage
 {
 public:
-    EnotStorage();
+    QString name() const override;
+    bool readOnly() const override;
+    QVector<Ori::Highlighter::Meta> loadMetas() const override;
+    QSharedPointer<Ori::Highlighter::Spec> loadSpec(const QString &source, bool withRawData = false) const override;
+    QString saveSpec(const QSharedPointer<Ori::Highlighter::Spec>& spec) override;
 };
 
 #endif // ENOT_STORAGE_H

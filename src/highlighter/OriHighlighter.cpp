@@ -23,7 +23,7 @@ namespace Highlighter {
 
 QString Spec::storableString() const
 {
-    return code.trimmed() + "\n\n---\n" + sample.trimmed();
+    return rawCode().trimmed() + "\n\n---\n" + rawSample().trimmed();
 }
 
 //------------------------------------------------------------------------------
@@ -86,7 +86,7 @@ private:
         return true;
     }
 
-    void finalizeRule(Spec* spec, Rule& rule)
+    void finalizeRule(Rule& rule, Spec* spec)
     {
         if (!rule.terms.isEmpty())
         {
@@ -114,7 +114,7 @@ public:
         : source(source), stream(stream), withRawData(withRawData)
     {}
 
-    bool loadMeta(Meta& meta)
+    bool loadMeta(Meta& meta, Spec* spec = nullptr)
     {
         bool suffice = false;
         while (!stream.atEnd())
@@ -129,10 +129,14 @@ public:
             {
                 meta.name = val;
                 suffice = true;
+                if (spec && withRawData)
+                    spec->raw[Spec::RAW_NAME_LINE] = lineNo;
             }
             else if (key == QStringLiteral("title"))
             {
                 meta.title = val;
+                if (spec && withRawData)
+                    spec->raw[Spec::RAW_TITLE_LINE] = lineNo;
             }
             else if (key == QStringLiteral("rule"))
             {
@@ -148,13 +152,13 @@ public:
     QMap<int, QString> loadSpec(Spec* spec)
     {
         // ! Don't clear meta.source and meta.storage
+        // ! they are parameters of the loading
         spec->meta.name.clear();
         spec->meta.title.clear();
-        spec->code.clear();
-        spec->sample.clear();
+        spec->raw.clear();
         spec->rules.clear();
 
-        if (!loadMeta(spec->meta))
+        if (!loadMeta(spec->meta, spec))
             return warnings;
 
         Rule rule;
@@ -175,7 +179,7 @@ public:
             }
             else if (key == QStringLiteral("rule"))
             {
-                finalizeRule(spec, rule);
+                finalizeRule(rule, spec);
 
                 for (const auto& r : spec->rules)
                     if (r.name == val)
@@ -258,11 +262,11 @@ public:
             }
             else warning(QStringLiteral("Unknown key"));
         }
-        finalizeRule(spec, rule);
+        finalizeRule(rule, spec);
         if (withRawData)
         {
-            spec->code = code.join('\n');
-            spec->sample = sample.join('\n');
+            spec->raw[Spec::RAW_CODE] = code.join('\n');
+            spec->raw[Spec::RAW_SAMPLE] = sample.join('\n');
         }
         return warnings;
     }
@@ -398,6 +402,29 @@ static SpecCache& specCache()
 QSharedPointer<Spec> getSpec(const QString& name)
 {
     return specCache().getSpec(name);
+}
+
+QPair<bool, bool> checkDuplicates(const Meta& meta)
+{
+    bool name = false;
+    bool title = false;
+    const auto& metas = specCache().allMetas;
+    auto it = metas.constBegin();
+    while (it != metas.constEnd())
+    {
+        const auto& m = it.value();
+        if (m.source != meta.source)
+        {
+            if (!name && m.name == meta.name)
+                name = true;
+            if (!title && m.title == meta.title)
+                title = true;
+            if (name && title)
+                break;
+        }
+        it++;
+    }
+    return {name, title};
 }
 
 //------------------------------------------------------------------------------
@@ -756,7 +783,7 @@ void ManagerDlg::deleteHighlighter()
     if (!res.isEmpty())
         Ori::Dlg::error(tr("There is an error during highlighter deletion\n\n%1").arg(res));
 
-    PopupMessage::showAffirm(tr("Highlighter successfully deleted\n\n"
+    PopupMessage::affirm(tr("Highlighter successfully deleted\n\n"
         "Application is required to be restarted to reflect changes"));
 
     delete _specList->currentItem();

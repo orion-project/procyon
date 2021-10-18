@@ -20,7 +20,7 @@ HighlightEditorPage::HighlightEditorPage(const QSharedPointer<Ori::Highlighter::
     setWindowIcon(QIcon(":/icon/main"));
 
     _editor = new CodeTextEdit;
-    _editor->setPlainText(spec->code);
+    _editor->setPlainText(spec->rawCode());
     auto hl = Ori::Highlighter::getSpec("highlighter");
     if (hl)
         new Ori::Highlighter::Highlighter(_editor->document(), hl);
@@ -30,7 +30,7 @@ HighlightEditorPage::HighlightEditorPage(const QSharedPointer<Ori::Highlighter::
     _sample->setProperty("role", "memo_editor");
     _sample->setObjectName("code_editor");
     _sample->setFont(AppSettings::instance().memoFont);
-    _sample->setPlainText(spec->sample);
+    _sample->setPlainText(spec->rawSample());
     _highlight = new Ori::Highlighter::Highlighter(_sample->document(), spec);
 
     auto splitter = new QSplitter;
@@ -74,18 +74,26 @@ void HighlightEditorPage::saveHighlighter()
     }
     auto code = _editor->toPlainText();
     auto warnings = Ori::Highlighter::loadSpecRaw(spec, QStringLiteral("HighlightEditor"), &code, true);
+    if (warnings.isEmpty())
+    {
+        auto existed = Ori::Highlighter::checkDuplicates(spec->meta);
+        if (existed.first)
+            warnings[spec->rawNameLineNo()] = "Another one with the same name already exists";
+        if (existed.second)
+            warnings[spec->rawTitleLineNo()] = "Another one with the same title already exists";
+    }
     _editor->setLineHints(warnings);
     _highlight->rehighlight();
     if (!warnings.isEmpty())
     {
-        Ori::Dlg::error(tr("There are errors in the highlighter code, fix them before saving"));
+        PopupMessage::error(tr("There are errors in the highlighter code, fix them before saving"));
         return;
     }
-    spec->sample = _sample->toPlainText();
+    spec->raw[Ori::Highlighter::Spec::RAW_SAMPLE] = _sample->toPlainText();
     auto err = spec->meta.storage->saveSpec(spec);
     if (!err.isEmpty())
         Ori::Dlg::error(tr("Failed to save highlighter\n\n%1").arg(err));
     else
-        PopupMessage::showAffirm(tr("Highlighter successfully saved\n\n"
+        PopupMessage::affirm(tr("Highlighter successfully saved\n\n"
             "Application is required to be restarted to reflect changes"));
 }

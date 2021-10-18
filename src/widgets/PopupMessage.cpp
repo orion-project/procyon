@@ -9,9 +9,14 @@
 #include <QPropertyAnimation>
 #include <QTimer>
 
-void PopupMessage::showAffirm(const QString& text)
+void PopupMessage::affirm(const QString& text, int duration)
 {
-    (new PopupMessage(text, qApp->activeWindow()))->show();
+    (new PopupMessage(AFFIRM, text, duration, qApp->activeWindow()))->show();
+}
+
+void PopupMessage::error(const QString& text, int duration)
+{
+    (new PopupMessage(ERROR, text, duration, qApp->activeWindow()))->show();
 }
 
 namespace {
@@ -22,8 +27,7 @@ struct PopupMsgStyle
     int borderRadius = 5;
     QPen borderColor = QColor("gray");
     QBrush affirmBackColor = QColor(181, 252, 181);
-    int fadeAfterMs = 1000;
-    int fadeDurationMs = 1000;
+    QBrush errorBackColor = QColor(255, 181, 181);
 };
 
 const PopupMsgStyle& msgStyle()
@@ -34,7 +38,7 @@ const PopupMsgStyle& msgStyle()
 
 } // namespace
 
-PopupMessage::PopupMessage(const QString& text, QWidget *parent) : QWidget(parent)
+PopupMessage::PopupMessage(Mode mode, const QString& text, int duration, QWidget *parent) : QWidget(parent), _mode(mode)
 {
     setAttribute(Qt::WA_DeleteOnClose);
 
@@ -59,11 +63,11 @@ PopupMessage::PopupMessage(const QString& text, QWidget *parent) : QWidget(paren
     int y = (psz.height() - sz.height())/2;
     move(x, y);
 
-    QTimer::singleShot(style.fadeAfterMs, this, [this, style](){
+    QTimer::singleShot(duration, this, [this, style](){
         auto opacity = new QGraphicsOpacityEffect();
         setGraphicsEffect(opacity);
         auto fadeout = new QPropertyAnimation(opacity, "opacity");
-        fadeout->setDuration(style.fadeDurationMs);
+        fadeout->setDuration(1000);
         fadeout->setStartValue(1);
         fadeout->setEndValue(0);
         fadeout->setEasingCurve(QEasingCurve::OutBack);
@@ -83,7 +87,7 @@ void PopupMessage::paintEvent(QPaintEvent *event)
     QPainter p(this);
     p.setClipRect(event->rect());
     p.setPen(style.borderColor);
-    p.setBrush(style.affirmBackColor);
+    p.setBrush(_mode == AFFIRM ? style.affirmBackColor : style.errorBackColor);
     p.setRenderHint(QPainter::Antialiasing, true);
     p.drawRoundedRect(0, 0, width(), height(), style.borderRadius, style.borderRadius);
     QWidget::paintEvent(event);

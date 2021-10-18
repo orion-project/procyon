@@ -46,10 +46,16 @@ struct Rule
 struct Spec
 {
     Meta meta;
-    QString code;           // not empty only when spec is loaded withRawData
-    QString sample;         // not empty only when spec is loaded withRawData
     QVector<Rule> rules;
 
+    // not empty only when spec is loaded withRawData
+    // this stuff is required for highlighter editor
+    QMap<int, QVariant> raw;
+    enum RawData {RAW_CODE, RAW_SAMPLE, RAW_NAME_LINE, RAW_TITLE_LINE};
+    QString rawCode() const { return raw[RAW_CODE].toString(); }
+    QString rawSample() const { return raw[RAW_SAMPLE].toString(); }
+    int rawNameLineNo() const { return raw[RAW_NAME_LINE].toInt(); }
+    int rawTitleLineNo() const { return raw[RAW_TITLE_LINE].toInt(); }
     QString storableString() const;
 };
 
@@ -80,6 +86,7 @@ public:
 
 QSharedPointer<Spec> getSpec(const QString& name);
 QMap<int, QString> loadSpecRaw(QSharedPointer<Spec> spec, const QString& source, QString* data, bool withRawData);
+QPair<bool, bool> checkDuplicates(const Meta& meta);
 
 class Highlighter : public QSyntaxHighlighter
 {

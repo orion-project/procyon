@@ -2,6 +2,7 @@
 
 #include "PageWidgets.h"
 #include "../catalog/SqlHelper.h"
+#include "../highlighter/OriHighlighter.h"
 #include "helpers/OriLayouts.h"
 #include "helpers/OriWidgets.h"
 
@@ -74,6 +75,7 @@ SqlConsolePage::SqlConsolePage(QWidget *parent) : QWidget(parent)
     editor->setProperty("role", "memo_editor");
     editor->setObjectName("code_editor");
     editor->setWordWrapMode(QTextOption::NoWrap);
+    Ori::Highlighter::createHighlighter(editor, QStringLiteral("sql"));
 
     auto result = new QTextEdit;
     result->setWordWrapMode(QTextOption::NoWrap);

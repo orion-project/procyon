@@ -2,6 +2,7 @@
 
 #include "PageWidgets.h"
 #include "../AppSettings.h"
+#include "../highlighter/OriHighlighter.h"
 #include "../widgets/CodeTextEdit.h"
 
 #include "helpers/OriLayouts.h"
@@ -16,6 +17,7 @@ MarkdownCssEditorPage::MarkdownCssEditorPage(QWidget *parent) : QWidget(parent)
 
     auto editor = new CodeTextEdit;
     editor->setPlainText(AppSettings::instance().markdownCss());
+    Ori::Highlighter::createHighlighter(editor, QStringLiteral("css"));
 
     auto titleEditor = PageWidgets::makeTitleEditor("Markdown CSS Editor");
 

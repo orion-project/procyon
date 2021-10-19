@@ -9,6 +9,7 @@ QT_BEGIN_NAMESPACE
 class QActionGroup;
 class QListWidget;
 class QMenu;
+class QPlainTextEdit;
 class QPushButton;
 QT_END_NAMESPACE
 
@@ -77,7 +78,7 @@ class DefaultStorage : public SpecStorage
 {
 public:
     QString name() const override { return QStringLiteral("default-storage"); }
-    bool readOnly() const override { return true; }
+    bool readOnly() const override { return false; }
     QVector<Meta> loadMetas() const override;
     QSharedPointer<Spec> loadSpec(const Meta &meta, bool withRawData = false) const override;
     QString saveSpec(const QSharedPointer<Spec>& spec) override;
@@ -87,6 +88,7 @@ public:
 QSharedPointer<Spec> getSpec(const QString& name);
 QMap<int, QString> loadSpecRaw(QSharedPointer<Spec> spec, const QString& source, QString* data, bool withRawData);
 QPair<bool, bool> checkDuplicates(const Meta& meta);
+QSyntaxHighlighter* createHighlighter(QPlainTextEdit* editor, const QString& name);
 
 class Highlighter : public QSyntaxHighlighter
 {

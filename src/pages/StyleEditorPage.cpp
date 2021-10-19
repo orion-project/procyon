@@ -1,6 +1,7 @@
 #include "StyleEditorPage.h"
 
 #include "PageWidgets.h"
+#include "../highlighter/OriHighlighter.h"
 #include "../widgets/CodeTextEdit.h"
 #include "helpers/OriLayouts.h"
 
@@ -16,6 +17,7 @@ StyleEditorPage::StyleEditorPage(QWidget *parent) : QWidget(parent)
 
     auto editor = new CodeTextEdit;
     editor->setPlainText(qApp->styleSheet());
+    Ori::Highlighter::createHighlighter(editor, QStringLiteral("qss"));
 
     auto titleEditor = PageWidgets::makeTitleEditor(windowTitle());
 

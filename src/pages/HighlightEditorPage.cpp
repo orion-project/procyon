@@ -21,9 +21,7 @@ HighlightEditorPage::HighlightEditorPage(const QSharedPointer<Ori::Highlighter::
 
     _editor = new CodeTextEdit;
     _editor->setPlainText(spec->rawCode());
-    auto hl = Ori::Highlighter::getSpec("highlighter");
-    if (hl)
-        new Ori::Highlighter::Highlighter(_editor->document(), hl);
+    Ori::Highlighter::createHighlighter(_editor, QStringLiteral("highlighter"));
 
     _sample = new QPlainTextEdit;
     _sample->setWordWrapMode(QTextOption::NoWrap);

@@ -29,12 +29,12 @@ expr: "[^\\"]*(\\.[^\\"]*)*"
 color: #a31515
 
 rule: Triple-quoted string (single)
-style: multiline
+opts: multiline
 expr: '''
 color: #a31515
 
 rule: Triple-quoted string (double)
-style: multiline
+opts: multiline
 expr: """
 color: #a31515
 

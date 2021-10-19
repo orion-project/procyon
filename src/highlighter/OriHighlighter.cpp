@@ -7,6 +7,7 @@
 #include <QFile>
 #include <QListWidget>
 #include <QMenu>
+#include <QPlainTextEdit>
 #include <QPushButton>
 #include <QRegularExpression>
 #include <QTextDocument>
@@ -86,7 +87,7 @@ private:
         return true;
     }
 
-    void finalizeRule(Rule& rule, Spec* spec)
+    void finalizeRule(Rule& rule, Spec* spec, const QRegularExpression::PatternOptions& opts)
     {
         if (!rule.terms.isEmpty())
         {
@@ -106,6 +107,8 @@ private:
             else if (rule.exprs.size() > 2)
                 rule.exprs.resize(2);
         }
+        for (auto& expr : rule.exprs)
+            expr.setPatternOptions(opts);
         spec->rules << rule;
     }
 
@@ -163,6 +166,7 @@ public:
 
         Rule rule;
         rule.name = val;
+        QRegularExpression::PatternOptions opts;
 
         while (!stream.atEnd())
         {
@@ -179,7 +183,7 @@ public:
             }
             else if (key == QStringLiteral("rule"))
             {
-                finalizeRule(rule, spec);
+                finalizeRule(rule, spec, opts);
 
                 for (const auto& r : spec->rules)
                     if (r.name == val)
@@ -190,6 +194,7 @@ public:
                 rule = Rule();
                 rule.name = val;
                 ruleStarts[val] = lineNo;
+                opts = QRegularExpression::PatternOptions();
             }
             else if (key == QStringLiteral("expr"))
             {
@@ -246,9 +251,19 @@ public:
                         rule.format.setAnchor(true);
                         rule.hyperlink = true;
                     }
-                    else if (s == QStringLiteral("multiline"))
-                        rule.multiline = true;
                     else warning(QStringLiteral("Unknown style ") + s);
+                }
+            }
+            else if (key == QStringLiteral("opts"))
+            {
+                for (const auto& style : val.split(',', Qt::SkipEmptyParts))
+                {
+                    auto s = style.trimmed();
+                    if (s == QStringLiteral("multiline"))
+                        rule.multiline = true;
+                    else if (s == QStringLiteral("ignore-case"))
+                        opts.setFlag(QRegularExpression::CaseInsensitiveOption);
+                    else warning(QStringLiteral("Unknown option ") + s);
                 }
             }
             else if (key == QStringLiteral("terms"))
@@ -262,7 +277,7 @@ public:
             }
             else warning(QStringLiteral("Unknown key"));
         }
-        finalizeRule(rule, spec);
+        finalizeRule(rule, spec, opts);
         if (withRawData)
         {
             spec->raw[Spec::RAW_CODE] = code.join('\n');
@@ -431,6 +446,12 @@ QPair<bool, bool> checkDuplicates(const Meta& meta)
 //                                 Highlighter
 //------------------------------------------------------------------------------
 
+QSyntaxHighlighter* createHighlighter(QPlainTextEdit* editor, const QString& name)
+{
+    auto hl = Ori::Highlighter::getSpec(name);
+    return hl ? new Highlighter(editor->document(), hl) : nullptr;
+}
+
 Highlighter::Highlighter(QTextDocument *parent, const QSharedPointer<Spec>& spec)
     : QSyntaxHighlighter(parent), _spec(spec), _document(parent)
 {
@@ -450,7 +471,7 @@ void Highlighter::highlightBlock(const QString &text)
         for (const auto& expr : rule.exprs)
         {
             auto m = expr.match(text);
-            if (m.hasMatch())
+            while (m.hasMatch())
             {
                 int pos = m.capturedStart(rule.group);
                 int length = m.capturedLength(rule.group);
@@ -510,27 +531,36 @@ int Highlighter::matchMultiline(const QString &text, const Rule& rule, int ruleI
             if (matchEnd)
             {
                 setFormat(start, m.capturedEnd()-start, rule.format);
-                setCurrentBlockState(0);
+                setCurrentBlockState(-1);
                 matchEnd = false;
+                //qDebug() << "    has-match(end)" << start << m.capturedEnd()-start;
             }
             else
             {
                 start = m.capturedStart();
                 matchEnd = true;
+                //qDebug() << "    has-match(beg)" << start;
             }
             offset = m.capturedEnd();
+            //qDebug() << "    offset" << offset;
         }
         else
         {
             if (matchEnd)
             {
+                //qDebug() << "    no-match(end)" << start << text.length()-start;
                 setFormat(start, text.length()-start, rule.format);
                 setCurrentBlockState(ruleIndex);
                 offset = -1;
             }
+            else
+            {
+                //qDebug() << "    no-match(beg)";
+            }
             break;
         }
     }
+    //qDebug() << "    return" << offset;
     return offset;
 }
 

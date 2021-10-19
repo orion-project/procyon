@@ -51,7 +51,9 @@ SOURCES += src/main.cpp\
     src/highlighter/EnotStorage.cpp \
     src/highlighter/OriHighlighter.cpp \
     src/pages/AppSettingsPage.cpp \
-    src/pages/HighlightEditorPage.cpp \
+    src/pages/CssEditorPage.cpp \
+    src/pages/PhlEditorPage.cpp \
+    src/pages/QssEditorPage.cpp \
     src/spellcheck/LangCodeAndNames.cpp \
     src/MainWindow.cpp \
     src/CatalogWidget.cpp \
@@ -74,11 +76,9 @@ SOURCES += src/main.cpp\
     src/CatalogModel.cpp \
     src/OpenedPagesWidget.cpp \
     src/pages/HelpPage.cpp \
-    src/pages/MarkdownCssEditorPage.cpp \
     src/pages/MemoPage.cpp \
     src/pages/PageWidgets.cpp \
     src/pages/SqlConsolePage.cpp \
-    src/pages/StyleEditorPage.cpp \
     src/spellcheck/TextEditSpellcheck.cpp \
     src/widgets/PopupMessage.cpp
 
@@ -89,7 +89,9 @@ HEADERS  += src/MainWindow.h \
     src/highlighter/EnotStorage.h \
     src/highlighter/OriHighlighter.h \
     src/pages/AppSettingsPage.h \
-    src/pages/HighlightEditorPage.h \
+    src/pages/CssEditorPage.h \
+    src/pages/PhlEditorPage.h \
+    src/pages/QssEditorPage.h \
     src/spellcheck/Spellchecker.h \
     src/TextEditHelpers.h \
     src/Utils.h \
@@ -108,11 +110,9 @@ HEADERS  += src/MainWindow.h \
     src/markdown/ori_html.h \
     src/OpenedPagesWidget.h \
     src/pages/HelpPage.h \
-    src/pages/MarkdownCssEditorPage.h \
     src/pages/MemoPage.h \
     src/pages/PageWidgets.h \
     src/pages/SqlConsolePage.h \
-    src/pages/StyleEditorPage.h \
     src/spellcheck/TextEditSpellcheck.h \
     src/widgets/PopupMessage.h
 

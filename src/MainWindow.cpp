@@ -9,11 +9,11 @@
 #include "highlighter/EnotStorage.h"
 #include "pages/AppSettingsPage.h"
 #include "pages/HelpPage.h"
-#include "pages/HighlightEditorPage.h"
-#include "pages/MarkdownCssEditorPage.h"
+#include "pages/PhlEditorPage.h"
+#include "pages/CssEditorPage.h"
 #include "pages/MemoPage.h"
 #include "pages/SqlConsolePage.h"
-#include "pages/StyleEditorPage.h"
+#include "pages/QssEditorPage.h"
 
 #ifdef ENABLE_SPELLCHECK
 #include "spellcheck/Spellchecker.h"
@@ -86,7 +86,7 @@ void activateOrOpenHighlighEditorPage(QStackedWidget* pagesView, OpenedPagesWidg
     for (int i = 0; i < pagesView->count(); i++)
     {
         auto widget = pagesView->widget(i);
-        auto page = qobject_cast<HighlightEditorPage*>(widget);
+        auto page = qobject_cast<PhlEditorPage*>(widget);
         if (page && page->spec == spec)
         {
             pagesView->setCurrentWidget(page);
@@ -94,7 +94,7 @@ void activateOrOpenHighlighEditorPage(QStackedWidget* pagesView, OpenedPagesWidg
             return;
         }
     }
-    auto page = new HighlightEditorPage(spec);
+    auto page = new PhlEditorPage(spec);
     pagesView->addWidget(page);
     pagesView->setCurrentWidget(page);
     openedPagesView->addOpenedPage(page);
@@ -212,10 +212,10 @@ void MainWindow::createMenu()
     {
         m->addSeparator();
         m->addAction(tr("Edit Application QSS"), this, [this]{
-            activateOrOpenNewPage<StyleEditorPage>(_pagesView, _openedPagesView);
+            activateOrOpenNewPage<QssEditorPage>(_pagesView, _openedPagesView);
         });
         m->addAction(tr("Edit Markdown CSS"), this, [this]{
-            activateOrOpenNewPage<MarkdownCssEditorPage>(_pagesView, _openedPagesView);
+            activateOrOpenNewPage<CssEditorPage>(_pagesView, _openedPagesView);
         });
         m->addAction(tr("Open SQL Console"), this, [this]{
             openNewPage<SqlConsolePage>(_pagesView, _openedPagesView);
@@ -432,7 +432,7 @@ bool MainWindow::closeAllMemos()
     {
         auto widget = _pagesView->widget(i);
 
-        auto hleditPage = qobject_cast<HighlightEditorPage*>(widget);
+        auto hleditPage = qobject_cast<PhlEditorPage*>(widget);
         if (hleditPage)
             // TODO: check if was modified
             deletingPages << hleditPage;

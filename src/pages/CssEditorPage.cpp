@@ -1,4 +1,4 @@
-#include "MarkdownCssEditorPage.h"
+#include "CssEditorPage.h"
 
 #include "PageWidgets.h"
 #include "../AppSettings.h"
@@ -10,7 +10,7 @@
 #include <QIcon>
 #include <QToolBar>
 
-MarkdownCssEditorPage::MarkdownCssEditorPage(QWidget *parent) : QWidget(parent)
+CssEditorPage::CssEditorPage(QWidget *parent) : QWidget(parent)
 {
     setWindowTitle("Markdown CSS Editor");
     setWindowIcon(QIcon(":/icon/main"));

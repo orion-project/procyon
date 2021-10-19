@@ -1,4 +1,4 @@
-#include "HighlightEditorPage.h"
+#include "PhlEditorPage.h"
 #include "PageWidgets.h"
 #include "../AppSettings.h"
 #include "../highlighter/OriHighlighter.h"
@@ -11,7 +11,7 @@
 #include <QSplitter>
 #include <QToolBar>
 
-HighlightEditorPage::HighlightEditorPage(const QSharedPointer<Ori::Highlighter::Spec>& spec) : QWidget(), spec(spec)
+PhlEditorPage::PhlEditorPage(const QSharedPointer<Ori::Highlighter::Spec>& spec) : QWidget(), spec(spec)
 {
     if (spec->meta.name.isEmpty())
         setWindowTitle(tr("Create Highlighter"));
@@ -40,8 +40,8 @@ HighlightEditorPage::HighlightEditorPage(const QSharedPointer<Ori::Highlighter::
     auto titleEditor = PageWidgets::makeTitleEditor(windowTitle());
 
     auto toolbar = new QToolBar;
-    auto actionCheck = toolbar->addAction(QIcon(":/toolbar/apply"), tr("Check"), this, &HighlightEditorPage::checkHighlighter);
-    auto actionApply = toolbar->addAction(QIcon(":/toolbar/save"), tr("Save"), this, &HighlightEditorPage::saveHighlighter);
+    auto actionCheck = toolbar->addAction(QIcon(":/toolbar/apply"), tr("Check"), this, &PhlEditorPage::checkHighlighter);
+    auto actionApply = toolbar->addAction(QIcon(":/toolbar/save"), tr("Save"), this, &PhlEditorPage::saveHighlighter);
     toolbar->addSeparator();
     toolbar->addAction(QIcon(":/toolbar/close"), tr("Close"), [this](){
         deleteLater();
@@ -55,7 +55,7 @@ HighlightEditorPage::HighlightEditorPage(const QSharedPointer<Ori::Highlighter::
     Ori::Layouts::LayoutV({toolPanel, splitter}).setMargin(0).setSpacing(0).useFor(this);
 }
 
-void HighlightEditorPage::checkHighlighter()
+void PhlEditorPage::checkHighlighter()
 {
     auto code = _editor->toPlainText();
     auto warnings = Ori::Highlighter::loadSpecRaw(spec, QStringLiteral("HighlightEditor"), &code, false);
@@ -63,7 +63,7 @@ void HighlightEditorPage::checkHighlighter()
     _highlight->rehighlight();
 }
 
-void HighlightEditorPage::saveHighlighter()
+void PhlEditorPage::saveHighlighter()
 {
     if (!spec->meta.storage)
     {

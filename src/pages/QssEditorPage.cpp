@@ -1,4 +1,4 @@
-#include "StyleEditorPage.h"
+#include "QssEditorPage.h"
 
 #include "PageWidgets.h"
 #include "../highlighter/OriHighlighter.h"
@@ -10,7 +10,7 @@
 #include <QPlainTextEdit>
 #include <QToolBar>
 
-StyleEditorPage::StyleEditorPage(QWidget *parent) : QWidget(parent)
+QssEditorPage::QssEditorPage(QWidget *parent) : QWidget(parent)
 {
     setWindowTitle("Application QSS Editor");
     setWindowIcon(QIcon(":/icon/main"));

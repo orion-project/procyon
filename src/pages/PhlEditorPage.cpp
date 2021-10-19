@@ -19,9 +19,8 @@ PhlEditorPage::PhlEditorPage(const QSharedPointer<Ori::Highlighter::Spec>& spec)
         setWindowTitle(tr("Edit Highlighter: %1").arg(spec->meta.displayTitle()));
     setWindowIcon(QIcon(":/icon/main"));
 
-    _editor = new CodeTextEdit;
+    _editor = new CodeTextEdit("highlighter");
     _editor->setPlainText(spec->rawCode());
-    Ori::Highlighter::createHighlighter(_editor, QStringLiteral("highlighter"));
 
     _sample = new QPlainTextEdit;
     _sample->setWordWrapMode(QTextOption::NoWrap);

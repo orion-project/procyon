@@ -9,13 +9,6 @@
 
 namespace AppTheme {
 
-struct Theme {
-    // General window color
-    // TODO: make it configurable, it can be set slightly different than the default,
-    // to make it better match the window borders color depending on the desktop theme.
-    QString baseColor = "#dadbde";
-};
-
 QString loadRawStyleSheet()
 {
     return loadTextFromResource(":/style/app_main");
@@ -38,10 +31,26 @@ QString saveRawStyleSheet(const QString& text)
 QString makeStyleSheet(const QString& rawStyleSheet)
 {
     QString styleSheet = rawStyleSheet;
-    Theme t;
 
-    styleSheet.replace("$base-color", t.baseColor);
+    // Interpolate vars
+    QMap<QString, QString> vars;
+    QRegularExpression varExpr(QStringLiteral("(\\$[a-zA-Z_][a-zA-Z_-]*)\\s*:\\s*(.+);"));
+    auto m = varExpr.match(styleSheet);
+    while (m.hasMatch())
+    {
+        vars[m.captured(1)] = m.captured(2);
+        m = varExpr.match(styleSheet, m.capturedEnd());
+    }
+    styleSheet.remove(varExpr);
+    auto it = vars.constBegin();
+    while (it != vars.constEnd())
+    {
+        styleSheet.replace(it.key(), it.value());
+        qDebug() << "VAR" << it.key() << it.value();
+        it++;
+    }
 
+    // Process platform-dependeent props
     auto options = QRegularExpression::CaseInsensitiveOption | QRegularExpression::MultilineOption;
     QRegularExpression propWin(QStringLiteral("^\\s*windows:(.*)$"), options);
     QRegularExpression propLinux(QStringLiteral("^\\s*linux:(.*)$"), options);

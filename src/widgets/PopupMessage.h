@@ -1,9 +1,9 @@
 #ifndef POPUP_MESSAGE_H
 #define POPUP_MESSAGE_H
 
-#include <QWidget>
+#include <QFrame>
 
-class PopupMessage : public QWidget
+class PopupMessage : public QFrame
 {
     Q_OBJECT
 
@@ -12,13 +12,14 @@ public:
     static void error(const QString& text, int duration = 2000);
 
 protected:
-    void paintEvent(QPaintEvent *event) override;
     void mouseReleaseEvent(QMouseEvent*) override;
 
 private:
     enum Mode {AFFIRM, ERROR};
     Mode _mode;
     explicit PopupMessage(Mode mode, const QString& text, int duration, QWidget *parent);
+    ~PopupMessage();
+    static PopupMessage* _instance;
 };
 
 #endif // POPUP_MESSAGE_H

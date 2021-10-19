@@ -1,4 +1,5 @@
 #include "PopupMessage.h"
+#include "orion/widgets/OriLabels.h"
 
 #include <QApplication>
 #include <QGraphicsDropShadowEffect>
@@ -19,36 +20,22 @@ void PopupMessage::error(const QString& text, int duration)
     (new PopupMessage(ERROR, text, duration, qApp->activeWindow()))->show();
 }
 
-namespace {
+PopupMessage* PopupMessage::_instance = nullptr;
 
-struct PopupMsgStyle
+PopupMessage::PopupMessage(Mode mode, const QString& text, int duration, QWidget *parent) : QFrame(parent), _mode(mode)
 {
-    int margin = 20;
-    int borderRadius = 5;
-    QPen borderColor = QColor("gray");
-    QBrush affirmBackColor = QColor(181, 252, 181);
-    QBrush errorBackColor = QColor(255, 181, 181);
-};
+    if (_instance)
+        delete _instance;
 
-const PopupMsgStyle& msgStyle()
-{
-    static PopupMsgStyle style;
-    return style;
-}
-
-} // namespace
-
-PopupMessage::PopupMessage(Mode mode, const QString& text, int duration, QWidget *parent) : QWidget(parent), _mode(mode)
-{
     setAttribute(Qt::WA_DeleteOnClose);
+    setProperty("mode", mode == AFFIRM ?  "affirm" : "error");
+    setFrameShape(QFrame::NoFrame);
 
-    const auto& style = msgStyle();
-
-    auto label = new QLabel(text);
+    auto label = new Ori::Widgets::Label(text);
     label->setAlignment(Qt::AlignHCenter);
+    connect(label, &Ori::Widgets::Label::clicked, this, &PopupMessage::close);
 
     auto layout = new QHBoxLayout(this);
-    layout->setContentsMargins(style.margin, style.margin, style.margin, style.margin);
     layout->addWidget(label);
 
     auto shadow = new QGraphicsDropShadowEffect;
@@ -63,32 +50,28 @@ PopupMessage::PopupMessage(Mode mode, const QString& text, int duration, QWidget
     int y = (psz.height() - sz.height())/2;
     move(x, y);
 
-    QTimer::singleShot(duration, this, [this, style](){
-        auto opacity = new QGraphicsOpacityEffect();
-        setGraphicsEffect(opacity);
-        auto fadeout = new QPropertyAnimation(opacity, "opacity");
-        fadeout->setDuration(1000);
-        fadeout->setStartValue(1);
-        fadeout->setEndValue(0);
-        fadeout->setEasingCurve(QEasingCurve::OutBack);
-        fadeout->start(QPropertyAnimation::DeleteWhenStopped);
-        connect(fadeout, &QPropertyAnimation::finished, this, &PopupMessage::close);
-    });
+    if (duration > 0)
+        QTimer::singleShot(duration, this, [this](){
+            auto opacity = new QGraphicsOpacityEffect();
+            setGraphicsEffect(opacity);
+            auto fadeout = new QPropertyAnimation(opacity, "opacity");
+            fadeout->setDuration(1000);
+            fadeout->setStartValue(1);
+            fadeout->setEndValue(0);
+            fadeout->setEasingCurve(QEasingCurve::OutBack);
+            fadeout->start(QPropertyAnimation::DeleteWhenStopped);
+            connect(fadeout, &QPropertyAnimation::finished, this, &PopupMessage::close);
+        });
+
+    _instance = this;
+}
+
+PopupMessage::~PopupMessage()
+{
+    _instance = nullptr;
 }
 
 void PopupMessage::mouseReleaseEvent(QMouseEvent*)
 {
     close();
-}
-
-void PopupMessage::paintEvent(QPaintEvent *event)
-{
-    const auto& style = msgStyle();
-    QPainter p(this);
-    p.setClipRect(event->rect());
-    p.setPen(style.borderColor);
-    p.setBrush(_mode == AFFIRM ? style.affirmBackColor : style.errorBackColor);
-    p.setRenderHint(QPainter::Antialiasing, true);
-    p.drawRoundedRect(0, 0, width(), height(), style.borderRadius, style.borderRadius);
-    QWidget::paintEvent(event);
 }

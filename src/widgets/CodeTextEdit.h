@@ -8,7 +8,7 @@ class CodeTextEdit : public QPlainTextEdit
     Q_OBJECT
 
 public:
-    explicit CodeTextEdit(QWidget *parent = nullptr);
+    explicit CodeTextEdit(const QString& highlighterName = QString(), QWidget *parent = nullptr);
 
     int lineNumberAreaWidth() const;
     void lineNumberAreaPaintEvent(QPaintEvent *event);

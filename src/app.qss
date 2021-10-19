@@ -306,3 +306,22 @@ QToolButton:hover {
   border: none;
   background-color: white;
 }
+
+/************************************
+             PopupMessage
+************************************/
+PopupMessage {
+  border-radius: 6px;
+}
+PopupMessage QLabel {
+  font-size: 13px;
+  margin: 15px;
+}
+PopupMessage[mode=affirm] {
+  border: 1px solid #7ee87e;
+  background: #b5fbb5;
+}
+PopupMessage[mode=error] {
+  border: 1px solid #e87e7e;
+  background: #ffb5b5;
+}

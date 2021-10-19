@@ -202,7 +202,7 @@ public:
                 {
                     QRegularExpression expr(val);
                     if (!expr.isValid())
-                        warning(QStringLiteral("invalid expression"));
+                        warning(QStringLiteral("Invalid expression"));
                     else
                         rule.exprs << expr;
                 }

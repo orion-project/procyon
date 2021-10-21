@@ -15,6 +15,7 @@
 #include <QDialog>
 #include <QLabel>
 #include <QUrl>
+#include <QToolBar>
 
 using namespace Ori::Layouts;
 

@@ -5,13 +5,15 @@
 #include "OpenedPagesWidget.h"
 #include "catalog/Catalog.h"
 #include "catalog/CatalogStore.h"
-#include "highlighter/HighlighterControl.h"
+#include "highlighter/OriHighlighter.h"
+#include "highlighter/EnotStorage.h"
 #include "pages/AppSettingsPage.h"
 #include "pages/HelpPage.h"
-#include "pages/MarkdownCssEditorPage.h"
+#include "pages/PhlEditorPage.h"
+#include "pages/CssEditorPage.h"
 #include "pages/MemoPage.h"
 #include "pages/SqlConsolePage.h"
-#include "pages/StyleEditorPage.h"
+#include "pages/QssEditorPage.h"
 
 #ifdef ENABLE_SPELLCHECK
 #include "spellcheck/Spellchecker.h"
@@ -78,6 +80,26 @@ void activateOrOpenNewPage(QStackedWidget* pagesView, OpenedPagesWidget* openedP
     openNewPage<TPage>(pagesView, openedPagesView);
 }
 
+void activateOrOpenHighlighEditorPage(QStackedWidget* pagesView, OpenedPagesWidget* openedPagesView,
+                                      QSharedPointer<Ori::Highlighter::Spec> spec)
+{
+    for (int i = 0; i < pagesView->count(); i++)
+    {
+        auto widget = pagesView->widget(i);
+        auto page = qobject_cast<PhlEditorPage*>(widget);
+        if (page && page->spec == spec)
+        {
+            pagesView->setCurrentWidget(page);
+            openedPagesView->addOpenedPage(page);
+            return;
+        }
+    }
+    auto page = new PhlEditorPage(spec);
+    pagesView->addWidget(page);
+    pagesView->setCurrentWidget(page);
+    openedPagesView->addOpenedPage(page);
+}
+
 } // namespace
 
 
@@ -116,10 +138,14 @@ MainWindow::MainWindow() : QMainWindow()
     connect(_spellcheckControl, &SpellcheckControl::langSelected, this, &MainWindow::setMemoSpellcheckLang);
 #endif
 
-    _highlighterControl = new HighlighterControl(this);
-    connect(_highlighterControl, &HighlighterControl::selected, this, &MainWindow::setMemoHighlighter);
-
     createMenu();
+
+    _highlighterControl = new Ori::Highlighter::Control(_highlighterMenu, this);
+    connect(_highlighterControl, &Ori::Highlighter::Control::selected, this, &MainWindow::setMemoHighlighter);
+    connect(_highlighterControl, &Ori::Highlighter::Control::editorRequested, this, [this](const QSharedPointer<Ori::Highlighter::Spec>& spec){
+        activateOrOpenHighlighEditorPage(_pagesView, _openedPagesView, spec);
+    });
+
     createStatusBar();
 }
 
@@ -150,14 +176,14 @@ void MainWindow::createMenu()
 
     m = menuBar()->addMenu(tr("Notebook"));
     connect(m, &QMenu::aboutToShow, this, &MainWindow::updateMenuCatalog);
-    _actionCreateTopLevelFolder = m->addAction(tr("New Top Level Folder..."), [this](){ _catalogView->createTopLevelFolder(); });
-    _actionCreateFolder = m->addAction(tr("New Subfolder..."), [this](){ _catalogView->createFolder(); });
-    _actionRenameFolder = m->addAction(tr("Rename Folder..."), [this](){ _catalogView->renameFolder(); });
-    _actionDeleteFolder = m->addAction(tr("Delete Folder"), [this](){ _catalogView->deleteFolder(); });
+    _actionCreateTopLevelFolder = m->addAction(tr("New Top Level Folder..."), this, [this](){ _catalogView->createTopLevelFolder(); });
+    _actionCreateFolder = m->addAction(tr("New Subfolder..."), this, [this](){ _catalogView->createFolder(); });
+    _actionRenameFolder = m->addAction(tr("Rename Folder..."), this, [this](){ _catalogView->renameFolder(); });
+    _actionDeleteFolder = m->addAction(tr("Delete Folder"), this, [this](){ _catalogView->deleteFolder(); });
     m->addSeparator();
     _actionOpenMemo = m->addAction(tr("Open Memo"), this, &MainWindow::openMemo);
-    _actionCreateMemo = m->addAction(tr("New Memo..."), [this](){ _catalogView->createMemo(); });
-    _actionDeleteMemo = m->addAction(tr("Delete Memo"), [this](){ _catalogView->deleteMemo(); });
+    _actionCreateMemo = m->addAction(tr("New Memo..."), this, [this](){ _catalogView->createMemo(); });
+    _actionDeleteMemo = m->addAction(tr("Delete Memo"), this, [this](){ _catalogView->deleteMemo(); });
 
     m = menuBar()->addMenu(tr("Memo"));
     connect(m, &QMenu::aboutToShow, this, &MainWindow::optionsMenuAboutToShow);
@@ -174,12 +200,8 @@ void MainWindow::createMenu()
     }
 #endif
 
-    _highlighterMenu = _highlighterControl->makeMenu(this);
-    if (_highlighterMenu)
-    {
-        connect(_highlighterMenu, &QMenu::aboutToShow, this, &MainWindow::highlighterMenuAboutToShow);
-        m->addMenu(_highlighterMenu);
-    }
+    _highlighterMenu = m->addMenu(tr("Highlighter"));
+    connect(_highlighterMenu, &QMenu::aboutToShow, this, &MainWindow::highlighterMenuAboutToShow);
 
     _actionMemoFont = m->addAction(tr("Choose Font..."), this, &MainWindow::chooseMemoFont);
 
@@ -190,15 +212,17 @@ void MainWindow::createMenu()
     {
         m->addSeparator();
         m->addAction(tr("Edit Application QSS"), this, [this]{
-            activateOrOpenNewPage<StyleEditorPage>(_pagesView, _openedPagesView);
+            activateOrOpenNewPage<QssEditorPage>(_pagesView, _openedPagesView);
         });
         m->addAction(tr("Edit Markdown CSS"), this, [this]{
-            activateOrOpenNewPage<MarkdownCssEditorPage>(_pagesView, _openedPagesView);
+            activateOrOpenNewPage<CssEditorPage>(_pagesView, _openedPagesView);
         });
         m->addAction(tr("Open SQL Console"), this, [this]{
             openNewPage<SqlConsolePage>(_pagesView, _openedPagesView);
         });
     }
+
+    m->addAction(tr("Highlighter Manager..."), this, [this]{ _highlighterControl->showManager(); });
 
     m = menuBar()->addMenu(tr("Help"));
     /* TODO
@@ -207,12 +231,12 @@ void MainWindow::createMenu()
     });
     m->addSeparator();
     */
-    m->addAction(tr("Visit Homepage"), []{ HelpPage::visitHomePage(); });
-    m->addAction(tr("Send Bug Report"), []{ HelpPage::sendBugReport(); });
+    m->addAction(tr("Visit Homepage"), this, []{ HelpPage::visitHomePage(); });
+    m->addAction(tr("Send Bug Report"), this, []{ HelpPage::sendBugReport(); });
 #ifndef Q_OS_MAC
     m->addSeparator(); // "About" item will be extracted to the system menu, se we don't need the separator
 #endif
-    m->addAction(tr("About %1...").arg(qApp->applicationName()), []{ HelpPage::showAbout(); });
+    m->addAction(tr("About %1...").arg(qApp->applicationName()), this, []{ HelpPage::showAbout(); });
 }
 
 namespace  {
@@ -265,7 +289,7 @@ void MainWindow::loadSettings(QSettings* s)
 
     auto lastFile = s->value("database").toString();
     if (!lastFile.isEmpty())
-        QTimer::singleShot(200, [this, lastFile](){ openCatalog(lastFile); });
+        QTimer::singleShot(200, this, [this, lastFile](){ openCatalog(lastFile); });
 }
 
 void MainWindow::loadSession()
@@ -284,7 +308,7 @@ void MainWindow::loadSession()
     _catalogView->setExpandedIds(expandedIds);
 
     QStringList openedIds = settings.value("openedMemos").toString().split(',');
-    for (auto idStr : openedIds)
+    for (const auto& idStr : openedIds)
     {
         auto memoItem = _catalog->findMemoById(idStr.toInt());
         if (!memoItem) continue;
@@ -377,6 +401,11 @@ void MainWindow::catalogOpened(Catalog* catalog)
     _mruList->append(filePath);
     _statusFileName->setText(QDir::toNativeSeparators(filePath));
     _lastOpenedCatalog = filePath;
+    _highlighterControl->loadMetas({
+        //QSharedPointer<Ori::Highlighter::SpecStorage>(new Ori::Highlighter::DefaultStorage()),
+        QSharedPointer<Ori::Highlighter::SpecStorage>(new Ori::Highlighter::QrcStorage()),
+        QSharedPointer<Ori::Highlighter::SpecStorage>(new EnotHighlighterStorage()),
+    });
     updateCounter();
     loadSession();
 }
@@ -403,6 +432,12 @@ bool MainWindow::closeAllMemos()
     for (int i = 0; i < _pagesView->count(); i++)
     {
         auto widget = _pagesView->widget(i);
+
+        auto hleditPage = qobject_cast<PhlEditorPage*>(widget);
+        if (hleditPage)
+            // TODO: check if was modified
+            deletingPages << hleditPage;
+
         auto page = qobject_cast<MemoPage*>(widget);
         if (!page) continue;
         if (!page->canClose())

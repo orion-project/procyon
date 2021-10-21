@@ -15,7 +15,7 @@ class MarkdownMemoEditor : public TextMemoEditor, public AppSettingsListener
     Q_OBJECT
 
 public:
-    explicit MarkdownMemoEditor(MemoItem* memoItem, QWidget *parent = nullptr);
+    explicit MarkdownMemoEditor(MemoItem* memoItem);
     ~MarkdownMemoEditor() override;
 
     void showMemo() override;

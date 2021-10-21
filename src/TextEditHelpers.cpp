@@ -1,6 +1,7 @@
 #include "TextEditHelpers.h"
 
 #include <QTextBlock>
+#include <QPrinter>
 
 //------------------------------------------------------------------------------
 //                                  TextFormat
@@ -51,5 +52,21 @@ QString hyperlinkAt(const QTextCursor& cursor)
         }
     return QString();
 }
+
+void exportToPdf(QTextDocument* doc, const QString& fileName)
+{
+    QPrinter printer(QPrinter::PrinterResolution);
+    printer.setOutputFormat(QPrinter::PdfFormat);
+
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 15, 0))
+    printer.setPageSize(QPageSize(QPageSize::A4));
+#else
+    printer.setPaperSize(QPrinter::A4);
+#endif
+    printer.setOutputFileName(fileName);
+
+    doc->print(&printer);
+}
+
 
 } // namespace TextEditHelpers

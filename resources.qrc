@@ -1,0 +1,38 @@
+<RCC>
+    <qresource prefix="/icon">
+        <file alias="edit_mode">img/icon/pencil_black.svg</file>
+        <file alias="folder">img/icon/folder_closed.svg</file>
+        <file alias="help">img/icon/help.svg</file>
+        <file alias="is_modified">img/icon/pencil_red.svg</file>
+        <file alias="main">img/icon/main.svg</file>
+        <file alias="memo_plain_text">img/icon/memo_plain_text.svg</file>
+        <file alias="memo_markdown">img/icon/memo_markdown.svg</file>
+        <file alias="memo_rich_text">img/icon/memo_rich_text.svg</file>
+        <file alias="settings">img/icon/settings.svg</file>
+    </qresource>
+    <qresource prefix="/toolbar">
+        <file alias="apply">img/toolbar/check_green.svg</file>
+        <file alias="close">img/toolbar/close.svg</file>
+        <file alias="cancel">img/toolbar/revert_red.svg</file>
+        <file alias="edit">img/toolbar/pencil.svg</file>
+        <file alias="update">img/toolbar/update.svg</file>
+        <file alias="save">img/toolbar/save.svg</file>
+    </qresource>
+    <qresource prefix="/style">
+        <file alias="about">img/about.png</file>
+        <file alias="app_main">src/app.qss</file>
+        <file alias="background">img/background.png</file>
+        <file alias="markdown_css">src/markdown/markdown.css</file>
+    </qresource>
+    <qresource prefix="/docs">
+        <file alias="help">src/help.md</file>
+    </qresource>
+    <qresource prefix="/syntax">
+        <file alias="css">syntax/css.phl</file>
+        <file alias="phl">syntax/phl.phl</file>
+        <file alias="procyon">syntax/procyon.phl</file>
+        <file alias="python">syntax/python.phl</file>
+        <file alias="qss">syntax/qss.phl</file>
+        <file alias="sql">syntax/sql.phl</file>
+    </qresource>
+</RCC>

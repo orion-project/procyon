@@ -1,9 +1,5 @@
 #include "PageWidgets.h"
 
-#include <QFrame>
-#include <QLineEdit>
-#include <QTextEdit>
-
 namespace PageWidgets
 {
 
@@ -23,27 +19,6 @@ QFrame* makeHeaderPanel(Ori::Layouts::LayoutItems items)
     toolPanel->setObjectName("memo_header_panel");
     Ori::Layouts::LayoutH(items).setMargin(0).useFor(toolPanel);
     return toolPanel;
-}
-
-QTextEdit* makeCodeEditor()
-{
-    auto editor = new QTextEdit;
-    editor->setAcceptRichText(false);
-    editor->setProperty("role", "memo_editor");
-    editor->setWordWrapMode(QTextOption::NoWrap);
-    auto f = editor->font();
-#if defined(Q_OS_WIN)
-    f.setFamily("Courier New");
-    f.setPointSize(11);
-#elif defined(Q_OS_MAC)
-    f.setFamily("Monaco");
-    f.setPointSize(13);
-#else
-    f.setFamily("monospace");
-    f.setPointSize(11);
-#endif
-    editor->setFont(f);
-    return editor;
 }
 
 } // namespace PageWidgets

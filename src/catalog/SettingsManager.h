@@ -12,19 +12,23 @@ public:
 
     QString prepare();
 
-    void writeValue(const QString& id, const QVariant& value) const;
+    QMap<QString, QVariant> readSettings(const QString& idPattern) const;
+
+    QString remove(const QString& id);
+
+    QString writeValue(const QString& id, const QVariant& value) const;
     QVariant readValue(const QString& id, const QVariant& defValue = QVariant(), bool *hasValue = nullptr) const;
 
-    void writeString(const QString& id, const QString& value) const;
+    QString writeString(const QString& id, const QString& value) const;
     QString readString(const QString& id, const QString& defValue = QString()) const;
 
-    void writeBool(const QString& id, bool value) const;
+    QString writeBool(const QString& id, bool value) const;
     bool readBool(const QString& id, bool defValue) const;
 
-    void writeInt(const QString& id, int value) const;
+    QString writeInt(const QString& id, int value) const;
     int readInt(const QString& id, int defValue) const;
 
-    void writeIntArray(const QString& id, const QVector<int>& values,
+    QString writeIntArray(const QString& id, const QVector<int>& values,
                        TrackChangesFlag trackChangesFlag = IgnoreValuesOrder) const;
     QVector<int> readIntArray(const QString& id) const;
 };

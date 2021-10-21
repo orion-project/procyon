@@ -1,3 +1,11 @@
+$base-color: #dadbde; /* General window color */
+$border-color: silver; /* Default border color */
+$border-radius: 4px; /* Default border radius */
+$default-border: 1px solid silver; /* Default border */
+$selection-color: steelBlue; 
+$main-font-size: 13px;
+$hover-color: #334682b4;
+
 /************************************
              Main window
 ************************************/
@@ -19,12 +27,12 @@ QMenuBar::item {
 }
 QMenuBar::item:selected {
   color: white;
-  background: steelBlue;
+  background: $selection-color;
 }
 QMenu {
   font-size: 12px;
   background-color: #f6f7fa;
-  border: 1px solid silver;
+  border: $default-border;
 }
 QMenu::item {
   margin: 2px;
@@ -38,17 +46,17 @@ QMenu::item:disabled {
 }
 QMenu::item:selected {
   color: white;
-  background-color: steelBlue;
-  border-radius: 4px;
+  background-color: $selection-color;
+  border-radius: $border-radius;
 }
 QMenu::separator {
   height: 1px;
-  background: silver;
+  background: $border-color;
   margin: 3px 6px;
 }
 QMenu::indicator {
   background: white;
-  border: 1px solid silver;
+  border: $default-border;
   width: 8px;
   height: 8px;
   margin-left: 5px;
@@ -58,7 +66,7 @@ QMenu::indicator:checked {
   background: #2b506e;
 }
 QFrame[role=context_menu_header_panel] {
-  border-bottom: 1px solid silver;
+  border-bottom: $default-border;
   margin-bottom: 3px;
   background: $base-color;
   padding: 5px;
@@ -74,14 +82,14 @@ QLabel[role=context_menu_header_text] {
              List view
 ************************************/
 #pages_list {
-  font-size: 13px;
+  font-size: $main-font-size;
   background-image: url(":/style/background");
   background-position: bottom left;
   background-attachment: fixed;
   background-repeat: none;
   background-color: white;
-  border: 1px solid silver;
-  border-radius: 4px;
+  border: $default-border;
+  border-radius: $border-radius;
   padding-left: 2px;
   padding-right: 2px;
   padding-top: 2px;
@@ -92,22 +100,22 @@ QLabel[role=context_menu_header_text] {
   height: 32px;
 }
 #pages_list::item:hover {
-  background-color: #334682b4;
-  border-radius: 4px;
+  background-color: $hover-color;
+  border-radius: $border-radius;
 }
 #pages_list::item:selected {
-  background-color: steelBlue;
-  border-radius: 4px;
+  background-color: $selection-color;
+  border-radius: $border-radius;
 }
 
 /************************************
              Tree view
 ************************************/
 #notebook_view {
-  font-size: 13px;
+  font-size: $main-font-size;
   background-color: white;
-  border: 1px solid silver;
-  border-radius: 4px;
+  border: $default-border;
+  border-radius: $border-radius;
   padding-left: 2px;
   padding-right: 2px;
   padding-top: 2px;
@@ -119,12 +127,12 @@ QLabel[role=context_menu_header_text] {
   height: 24px;
 }
 #notebook_view::item:hover {
-  background-color: #334682b4;
-  border-radius: 4px;
+  background-color: $hover-color;
+  border-radius: $border-radius;
 }
 #notebook_view::item:selected {
-  background-color: steelBlue;
-  border-radius: 4px;
+  background-color: $selection-color;
+  border-radius: $border-radius;
 }
 
 /************************************
@@ -132,11 +140,11 @@ QLabel[role=context_menu_header_text] {
 ************************************/
 [role=memo_editor] {
   background-color: white;
-  border: 1px solid silver;
-  border-radius: 4px;
+  border: $default-border;
+  border-radius: $border-radius;
   padding: 2px;
   selection-color: white;
-  selection-background-color: steelBlue;
+  selection-background-color: $selection-color;
 }
 [role=memo_title] {
   color: #32424c;
@@ -145,7 +153,7 @@ QLabel[role=context_menu_header_text] {
 }
 #memo_title_editor {
   selection-color: white;
-  selection-background-color: steelBlue;
+  selection-background-color: $selection-color;
   background: transparent;
   height: 36px;
   padding-left: 3px;
@@ -155,15 +163,15 @@ QLabel[role=context_menu_header_text] {
   border: 1px solid transparent;
 }
 #memo_title_editor[readOnly=false] {
-  border: 1px solid silver;
-  border-radius: 4px;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
 }
 #memo_header_panel {
   margin-bottom: 4px;
 }
 #code_editor {
   font-family: Menlo,Monaco,Consolas,'Courier New',monospace;
-  windows:font-size: 17px;
+  windows:font-size: 15px;
   linux:font-size: 17px;
   macos:font-size: 14px;
 }
@@ -188,8 +196,8 @@ QScrollBar:vertical {
   margin-bottom: 2px;
 }
 QScrollBar::handle:vertical {
-  border: 1px solid silver;
-  border-radius: 4px;
+  border: $default-border;
+  border-radius: $border-radius;
   background-color: #f6f7fa;
   min-height: 20px;
 }
@@ -209,8 +217,8 @@ QScrollBar:horizontal {
   margin-top: 2px;
 }
 QScrollBar::handle:horizontal {
-  border: 1px solid silver;
-  border-radius: 4px;
+  border: $default-border;
+  border-radius: $border-radius;
   background-color: #f6f7fa;
   min-width: 20px;
 }
@@ -228,9 +236,9 @@ QScrollBar::sub-line:horizontal {
               Tooltip
 ************************************/
 QToolTip {
-  font-size: 13px;
-  windows: border: 1px solid silver;
-  linux: border: 1px solid silver;
+  font-size: $main-font-size;
+  windows: border: 1px solid $border-color;
+  linux: border: 1px solid $border-color;
   macos: border: 1px solid #edf3f8;
   background-color: #edf3f8;
   padding: 2px;
@@ -264,7 +272,7 @@ QToolBar {
   margin: 0;
 }
 QToolBar::separator {
-  background: silver;
+  background: $border-color;
   width: 1px;
   margin-left: 3px;
   margin-right: 3px;
@@ -272,37 +280,56 @@ QToolBar::separator {
 QToolButton {
   width: 30px;
   height: 30px;
-  border-radius: 4px;
+  border-radius: $border-radius;
 }
 QToolButton:hover {
-  background: steelBlue;
+  background: $selection-color;
 }
 #button_preview {
-  font-size: 13px;
+  font-size: $main-font-size;
 }
 
 /************************************
              AppSettings view
 ************************************/
 #settings_category_list {
-  font-size: 13px;
+  font-size: $main-font-size;
   border: none;
   margin-left: 3px;
   margin-top: 3px;
 }
 #settings_category_list::item {
   height: 32px;
-  border-radius: 4px;
+  border-radius: $border-radius;
 }
 #settings_category_list::item:hover {
   background-color: #334682b4;
 }
 #settings_category_list::item:selected {
-  background-color: steelBlue;
+  background-color: $selection-color;
   color: white;
 }
 
 #settings_options_list {
   border: none;
   background-color: white;
+}
+
+/************************************
+             PopupMessage
+************************************/
+PopupMessage {
+  border-radius: 6px;
+}
+PopupMessage QLabel {
+  font-size: $main-font-size;
+  margin: 15px;
+}
+PopupMessage[mode=affirm] {
+  border: 1px solid #7ee87e;
+  background: #b5fbb5;
+}
+PopupMessage[mode=error] {
+  border: 1px solid #e87e7e;
+  background: #ffb5b5;
 }

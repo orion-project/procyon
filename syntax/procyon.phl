@@ -1,0 +1,149 @@
+name: procyon
+title: Procyon memo
+
+rule: Header
+expr: ^\s*\*.*$
+color: black
+style: bold
+        
+rule: Subheader
+expr: ^\s*\-.*$
+color: midnightBlue
+style: bold
+
+rule: Command
+expr: ^\s*\${1}.*$
+color: darkBlue
+
+rule: Subcommand
+expr: ^\s*\${2}.*$
+color: mediumBlue
+
+rule: Quote
+expr: ^\s*\|.*$
+color: teal
+
+rule: Section
+expr: ^\s*\+.*$
+color: darkOrchid
+style: bold
+
+rule: Exclame
+expr: ^\s*\!.*$
+color: red
+
+rule: Question
+expr: ^\s*\?.*$
+color: magenta
+
+rule: Output
+expr: ^\s*\>.*$
+color: darkMagenta
+
+rule: Option
+expr: ^\s*-{2}.*$
+color: darkSlateBlue
+
+rule: Comment
+expr: \s*#.*$
+color: darkGreen
+style: italic
+
+rule: Inline exclame
+expr: [\s:;.,?`()]+(![^!]+!)[\s:;.,`?()]+
+expr: [\s:;.,?`()]+(![^!]+!)$
+color: red
+group: 1
+
+rule: Inline question
+expr: [\s:;.,!`()]+(\?[^\?]+\?)[\s:;.,`!()]+
+expr: [\s:;.,!`()]+(\?[^\?]+\?)$
+color: magenta
+group: 1
+
+rule: Inline code
+expr: [\s:;.,!?()]+(`[^`]+`)[\s:;.,!?()]+
+expr: ^(`[^`]+`)[\s:;.,!?()]+
+expr: [\s:;.,!?()]+(`[^`]+`)$
+expr: ^(`[^`]+`)$
+color: maroon
+back: seashell
+group: 1
+
+rule: Inline bold
+expr: [\s:;.,!?()]+(\*[^\*]+\*)[\s:;.,!?()]+
+expr: ^(\*[^\*]+\*)[\s:;.,!?()]+
+expr: [\s:;.,!?()]+(\*[^\*]+\*)$
+expr: ^(\*[^\*]+\*)$
+style: bold
+group: 1
+
+rule: Inline italic
+expr: [\s:;.,!?()]+(_[^_]+_)[\s:;.,!?()]+
+expr: ^(_[^_]+_)[\s:;.,!?()]+
+expr: [\s:;.,!?()]+(_[^_]+_)$
+expr: ^(_[^_]+_)$
+style: italic
+group: 1
+
+rule: Inline strikeout
+expr: [\s:;.,!?()]+(~[^~]+~)[\s:;.,!?()]+
+expr: ^(~[^~]+~)[\s:;.,!?()]+
+expr: [\s:;.,!?()]+(~[^~]+~)$
+expr: ^(~[^~]+~)$
+style: strikeout
+group: 1
+
+rule: Hyperlink
+expr: \bhttp(s?)://[^\s]+\b
+color: blue
+style: underline,hyperlink
+
+# These are supposed to override all previous formatting, so put at the end
+rule: Separator
+expr: ^\s*-{3,}.*$
+color: darkGray
+
+rule: Quiet
+expr: ^\s*\..*$
+color: gainsboro
+
+---
+* Simple highlighter for personal notes
+
++ Commands and output:
+
+A command, e.g. connect to `psql`:
+$ sudo -u postgres psql
+
+"Subcommand" is a command running inside of another command
+So e.g. here we describe some commands of `psql`:
+
+$$ show hba_file;
+# command output:
+> /etc/postgresql/11/main/pg_hba.conf
+
++ Full-line colorization:
+
+! the whole line of exclamations
+
+? the whole line of questions
+
+| quote is something important spoken by someone other
+
+. this is the "quiet" style, e.g. to mark some lines as DONE
+
+Separator line:
+-----------------------------
+
++ Inline formattings:
+
+Text can contain _inline italic_ style, or *inline bold* style.
+Text can contain ~inline strikeout~ style, or some `inline code` text.
+Text can contain !inline exclames! or ? inline question ? formats.
+Text can contain hyperlinks https://google.com to some web pages.
+
+- options:
+-- option 1
+-- option 2
+-- option 3

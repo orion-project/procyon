@@ -5,15 +5,12 @@
 
 #include <QFrame>
 #include <QLineEdit>
-#include <QTextEdit>
-#include <QToolBar>
 
 namespace PageWidgets
 {
 
 QLineEdit* makeTitleEditor(const QString& title = QString());
 QFrame* makeHeaderPanel(Ori::Layouts::LayoutItems items);
-QTextEdit* makeCodeEditor();
 
 } // namespace PageWidgets
 

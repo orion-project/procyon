@@ -39,7 +39,38 @@ QString SettingsManager::prepare()
     return createTable(settingsTable());
 }
 
-void SettingsManager::writeValue(const QString& id, const QVariant& value) const
+QMap<QString, QVariant> SettingsManager::readSettings(const QString& idPattern) const
+{
+    auto table = settingsTable();
+
+    QMap<QString, QVariant> values;
+    SelectQuery query(QString("SELECT id, value FROM %1 WHERE id LIKE '%2'").arg(table->tableName(), idPattern));
+    if (query.isFailed())
+    {
+        qWarning() << "Unable to select setting" << idPattern << query.error();
+        return values;
+    }
+    while (query.next())
+    {
+        auto r = query.record();
+        values[r.value(0).toString()] = r.value(1);
+    }
+    return values;
+}
+
+QString SettingsManager::remove(const QString& id)
+{
+    auto table = settingsTable();
+    auto res = ActionQuery(QString("DELETE FROM %1 WHERE id = '%2'").arg(table->tableName(), id)).exec();
+    if (!res.isEmpty())
+    {
+        qWarning() << "Error while delete setting" << id << res;
+        return res;
+    }
+    return QString();
+}
+
+QString SettingsManager::writeValue(const QString& id, const QVariant& value) const
 {
     auto table = settingsTable();
 
@@ -47,7 +78,7 @@ void SettingsManager::writeValue(const QString& id, const QVariant& value) const
     if (query.isFailed())
     {
         qWarning() << "Unable to write setting" << id << query.error();
-        return;
+        return query.error();
     }
     QString sql = query.next() ? table->sqlUpdate : table->sqlInsert;
     QString res = ActionQuery(sql)
@@ -55,7 +86,11 @@ void SettingsManager::writeValue(const QString& id, const QVariant& value) const
             .param(table->value, value)
             .exec();
     if (!res.isEmpty())
+    {
         qWarning() << "Error while write setting" << id << res;
+        return res;
+    }
+    return QString();
 }
 
 QVariant SettingsManager::readValue(const QString& id, const QVariant& defValue, bool *hasValue) const
@@ -79,12 +114,13 @@ QVariant SettingsManager::readValue(const QString& id, const QVariant& defValue,
     return query.record().field(table->value).value();
 }
 
-void SettingsManager::writeString(const QString& id, const QString& value) const
+QString SettingsManager::writeString(const QString& id, const QString& value) const
 {
-    bool hasValue;
+    bool hasValue = false;
     QString oldValue = readValue(id, QVariant(), &hasValue).toString();
     if (!hasValue || oldValue != value)
-        writeValue(id, value);
+        return writeValue(id, value);
+    return QString();
 }
 
 QString SettingsManager::readString(const QString& id, const QString& defValue) const
@@ -92,12 +128,13 @@ QString SettingsManager::readString(const QString& id, const QString& defValue) 
     return readValue(id, defValue).toString();
 }
 
-void SettingsManager::writeBool(const QString& id, bool value) const
+QString SettingsManager::writeBool(const QString& id, bool value) const
 {
-    bool hasValue;
+    bool hasValue = false;
     bool oldValue = readValue(id, QVariant(), &hasValue).toBool();
     if (!hasValue || oldValue != value)
-        writeValue(id, value);
+        return writeValue(id, value);
+    return QString();
 }
 
 bool SettingsManager::readBool(const QString& id, bool defValue) const
@@ -105,12 +142,13 @@ bool SettingsManager::readBool(const QString& id, bool defValue) const
     return readValue(id, defValue).toBool();
 }
 
-void SettingsManager::writeInt(const QString& id, int value) const
+QString SettingsManager::writeInt(const QString& id, int value) const
 {
-    bool hasValue;
+    bool hasValue = false;
     int oldValue = readValue(id, QVariant(), &hasValue).toInt();
     if (!hasValue || oldValue != value)
-        writeValue(id, value);
+        return writeValue(id, value);
+    return QString();
 }
 
 int SettingsManager::readInt(const QString& id, int defValue) const
@@ -118,7 +156,7 @@ int SettingsManager::readInt(const QString& id, int defValue) const
     return readValue(id, defValue).toInt();
 }
 
-void SettingsManager::writeIntArray(const QString& id, const QVector<int>& values, TrackChangesFlag trackChangesFlag) const
+QString SettingsManager::writeIntArray(const QString& id, const QVector<int>& values, TrackChangesFlag trackChangesFlag) const
 {
     if (trackChangesFlag == IgnoreValuesOrder)
     {
@@ -137,7 +175,7 @@ void SettingsManager::writeIntArray(const QString& id, const QVector<int>& value
                     doSave = true;
                     break;
                 }
-        if (!doSave) return;
+        if (!doSave) return QString();
     }
 
     QString valueStr;
@@ -149,10 +187,10 @@ void SettingsManager::writeIntArray(const QString& id, const QVector<int>& value
     if (trackChangesFlag == RespectValuesOrder)
     {
         auto oldValueStr = readValue(id).toString();
-        if (oldValueStr == valueStr) return;
+        if (oldValueStr == valueStr) return QString();
     }
 
-    writeValue(id, valueStr);
+    return writeValue(id, valueStr);
 }
 
 QVector<int> SettingsManager::readIntArray(const QString& id) const

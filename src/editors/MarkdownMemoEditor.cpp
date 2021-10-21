@@ -5,12 +5,13 @@
 #include "../markdown/MarkdownHelper.h"
 #include "../widgets/MemoTextBrowser.h"
 #include "../widgets/MemoTextEdit.h"
+#include "../TextEditHelpers.h"
 
 #include "helpers/OriLayouts.h"
 
 #include <QStackedLayout>
 
-MarkdownMemoEditor::MarkdownMemoEditor(MemoItem* memoItem, QWidget *parent) : TextMemoEditor(memoItem, parent)
+MarkdownMemoEditor::MarkdownMemoEditor(MemoItem* memoItem) : TextMemoEditor(memoItem, false)
 {
     _view = new MemoTextBrowser;
     _view->document()->setDefaultStyleSheet(AppSettings::instance().markdownCss());
@@ -141,5 +142,5 @@ void MarkdownMemoEditor::exportToPdf(const QString& fileName)
             ? qobject_cast<QTextEdit*>(_view)
             : qobject_cast<QTextEdit*>(_editor);
 
-    TextMemoEditor::exportToPdf(editor->document(), fileName);
+    TextEditHelpers::exportToPdf(editor->document(), fileName);
 }

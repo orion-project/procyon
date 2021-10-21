@@ -8,7 +8,7 @@ class MemoTextEdit;
 class TextEditSpellcheck;
 
 QT_BEGIN_NAMESPACE
-class QTextDocument;
+class QSyntaxHighlighter;
 QT_END_NAMESPACE
 
 // TODO: all text related options (font, word-wrap, etc.) should be removed
@@ -22,6 +22,7 @@ public:
     virtual QFont font() const = 0;
     virtual void setFont(const QFont&) = 0;
     virtual bool isModified() const = 0;
+    virtual void setModified(bool on) = 0;
     virtual bool wordWrap() const = 0;
     virtual void setWordWrap(bool on) = 0;
     virtual void showMemo() = 0;
@@ -36,7 +37,7 @@ signals:
     void onModified(bool modified);
 
 protected:
-    explicit MemoEditor(MemoItem* memoItem, QWidget *parent = nullptr);
+    explicit MemoEditor(MemoItem* memoItem);
 
     MemoItem* _memoItem;
 };
@@ -51,6 +52,7 @@ public:
     QFont font() const override;
     void setFont(const QFont& f) override;
     bool isModified() const override;
+    void setModified(bool on) override;
     bool wordWrap() const override;
     void setWordWrap(bool on) override;
     QString data() const override;
@@ -59,16 +61,20 @@ public:
     void beginEdit() override;
     void endEdit() override;
     void saveEdit() override { endEdit(); }
+    void showMemo() override;
     virtual void exportToPdf(const QString& fileName);
 
-protected:
-    explicit TextMemoEditor(MemoItem* memoItem, QWidget *parent = nullptr);
+    QString highlighterName() const;
+    void setHighlighterName(const QString& name);
 
-    static void exportToPdf(QTextDocument* doc, const QString& fileName);
+    explicit TextMemoEditor(MemoItem* memoItem);
+protected:
+    explicit TextMemoEditor(MemoItem* memoItem, bool createEditor);
 
     MemoTextEdit* _editor = nullptr;
     TextEditSpellcheck* _spellcheck = nullptr;
     QString _spellcheckLang;
+    QSyntaxHighlighter* _highlighter = nullptr;
 
     void setEditor(MemoTextEdit*);
     void setReadOnly(bool on);

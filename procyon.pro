@@ -41,14 +41,20 @@ include(release/version.pri)
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
 
-RESOURCES += src/resources.qrc
+RESOURCES += resources.qrc
 
 win32: RC_FILE = src/app.rc
 macx: ICON = img/icon/main.icns
 
 SOURCES += src/main.cpp\
     src/AppSettings.cpp \
+    src/AppTheme.cpp \
+    src/highlighter/EnotStorage.cpp \
+    src/highlighter/OriHighlighter.cpp \
     src/pages/AppSettingsPage.cpp \
+    src/pages/CssEditorPage.cpp \
+    src/pages/PhlEditorPage.cpp \
+    src/pages/QssEditorPage.cpp \
     src/spellcheck/LangCodeAndNames.cpp \
     src/MainWindow.cpp \
     src/CatalogWidget.cpp \
@@ -64,30 +70,30 @@ SOURCES += src/main.cpp\
     src/markdown/MarkdownHelper.cpp \
     src/editors/MarkdownMemoEditor.cpp \
     src/editors/MemoEditor.cpp \
+    src/widgets/CodeTextEdit.cpp \
     src/widgets/MemoTextBrowser.cpp \
     src/widgets/MemoTextEdit.cpp \
-    src/editors/PlainTextMemoEditor.cpp \
     src/markdown/ori_html.c \
-    src/highlighter/HighlighterControl.cpp \
-    src/highlighter/HighlighterManager.cpp \
-    src/highlighter/HighlightingRule.cpp \
-    src/highlighter/ProcyonSyntaxHighlighter.cpp \
-    src/highlighter/PythonSyntaxHighlighter.cpp \
     src/CatalogModel.cpp \
     src/OpenedPagesWidget.cpp \
     src/pages/HelpPage.cpp \
-    src/pages/MarkdownCssEditorPage.cpp \
     src/pages/MemoPage.cpp \
     src/pages/PageWidgets.cpp \
     src/pages/SqlConsolePage.cpp \
-    src/pages/StyleEditorPage.cpp \
-    src/spellcheck/TextEditSpellcheck.cpp
+    src/spellcheck/TextEditSpellcheck.cpp \
+    src/widgets/PopupMessage.cpp
 
 HEADERS  += src/MainWindow.h \
     src/AppSettings.h \
+    src/AppTheme.h \
     src/CatalogWidget.h \
     src/CatalogModel.h \
+    src/highlighter/EnotStorage.h \
+    src/highlighter/OriHighlighter.h \
     src/pages/AppSettingsPage.h \
+    src/pages/CssEditorPage.h \
+    src/pages/PhlEditorPage.h \
+    src/pages/QssEditorPage.h \
     src/spellcheck/Spellchecker.h \
     src/TextEditHelpers.h \
     src/Utils.h \
@@ -100,23 +106,17 @@ HEADERS  += src/MainWindow.h \
     src/markdown/MarkdownHelper.h \
     src/editors/MarkdownMemoEditor.h \
     src/editors/MemoEditor.h \
+    src/widgets/CodeTextEdit.h \
     src/widgets/MemoTextBrowser.h \
     src/widgets/MemoTextEdit.h \
-    src/editors/PlainTextMemoEditor.h \
     src/markdown/ori_html.h \
-    src/highlighter/HighlighterControl.h \
-    src/highlighter/HighlighterManager.h \
-    src/highlighter/HighlightingRule.h \
-    src/highlighter/ProcyonSyntaxHighlighter.h \
-    src/highlighter/PythonSyntaxHighlighter.h \
     src/OpenedPagesWidget.h \
     src/pages/HelpPage.h \
-    src/pages/MarkdownCssEditorPage.h \
     src/pages/MemoPage.h \
     src/pages/PageWidgets.h \
     src/pages/SqlConsolePage.h \
-    src/pages/StyleEditorPage.h \
-    src/spellcheck/TextEditSpellcheck.h
+    src/spellcheck/TextEditSpellcheck.h \
+    src/widgets/PopupMessage.h
 
 DISTFILES += \
     src/app.qss \

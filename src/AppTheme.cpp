@@ -46,7 +46,6 @@ QString makeStyleSheet(const QString& rawStyleSheet)
     while (it != vars.constEnd())
     {
         styleSheet.replace(it.key(), it.value());
-        qDebug() << "VAR" << it.key() << it.value();
         it++;
     }
 

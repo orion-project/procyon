@@ -304,7 +304,7 @@ QSharedPointer<Spec> createSpec(const Meta& meta, bool withRawData)
 }
 
 //------------------------------------------------------------------------------
-//                              DefaultSpecStorage
+//                               DefaultStorage
 //------------------------------------------------------------------------------
 
 QVector<Meta> DefaultStorage::loadMetas() const
@@ -373,6 +373,59 @@ QString DefaultStorage::saveSpec(const QSharedPointer<Spec>& spec)
     if (file.write(spec->storableString().toUtf8()) == -1)
         return QString("Failed to write highlighter file \"%1\": %2").arg(spec->meta.source, file.errorString());
     return "";
+}
+
+//------------------------------------------------------------------------------
+//                              QrcStorage
+//------------------------------------------------------------------------------
+
+QVector<Meta> QrcStorage::loadMetas() const
+{
+    QVector<Meta> metas;
+    QVector<QString> files({
+        QStringLiteral(":/syntax/css"),
+        QStringLiteral(":/syntax/phl"),
+        QStringLiteral(":/syntax/procyon"),
+        QStringLiteral(":/syntax/python"),
+        QStringLiteral(":/syntax/qss"),
+        QStringLiteral(":/syntax/sql"),
+    });
+
+    for (const auto& fileName : files)
+    {
+        QFile file(fileName);
+        if (!file.open(QFile::ReadOnly | QFile::Text))
+        {
+            qWarning() << "Highlighter::QrcStorage.loadMetas" << fileName << "|" << file.errorString();
+            continue;
+        }
+        QTextStream stream(&file);
+        SpecLoader loader(fileName, stream, false);
+        Meta meta;
+        if (loader.loadMeta(meta))
+        {
+            meta.source = fileName;
+            metas << meta;
+        }
+        else
+            qWarning() << "Highlighters::QrcStorage: meta not loaded" << fileName;
+    }
+    return metas;
+}
+
+QSharedPointer<Spec> QrcStorage::loadSpec(const Meta &meta, bool withRawData) const
+{
+    QFile file(meta.source);
+    if (!file.open(QFile::ReadOnly | QFile::Text))
+    {
+        qWarning() << "Highlighter::QrcStorage.loadSpec" << meta.source << "|" << file.errorString();
+        return QSharedPointer<Spec>();
+    }
+    QTextStream stream(&file);
+    QSharedPointer<Spec> spec(new Spec());
+    SpecLoader loader(meta.source, stream, withRawData);
+    loader.loadSpec(spec.get());
+    return spec;
 }
 
 //------------------------------------------------------------------------------

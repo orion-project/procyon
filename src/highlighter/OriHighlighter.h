@@ -85,6 +85,16 @@ public:
     QString deleteSpec(const Meta&) override { return QString(); }
 };
 
+class QrcStorage : public SpecStorage
+{
+    QString name() const override { return QStringLiteral("qrc-storage"); }
+    bool readOnly() const override { return true; }
+    QVector<Meta> loadMetas() const override;
+    QSharedPointer<Spec> loadSpec(const Meta &meta, bool withRawData = false) const override;
+    QString saveSpec(const QSharedPointer<Spec>&) override { return QString(); }
+    QString deleteSpec(const Meta&) override { return QString(); }
+};
+
 QSharedPointer<Spec> getSpec(const QString& name);
 QMap<int, QString> loadSpecRaw(QSharedPointer<Spec> spec, const QString& source, QString* data, bool withRawData);
 QPair<bool, bool> checkDuplicates(const Meta& meta);

@@ -402,7 +402,8 @@ void MainWindow::catalogOpened(Catalog* catalog)
     _statusFileName->setText(QDir::toNativeSeparators(filePath));
     _lastOpenedCatalog = filePath;
     _highlighterControl->loadMetas({
-        QSharedPointer<Ori::Highlighter::SpecStorage>(new Ori::Highlighter::DefaultStorage()),
+        //QSharedPointer<Ori::Highlighter::SpecStorage>(new Ori::Highlighter::DefaultStorage()),
+        QSharedPointer<Ori::Highlighter::SpecStorage>(new Ori::Highlighter::QrcStorage()),
         QSharedPointer<Ori::Highlighter::SpecStorage>(new EnotHighlighterStorage()),
     });
     updateCounter();

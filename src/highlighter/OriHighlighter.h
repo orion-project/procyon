@@ -124,7 +124,6 @@ class Control : public QObject
 
 public:
     explicit Control(QMenu* menu, QObject *parent = nullptr);
-    ~Control();
 
     void showManager();
     void showCurrent(const QString& name);

@@ -627,12 +627,6 @@ Control::Control(QMenu *menu, QObject *parent) : QObject(parent), _menu(menu)
 {
 }
 
-Control::~Control()
-{
-    if (_managerDlg)
-        delete _managerDlg;
-}
-
 void Control::loadMetas(const QVector<QSharedPointer<SpecStorage>>& storages)
 {
     if (_managerDlg)
@@ -715,8 +709,9 @@ void Control::actionGroupTriggered(QAction* action)
 
 void Control::showManager()
 {
-    if (!_managerDlg)
-        _managerDlg = new ManagerDlg(this);
+    // We store dlg pointer only to be able to close it when another db loaded
+    _managerDlg = new ManagerDlg(this);
+    connect(_managerDlg, &QObject::destroyed, this, [this]{ _managerDlg = nullptr; });
     _managerDlg->show();
     _managerDlg->activateWindow();
 }

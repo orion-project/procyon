@@ -2,6 +2,8 @@
 
 All the commands below suppose the current directory is `deps`.
 
+For Linux and macOS use `./prepare.sh` (TODO: convert it to cross-platform python script).
+
 ## hunspell
 
 [hunspell](http://hunspell.github.io/) used for spell checking.

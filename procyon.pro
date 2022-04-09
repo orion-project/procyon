@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT += core gui widgets sql printsupport core5compat
+QT += core gui widgets sql printsupport
 
 # core5compat is only needed for QTextCodec
 # which is needed for opening LibreOffice dictionaries for hunspell

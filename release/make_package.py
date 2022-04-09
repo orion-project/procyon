@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import glob
 from helpers import *
@@ -92,7 +92,7 @@ def make_package_for_linux():
     './{} {}/usr/share/applications/{}.desktop ' +
     '-appimage -no-translations -no-copy-copyright-files ' +
     '-extra-plugins=iconengines,imageformats/libqsvg.so ' +
-    '-exclude-libs=libqsqlmysql,libqsqlpsql,libqicns,libqico,libqtga,libqtiff,libqwbmp,libqwebp'
+    '-exclude-libs=libqsqlmysql,libqsqlpsql,libqsqlodbc,libqicns,libqico,libqtga,libqtiff,libqwbmp,libqwebp'
   ).format(linuxdeployqt, REDIST_DIR, PROJECT_NAME))
 
   # Seems we can't specify target AppImage name, so find it

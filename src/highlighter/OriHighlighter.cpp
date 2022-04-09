@@ -3,6 +3,7 @@
 
 #include <QActionGroup>
 #include <QApplication>
+#include <QDebug>
 #include <QDir>
 #include <QFile>
 #include <QListWidget>
@@ -81,8 +82,9 @@ private:
             warning("Key not found");
             return false;
         }
-        key = line.first(keyLen).trimmed();
-        val = line.sliced(keyLen+1).trimmed();
+
+        key = line.left(keyLen).trimmed();
+        val = line.mid(keyLen+1).trimmed();
         //qDebug() << "Highlighter" << source << "| line" << lineNo << "| key" << key << "| value" << val;
         return true;
     }
@@ -623,6 +625,12 @@ int Highlighter::matchMultiline(const QString &text, const Rule& rule, int ruleI
 
 Control::Control(QMenu *menu, QObject *parent) : QObject(parent), _menu(menu)
 {
+}
+
+Control::~Control()
+{
+    if (_managerDlg)
+        delete _managerDlg;
 }
 
 void Control::loadMetas(const QVector<QSharedPointer<SpecStorage>>& storages)

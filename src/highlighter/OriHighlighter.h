@@ -124,6 +124,7 @@ class Control : public QObject
 
 public:
     explicit Control(QMenu* menu, QObject *parent = nullptr);
+    ~Control();
 
     void showManager();
     void showCurrent(const QString& name);
@@ -138,7 +139,7 @@ signals:
 private:
     QMenu* _menu;
     QActionGroup* _actionGroup = nullptr;
-    QPointer<class ManagerDlg> _managerDlg;
+    class ManagerDlg* _managerDlg = nullptr;
 
     void actionGroupTriggered(QAction* action);
     void makeMenu();

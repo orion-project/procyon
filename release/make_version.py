@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Script updates version information in version.pri and version.rc,
 # and creates version.txt file contaning version string "X.Y.Z-codename"

@@ -1,16 +1,16 @@
 from __future__ import print_function
 
+import sys
+print('Python ' + sys.version + '\n')
+
 import os
 import subprocess
-import sys
 import platform
 import requests
 import shutil
 import struct
 import errno
 from zipfile import ZipFile, ZIP_DEFLATED
-
-print('Python ' + sys.version + '\n')
 
 IS_WINDOWS = False
 IS_LINUX = False
@@ -104,9 +104,9 @@ def check_qt_path(cmd = 'qmake -v', print_stdout = True, check_return_code = Tru
     if IS_WINDOWS:
       return 'set PATH=c:\\Qt\\5.12.0\\mingw73_64\\bin;%PATH%'
     if IS_LINUX:
-      return 'export PATH=/home/user/Qt/5.10.0/gcc_64/bin:$PATH$'
+      return 'export PATH=/home/user/Qt/5.10.0/gcc_64/bin:$PATH'
     if IS_MACOS:
-      return 'export PATH=/Users/user/Qt/5.10.0/clang_64/bin:$PATH$'
+      return 'export PATH=/Users/user/Qt/5.10.0/clang_64/bin:$PATH'
 
   try:
     execute(cmd,

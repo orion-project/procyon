@@ -38,7 +38,7 @@ QSharedPointer<Spec> EnotHighlighterStorage::loadSpec(const Meta &meta, bool wit
     auto text = sm->readString(specKey(meta.name), QStringLiteral("---"));
     if (text == QStringLiteral("---")) return QSharedPointer<Spec>();
     QSharedPointer<Spec> spec(new Spec);
-    loadSpecRaw(spec, meta.source, &text, withRawData);
+    Ori::Highlighter::loadSpec(spec, &text, withRawData);
     return spec;
 }
 

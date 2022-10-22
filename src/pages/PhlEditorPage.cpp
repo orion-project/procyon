@@ -1,11 +1,11 @@
 #include "PhlEditorPage.h"
 #include "PageWidgets.h"
 #include "../AppSettings.h"
-#include "../highlighter/OriHighlighter.h"
-#include "../widgets/CodeTextEdit.h"
+#include "../highlighter/PhlManager.h"
 #include "../widgets/PopupMessage.h"
 
 #include "orion/helpers/OriDialogs.h"
+#include "orion/widgets/OriCodeEditor.h"
 
 #include <QIcon>
 #include <QSplitter>
@@ -19,8 +19,11 @@ PhlEditorPage::PhlEditorPage(const QSharedPointer<Ori::Highlighter::Spec>& spec)
         setWindowTitle(tr("Edit Highlighter: %1").arg(spec->meta.displayTitle()));
     setWindowIcon(QIcon(":/icon/main"));
 
-    _editor = new CodeTextEdit("highlighter");
+    _editor = new Ori::Widgets::CodeEditor;
+    _editor->setProperty("role", "memo_editor");
+    _editor->setObjectName("code_editor");
     _editor->setPlainText(spec->rawCode());
+    Phl::createHighlighter(_editor, "highlighter");
 
     _sample = new QPlainTextEdit;
     _sample->setWordWrapMode(QTextOption::NoWrap);
@@ -57,7 +60,7 @@ PhlEditorPage::PhlEditorPage(const QSharedPointer<Ori::Highlighter::Spec>& spec)
 void PhlEditorPage::checkHighlighter()
 {
     auto code = _editor->toPlainText();
-    auto warnings = Ori::Highlighter::loadSpecRaw(spec, QStringLiteral("HighlightEditor"), &code, false);
+    auto warnings = Ori::Highlighter::loadSpec(spec, &code, false);
     _editor->setLineHints(warnings);
     _highlight->rehighlight();
 }
@@ -70,10 +73,10 @@ void PhlEditorPage::saveHighlighter()
         return;
     }
     auto code = _editor->toPlainText();
-    auto warnings = Ori::Highlighter::loadSpecRaw(spec, QStringLiteral("HighlightEditor"), &code, true);
+    auto warnings = Ori::Highlighter::loadSpec(spec, &code, true);
     if (warnings.isEmpty())
     {
-        auto existed = Ori::Highlighter::checkDuplicates(spec->meta);
+        auto existed = Phl::checkDuplicates(spec->meta);
         if (existed.first)
             warnings[spec->rawNameLineNo()] = "Another one with the same name already exists";
         if (existed.second)

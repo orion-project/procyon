@@ -21,11 +21,11 @@ class MemoItem;
 
 namespace Ori {
 class MruFileList;
-
-namespace Highlighter {
-    class Control;
-} // namespace Highlighter
 } // namespace Ori
+
+namespace Phl {
+class Control;
+} // namespace Highlighter
 
 
 class MainWindow : public QMainWindow
@@ -55,7 +55,7 @@ private:
     QAction *_actionOpenMemo, *_actionCreateMemo, *_actionDeleteMemo;
     QString _lastOpenedCatalog;
     SpellcheckControl* _spellcheckControl;
-    Ori::Highlighter::Control* _highlighterControl;
+    Phl::Control* _highlighterControl;
     QMenu *_spellcheckMenu = nullptr;
     QMenu *_highlighterMenu;
 

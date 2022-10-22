@@ -50,7 +50,7 @@ SOURCES += src/main.cpp\
     src/AppSettings.cpp \
     src/AppTheme.cpp \
     src/highlighter/EnotStorage.cpp \
-    src/highlighter/OriHighlighter.cpp \
+    src/highlighter/PhlManager.cpp \
     src/pages/AppSettingsPage.cpp \
     src/pages/CssEditorPage.cpp \
     src/pages/PhlEditorPage.cpp \
@@ -70,7 +70,6 @@ SOURCES += src/main.cpp\
     src/markdown/MarkdownHelper.cpp \
     src/editors/MarkdownMemoEditor.cpp \
     src/editors/MemoEditor.cpp \
-    src/widgets/CodeTextEdit.cpp \
     src/widgets/MemoTextBrowser.cpp \
     src/widgets/MemoTextEdit.cpp \
     src/markdown/ori_html.c \
@@ -89,7 +88,7 @@ HEADERS  += src/MainWindow.h \
     src/CatalogWidget.h \
     src/CatalogModel.h \
     src/highlighter/EnotStorage.h \
-    src/highlighter/OriHighlighter.h \
+    src/highlighter/PhlManager.h \
     src/pages/AppSettingsPage.h \
     src/pages/CssEditorPage.h \
     src/pages/PhlEditorPage.h \
@@ -106,7 +105,6 @@ HEADERS  += src/MainWindow.h \
     src/markdown/MarkdownHelper.h \
     src/editors/MarkdownMemoEditor.h \
     src/editors/MemoEditor.h \
-    src/widgets/CodeTextEdit.h \
     src/widgets/MemoTextBrowser.h \
     src/widgets/MemoTextEdit.h \
     src/markdown/ori_html.h \

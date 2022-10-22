@@ -1,11 +1,12 @@
 #include "MemoEditor.h"
 
+#include "../TextEditHelpers.h"
 #include "../catalog/Catalog.h"
-#include "../highlighter/OriHighlighter.h"
+#include "../highlighter/PhlManager.h"
 #include "../spellcheck/TextEditSpellcheck.h"
 #include "../spellcheck/Spellchecker.h"
 #include "../widgets/MemoTextEdit.h"
-#include "../TextEditHelpers.h"
+
 #include "orion/helpers/OriLayouts.h"
 
 #include <QStyle>
@@ -175,7 +176,7 @@ void TextMemoEditor::setHighlighterName(const QString& name)
     if (_highlighter) delete _highlighter;
     if (!name.isEmpty())
     {
-        auto spec = Ori::Highlighter::getSpec(name);
+        auto spec = Phl::getSpec(name);
         if (spec)
             _highlighter = new Ori::Highlighter::Highlighter(_editor->document(), spec);
     }

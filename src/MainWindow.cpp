@@ -5,8 +5,7 @@
 #include "OpenedPagesWidget.h"
 #include "catalog/Catalog.h"
 #include "catalog/CatalogStore.h"
-#include "highlighter/OriHighlighter.h"
-#include "highlighter/EnotStorage.h"
+#include "highlighter/PhlManager.h"
 #include "pages/AppSettingsPage.h"
 #include "pages/HelpPage.h"
 #include "pages/PhlEditorPage.h"
@@ -140,9 +139,9 @@ MainWindow::MainWindow() : QMainWindow()
 
     createMenu();
 
-    _highlighterControl = new Ori::Highlighter::Control(_highlighterMenu, this);
-    connect(_highlighterControl, &Ori::Highlighter::Control::selected, this, &MainWindow::setMemoHighlighter);
-    connect(_highlighterControl, &Ori::Highlighter::Control::editorRequested, this, [this](const QSharedPointer<Ori::Highlighter::Spec>& spec){
+    _highlighterControl = new Phl::Control(_highlighterMenu, this);
+    connect(_highlighterControl, &Phl::Control::selected, this, &MainWindow::setMemoHighlighter);
+    connect(_highlighterControl, &Phl::Control::editorRequested, this, [this](const QSharedPointer<Ori::Highlighter::Spec>& spec){
         activateOrOpenHighlighEditorPage(_pagesView, _openedPagesView, spec);
     });
 
@@ -401,11 +400,7 @@ void MainWindow::catalogOpened(Catalog* catalog)
     _mruList->append(filePath);
     _statusFileName->setText(QDir::toNativeSeparators(filePath));
     _lastOpenedCatalog = filePath;
-    _highlighterControl->loadMetas({
-        //QSharedPointer<Ori::Highlighter::SpecStorage>(new Ori::Highlighter::DefaultStorage()),
-        QSharedPointer<Ori::Highlighter::SpecStorage>(new Ori::Highlighter::QrcStorage()),
-        QSharedPointer<Ori::Highlighter::SpecStorage>(new EnotHighlighterStorage()),
-    });
+    _highlighterControl->loadMetas();
     updateCounter();
     loadSession();
 }

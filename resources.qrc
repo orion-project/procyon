@@ -28,11 +28,11 @@
         <file alias="help">src/help.md</file>
     </qresource>
     <qresource prefix="/syntax">
-        <file alias="css">syntax/css.phl</file>
-        <file alias="phl">syntax/phl.phl</file>
-        <file alias="procyon">syntax/procyon.phl</file>
-        <file alias="python">syntax/python.phl</file>
-        <file alias="qss">syntax/qss.phl</file>
-        <file alias="sql">syntax/sql.phl</file>
+        <file alias="css">orion/syntax/css.ohl</file>
+        <file alias="ohl">orion/syntax/ohl.ohl</file>
+        <file alias="procyon">syntax/procyon.ohl</file>
+        <file alias="python">orion/syntax/python.ohl</file>
+        <file alias="qss">orion/syntax/qss.ohl</file>
+        <file alias="sql">orion/syntax/sql.ohl</file>
     </qresource>
 </RCC>

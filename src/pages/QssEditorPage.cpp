@@ -2,11 +2,13 @@
 
 #include "PageWidgets.h"
 #include "../AppTheme.h"
-#include "../widgets/CodeTextEdit.h"
+#include "../highlighter/PhlManager.h"
 #include "../widgets/PopupMessage.h"
+
 #include "orion/helpers/OriDialogs.h"
 #include "orion/helpers/OriLayouts.h"
 #include "orion/helpers/OriWidgets.h"
+#include "orion/widgets/OriCodeEditor.h"
 
 #include <QApplication>
 #include <QGroupBox>
@@ -21,8 +23,11 @@ QssEditorPage::QssEditorPage(QWidget *parent) : QWidget(parent)
     setWindowTitle("Application QSS Editor");
     setWindowIcon(QIcon(":/icon/main"));
 
-    _editor = new CodeTextEdit("qss");
+    _editor = new Ori::Widgets::CodeEditor;
     _editor->setPlainText(AppTheme::loadRawStyleSheet());
+    _editor->setProperty("role", "memo_editor");
+    _editor->setObjectName("code_editor");
+    Phl::createHighlighter(_editor, "qss");
 
     auto titleEditor = PageWidgets::makeTitleEditor(windowTitle());
 

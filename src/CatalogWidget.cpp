@@ -162,7 +162,8 @@ void CatalogWidget::openSelectedMemo()
     if (!_catalogModel) return;
 
     CatalogSelection selected(_catalogView);
-    if (selected.memo) onOpenMemo(selected.memo);
+    if (selected.memo)
+        emit onOpenMemo(selected.memo);
 }
 
 void CatalogWidget::doubleClicked(const QModelIndex&)
@@ -181,6 +182,9 @@ SelectedItems CatalogWidget::selection() const
 
 void CatalogWidget::createFolder()
 {
+    if (_catalog->items().isEmpty())
+        return createTopLevelFolder();
+
     CatalogSelection selection(_catalogView);
     selection.selectFolderIfNone();
     if (selection.folder)
@@ -273,6 +277,12 @@ static MemoType* selectMemoTypeDlg()
 
 void CatalogWidget::createMemo()
 {
+    if (_catalog->items().isEmpty())
+    {
+        Ori::Dlg::info(tr("Catalog is empty, you have to create at least one top level folder first"));
+        createTopLevelFolder();
+    }
+
     CatalogSelection selection(_catalogView);
     selection.selectFolderIfNone();
     if (!selection.folder) return;

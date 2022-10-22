@@ -1,7 +1,7 @@
 #ifndef ENOT_STORAGE_H
 #define ENOT_STORAGE_H
 
-#include "OriHighlighter.h"
+#include "tools/OriHighlighter.h"
 
 class EnotHighlighterStorage : public Ori::Highlighter::SpecStorage
 {

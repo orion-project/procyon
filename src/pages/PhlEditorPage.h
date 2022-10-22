@@ -1,11 +1,14 @@
 #ifndef PHL_EDITOR_PAGE_H
 #define PHL_EDITOR_PAGE_H
 
-#include "../highlighter/OriHighlighter.h"
+#include "tools/OriHighlighter.h"
 
 #include <QWidget>
 
-class CodeTextEdit;
+namespace Ori {
+namespace Widgets {
+    class CodeEditor;
+}}
 
 QT_BEGIN_NAMESPACE
 class QPlainTextEdit;
@@ -21,7 +24,7 @@ public:
     QSharedPointer<Ori::Highlighter::Spec> spec;
 
 private:
-    CodeTextEdit *_editor;
+    Ori::Widgets::CodeEditor *_editor;
     QPlainTextEdit *_sample;
     QSyntaxHighlighter *_highlight;
 

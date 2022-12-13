@@ -5,15 +5,15 @@
 #include "../highlighter/PhlManager.h"
 
 #include "orion/helpers/OriLayouts.h"
-#include "orion/helpers/OriWidgets.h"
 
+#include <QLabel>
 #include <QSplitter>
 #include <QToolBar>
 #include <QPlainTextEdit>
 
 namespace {
 
-const int MAX_VALUE_LEN = 32;
+const int MAX_VALUE_LEN = 100; // TODO: make configurable
 
 QString runSql(const QString& sql)
 {
@@ -65,12 +65,32 @@ QString runSql(const QString& sql)
     return result;
 }
 
+QString loadTableNames()
+{
+    Ori::Sql::SelectQuery query("select name from sqlite_schema where type = 'table' and name not like 'sqlite_%'");
+    if (query.isFailed())
+        return QString("<span style='color:red;white-space:pre'>%1</span>").arg(query.error());
+
+    QStringList names;
+    while (query.next())
+    {
+        auto r = query.record();
+        names << "<b>" + r.field(0).value().toString() + "</b>";
+    }
+    return "<span style='background:silver;color:white;font-weight:bold'>&nbsp;&nbsp;i&nbsp;&nbsp;</span>&nbsp; Available tables: " + names.join(", ");
+}
+
 } // namespace
 
 SqlConsolePage::SqlConsolePage(QWidget *parent) : QWidget(parent)
 {
     setWindowTitle(tr("SQL Console"));
     setWindowIcon(QIcon(":/icon/main"));
+
+    auto infoLabel = new QLabel;
+    infoLabel->setProperty("role", "memo_editor");
+    infoLabel->setText(loadTableNames());
+    infoLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
 
     auto editor = new QPlainTextEdit;
     editor->setProperty("role", "memo_editor");
@@ -94,17 +114,17 @@ SqlConsolePage::SqlConsolePage(QWidget *parent) : QWidget(parent)
     auto titleEditor = PageWidgets::makeTitleEditor(windowTitle());
 
     auto toolbar = new QToolBar;
-    auto actionRun = toolbar->addAction(QIcon(":/toolbar/apply"), tr("Execute"), [editor, result](){
+    auto actionRun = toolbar->addAction(QIcon(":/toolbar/apply"), tr("Execute (F5)"), [editor, result](){
         result->setHtml(runSql(editor->toPlainText()));
     });
+    actionRun->setShortcut(Qt::Key_F5);
+
     toolbar->addSeparator();
     toolbar->addAction(QIcon(":/toolbar/close"), tr("Close"), [this](){
         deleteLater();
     });
 
-    actionRun->setShortcut(Qt::Key_F5);
-
     auto toolPanel = PageWidgets::makeHeaderPanel({titleEditor, toolbar});
 
-    Ori::Layouts::LayoutV({toolPanel, splitter}).setMargin(0).setSpacing(0).useFor(this);
+    Ori::Layouts::LayoutV({toolPanel, infoLabel, Ori::Layouts::Space(3), splitter}).setMargin(0).setSpacing(0).useFor(this);
 }

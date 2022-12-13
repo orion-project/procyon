@@ -2,41 +2,51 @@
   "history":
   [
     {
-	  "version": "0.11.0",
-	  "date": "2021-10-21",
-	  "changes": 
-	  [
-	    {
-		  "text": "Switched to Qt 6.2."
-		},
-		{
-		  "text": "Export memo to PDF."
-		},
-		{
-		  "text": "Highlighter manager dialog and Highlighter editor page."
-		},
-		{
-		  "text": "Generic highlighters stored in custom text format."
-		},
-		{
-		  "text": "CSS, QSS, SQL built-in syntax highlighters."
-		},
-		{
-		  "text": "Can create custom highlighters stored in catalog."
-		},
-		{
-		  "text": "Fix for restoring of expanded folders."
-		},
-		{
-		  "text": "QSS editor can save style file (dev feature)."
-		}
-	  ]
-	},
+      "version": "1.0.0",
+      "date": "",
+      "changes": [
+        {
+          "text": "Switch to new database format and file ext (enot -> procyon)."
+        },
+        {
+          "text": "SQL console shows available table names."
+        }
+      ]
+    },
+    {
+      "version": "0.11.0",
+      "date": "2021-10-21",
+      "changes": [
+        {
+          "text": "Switched to Qt 6.2."
+        },
+        {
+          "text": "Export memo to PDF."
+        },
+        {
+          "text": "Highlighter manager dialog and Highlighter editor page."
+        },
+        {
+          "text": "Generic highlighters stored in custom text format."
+        },
+        {
+          "text": "CSS, QSS, SQL built-in syntax highlighters."
+        },
+        {
+          "text": "Can create custom highlighters stored in catalog."
+        },
+        {
+          "text": "Fix for restoring of expanded folders."
+        },
+        {
+          "text": "QSS editor can save style file (dev feature)."
+        }
+      ]
+    },
     {
       "version": "0.10.0",
       "date": "2019-10-04",
-      "changes":
-      [
+      "changes": [
         {
           "text": "New memo type - Markdown."
         },
@@ -54,8 +64,7 @@
     {
       "version": "0.9.0",
       "date": "2019-08-21",
-      "changes":
-      [
+      "changes": [
         {
           "text": "The first public version."
         },

@@ -23,8 +23,7 @@ QString runSql(const QString& sql)
     Ori::Sql::SelectQuery query(sql);
     if (query.isFailed())
     {
-        stream << QStringLiteral("<p style='color:red;white-space:pre'>")
-               << query.error();
+        stream << "<p>" << PageWidgets::formatError(query.error());
         return result;
     }
 
@@ -67,9 +66,9 @@ QString runSql(const QString& sql)
 
 QString loadTableNames()
 {
-    Ori::Sql::SelectQuery query("select name from sqlite_schema where type = 'table' and name not like 'sqlite_%'");
+    Ori::Sql::SelectQuery query("SELECT name FROM sqlite_schema WHERE type = 'table' AND name NOT LIKE 'sqlite_%'");
     if (query.isFailed())
-        return QString("<span style='color:red;white-space:pre'>%1</span>").arg(query.error());
+        return PageWidgets::formatError(query.error());
 
     QStringList names;
     while (query.next())
@@ -77,7 +76,7 @@ QString loadTableNames()
         auto r = query.record();
         names << "<b>" + r.field(0).value().toString() + "</b>";
     }
-    return "<span style='background:silver;color:white;font-weight:bold'>&nbsp;&nbsp;i&nbsp;&nbsp;</span>&nbsp; Available tables: " + names.join(", ");
+    return PageWidgets::formatInfo("Available tables: " + names.join(", "));
 }
 
 } // namespace

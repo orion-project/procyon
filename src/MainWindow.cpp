@@ -13,6 +13,7 @@
 #include "pages/MemoPage.h"
 #include "pages/SqlConsolePage.h"
 #include "pages/QssEditorPage.h"
+#include "pages/CmdConsolePage.h"
 
 #ifdef ENABLE_SPELLCHECK
 #include "spellcheck/Spellchecker.h"
@@ -53,28 +54,36 @@ QVector<TPage*> getPages(QStackedWidget* pagesView)
     return pages;
 }
 
-template <typename TPage>
-void openNewPage(QStackedWidget* pagesView, OpenedPagesWidget* openedPagesView)
+template <typename TPage, typename... Args>
+void openNewPage(QStackedWidget* pagesView, OpenedPagesWidget* openedPagesView, Args && ...arguments)
 {
-    auto page = new TPage;
+    auto page = new TPage(std::forward<Args>(arguments)...);
     pagesView->addWidget(page);
     pagesView->setCurrentWidget(page);
     openedPagesView->addOpenedPage(page);
 }
 
 template <typename TPage>
-void activateOrOpenNewPage(QStackedWidget* pagesView, OpenedPagesWidget* openedPagesView)
+TPage* findPage(QStackedWidget* pagesView)
 {
     for (int i = 0; i < pagesView->count(); i++)
     {
         auto widget = pagesView->widget(i);
         auto page = qobject_cast<TPage*>(widget);
-        if (page)
-        {
-            pagesView->setCurrentWidget(page);
-            openedPagesView->addOpenedPage(page);
-            return;
-        }
+        if (page) return page;
+    }
+    return nullptr;
+}
+
+template <typename TPage>
+void activateOrOpenNewPage(QStackedWidget* pagesView, OpenedPagesWidget* openedPagesView)
+{
+    auto page = findPage<TPage>(pagesView);
+    if (page)
+    {
+        pagesView->setCurrentWidget(page);
+        openedPagesView->addOpenedPage(page);
+        return;
     }
     openNewPage<TPage>(pagesView, openedPagesView);
 }
@@ -218,6 +227,9 @@ void MainWindow::createMenu()
         });
         m->addAction(tr("Open SQL Console"), this, [this]{
             openNewPage<SqlConsolePage>(_pagesView, _openedPagesView);
+        });
+        m->addAction(tr("Open Command Console"), this, [this]{
+            openNewPage<CmdConsolePage>(_pagesView, _openedPagesView, _catalog);
         });
     }
 
@@ -377,7 +389,7 @@ void MainWindow::openCatalog(const QString &fileName)
     auto res = Catalog::open(fileName);
     if (res.ok())
         catalogOpened(res.result());
-    else Ori::Dlg::error(tr("Unable to load notebook.\n\n%1").arg(res.error()));
+    else Ori::Dlg::error(tr("Unable to load notebook %1.\n\n%2").arg(fileName, res.error()));
 }
 
 void MainWindow::openCatalogViaDialog()
@@ -403,6 +415,9 @@ void MainWindow::catalogOpened(Catalog* catalog)
     _highlighterControl->loadMetas();
     updateCounter();
     loadSession();
+
+    auto cmdConsole = findPage<CmdConsolePage>(_pagesView);
+    if (cmdConsole) cmdConsole->setCatalog(_catalog);
 }
 
 bool MainWindow::closeCatalog()

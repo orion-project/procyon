@@ -182,7 +182,7 @@ SelectedItems CatalogWidget::selection() const
 
 void CatalogWidget::createFolder()
 {
-    if (_catalog->items().isEmpty())
+    if (_catalog->topItems().isEmpty())
         return createTopLevelFolder();
 
     CatalogSelection selection(_catalogView);
@@ -277,7 +277,7 @@ static MemoType* selectMemoTypeDlg()
 
 void CatalogWidget::createMemo()
 {
-    if (_catalog->items().isEmpty())
+    if (_catalog->topItems().isEmpty())
     {
         Ori::Dlg::info(tr("Catalog is empty, you have to create at least one top level folder first"));
         createTopLevelFolder();

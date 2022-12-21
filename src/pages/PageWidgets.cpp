@@ -21,4 +21,14 @@ QFrame* makeHeaderPanel(Ori::Layouts::LayoutItems items)
     return toolPanel;
 }
 
+QString formatInfo(const QString& info)
+{
+    return "<span style='background:silver;color:white;font-weight:bold'>&nbsp;&nbsp;i&nbsp;&nbsp;</span>&nbsp; " + info;
+}
+
+QString formatError(const QString& msg)
+{
+    return QString("<span style='color:red;white-space:pre'>%1</span>").arg(msg);
+}
+
 } // namespace PageWidgets

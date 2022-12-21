@@ -176,7 +176,7 @@ public:
     static CatalorResult create(const QString& fileName);
 
     const QString& fileName() const { return _fileName; }
-    const QList<CatalogItem*>& items() const { return _items; }
+    const QList<CatalogItem*>& topItems() const { return _topItems; }
     MemoItem* findMemoById(int id) const;
     FolderItem* findFolderById(int id) const;
 
@@ -204,7 +204,7 @@ signals:
 private:
     QString _fileName;
     QString _station;
-    QList<CatalogItem*> _items;
+    QList<CatalogItem*> _topItems;
     QMap<int, MemoItem*> _allMemos;
     QMap<int, FolderItem*> _allFolders;
 };

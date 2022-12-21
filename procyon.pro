@@ -52,6 +52,7 @@ SOURCES += src/main.cpp\
     src/highlighter/EnotStorage.cpp \
     src/highlighter/PhlManager.cpp \
     src/pages/AppSettingsPage.cpp \
+    src/pages/CmdConsolePage.cpp \
     src/pages/CssEditorPage.cpp \
     src/pages/PhlEditorPage.cpp \
     src/pages/QssEditorPage.cpp \
@@ -90,6 +91,7 @@ HEADERS  += src/MainWindow.h \
     src/highlighter/EnotStorage.h \
     src/highlighter/PhlManager.h \
     src/pages/AppSettingsPage.h \
+    src/pages/CmdConsolePage.h \
     src/pages/CssEditorPage.h \
     src/pages/PhlEditorPage.h \
     src/pages/QssEditorPage.h \

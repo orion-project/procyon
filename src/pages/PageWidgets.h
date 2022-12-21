@@ -11,6 +11,8 @@ namespace PageWidgets
 
 QLineEdit* makeTitleEditor(const QString& title = QString());
 QFrame* makeHeaderPanel(Ori::Layouts::LayoutItems items);
+QString formatInfo(const QString& info);
+QString formatError(const QString& msg);
 
 } // namespace PageWidgets
 

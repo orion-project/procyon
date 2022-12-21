@@ -5,7 +5,7 @@
 #include <QUuid>
 #include <QFile>
 
-static const QString KEY_UID("UID");
+#define KEY_UID "UID"
 
 //------------------------------------------------------------------------------
 //                                MemoType
@@ -111,7 +111,7 @@ CatalorResult Catalog::open(const QString& fileName)
         catalog->_allFolders[item->id()] = item;
 
         if (!item->parent())
-            catalog->_items.append(item);
+            catalog->_topItems.append(item);
     }
 
     MemosResult memos = CatalogStore::memoManager()->selectAll();
@@ -145,7 +145,7 @@ CatalorResult Catalog::open(const QString& fileName)
         }
         else
             for (MemoItem* item: memos.items[folderId])
-                catalog->_items.append(item);
+                catalog->_topItems.append(item);
     }
 
     catalog->_allMemos = memos.allMemos;
@@ -174,7 +174,7 @@ Catalog::Catalog() : QObject()
 
 Catalog::~Catalog()
 {
-    qDeleteAll(_items);
+    qDeleteAll(_topItems);
 }
 
 QString Catalog::renameFolder(FolderItem* item, const QString& title)
@@ -201,7 +201,7 @@ FolderResult Catalog::createFolder(FolderItem* parent, const QString& title)
         return FolderResult::fail(res);
     }
 
-    (parent ? parent->_children : _items).append(folder);
+    (parent ? parent->_children : _topItems).append(folder);
     _allFolders.insert(folder->id(), folder);
     // TODO sort items after inserting
 
@@ -217,7 +217,7 @@ QString Catalog::removeFolder(FolderItem* item)
     QString res = CatalogStore::folderManager()->remove(item);
     if (!res.isEmpty()) return res;
 
-    (item->parent() ? item->parent()->asFolder()->_children : _items).removeOne(item);
+    (item->parent() ? item->parent()->asFolder()->_children : _topItems).removeOne(item);
 
     for (auto subitem : subitems)
         if (subitem->isFolder())
@@ -252,7 +252,7 @@ MemoResult Catalog::createMemo(FolderItem* parent, MemoItem* item, MemoType* mem
         return MemoResult::fail(res);
     }
 
-    (parent ? parent->asFolder()->_children : _items).append(item);
+    (parent ? parent->asFolder()->_children : _topItems).append(item);
     _allMemos.insert(item->id(), item);
     // TODO sort items after inserting
 
@@ -290,7 +290,7 @@ QString Catalog::removeMemo(MemoItem* item)
     QString res = CatalogStore::memoManager()->remove(item);
     if (!res.isEmpty()) return res;
 
-    (item->parent() ? item->parent()->asFolder()->_children : _items).removeOne(item);
+    (item->parent() ? item->parent()->asFolder()->_children : _topItems).removeOne(item);
     _allMemos.remove(item->id());
 
     emit memoRemoved(item);

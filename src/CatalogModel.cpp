@@ -32,8 +32,8 @@ QModelIndex CatalogModel::index(int row, int column, const QModelIndex &parent) 
 {
     if (!parent.isValid())
     {
-        if (row < _catalog->items().size())
-            return createIndex(row, column, _catalog->items().at(row));
+        if (row < _catalog->topItems().size())
+            return createIndex(row, column, _catalog->topItems().at(row));
         return QModelIndex();
     }
 
@@ -61,7 +61,7 @@ QModelIndex CatalogModel::parent(const QModelIndex &child) const
 
     int row = parentItem->parent()
             ? parentItem->parent()->asFolder()->children().indexOf(parentItem)
-            : _catalog->items().indexOf(parentItem);
+            : _catalog->topItems().indexOf(parentItem);
 
     return createIndex(row, 0, parentItem);
 }
@@ -69,7 +69,7 @@ QModelIndex CatalogModel::parent(const QModelIndex &child) const
 int CatalogModel::rowCount(const QModelIndex &parent) const
 {
     if (!parent.isValid())
-        return _catalog->items().size();
+        return _catalog->topItems().size();
 
     auto item = catalogItem(parent);
     return item && item->isFolder() ? item->asFolder()->children().size() : 0;

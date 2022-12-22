@@ -6,7 +6,7 @@
       "date": "",
       "changes": [
         {
-          "text": "Switch to new database format and file ext (enot -> procyon)."
+          "text": "Added command console dev tool."
         },
         {
           "text": "SQL console shows available table names."

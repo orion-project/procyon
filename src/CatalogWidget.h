@@ -53,6 +53,7 @@ private:
     CatalogModel* _catalogModel = nullptr;
     QMenu *_rootMenu, *_folderMenu, *_memoMenu;
     QAction *_openMemo;
+    QLabel *_rootTitle;
 
     void contextMenuRequested(const QPoint &pos);
     void doubleClicked(const QModelIndex &);

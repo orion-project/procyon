@@ -12,6 +12,7 @@
 #include <QMenu>
 #include <QTreeView>
 #include <QWidgetAction>
+#include <QFileInfo>
 
 struct CatalogSelection
 {
@@ -55,7 +56,8 @@ struct CatalogSelection
 // for subsequent menu open at items having longer titles.
 static void makeMenuHeader(QMenu* menu, const QIcon& icon, const QString& title)
 {
-    auto prevHeader = qobject_cast<QWidgetAction*>(menu->actions().first());
+    auto actions = menu->actions();
+    auto prevHeader = qobject_cast<QWidgetAction*>(actions.first());
     if (prevHeader) delete prevHeader;
 
     auto iconLabel = new QLabel;
@@ -72,7 +74,7 @@ static void makeMenuHeader(QMenu* menu, const QIcon& icon, const QString& title)
 
     auto headerAction = new QWidgetAction(menu);
     headerAction->setDefaultWidget(panel);
-    menu->insertAction(menu->actions().first(), headerAction);
+    menu->insertAction(actions.first(), headerAction);
 }
 
 CatalogWidget::CatalogWidget() : QWidget()
@@ -101,6 +103,12 @@ CatalogWidget::CatalogWidget() : QWidget()
     _memoMenu->addAction(tr("New Subfolder..."), this, &CatalogWidget::createFolder);
     _memoMenu->addAction(tr("New Top Level Folder..."), this, &CatalogWidget::createTopLevelFolder);
 
+    _rootTitle = new QLabel;
+
+    auto rootView = Ori::Layouts::LayoutH({
+                                              _rootTitle,
+                                          }).setMargin(0).setSpacing(0).makeWidget();
+
     _catalogView = new QTreeView;
     _catalogView->setObjectName("notebook_view");
     _catalogView->setHeaderHidden(true);
@@ -108,7 +116,7 @@ CatalogWidget::CatalogWidget() : QWidget()
     connect(_catalogView, &QTreeView::customContextMenuRequested, this, &CatalogWidget::contextMenuRequested);
     connect(_catalogView, &QTreeView::doubleClicked, this, &CatalogWidget::doubleClicked);
 
-    Ori::Layouts::LayoutV({_catalogView})
+    Ori::Layouts::LayoutV({rootView, _catalogView})
             .setMargin(0)
             .setSpacing(0)
             .useFor(this);
@@ -131,6 +139,7 @@ void CatalogWidget::setCatalog(Catalog* catalog)
         connect(_catalog, &Catalog::memoUpdated, this, &CatalogWidget::memoUpdated);
     }
     _catalogView->setModel(_catalogModel);
+    _rootTitle->setText(QFileInfo(_catalog->fileName()).baseName());
 }
 
 void CatalogWidget::contextMenuRequested(const QPoint &pos)

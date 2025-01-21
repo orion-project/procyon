@@ -6,6 +6,13 @@
 
 QT += core gui widgets sql printsupport
 
+# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+
+# Remove per-configuration suffix from output directory added by VSCode
+# https://stackoverflow.com/questions/47175912/using-cmake-how-to-stop-the-debug-and-release-subdirectories
+# https://cmake.org/cmake/help/v3.4/prop_tgt/RUNTIME_OUTPUT_DIRECTORY.html#prop_tgt:RUNTIME_OUTPUT_DIRECTORY
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_SOURCE_DIR}/bin>)
+
 # core5compat is only needed for QTextCodec
 # which is needed for opening LibreOffice dictionaries for hunspell
 # which are in strange encodings sometimes (e.g. KOI8-R)

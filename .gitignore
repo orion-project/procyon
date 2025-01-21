@@ -46,3 +46,4 @@ deps/hunspell
 deps/libreoffice*
 deps/hoedown
 .qtc_clangd
+build

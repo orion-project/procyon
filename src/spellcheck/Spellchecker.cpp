@@ -12,7 +12,9 @@
 #include <QFileInfo>
 #include <QMenu>
 #include <QRegularExpression>
+#if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
 #include <QTextCodec>
+#endif
 
 #include "tools/OriSettings.h"
 
@@ -86,6 +88,58 @@ static QString dictionaryEncoding(const QString& affixFilePath)
     return encoding;
 }
 
+class TextCodec
+{
+public:
+#if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
+// core5compat is required for QTextCodec
+// which is needed for opening LibreOffice dictionaries for hunspell
+// which are in strange encodings sometimes (e.g. KOI8-R)
+// But core5compat is unavailable in Qt 6.8
+// So we use Pyhton conversion script instead (see deps/prepare.sh)
+    static TextCodec* create(const QString &encoding) {
+        auto codec = QTextCodec::codecForName(encoding.toLatin1().constData());
+        if (!codec)
+            return nullptr;
+        auto res = new TextCodec;
+        res._codec = codec;
+        return res;
+    }
+    ~TextCodec() { delete _codec; }
+    QString fromUnicode(const QString &word) {
+        return _codec->fromUnicode(word).toStdString();
+    }
+    QString toUnicode(const std::string &word) {
+        return _codec->toUnicode(QByteArray::fromStdString(word));
+    }
+private:
+    QTextCodec *_codec;
+};
+#else
+    static TextCodec* create(const QString &encoding) {
+        auto enc = QStringConverter::encodingForName(encoding);
+        if (!enc)
+            return nullptr;
+        auto res = new TextCodec;
+        res->_decoder = new QStringDecoder(*enc);
+        res->_encoder = new QStringEncoder(*enc);
+        return res;
+    }
+    ~TextCodec() { delete _encoder; delete _decoder; }
+    std::string fromUnicode(const QString &word) {
+        QByteArray r = _encoder->encode(word);
+        return r.toStdString();
+    }
+    QString toUnicode(const std::string &word) {
+        QString r = _decoder->decode(QByteArray::fromStdString(word));
+        return r;
+    }
+private:
+    QStringEncoder *_encoder;
+    QStringDecoder *_decoder;
+#endif
+};
+
 Spellchecker* Spellchecker::get(const QString& lang)
 {
     if (lang.isEmpty()) return nullptr;
@@ -126,7 +180,6 @@ Spellchecker* Spellchecker::get(const QString& lang)
     return checkers[lang];
 }
 
-
 Spellchecker::Spellchecker(const QString &dictFilePath, const QString& affixFilePath, const QString &userDictionaryPath)
 {
     _userDictionaryPath = userDictionaryPath;
@@ -139,7 +192,7 @@ Spellchecker::Spellchecker(const QString &dictFilePath, const QString& affixFile
         return;
     }
 
-    _codec = QTextCodec::codecForName(encoding.toLatin1().constData());
+    _codec = TextCodec::create(encoding);
     if (!_codec)
     {
         qWarning() << "Codec not found for encoding" << encoding
@@ -157,16 +210,17 @@ Spellchecker::Spellchecker(const QString &dictFilePath, const QString& affixFile
 Spellchecker::~Spellchecker()
 {
     if (_hunspell) delete _hunspell;
+    if (_codec) delete _codec;
 }
 
 bool Spellchecker::check(const QString &word) const
 {
-    return _hunspell->spell(_codec->fromUnicode(word).toStdString());
+    return _hunspell->spell(_codec->fromUnicode(word));
 }
 
 void Spellchecker::ignore(const QString &word)
 {
-    _hunspell->add(_codec->fromUnicode(word).toStdString());
+    _hunspell->add(_codec->fromUnicode(word));
     emit wordIgnored(word);
 }
 
@@ -195,8 +249,8 @@ void Spellchecker::save(const QString &word)
 QStringList Spellchecker::suggest(const QString &word) const
 {
     QStringList variants;
-    for (auto& variant : _hunspell->suggest(_codec->fromUnicode(word).toStdString()))
-        variants << _codec->toUnicode(QByteArray::fromStdString(variant));
+    for (auto& variant : _hunspell->suggest(_codec->fromUnicode(word)))
+        variants << _codec->toUnicode(variant);
     return variants;
 }
 
@@ -220,7 +274,7 @@ void Spellchecker::loadUserDictionary()
     stream.setCodec("UTF-8");
 #endif
     for (QString word = stream.readLine(); !word.isEmpty(); word = stream.readLine())
-        _hunspell->add(_codec->fromUnicode(word).toStdString());
+        _hunspell->add(_codec->fromUnicode(word));
     file.close();
 }
 

@@ -55,7 +55,9 @@ download_dicts() {
     fi
     if [ ! -f $DICTS_DIR ]; then mkdir $DICTS_DIR; fi
     unzip -j $LIBRE.zip dictionaries-$LIBRE/en/en_US.* -d $DICTS_DIR
-    unzip -j $LIBRE.zip dictionaries-$LIBRE/ru_RU/ru_RU.* -d $DICTS_DIR
+    #unzip -j $LIBRE.zip dictionaries-$LIBRE/ru_RU/ru_RU.* -d $DICTS_DIR
+    unzip -j $LIBRE.zip dictionaries-$LIBRE/ru_RU/ru_RU.* -d .
+    python3 convert_ru_dict.py
 }
 
 clone_hoedown() {

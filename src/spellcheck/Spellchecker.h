@@ -10,10 +10,10 @@ class QAction;
 class QActionGroup;
 class QMenu;
 class QWidget;
-class QTextCodec;
 QT_END_NAMESPACE
 
 class Hunspell;
+class TextCodec;
 
 class Spellchecker : public QObject
 {
@@ -39,7 +39,7 @@ private:
     QString _lang;
     QString _userDictionaryPath;
     Hunspell* _hunspell = nullptr;
-    QTextCodec *_codec;
+    TextCodec*  _codec = nullptr;
 
     void loadUserDictionary();
 };

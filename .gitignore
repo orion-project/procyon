@@ -46,4 +46,7 @@ out
 deps/hunspell
 deps/libreoffice*
 deps/hoedown
+deps/*.aff
+deps/*.dic
 .qtc_clangd
+build

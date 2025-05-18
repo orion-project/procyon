@@ -131,6 +131,7 @@ void CatalogWidget::setCatalog(Catalog* catalog)
     {
         _catalogModel = new CatalogModel(_catalog);
         connect(_catalog, &Catalog::memoUpdated, this, &CatalogWidget::memoUpdated);
+        _rootTitle->setText(QFileInfo(_catalog->fileName()).baseName());
     }
     _catalogView->setModel(_catalogModel);
 }

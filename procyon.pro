@@ -6,11 +6,6 @@
 
 QT += core gui widgets sql printsupport
 
-# core5compat is only needed for QTextCodec
-# which is needed for opening LibreOffice dictionaries for hunspell
-# which are in strange encodings sometimes (e.g. KOI8-R)
-greaterThan(QT_MAJOR_VERSION,5): QT += core5compat
-
 TARGET = procyon
 TEMPLATE = app
 DESTDIR = $$_PRO_FILE_PWD_/bin

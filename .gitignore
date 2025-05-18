@@ -40,6 +40,7 @@ bin/procyon.exe
 bin/procyon.app
 bin/dicts
 bin/*.ini
+build
 tmp
 out
 deps/hunspell

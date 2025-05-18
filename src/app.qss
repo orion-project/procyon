@@ -32,7 +32,7 @@ QMenuBar::item:selected {
 QMenu {
   font-size: 12px;
   background-color: #f6f7fa;
-  border: $default-border;
+  border: none;
 }
 QMenu::item {
   margin: 2px;

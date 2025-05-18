@@ -58,7 +58,7 @@ void HelpPage::showAbout()
     //f.setFamily("sans-serif");
 
     auto labelVersion = new QLabel(qApp->applicationVersion());
-    f.setPixelSize(40);
+    f.setPixelSize(30);
     labelVersion->setFont(f);
     labelVersion->setStyleSheet("color:#2e2f33");
 
@@ -90,7 +90,7 @@ void HelpPage::showAbout()
     labelWebsite->setFont(f);
 
     LayoutV({
-        Space(71),
+        Space(90),
         LayoutH({Stretch(), labelVersion}),
         LayoutH({Stretch(), labelDate}),
         Stretch(),

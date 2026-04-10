@@ -1,6 +1,6 @@
-#include "SqlConsolePage.h"
+#include "SqlConsoleTab.h"
 
-#include "PageWidgets.h"
+#include "TabHelpers.h"
 #include "../catalog/SqlHelper.h"
 #include "../highlighter/PhlManager.h"
 
@@ -23,7 +23,7 @@ QString runSql(const QString& sql)
     Ori::Sql::SelectQuery query(sql);
     if (query.isFailed())
     {
-        stream << "<p>" << PageWidgets::formatError(query.error());
+        stream << "<p>" << TabHelpers::formatError(query.error());
         return result;
     }
 
@@ -68,7 +68,7 @@ QString loadTableNames()
 {
     Ori::Sql::SelectQuery query("SELECT name FROM sqlite_schema WHERE type = 'table' AND name NOT LIKE 'sqlite_%'");
     if (query.isFailed())
-        return PageWidgets::formatError(query.error());
+        return TabHelpers::formatError(query.error());
 
     QStringList names;
     while (query.next())
@@ -76,12 +76,12 @@ QString loadTableNames()
         auto r = query.record();
         names << "<b>" + r.field(0).value().toString() + "</b>";
     }
-    return PageWidgets::formatInfo("Available tables: " + names.join(", "));
+    return TabHelpers::formatInfo("Available tables: " + names.join(", "));
 }
 
 } // namespace
 
-SqlConsolePage::SqlConsolePage(QWidget *parent) : QWidget(parent)
+SqlConsoleTab::SqlConsoleTab(QWidget *parent) : QWidget(parent)
 {
     setWindowTitle(tr("SQL Console"));
     setWindowIcon(QIcon(":/icon/main"));
@@ -110,7 +110,7 @@ SqlConsolePage::SqlConsolePage(QWidget *parent) : QWidget(parent)
     splitter->setStretchFactor(0, 1);
     splitter->setStretchFactor(1, 9);
 
-    auto titleEditor = PageWidgets::makeTitleEditor(windowTitle());
+    auto titleEditor = TabHelpers::makeTitleEditor(windowTitle());
 
     auto toolbar = new QToolBar;
     auto actionRun = toolbar->addAction(QIcon(":/toolbar/apply"), tr("Execute (F5)"), [editor, result](){
@@ -119,11 +119,11 @@ SqlConsolePage::SqlConsolePage(QWidget *parent) : QWidget(parent)
     actionRun->setShortcut(Qt::Key_F5);
 
     toolbar->addSeparator();
-    toolbar->addAction(QIcon(":/toolbar/close"), tr("Close"), [this](){
+    toolbar->addAction(QIcon(":/toolbar/close"), tr("Close Tab"), [this](){
         deleteLater();
     });
 
-    auto toolPanel = PageWidgets::makeHeaderPanel({titleEditor, toolbar});
+    auto toolPanel = TabHelpers::makeHeaderPanel({titleEditor, toolbar});
 
     Ori::Layouts::LayoutV({toolPanel, infoLabel, Ori::Layouts::Space(3), splitter}).setMargin(0).setSpacing(0).useFor(this);
 }

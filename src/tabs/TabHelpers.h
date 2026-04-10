@@ -1,12 +1,12 @@
-#ifndef PAGE_WIDGETS_H
-#define PAGE_WIDGETS_H
+#ifndef TAB_HELPERS_H
+#define TAB_HELPERS_H
 
 #include "helpers/OriLayouts.h"
 
 #include <QFrame>
 #include <QLineEdit>
 
-namespace PageWidgets
+namespace TabHelpers
 {
 
 QLineEdit* makeTitleEditor(const QString& title = QString());
@@ -14,6 +14,6 @@ QFrame* makeHeaderPanel(Ori::Layouts::LayoutItems items);
 QString formatInfo(const QString& info);
 QString formatError(const QString& msg);
 
-} // namespace PageWidgets
+} // namespace TabHelpers
 
-#endif // PAGE_WIDGETS_H
+#endif // TAB_HELPERS_H

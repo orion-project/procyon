@@ -1,5 +1,5 @@
-#ifndef PHL_EDITOR_PAGE_H
-#define PHL_EDITOR_PAGE_H
+#ifndef PHL_EDITOR_TAB_H
+#define PHL_EDITOR_TAB_H
 
 #include "tools/OriHighlighter.h"
 
@@ -14,12 +14,12 @@ QT_BEGIN_NAMESPACE
 class QPlainTextEdit;
 QT_END_NAMESPACE
 
-class PhlEditorPage : public QWidget
+class PhlEditorTab : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit PhlEditorPage(const QSharedPointer<Ori::Highlighter::Spec>& spec);
+    explicit PhlEditorTab(const QSharedPointer<Ori::Highlighter::Spec>& spec);
 
     QSharedPointer<Ori::Highlighter::Spec> spec;
 
@@ -32,4 +32,4 @@ private:
     void saveHighlighter();
 };
 
-#endif // PHL_EDITOR_PAGE_H
+#endif // PHL_EDITOR_TAB_H

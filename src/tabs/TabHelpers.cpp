@@ -1,6 +1,6 @@
-#include "PageWidgets.h"
+#include "TabHelpers.h"
 
-namespace PageWidgets
+namespace TabHelpers
 {
 
 QLineEdit* makeTitleEditor(const QString &title)
@@ -31,4 +31,4 @@ QString formatError(const QString& msg)
     return QString("<span style='color:red;white-space:pre'>%1</span>").arg(msg);
 }
 
-} // namespace PageWidgets
+} // namespace TabHelpers

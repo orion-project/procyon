@@ -1,18 +1,18 @@
-#ifndef HELP_PAGE_H
-#define HELP_PAGE_H
+#ifndef HELP_TAB_H
+#define HELP_TAB_H
 
 #include <QWidget>
 
-class HelpPage : public QWidget
+class HelpTab : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit HelpPage(QWidget *parent = nullptr);
+    explicit HelpTab(QWidget *parent = nullptr);
 
     static void showAbout();
     static void visitHomePage();
     static void sendBugReport();
 };
 
-#endif // HELP_PAGE_H
+#endif // HELP_TAB_H

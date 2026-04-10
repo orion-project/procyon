@@ -13,10 +13,10 @@ QT_END_NAMESPACE
 
 class Catalog;
 class CatalogWidget;
-class OpenedPagesWidget;
+class OpenTabsWidget;
 class SpellcheckControl;
 class InfoWidget;
-class MemoPage;
+class MemoTab;
 class MemoItem;
 
 namespace Ori {
@@ -46,8 +46,8 @@ private:
     QSplitter* _splitter;
     Catalog* _catalog = nullptr;
     CatalogWidget* _catalogView;
-    QStackedWidget* _pagesView;
-    OpenedPagesWidget* _openedPagesView;
+    QStackedWidget* _tabsView;
+    OpenTabsWidget* _openTabsView;
     Ori::MruFileList *_mruList;
     QLabel *_statusMemoCount, *_statusFileName;
     QAction *_actionCreateTopLevelFolder, *_actionCreateFolder, *_actionRenameFolder, *_actionDeleteFolder;
@@ -76,10 +76,10 @@ private:
     void memoCreated(MemoItem* item);
     void memoRemoved(MemoItem* item);
     bool closeAllMemos();
-    void openMemoPage(MemoItem* item);
+    void openMemoTab(MemoItem* item);
     void exportToPdf();
-    MemoPage* findMemoPage(MemoItem* item) const;
-    MemoPage* currentMemoPage() const;
+    MemoTab* findMemoTab(MemoItem* item) const;
+    MemoTab* currentMemoTab() const;
     void optionsMenuAboutToShow();
     void spellcheckMenuAboutToShow();
     void highlighterMenuAboutToShow();

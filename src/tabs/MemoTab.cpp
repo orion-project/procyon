@@ -1,6 +1,6 @@
-#include "MemoPage.h"
+#include "MemoTab.h"
 
-#include "PageWidgets.h"
+#include "TabHelpers.h"
 #include "../editors/MarkdownMemoEditor.h"
 #include "../editors/MemoEditor.h"
 #include "../catalog/Catalog.h"
@@ -44,7 +44,7 @@ void updateOption(MemoItem* memo, const QString& name, const QVariant& value)
 }
 
 
-MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
+MemoTab::MemoTab(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     _catalog(catalog), _memoItem(memoItem)
 {
     auto memoType = _memoItem->type();
@@ -55,9 +55,9 @@ MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
         _memoEditor = new MarkdownMemoEditor(_memoItem);
     else
         _memoEditor = new TextMemoEditor(_memoItem);
-    connect(_memoEditor, &MemoEditor::onModified, this, &MemoPage::onModified);
+    connect(_memoEditor, &MemoEditor::onModified, this, &MemoTab::onModified);
 
-    _titleEditor = PageWidgets::makeTitleEditor();
+    _titleEditor = TabHelpers::makeTitleEditor();
     connect(_titleEditor, &QLineEdit::textEdited, [this]{ emit onModified(true); });
 
     _toolbar = new QToolBar;
@@ -65,18 +65,18 @@ MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     _toolbar->setContentsMargins(0, 0, 0, 0);
     _toolbar->setIconSize(QSize(24, 24));
 
-    _actionEdit = _toolbar->addAction(QIcon(":/toolbar/edit"), tr("Edit"), this, &MemoPage::beginEdit);
-    _actionSave = _toolbar->addAction(QIcon(":/toolbar/apply"), tr("Save"), this, &MemoPage::saveEdit);
-    _actionCancel = _toolbar->addAction(QIcon(":/toolbar/cancel"), tr("Cancel"), this, &MemoPage::cancelEdit);
+    _actionEdit = _toolbar->addAction(QIcon(":/toolbar/edit"), tr("Edit"), this, &MemoTab::beginEdit);
+    _actionSave = _toolbar->addAction(QIcon(":/toolbar/apply"), tr("Save"), this, &MemoTab::saveEdit);
+    _actionCancel = _toolbar->addAction(QIcon(":/toolbar/cancel"), tr("Cancel"), this, &MemoTab::cancelEdit);
     _actionEdit->setShortcut(QKeySequence(Qt::Key_Return, Qt::Key_Return));
     _actionSave->setShortcut(QKeySequence::Save);
     _actionCancel->setShortcut(QKeySequence(Qt::Key_Escape, Qt::Key_Escape));
     _toolbar->addSeparator();
-    _toolbar->addAction(QIcon(":/toolbar/close"), tr("Close"), [this](){
+    _toolbar->addAction(QIcon(":/toolbar/close"), tr("Close Tab"), [this](){
         if (canClose()) deleteLater();
     });
 
-    auto toolPanel = PageWidgets::makeHeaderPanel({_titleEditor, _toolbar});
+    auto toolPanel = TabHelpers::makeHeaderPanel({_titleEditor, _toolbar});
 
     Ori::Layouts::LayoutV({toolPanel, _memoEditor}).setMargin(0).setSpacing(0).useFor(this);
 
@@ -85,11 +85,11 @@ MemoPage::MemoPage(Catalog *catalog, MemoItem *memoItem) : QWidget(),
     _memoEditor->setFocus();
 }
 
-MemoPage::~MemoPage()
+MemoTab::~MemoTab()
 {
 }
 
-void MemoPage::showMemo()
+void MemoTab::showMemo()
 {
     _memoEditor->showMemo();
 
@@ -99,7 +99,7 @@ void MemoPage::showMemo()
     setWindowTitle(_memoItem->title());
 }
 
-bool MemoPage::canClose()
+bool MemoTab::canClose()
 {
     if (!isModified()) return true;
 
@@ -114,14 +114,14 @@ bool MemoPage::canClose()
     return true;
 }
 
-void MemoPage::beginEdit()
+void MemoTab::beginEdit()
 {
     toggleEditMode(true);
     _memoEditor->beginEdit();
     emit onReadOnly(false);
 }
 
-void MemoPage::cancelEdit()
+void MemoTab::cancelEdit()
 {
     toggleEditMode(false);
     _memoEditor->endEdit();
@@ -129,7 +129,7 @@ void MemoPage::cancelEdit()
     emit onReadOnly(true);
 }
 
-bool MemoPage::saveEdit()
+bool MemoTab::saveEdit()
 {
     MemoUpdateParam update;
     update.title = _titleEditor->text().trimmed();
@@ -150,7 +150,7 @@ bool MemoPage::saveEdit()
     return true;
 }
 
-void MemoPage::toggleEditMode(bool on)
+void MemoTab::toggleEditMode(bool on)
 {
     _isEditMode = on;
 
@@ -165,7 +165,7 @@ void MemoPage::toggleEditMode(bool on)
             _actionPreview = new QAction(tr("Edit Mode"));
             _actionPreview->setShortcut(Qt::Key_F5);
             _actionPreview->setToolTip(tr("Switch between Preview and Edit mode"));
-            connect(_actionPreview, &QAction::triggered, this, &MemoPage::togglePreviewMode);
+            connect(_actionPreview, &QAction::triggered, this, &MemoTab::togglePreviewMode);
 
             _previewButton = new QToolButton;
             _previewButton->setObjectName("button_preview");
@@ -190,45 +190,45 @@ void MemoPage::toggleEditMode(bool on)
     _titleEditor->setStyleSheet(QString("QLineEdit { background: %1 }").arg(on ? "white" : "transparent"));
 }
 
-QFont MemoPage::memoFont() const
+QFont MemoTab::memoFont() const
 {
     return _memoEditor->font();
 }
 
-void MemoPage::setMemoFont(const QFont& font)
+void MemoTab::setMemoFont(const QFont& font)
 {
     _memoEditor->setFont(font);
     updateOption(_memoItem, MemoOptions::FONT, font.toString());
 }
 
-bool MemoPage::wordWrap() const
+bool MemoTab::wordWrap() const
 {
     return _memoEditor->wordWrap();
 }
 
-void MemoPage::setWordWrap(bool wrap)
+void MemoTab::setWordWrap(bool wrap)
 {
     _memoEditor->setWordWrap(wrap);
     updateOption(_memoItem, MemoOptions::WORD_WRAP, wrap);
 }
 
-bool MemoPage::isModified() const
+bool MemoTab::isModified() const
 {
     return _memoEditor->isModified() || _titleEditor->isModified();
 }
 
-void MemoPage::setSpellcheckLang(const QString &lang)
+void MemoTab::setSpellcheckLang(const QString &lang)
 {
     _memoEditor->setSpellcheckLang(lang);
     updateOption(_memoItem, MemoOptions::SPELLCHECK, lang);
 }
 
-QString MemoPage::spellcheckLang() const
+QString MemoTab::spellcheckLang() const
 {
     return _memoEditor->spellcheckLang();
 }
 
-void MemoPage::setHighlighter(const QString& name)
+void MemoTab::setHighlighter(const QString& name)
 {
     auto editor = dynamic_cast<TextMemoEditor*>(_memoEditor);
     if (editor && editor->highlighterName() != name)
@@ -240,13 +240,13 @@ void MemoPage::setHighlighter(const QString& name)
     }
 }
 
-QString MemoPage::highlighter() const
+QString MemoTab::highlighter() const
 {
     auto editor = dynamic_cast<TextMemoEditor*>(_memoEditor);
     return editor ? editor->highlighterName() : QString();
 }
 
-void MemoPage::togglePreviewMode()
+void MemoTab::togglePreviewMode()
 {
     auto editor = qobject_cast<MarkdownMemoEditor*>(_memoEditor);
     if (!editor) return;
@@ -256,7 +256,7 @@ void MemoPage::togglePreviewMode()
     editor->togglePreviewMode(!isPreview);
 }
 
-void MemoPage::loadSettings()
+void MemoTab::loadSettings()
 {
     auto options = CatalogStore::memoManager()->selectOptions(_memoItem->id());
 
@@ -278,7 +278,7 @@ void MemoPage::loadSettings()
     }
 }
 
-void MemoPage::exportToPdf()
+void MemoTab::exportToPdf()
 {
     auto editor = dynamic_cast<TextMemoEditor*>(_memoEditor);
     if (!editor) return;

@@ -44,73 +44,73 @@ macx: ICON = img/icon/main.icns
 SOURCES += src/main.cpp\
     src/AppSettings.cpp \
     src/AppTheme.cpp \
-    src/highlighter/EnotStorage.cpp \
-    src/highlighter/PhlManager.cpp \
-    src/pages/AppSettingsPage.cpp \
-    src/pages/CmdConsolePage.cpp \
-    src/pages/CssEditorPage.cpp \
-    src/pages/PhlEditorPage.cpp \
-    src/pages/QssEditorPage.cpp \
-    src/spellcheck/LangCodeAndNames.cpp \
-    src/MainWindow.cpp \
-    src/CatalogWidget.cpp \
-    src/spellcheck/Spellchecker.cpp \
-    src/TextEditHelpers.cpp \
-    src/Utils.cpp \
     src/catalog/Catalog.cpp \
     src/catalog/CatalogStore.cpp \
     src/catalog/FolderManager.cpp \
     src/catalog/MemoManager.cpp \
     src/catalog/SettingsManager.cpp \
     src/catalog/SqlHelper.cpp \
-    src/markdown/MarkdownHelper.cpp \
+    src/CatalogModel.cpp \
+    src/CatalogWidget.cpp \
     src/editors/MarkdownMemoEditor.cpp \
     src/editors/MemoEditor.cpp \
+    src/highlighter/EnotStorage.cpp \
+    src/highlighter/PhlManager.cpp \
+    src/MainWindow.cpp \
+    src/markdown/MarkdownHelper.cpp \
+    src/markdown/ori_html.c \
+    src/OpenTabsWidget.cpp \
+    src/spellcheck/LangCodeAndNames.cpp \
+    src/spellcheck/Spellchecker.cpp \
+    src/spellcheck/TextEditSpellcheck.cpp \
+    src/tabs/AppSettingsTab.cpp \
+    src/tabs/CmdConsoleTab.cpp \
+    src/tabs/CssEditorTab.cpp \
+    src/tabs/HelpTab.cpp \
+    src/tabs/MemoTab.cpp \
+    src/tabs/PhlEditorTab.cpp \
+    src/tabs/QssEditorTab.cpp \
+    src/tabs/SqlConsoleTab.cpp \
+    src/tabs/TabHelpers.cpp \
+    src/TextEditHelpers.cpp \
+    src/Utils.cpp \
     src/widgets/MemoTextBrowser.cpp \
     src/widgets/MemoTextEdit.cpp \
-    src/markdown/ori_html.c \
-    src/CatalogModel.cpp \
-    src/OpenedPagesWidget.cpp \
-    src/pages/HelpPage.cpp \
-    src/pages/MemoPage.cpp \
-    src/pages/PageWidgets.cpp \
-    src/pages/SqlConsolePage.cpp \
-    src/spellcheck/TextEditSpellcheck.cpp \
     src/widgets/PopupMessage.cpp
 
 HEADERS  += src/MainWindow.h \
     src/AppSettings.h \
     src/AppTheme.h \
-    src/CatalogWidget.h \
-    src/CatalogModel.h \
-    src/highlighter/EnotStorage.h \
-    src/highlighter/PhlManager.h \
-    src/pages/AppSettingsPage.h \
-    src/pages/CmdConsolePage.h \
-    src/pages/CssEditorPage.h \
-    src/pages/PhlEditorPage.h \
-    src/pages/QssEditorPage.h \
-    src/spellcheck/Spellchecker.h \
-    src/TextEditHelpers.h \
-    src/Utils.h \
     src/catalog/Catalog.h \
     src/catalog/CatalogStore.h \
     src/catalog/FolderManager.h \
     src/catalog/MemoManager.h \
     src/catalog/SettingsManager.h \
     src/catalog/SqlHelper.h \
-    src/markdown/MarkdownHelper.h \
+    src/CatalogModel.h \
+    src/CatalogWidget.h \
     src/editors/MarkdownMemoEditor.h \
     src/editors/MemoEditor.h \
+    src/highlighter/EnotStorage.h \
+    src/highlighter/PhlManager.h \
+    src/markdown/MarkdownHelper.h \
+    src/markdown/ori_html.h \
+    src/OpenTabsWidget.h \
+    src/spellcheck/Spellchecker.h \
+    src/spellcheck/TextEditSpellcheck.h \
+    src/tabs/AppSettingsTab.h \
+    src/tabs/CmdConsoleTab.h \
+    src/tabs/CssEditorTab.h \
+    src/tabs/HelpTab.h \
+    src/tabs/MemoTab.h \
+    src/tabs/PhlEditorTab.h \
+    src/tabs/QssEditorTab.h \
+    src/tabs/SqlConsoleTab.h \
+    src/tabs/TabHelpers.h \
+    src/TextEditHelpers.h \
+    src/Utils.h \
     src/widgets/MemoTextBrowser.h \
     src/widgets/MemoTextEdit.h \
-    src/markdown/ori_html.h \
-    src/OpenedPagesWidget.h \
-    src/pages/HelpPage.h \
-    src/pages/MemoPage.h \
-    src/pages/PageWidgets.h \
-    src/pages/SqlConsolePage.h \
-    src/spellcheck/TextEditSpellcheck.h \
     src/widgets/PopupMessage.h
 
 DISTFILES += \

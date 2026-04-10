@@ -1,6 +1,6 @@
-#include "HelpPage.h"
+#include "HelpTab.h"
 
-#include "PageWidgets.h"
+#include "TabHelpers.h"
 #include "../Utils.h"
 #include "../markdown/MarkdownHelper.h"
 #include "../widgets/MemoTextBrowser.h"
@@ -19,7 +19,7 @@
 
 using namespace Ori::Layouts;
 
-HelpPage::HelpPage(QWidget *parent) : QWidget(parent)
+HelpTab::HelpTab(QWidget *parent) : QWidget(parent)
 {
     setWindowTitle(tr("Reference Manual"));
     setWindowIcon(QIcon(":/icon/help"));
@@ -29,17 +29,17 @@ HelpPage::HelpPage(QWidget *parent) : QWidget(parent)
     browser->document()->setDocumentMargin(10);
     browser->setHtml(MarkdownHelper::markdownToHtml(loadTextFromResource(":/docs/help")));
 
-    auto titleEditor = PageWidgets::makeTitleEditor(windowTitle());
+    auto titleEditor = TabHelpers::makeTitleEditor(windowTitle());
 
     auto toolbar = new QToolBar;
-    toolbar->addAction(QIcon(":/toolbar/close"), tr("Close"), [this]{ deleteLater(); });
+    toolbar->addAction(QIcon(":/toolbar/close"), tr("Close Tab"), [this]{ deleteLater(); });
 
-    auto toolPanel = PageWidgets::makeHeaderPanel({titleEditor, toolbar});
+    auto toolPanel = TabHelpers::makeHeaderPanel({titleEditor, toolbar});
 
     Ori::Layouts::LayoutV({toolPanel, browser}).setMargin(0).setSpacing(0).useFor(this);
 }
 
-void HelpPage::showAbout()
+void HelpTab::showAbout()
 {
     auto w = new QDialog;
     w->setAttribute(Qt::WA_DeleteOnClose);
@@ -104,12 +104,12 @@ void HelpPage::showAbout()
     w->exec();
 }
 
-void HelpPage::visitHomePage()
+void HelpTab::visitHomePage()
 {
     QDesktopServices::openUrl(QUrl("https://github.com/orion-project/procyon"));
 }
 
-void HelpPage::sendBugReport()
+void HelpTab::sendBugReport()
 {
     QDesktopServices::openUrl(QUrl("https://github.com/orion-project/procyon/issues/new"));
 }

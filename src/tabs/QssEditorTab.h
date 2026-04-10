@@ -1,5 +1,5 @@
-#ifndef QSS_EDITOR_PAGE_H
-#define QSS_EDITOR_PAGE_H
+#ifndef QSS_EDITOR_TAB_H
+#define QSS_EDITOR_TAB_H
 
 #include <QWidget>
 
@@ -7,12 +7,12 @@ QT_BEGIN_NAMESPACE
 class QPlainTextEdit;
 QT_END_NAMESPACE
 
-class QssEditorPage : public QWidget
+class QssEditorTab : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit QssEditorPage(QWidget *parent = nullptr);
+    explicit QssEditorTab(QWidget *parent = nullptr);
 
 private:
     QPlainTextEdit *_editor;
@@ -22,4 +22,4 @@ private:
     QWidget* makeWarningBox();
 };
 
-#endif // QSS_EDITOR_PAGE_H
+#endif // QSS_EDITOR_TAB_H

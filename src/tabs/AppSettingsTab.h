@@ -1,16 +1,16 @@
-#ifndef APP_SETTING_SPAGE_H
-#define APP_SETTING_SPAGE_H
+#ifndef APP_SETTINGS_TAB_H
+#define APP_SETTINGS_TAB_H
 
 #include "../AppSettings.h"
 
 #include <QWidget>
 
-class AppSettingsPage : public QWidget
+class AppSettingsTab : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit AppSettingsPage(QWidget *parent = nullptr);
+    explicit AppSettingsTab(QWidget *parent = nullptr);
 
 private:
     QWidget* makeCategoriesList();
@@ -18,4 +18,4 @@ private:
     AppSettings::Options _options = AppSettings::instance().options();
 };
 
-#endif // APP_SETTING_SPAGE_H
+#endif // APP_SETTINGS_TAB_H

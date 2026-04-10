@@ -1,5 +1,5 @@
-#include "PhlEditorPage.h"
-#include "PageWidgets.h"
+#include "PhlEditorTab.h"
+#include "TabHelpers.h"
 #include "../AppSettings.h"
 #include "../highlighter/PhlManager.h"
 #include "../widgets/PopupMessage.h"
@@ -11,7 +11,7 @@
 #include <QSplitter>
 #include <QToolBar>
 
-PhlEditorPage::PhlEditorPage(const QSharedPointer<Ori::Highlighter::Spec>& spec) : QWidget(), spec(spec)
+PhlEditorTab::PhlEditorTab(const QSharedPointer<Ori::Highlighter::Spec>& spec) : QWidget(), spec(spec)
 {
     if (spec->meta.name.isEmpty())
         setWindowTitle(tr("Create Highlighter"));
@@ -39,25 +39,25 @@ PhlEditorPage::PhlEditorPage(const QSharedPointer<Ori::Highlighter::Spec>& spec)
     splitter->setSizePolicy(splitter->sizePolicy().horizontalPolicy(),
                             QSizePolicy::Expanding);
 
-    auto titleEditor = PageWidgets::makeTitleEditor(windowTitle());
+    auto titleEditor = TabHelpers::makeTitleEditor(windowTitle());
 
     auto toolbar = new QToolBar;
-    auto actionCheck = toolbar->addAction(QIcon(":/toolbar/apply"), tr("Check"), this, &PhlEditorPage::checkHighlighter);
-    auto actionApply = toolbar->addAction(QIcon(":/toolbar/save"), tr("Save"), this, &PhlEditorPage::saveHighlighter);
+    auto actionCheck = toolbar->addAction(QIcon(":/toolbar/apply"), tr("Check"), this, &PhlEditorTab::checkHighlighter);
+    auto actionApply = toolbar->addAction(QIcon(":/toolbar/save"), tr("Save"), this, &PhlEditorTab::saveHighlighter);
     toolbar->addSeparator();
-    toolbar->addAction(QIcon(":/toolbar/close"), tr("Close"), [this](){
+    toolbar->addAction(QIcon(":/toolbar/close"), tr("Close Tab"), [this](){
         deleteLater();
     });
 
     actionCheck->setShortcut(Qt::Key_F5);
     actionApply->setShortcut(QKeySequence::Save);
 
-    auto toolPanel = PageWidgets::makeHeaderPanel({titleEditor, toolbar});
+    auto toolPanel = TabHelpers::makeHeaderPanel({titleEditor, toolbar});
 
     Ori::Layouts::LayoutV({toolPanel, splitter}).setMargin(0).setSpacing(0).useFor(this);
 }
 
-void PhlEditorPage::checkHighlighter()
+void PhlEditorTab::checkHighlighter()
 {
     auto code = _editor->toPlainText();
     auto warnings = Ori::Highlighter::loadSpec(spec, &code, false);
@@ -65,7 +65,7 @@ void PhlEditorPage::checkHighlighter()
     _highlight->rehighlight();
 }
 
-void PhlEditorPage::saveHighlighter()
+void PhlEditorTab::saveHighlighter()
 {
     if (!spec->meta.storage)
     {

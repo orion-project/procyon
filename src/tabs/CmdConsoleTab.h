@@ -1,5 +1,5 @@
-#ifndef TOOL_CONSOLE_PAGE_H
-#define TOOL_CONSOLE_PAGE_H
+#ifndef TOOL_CONSOLE_TAB_H
+#define TOOL_CONSOLE_TAB_H
 
 #include <QWidget>
 
@@ -9,14 +9,14 @@ namespace CmdConsoleImpl {
 
 class Catalog;
 
-class CmdConsolePage : public QWidget
+class CmdConsoleTab : public QWidget
 {
     Q_OBJECT
 public:
-    explicit CmdConsolePage(Catalog* catalog);
+    explicit CmdConsoleTab(Catalog* catalog);
     void setCatalog(Catalog* catalog);
 private:
     QSharedPointer<CmdConsoleImpl::CmdConsole> _impl;
 };
 
-#endif // TOOL_CONSOLE_PAGE_H
+#endif // TOOL_CONSOLE_TAB_H

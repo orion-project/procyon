@@ -1,6 +1,7 @@
-#include "AppSettingsPage.h"
+#include "AppSettingsTab.h"
 
-#include "PageWidgets.h"
+#include "TabHelpers.h"
+
 #include "helpers/OriLayouts.h"
 
 #include <QDebug>
@@ -8,7 +9,7 @@
 #include <QScrollArea>
 #include <QToolBar>
 
-AppSettingsPage::AppSettingsPage(QWidget *parent) : QWidget(parent)
+AppSettingsTab::AppSettingsTab(QWidget *parent) : QWidget(parent)
 {
     setWindowTitle("Application Settings");
     setWindowIcon(QIcon(":/icon/settings"));
@@ -20,7 +21,7 @@ AppSettingsPage::AppSettingsPage(QWidget *parent) : QWidget(parent)
     editor->setProperty("role", "memo_editor");
     Ori::Layouts::LayoutH({makeCategoriesList(), optionsList}).setMargin(0).useFor(editor);
 
-    auto titleEditor = PageWidgets::makeTitleEditor(windowTitle());
+    auto titleEditor = TabHelpers::makeTitleEditor(windowTitle());
 
     auto toolbar = new QToolBar;
     toolbar->addAction(QIcon(":/toolbar/apply"), "Apply", [](){
@@ -31,12 +32,12 @@ AppSettingsPage::AppSettingsPage(QWidget *parent) : QWidget(parent)
         deleteLater();
     });
 
-    auto toolPanel = PageWidgets::makeHeaderPanel({titleEditor, toolbar});
+    auto toolPanel = TabHelpers::makeHeaderPanel({titleEditor, toolbar});
 
     Ori::Layouts::LayoutV({toolPanel, editor}).setMargin(0).setSpacing(0).useFor(this);
 }
 
-QWidget* AppSettingsPage::makeCategoriesList()
+QWidget* AppSettingsTab::makeCategoriesList()
 {
     auto w = new QListWidget;
     w->setObjectName("settings_category_list");

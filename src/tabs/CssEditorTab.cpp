@@ -1,6 +1,6 @@
-#include "CssEditorPage.h"
+#include "CssEditorTab.h"
 
-#include "PageWidgets.h"
+#include "TabHelpers.h"
 #include "../AppSettings.h"
 #include "../highlighter/PhlManager.h"
 
@@ -10,7 +10,7 @@
 #include <QIcon>
 #include <QToolBar>
 
-CssEditorPage::CssEditorPage(QWidget *parent) : QWidget(parent)
+CssEditorTab::CssEditorTab(QWidget *parent) : QWidget(parent)
 {
     setWindowTitle("Markdown CSS Editor");
     setWindowIcon(QIcon(":/icon/main"));
@@ -21,7 +21,7 @@ CssEditorPage::CssEditorPage(QWidget *parent) : QWidget(parent)
     editor->setPlainText(AppSettings::instance().markdownCss());
     Phl::createHighlighter(editor, "css");
 
-    auto titleEditor = PageWidgets::makeTitleEditor("Markdown CSS Editor");
+    auto titleEditor = TabHelpers::makeTitleEditor("Markdown CSS Editor");
 
     auto toolbar = new QToolBar;
     toolbar->addAction(QIcon(":/toolbar/apply"), "Apply", [editor](){
@@ -32,7 +32,7 @@ CssEditorPage::CssEditorPage(QWidget *parent) : QWidget(parent)
         deleteLater();
     });
 
-    auto toolPanel = PageWidgets::makeHeaderPanel({titleEditor, toolbar});
+    auto toolPanel = TabHelpers::makeHeaderPanel({titleEditor, toolbar});
 
     Ori::Layouts::LayoutV({toolPanel, editor}).setMargin(0).setSpacing(0).useFor(this);
 }

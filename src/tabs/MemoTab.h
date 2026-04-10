@@ -1,5 +1,5 @@
-#ifndef MEMO_PAGE_H
-#define MEMO_PAGE_H
+#ifndef MEMO_TAB_H
+#define MEMO_TAB_H
 
 #include <QWidget>
 
@@ -15,13 +15,13 @@ class Catalog;
 class MemoEditor;
 class MemoItem;
 
-class MemoPage : public QWidget
+class MemoTab : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit MemoPage(Catalog* catalog, MemoItem* memoItem);
-    ~MemoPage();
+    explicit MemoTab(Catalog* catalog, MemoItem* memoItem);
+    ~MemoTab();
 
     MemoItem* memoItem() const { return _memoItem; }
 
@@ -69,4 +69,4 @@ private:
     void togglePreviewMode();
 };
 
-#endif // MEMO_PAGE_H
+#endif // MEMO_TAB_H

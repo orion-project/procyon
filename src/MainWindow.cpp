@@ -2,18 +2,18 @@
 
 #include "AppSettings.h"
 #include "CatalogWidget.h"
-#include "OpenedPagesWidget.h"
+#include "OpenTabsWidget.h"
 #include "catalog/Catalog.h"
 #include "catalog/CatalogStore.h"
 #include "highlighter/PhlManager.h"
-#include "pages/AppSettingsPage.h"
-#include "pages/HelpPage.h"
-#include "pages/PhlEditorPage.h"
-#include "pages/CssEditorPage.h"
-#include "pages/MemoPage.h"
-#include "pages/SqlConsolePage.h"
-#include "pages/QssEditorPage.h"
-#include "pages/CmdConsolePage.h"
+#include "tabs/AppSettingsTab.h"
+#include "tabs/HelpTab.h"
+#include "tabs/PhlEditorTab.h"
+#include "tabs/CssEditorTab.h"
+#include "tabs/MemoTab.h"
+#include "tabs/SqlConsoleTab.h"
+#include "tabs/QssEditorTab.h"
+#include "tabs/CmdConsoleTab.h"
 
 #ifdef ENABLE_SPELLCHECK
 #include "spellcheck/Spellchecker.h"
@@ -42,70 +42,70 @@
 #include <QTimer>
 
 namespace {
-template <typename TPage>
-QVector<TPage*> getPages(QStackedWidget* pagesView)
+template <typename TTab>
+QVector<TTab*> getPages(QStackedWidget* tabsView)
 {
-    QVector<TPage*> pages;
-    for (int i = 0; i < pagesView->count(); i++)
+    QVector<TTab*> tabs;
+    for (int i = 0; i < tabsView->count(); i++)
     {
-        auto page = qobject_cast<TPage*>(pagesView->widget(i));
-        if (page) pages << page;
+        auto tab = qobject_cast<TTab*>(tabsView->widget(i));
+        if (tab) tabs << tab;
     }
-    return pages;
+    return tabs;
 }
 
-template <typename TPage, typename... Args>
-void openNewPage(QStackedWidget* pagesView, OpenedPagesWidget* openedPagesView, Args && ...arguments)
+template <typename TTab, typename... Args>
+void openNewTab(QStackedWidget* tabsView, OpenTabsWidget* openTabsView, Args && ...arguments)
 {
-    auto page = new TPage(std::forward<Args>(arguments)...);
-    pagesView->addWidget(page);
-    pagesView->setCurrentWidget(page);
-    openedPagesView->addOpenedPage(page);
+    auto tab = new TTab(std::forward<Args>(arguments)...);
+    tabsView->addWidget(tab);
+    tabsView->setCurrentWidget(tab);
+    openTabsView->addOpenedTab(tab);
 }
 
-template <typename TPage>
-TPage* findPage(QStackedWidget* pagesView)
+template <typename TTab>
+TTab* findTab(QStackedWidget* tabsView)
 {
-    for (int i = 0; i < pagesView->count(); i++)
+    for (int i = 0; i < tabsView->count(); i++)
     {
-        auto widget = pagesView->widget(i);
-        auto page = qobject_cast<TPage*>(widget);
-        if (page) return page;
+        auto widget = tabsView->widget(i);
+        auto tab = qobject_cast<TTab*>(widget);
+        if (tab) return tab;
     }
     return nullptr;
 }
 
-template <typename TPage>
-void activateOrOpenNewPage(QStackedWidget* pagesView, OpenedPagesWidget* openedPagesView)
+template <typename TTab>
+void activateOrOpenNewTab(QStackedWidget* tabsView, OpenTabsWidget* openTabsView)
 {
-    auto page = findPage<TPage>(pagesView);
-    if (page)
+    auto tab = findTab<TTab>(tabsView);
+    if (tab)
     {
-        pagesView->setCurrentWidget(page);
-        openedPagesView->addOpenedPage(page);
+        tabsView->setCurrentWidget(tab);
+        openTabsView->addOpenedTab(tab);
         return;
     }
-    openNewPage<TPage>(pagesView, openedPagesView);
+    openNewTab<TTab>(tabsView, openTabsView);
 }
 
-void activateOrOpenHighlighEditorPage(QStackedWidget* pagesView, OpenedPagesWidget* openedPagesView,
+void activateOrOpenHighlighEditorTab(QStackedWidget* tabsView, OpenTabsWidget* openTabsView,
                                       QSharedPointer<Ori::Highlighter::Spec> spec)
 {
-    for (int i = 0; i < pagesView->count(); i++)
+    for (int i = 0; i < tabsView->count(); i++)
     {
-        auto widget = pagesView->widget(i);
-        auto page = qobject_cast<PhlEditorPage*>(widget);
-        if (page && page->spec == spec)
+        auto widget = tabsView->widget(i);
+        auto tab = qobject_cast<PhlEditorTab*>(widget);
+        if (tab && tab->spec == spec)
         {
-            pagesView->setCurrentWidget(page);
-            openedPagesView->addOpenedPage(page);
+            tabsView->setCurrentWidget(tab);
+            openTabsView->addOpenedTab(tab);
             return;
         }
     }
-    auto page = new PhlEditorPage(spec);
-    pagesView->addWidget(page);
-    pagesView->setCurrentWidget(page);
-    openedPagesView->addOpenedPage(page);
+    auto tab = new PhlEditorTab(spec);
+    tabsView->addWidget(tab);
+    tabsView->setCurrentWidget(tab);
+    openTabsView->addOpenedTab(tab);
 }
 
 } // namespace
@@ -119,17 +119,17 @@ MainWindow::MainWindow() : QMainWindow()
     _mruList = new Ori::MruFileList(this);
     connect(_mruList, &Ori::MruFileList::clicked, this, &MainWindow::openCatalog);
 
-    _pagesView = new QStackedWidget;
+    _tabsView = new QStackedWidget;
 
-    _openedPagesView = new OpenedPagesWidget;
-    connect(_openedPagesView, &OpenedPagesWidget::onActivatePage, _pagesView, &QStackedWidget::setCurrentWidget);
+    _openTabsView = new OpenTabsWidget;
+    connect(_openTabsView, &OpenTabsWidget::onActivateTab, _tabsView, &QStackedWidget::setCurrentWidget);
 
     _catalogView = new CatalogWidget;
-    connect(_catalogView, &CatalogWidget::onOpenMemo, this, &MainWindow::openMemoPage);
+    connect(_catalogView, &CatalogWidget::onOpenMemo, this, &MainWindow::openMemoTab);
 
     _splitter = new QSplitter;
-    _splitter->addWidget(_openedPagesView);
-    _splitter->addWidget(_pagesView);
+    _splitter->addWidget(_openTabsView);
+    _splitter->addWidget(_tabsView);
     _splitter->addWidget(_catalogView);
     _splitter->setStretchFactor(0, 0);
     _splitter->setStretchFactor(1, 1);
@@ -151,7 +151,7 @@ MainWindow::MainWindow() : QMainWindow()
     _highlighterControl = new Phl::Control(_highlighterMenu, this);
     connect(_highlighterControl, &Phl::Control::selected, this, &MainWindow::setMemoHighlighter);
     connect(_highlighterControl, &Phl::Control::editorRequested, this, [this](const QSharedPointer<Ori::Highlighter::Spec>& spec){
-        activateOrOpenHighlighEditorPage(_pagesView, _openedPagesView, spec);
+        activateOrOpenHighlighEditorTab(_tabsView, _openTabsView, spec);
     });
 
     createStatusBar();
@@ -175,7 +175,7 @@ void MainWindow::createMenu()
     m->addSeparator();
     /* TODO
     m->addAction(tr("Application Settings"), this, [this]{
-        activateOrOpenNewPage<AppSettingsPage>(_pagesView, _openedPagesView);
+        activateOrOpenNewTab<AppSettingsTab>(_tabsView, _openTabsView);
     });
     m->addSeparator();
     */
@@ -220,16 +220,16 @@ void MainWindow::createMenu()
     {
         m->addSeparator();
         m->addAction(tr("Edit Application QSS"), this, [this]{
-            activateOrOpenNewPage<QssEditorPage>(_pagesView, _openedPagesView);
+            activateOrOpenNewTab<QssEditorTab>(_tabsView, _openTabsView);
         });
         m->addAction(tr("Edit Markdown CSS"), this, [this]{
-            activateOrOpenNewPage<CssEditorPage>(_pagesView, _openedPagesView);
+            activateOrOpenNewTab<CssEditorTab>(_tabsView, _openTabsView);
         });
         m->addAction(tr("Open SQL Console"), this, [this]{
-            openNewPage<SqlConsolePage>(_pagesView, _openedPagesView);
+            openNewTab<SqlConsoleTab>(_tabsView, _openTabsView);
         });
         m->addAction(tr("Open Command Console"), this, [this]{
-            openNewPage<CmdConsolePage>(_pagesView, _openedPagesView, _catalog);
+            openNewTab<CmdConsoleTab>(_tabsView, _openTabsView, _catalog);
         });
     }
 
@@ -238,16 +238,16 @@ void MainWindow::createMenu()
     m = menuBar()->addMenu(tr("Help"));
     /* TODO
     m->addAction(tr("Show Help"), [this]{
-        activateOrOpenNewPage<HelpPage>(_pagesView, _openedPagesView);
+        activateOrOpenNewTab<HelpTab>(_tabsView, _openTabsView);
     });
     m->addSeparator();
     */
-    m->addAction(tr("Visit Homepage"), this, []{ HelpPage::visitHomePage(); });
-    m->addAction(tr("Send Bug Report"), this, []{ HelpPage::sendBugReport(); });
+    m->addAction(tr("Visit Homepage"), this, []{ HelpTab::visitHomePage(); });
+    m->addAction(tr("Send Bug Report"), this, []{ HelpTab::sendBugReport(); });
 #ifndef Q_OS_MAC
     m->addSeparator(); // "About" item will be extracted to the system menu, se we don't need the separator
 #endif
-    m->addAction(tr("About %1...").arg(qApp->applicationName()), this, []{ HelpPage::showAbout(); });
+    m->addAction(tr("About %1...").arg(qApp->applicationName()), this, []{ HelpTab::showAbout(); });
 }
 
 namespace  {
@@ -323,12 +323,12 @@ void MainWindow::loadSession()
     {
         auto memoItem = _catalog->findMemoById(idStr.toInt());
         if (!memoItem) continue;
-        openMemoPage(memoItem);
+        openMemoTab(memoItem);
     }
 
     int activeId = settings.value("activeMemo", -1).toInt();
     auto activeMemoItem = _catalog->findMemoById(activeId);
-    if (activeMemoItem) openMemoPage(activeMemoItem);
+    if (activeMemoItem) openMemoTab(activeMemoItem);
 }
 
 void MainWindow::saveSession()
@@ -344,11 +344,11 @@ void MainWindow::saveSession()
 
     QStringList openedIds;
     int activeId = -1;
-    auto activeWidget = _pagesView->currentWidget();
-    for (int i = 0; i < _pagesView->count(); i++)
+    auto activeWidget = _tabsView->currentWidget();
+    for (int i = 0; i < _tabsView->count(); i++)
     {
-        auto widget = _pagesView->widget(i);
-        auto memoWindow = qobject_cast<MemoPage*>(widget);
+        auto widget = _tabsView->widget(i);
+        auto memoWindow = qobject_cast<MemoTab*>(widget);
         if (!memoWindow) continue;
         int memoId = memoWindow->memoItem()->id();
         openedIds << QString::number(memoId);
@@ -416,7 +416,7 @@ void MainWindow::catalogOpened(Catalog* catalog)
     updateCounter();
     loadSession();
 
-    auto cmdConsole = findPage<CmdConsolePage>(_pagesView);
+    auto cmdConsole = findTab<CmdConsoleTab>(_tabsView);
     if (cmdConsole) cmdConsole->setCatalog(_catalog);
 }
 
@@ -439,23 +439,23 @@ bool MainWindow::closeCatalog()
 bool MainWindow::closeAllMemos()
 {
     QVector<QWidget*> deletingPages;
-    for (int i = 0; i < _pagesView->count(); i++)
+    for (int i = 0; i < _tabsView->count(); i++)
     {
-        auto widget = _pagesView->widget(i);
+        auto widget = _tabsView->widget(i);
 
-        auto hleditPage = qobject_cast<PhlEditorPage*>(widget);
+        auto hleditPage = qobject_cast<PhlEditorTab*>(widget);
         if (hleditPage)
             // TODO: check if was modified
             deletingPages << hleditPage;
 
-        auto page = qobject_cast<MemoPage*>(widget);
-        if (!page) continue;
-        if (!page->canClose())
+        auto tab = qobject_cast<MemoTab*>(widget);
+        if (!tab) continue;
+        if (!tab->canClose())
             return false;
-        deletingPages << page;
+        deletingPages << tab;
     }
-    for (auto page : deletingPages)
-        page->deleteLater();
+    for (auto tab : deletingPages)
+        tab->deleteLater();
     return true;
 }
 
@@ -507,10 +507,10 @@ void MainWindow::closeEvent(QCloseEvent *event)
 void MainWindow::openMemo()
 {
     auto selected = _catalogView->selection();
-    if (selected.memo) openMemoPage(selected.memo);
+    if (selected.memo) openMemoTab(selected.memo);
 }
 
-void MainWindow::openMemoPage(MemoItem* item)
+void MainWindow::openMemoTab(MemoItem* item)
 {
     if (!item->isLoaded())
     {
@@ -518,47 +518,47 @@ void MainWindow::openMemoPage(MemoItem* item)
         if (!res.isEmpty()) return Ori::Dlg::error(res);
     }
 
-    auto existedPage = findMemoPage(item);
+    auto existedPage = findMemoTab(item);
     if (existedPage)
     {
-        _pagesView->setCurrentWidget(existedPage);
-        _openedPagesView->addOpenedPage(existedPage);
+        _tabsView->setCurrentWidget(existedPage);
+        _openTabsView->addOpenedTab(existedPage);
         return;
     }
 
-    auto page = new MemoPage(_catalog, item);
-    _pagesView->addWidget(page);
-    _pagesView->setCurrentWidget(page);
-    _openedPagesView->addOpenedPage(page);
+    auto tab = new MemoTab(_catalog, item);
+    _tabsView->addWidget(tab);
+    _tabsView->setCurrentWidget(tab);
+    _openTabsView->addOpenedTab(tab);
 
-    // In some cases, when a page added to the pages view,
-    // page's font can be reset to the parent's one.
+    // In some cases, when a tab added to the tabs view,
+    // tab's font can be reset to the parent's one.
     // For example, it happens with markdown editor.
-    // So assign font _after_ the page added to the pages view.
-    page->loadSettings();
+    // So assign font _after_ the tab added to the tabs view.
+    tab->loadSettings();
 }
 
-MemoPage* MainWindow::findMemoPage(MemoItem* item) const
+MemoTab* MainWindow::findMemoTab(MemoItem* item) const
 {
-    for (int i = 0; i < _pagesView->count(); i++)
+    for (int i = 0; i < _tabsView->count(); i++)
     {
-        auto widget = _pagesView->widget(i);
-        auto page = qobject_cast<MemoPage*>(widget);
-        if (!page) continue;
-        if (page->memoItem() == item)
-            return page;
+        auto widget = _tabsView->widget(i);
+        auto tab = qobject_cast<MemoTab*>(widget);
+        if (!tab) continue;
+        if (tab->memoItem() == item)
+            return tab;
     }
     return nullptr;
 }
 
-MemoPage* MainWindow::currentMemoPage() const
+MemoTab* MainWindow::currentMemoTab() const
 {
-    return dynamic_cast<MemoPage*>(_pagesView->currentWidget());
+    return dynamic_cast<MemoTab*>(_tabsView->currentWidget());
 }
 
 void MainWindow::exportToPdf()
 {
-    auto memoPage = currentMemoPage();
+    auto memoPage = currentMemoTab();
     if (!memoPage) return;
 
     memoPage->exportToPdf();
@@ -566,7 +566,7 @@ void MainWindow::exportToPdf()
 
 void MainWindow::chooseMemoFont()
 {
-    auto memoPage = currentMemoPage();
+    auto memoPage = currentMemoTab();
     if (!memoPage) return;
 
     bool ok;
@@ -580,7 +580,7 @@ void MainWindow::chooseMemoFont()
 
 void MainWindow::toggleWordWrap()
 {
-    auto memoPage = currentMemoPage();
+    auto memoPage = currentMemoTab();
     if (!memoPage) return;
 
     memoPage->setWordWrap(!memoPage->wordWrap());
@@ -590,23 +590,23 @@ void MainWindow::memoCreated(MemoItem* item)
 {
     updateCounter();
 
-    openMemoPage(item);
+    openMemoTab(item);
 
-    auto page = findMemoPage(item);
-    if (page) page->beginEdit();
+    auto tab = findMemoTab(item);
+    if (tab) tab->beginEdit();
 }
 
 void MainWindow::memoRemoved(MemoItem* item)
 {
     updateCounter();
 
-    auto page = findMemoPage(item);
-    if (page) page->deleteLater();
+    auto tab = findMemoTab(item);
+    if (tab) tab->deleteLater();
 }
 
 void MainWindow::optionsMenuAboutToShow()
 {
-    auto memoPage = currentMemoPage();
+    auto memoPage = currentMemoTab();
     if (_spellcheckMenu)
         _spellcheckMenu->setEnabled(memoPage && !memoPage->isReadOnly());
     _highlighterMenu->setEnabled(memoPage && memoPage->memoItem()->type() == plainTextMemoType());
@@ -620,7 +620,7 @@ void MainWindow::optionsMenuAboutToShow()
 void MainWindow::spellcheckMenuAboutToShow()
 {
 #ifdef ENABLE_SPELLCHECK
-    auto memoPage = currentMemoPage();
+    auto memoPage = currentMemoTab();
     if (memoPage)
         _spellcheckControl->showCurrentLang(memoPage->spellcheckLang());
 #endif
@@ -629,7 +629,7 @@ void MainWindow::spellcheckMenuAboutToShow()
 void MainWindow::highlighterMenuAboutToShow()
 {
     QString currentHighlighter;
-    auto memoPage = currentMemoPage();
+    auto memoPage = currentMemoTab();
     if (memoPage)
         currentHighlighter = memoPage->highlighter();
     _highlighterControl->showCurrent(currentHighlighter);
@@ -637,12 +637,12 @@ void MainWindow::highlighterMenuAboutToShow()
 
 void MainWindow::setMemoSpellcheckLang(const QString& lang)
 {
-    auto memoPage = currentMemoPage();
+    auto memoPage = currentMemoTab();
     if (memoPage) memoPage->setSpellcheckLang(lang);
 }
 
 void MainWindow::setMemoHighlighter(const QString& name)
 {
-    auto memoPage = currentMemoPage();
+    auto memoPage = currentMemoTab();
     if (memoPage) memoPage->setHighlighter(name);
 }

@@ -1,6 +1,6 @@
-#include "CmdConsolePage.h"
+#include "CmdConsoleTab.h"
 
-#include "PageWidgets.h"
+#include "TabHelpers.h"
 #include "../catalog/Catalog.h"
 #include "../catalog/SqlHelper.h"
 
@@ -81,7 +81,7 @@ private:
 
 using namespace CmdConsoleImpl;
 
-CmdConsolePage::CmdConsolePage(Catalog* catalog) : QWidget()
+CmdConsoleTab::CmdConsoleTab(Catalog* catalog) : QWidget()
 {
     setWindowTitle(tr("Command Console"));
     setWindowIcon(QIcon(":/icon/main"));
@@ -93,7 +93,7 @@ CmdConsolePage::CmdConsolePage(Catalog* catalog) : QWidget()
 
     auto infoLabel = new QLabel;
     infoLabel->setProperty("role", "memo_editor");
-    infoLabel->setText(PageWidgets::formatInfo(_impl->formatNames()));
+    infoLabel->setText(TabHelpers::formatInfo(_impl->formatNames()));
     infoLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
 
     auto editor = new QPlainTextEdit;
@@ -114,7 +114,7 @@ CmdConsolePage::CmdConsolePage(Catalog* catalog) : QWidget()
     splitter->setStretchFactor(0, 1);
     splitter->setStretchFactor(1, 9);
 
-    auto titleEditor = PageWidgets::makeTitleEditor(windowTitle());
+    auto titleEditor = TabHelpers::makeTitleEditor(windowTitle());
 
     auto toolbar = new QToolBar;
     auto actionRun = toolbar->addAction(QIcon(":/toolbar/apply"), tr("Execute (F5)"), [this, editor, result](){
@@ -122,7 +122,7 @@ CmdConsolePage::CmdConsolePage(Catalog* catalog) : QWidget()
         if (cmdName.isEmpty()) return;
         if (!_impl->cmds.contains(cmdName))
         {
-            result->setHtml(PageWidgets::formatError("Unknown command: <b>%%1</b>").arg(cmdName));
+            result->setHtml(TabHelpers::formatError("Unknown command: <b>%%1</b>").arg(cmdName));
             return;
         }
         QString res = _impl->cmds[cmdName]->run();
@@ -133,16 +133,16 @@ CmdConsolePage::CmdConsolePage(Catalog* catalog) : QWidget()
     actionRun->setShortcut(Qt::Key_F5);
 
     toolbar->addSeparator();
-    toolbar->addAction(QIcon(":/toolbar/close"), tr("Close"), [this](){
+    toolbar->addAction(QIcon(":/toolbar/close"), tr("Close Tab"), [this](){
         deleteLater();
     });
 
-    auto toolPanel = PageWidgets::makeHeaderPanel({titleEditor, toolbar});
+    auto toolPanel = TabHelpers::makeHeaderPanel({titleEditor, toolbar});
 
     Ori::Layouts::LayoutV({toolPanel, infoLabel, Ori::Layouts::Space(3), splitter}).setMargin(0).setSpacing(0).useFor(this);
 }
 
-void CmdConsolePage::setCatalog(Catalog* catalog)
+void CmdConsoleTab::setCatalog(Catalog* catalog)
 {
     _impl->catalog = catalog;
 }

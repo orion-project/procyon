@@ -12,7 +12,7 @@ class QSettings;
 QT_END_NAMESPACE
 
 class Db;
-class CatalogWidget;
+class DbTreeWidget;
 class OpenTabsWidget;
 class SpellcheckControl;
 class InfoWidget;
@@ -44,8 +44,8 @@ protected:
 
 private:
     QSplitter* _splitter;
-    Db* _catalog = nullptr;
-    CatalogWidget* _catalogView;
+    Db* _db = nullptr;
+    DbTreeWidget* _treeView;
     QStackedWidget* _tabsView;
     OpenTabsWidget* _openTabsView;
     Ori::MruFileList *_mruList;
@@ -53,7 +53,7 @@ private:
     QAction *_actionCreateTopLevelFolder, *_actionCreateFolder, *_actionRenameFolder, *_actionDeleteFolder;
     QAction *_actionMemoFont, *_actionWordWrap, *_actionMemoExportPdf;
     QAction *_actionOpenMemo, *_actionCreateMemo, *_actionDeleteMemo;
-    QString _lastOpenedCatalog;
+    QString _lastOpenedDb;
     SpellcheckControl* _spellcheckControl;
     Phl::Control* _highlighterControl;
     QMenu *_spellcheckMenu = nullptr;
@@ -63,13 +63,13 @@ private:
     void createStatusBar();
     void loadSession();
     void saveSession();
-    void newCatalog();
-    void openCatalog(const QString &fileName);
-    void openCatalogViaDialog();
-    void catalogOpened(Db* catalog);
-    bool closeCatalog();
+    void newDb();
+    void openDb(const QString &fileName);
+    void openDbViaDialog();
+    void dbOpened(Db* db);
+    bool closeDb();
     void updateCounter();
-    void updateMenuCatalog();
+    void updateMenuDb();
     void openMemo();
     void chooseMemoFont();
     void toggleWordWrap();

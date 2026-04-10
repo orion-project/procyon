@@ -1,6 +1,6 @@
-#include "CatalogWidget.h"
+#include "DbTreeWidget.h"
 
-#include "CatalogModel.h"
+#include "DbTreeModel.h"
 #include "db/Db.h"
 #include "helpers/OriLayouts.h"
 #include "helpers/OriDialogs.h"
@@ -14,21 +14,21 @@
 #include <QWidgetAction>
 #include <QFileInfo>
 
-struct CatalogSelection
+struct DbTreeSelection
 {
     QModelIndex index;
     DbItem* item = nullptr;
     FolderItem* folder = nullptr;
     MemoItem* memo = nullptr;
 
-    CatalogSelection() {}
+    DbTreeSelection() {}
 
-    CatalogSelection(QTreeView* view)
+    DbTreeSelection(QTreeView* view)
     {
         index = view->currentIndex();
         if (!index.isValid()) return;
 
-        item = CatalogModel::catalogItem(index);
+        item = DbTreeModel::dbItem(index);
         if (!item) return;
 
         folder = item->asFolder();
@@ -43,7 +43,7 @@ struct CatalogSelection
         index = index.parent();
         if (!index.isValid()) return;
 
-        item = CatalogModel::catalogItem(index);
+        item = DbTreeModel::dbItem(index);
         if (!item) return;
 
         folder = item->asFolder();
@@ -77,78 +77,78 @@ static void makeMenuHeader(QMenu* menu, const QIcon& icon, const QString& title)
     menu->insertAction(actions.first(), headerAction);
 }
 
-CatalogWidget::CatalogWidget() : QWidget()
+DbTreeWidget::DbTreeWidget() : QWidget()
 {
     _rootMenu = new QMenu(this);
-    _rootMenu->addAction(tr("New Folder..."), this, &CatalogWidget::createFolder);
-    _rootMenu->addAction(tr("New Memo..."), this, &CatalogWidget::createMemo);
+    _rootMenu->addAction(tr("New Folder..."), this, &DbTreeWidget::createFolder);
+    _rootMenu->addAction(tr("New Memo..."), this, &DbTreeWidget::createMemo);
 
     _folderMenu = new QMenu(this);
-    _folderMenu->addAction(tr("Rename..."), this, &CatalogWidget::renameFolder);
-    _folderMenu->addAction(tr("Delete"), this, &CatalogWidget::deleteFolder);
+    _folderMenu->addAction(tr("Rename..."), this, &DbTreeWidget::renameFolder);
+    _folderMenu->addAction(tr("Delete"), this, &DbTreeWidget::deleteFolder);
     _folderMenu->addSeparator();
-    _folderMenu->addAction(tr("New Memo..."), this, &CatalogWidget::createMemo);
-    _folderMenu->addAction(tr("New Subfolder..."), this, &CatalogWidget::createFolder);
-    _folderMenu->addAction(tr("New Top Level Folder..."), this, &CatalogWidget::createTopLevelFolder);
+    _folderMenu->addAction(tr("New Memo..."), this, &DbTreeWidget::createMemo);
+    _folderMenu->addAction(tr("New Subfolder..."), this, &DbTreeWidget::createFolder);
+    _folderMenu->addAction(tr("New Top Level Folder..."), this, &DbTreeWidget::createTopLevelFolder);
 
     auto openMemo = new QAction(tr("Open"));
-    connect(openMemo, &QAction::triggered, this, &CatalogWidget::openSelectedMemo);
+    connect(openMemo, &QAction::triggered, this, &DbTreeWidget::openSelectedMemo);
 
     _memoMenu = new QMenu(this);
     _memoMenu->addAction(openMemo);
     _memoMenu->addSeparator();
-    _memoMenu->addAction(tr("Delete"), this, &CatalogWidget::deleteMemo);
+    _memoMenu->addAction(tr("Delete"), this, &DbTreeWidget::deleteMemo);
     _memoMenu->addSeparator();
-    _memoMenu->addAction(tr("New Memo..."), this, &CatalogWidget::createMemo);
-    _memoMenu->addAction(tr("New Subfolder..."), this, &CatalogWidget::createFolder);
-    _memoMenu->addAction(tr("New Top Level Folder..."), this, &CatalogWidget::createTopLevelFolder);
+    _memoMenu->addAction(tr("New Memo..."), this, &DbTreeWidget::createMemo);
+    _memoMenu->addAction(tr("New Subfolder..."), this, &DbTreeWidget::createFolder);
+    _memoMenu->addAction(tr("New Top Level Folder..."), this, &DbTreeWidget::createTopLevelFolder);
 
-    _catalogView = new QTreeView;
-    _catalogView->setObjectName("tree_view");
-    _catalogView->setHeaderHidden(true);
-    _catalogView->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(_catalogView, &QTreeView::customContextMenuRequested, this, &CatalogWidget::contextMenuRequested);
-    connect(_catalogView, &QTreeView::doubleClicked, this, &CatalogWidget::doubleClicked);
+    _treeView = new QTreeView;
+    _treeView->setObjectName("tree_view");
+    _treeView->setHeaderHidden(true);
+    _treeView->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(_treeView, &QTreeView::customContextMenuRequested, this, &DbTreeWidget::contextMenuRequested);
+    connect(_treeView, &QTreeView::doubleClicked, this, &DbTreeWidget::doubleClicked);
 
-    Ori::Layouts::LayoutV({_catalogView})
+    Ori::Layouts::LayoutV({_treeView})
             .setMargin(0)
             .setSpacing(0)
             .useFor(this);
 }
 
-void CatalogWidget::setCatalog(Db* catalog)
+void DbTreeWidget::setDb(Db* db)
 {
-    if (_catalog)
-        disconnect(_catalog, &Db::memoUpdated, this, &CatalogWidget::memoUpdated);
+    if (_db)
+        disconnect(_db, &Db::memoUpdated, this, &DbTreeWidget::memoUpdated);
 
-    _catalog = catalog;
-    if (_catalogModel)
+    _db = db;
+    if (_model)
     {
-        delete _catalogModel;
-        _catalogModel = nullptr;
+        delete _model;
+        _model = nullptr;
     }
-    if (_catalog)
+    if (_db)
     {
-        _catalogModel = new CatalogModel(_catalog);
-        connect(_catalog, &Db::memoUpdated, this, &CatalogWidget::memoUpdated);
-        //_rootTitle->setText(QFileInfo(_catalog->fileName()).baseName());
+        _model = new DbTreeModel(_db);
+        connect(_db, &Db::memoUpdated, this, &DbTreeWidget::memoUpdated);
+        //_rootTitle->setText(QFileInfo(_db->fileName()).baseName());
     }
-    _catalogView->setModel(_catalogModel);
+    _treeView->setModel(_model);
 }
 
-void CatalogWidget::contextMenuRequested(const QPoint &pos)
+void DbTreeWidget::contextMenuRequested(const QPoint &pos)
 {
-    if (!_catalogModel) return;
+    if (!_model) return;
 
     QMenu* menu = nullptr;
-    CatalogSelection selected(_catalogView);
+    DbTreeSelection selected(_treeView);
     if (!selected.item)
     {
         menu = _rootMenu;
     }
     else if (selected.folder)
     {
-        makeMenuHeader(_folderMenu, _catalogModel->folderIcon(), selected.item->title());
+        makeMenuHeader(_folderMenu, _model->folderIcon(), selected.item->title());
         menu = _folderMenu;
     }
     else if (selected.memo)
@@ -157,93 +157,93 @@ void CatalogWidget::contextMenuRequested(const QPoint &pos)
         menu = _memoMenu;
     }
     if (menu)
-        menu->popup(_catalogView->mapToGlobal(pos));
+        menu->popup(_treeView->mapToGlobal(pos));
 }
 
-void CatalogWidget::openSelectedMemo()
+void DbTreeWidget::openSelectedMemo()
 {
-    if (!_catalogModel) return;
+    if (!_model) return;
 
-    CatalogSelection selected(_catalogView);
+    DbTreeSelection selected(_treeView);
     if (selected.memo)
         emit onOpenMemo(selected.memo);
 }
 
-void CatalogWidget::doubleClicked(const QModelIndex&)
+void DbTreeWidget::doubleClicked(const QModelIndex&)
 {
     openSelectedMemo();
 }
 
-SelectedItems CatalogWidget::selection() const
+SelectedItems DbTreeWidget::selection() const
 {
-    CatalogSelection selected(_catalogView);
+    DbTreeSelection selected(_treeView);
     SelectedItems result;
     result.memo = selected.memo;
     result.folder = selected.folder;
     return result;
 }
 
-void CatalogWidget::createFolder()
+void DbTreeWidget::createFolder()
 {
-    if (_catalog->topItems().isEmpty())
+    if (_db->topItems().isEmpty())
         return createTopLevelFolder();
 
-    CatalogSelection selection(_catalogView);
+    DbTreeSelection selection(_treeView);
     selection.selectFolderIfNone();
     if (selection.folder)
         createFolderInternal(selection);
 }
 
-void CatalogWidget::createTopLevelFolder()
+void DbTreeWidget::createTopLevelFolder()
 {
-    createFolderInternal(CatalogSelection());
+    createFolderInternal(DbTreeSelection());
 }
 
-void CatalogWidget::createFolderInternal(const CatalogSelection& selection)
+void DbTreeWidget::createFolderInternal(const DbTreeSelection& selection)
 {
     auto title = Ori::Dlg::inputText(tr("Enter a title for new folder"), "");
     if (title.isEmpty()) return;
 
-    auto res = _catalog->createFolder(selection.folder, title);
+    auto res = _db->createFolder(selection.folder, title);
     if (!res.ok()) return Ori::Dlg::error(res.error());
 
     // TODO do not know about item inserted at the end and select by pointer
-    auto newIndex = _catalogModel->itemAdded(selection.index);
-    if (!_catalogView->isExpanded(selection.index))
-        _catalogView->expand(selection.index);
-    _catalogView->setCurrentIndex(newIndex);
+    auto newIndex = _model->itemAdded(selection.index);
+    if (!_treeView->isExpanded(selection.index))
+        _treeView->expand(selection.index);
+    _treeView->setCurrentIndex(newIndex);
 }
 
-void CatalogWidget::renameFolder()
+void DbTreeWidget::renameFolder()
 {
-    CatalogSelection selected(_catalogView);
+    DbTreeSelection selected(_treeView);
     if (!selected.folder) return;
 
     auto title = Ori::Dlg::inputText(tr("Enter new title for folder"), selected.folder->title());
     if (title.isEmpty()) return;
 
-    auto res = _catalog->renameFolder(selected.folder, title);
+    auto res = _db->renameFolder(selected.folder, title);
     if (!res.isEmpty()) return Ori::Dlg::error(res);
 
-    _catalogModel->itemRenamed(selected.index);
+    _model->itemRenamed(selected.index);
     // TODO do something about items sorted after renaming
 }
 
-void CatalogWidget::deleteFolder()
+void DbTreeWidget::deleteFolder()
 {
-    CatalogSelection selected(_catalogView);
+    DbTreeSelection selected(_treeView);
     if (!selected.folder) return;
 
     auto confirm = tr("Are you sure to delete folder '%1' and all its content?\n\n"
                       "This action can't be undone.").arg(selected.folder->title());
     if (!Ori::Dlg::yes(confirm)) return;
 
-    ItemRemoverGuard guard(_catalogModel, selected.index);
+    ItemRemoverGuard guard(_model, selected.index);
 
-    auto res = _catalog->removeFolder(selected.folder);
+    auto res = _db->removeFolder(selected.folder);
     if (!res.isEmpty()) return Ori::Dlg::error(res);
 
-    _catalogView->setCurrentIndex(guard.parentIndex);
+    _treeView->setCurrentIndex(guard.parentIndex);
 }
 
 static MemoType* selectMemoTypeDlg()
@@ -278,15 +278,15 @@ static MemoType* selectMemoTypeDlg()
 }
 
 
-void CatalogWidget::createMemo()
+void DbTreeWidget::createMemo()
 {
-    if (_catalog->topItems().isEmpty())
+    if (_db->topItems().isEmpty())
     {
         Ori::Dlg::info(tr("Db is empty, you have to create at least one top level folder first"));
         createTopLevelFolder();
     }
 
-    CatalogSelection selection(_catalogView);
+    DbTreeSelection selection(_treeView);
     selection.selectFolderIfNone();
     if (!selection.folder) return;
 
@@ -294,7 +294,7 @@ void CatalogWidget::createMemo()
     if (!memoType) return;
 
     auto memoItem = new MemoItem;
-    auto res = _catalog->createMemo(selection.folder, memoItem, memoType);
+    auto res = _db->createMemo(selection.folder, memoItem, memoType);
     if (!res.ok())
     {
         delete memoItem;
@@ -302,73 +302,73 @@ void CatalogWidget::createMemo()
     }
 
     // TODO do not know about item inserted at the end and select by pointer
-    auto newIndex = _catalogModel->itemAdded(selection.index);
-    if (!_catalogView->isExpanded(selection.index))
-        _catalogView->expand(selection.index);
-    _catalogView->setCurrentIndex(newIndex);
+    auto newIndex = _model->itemAdded(selection.index);
+    if (!_treeView->isExpanded(selection.index))
+        _treeView->expand(selection.index);
+    _treeView->setCurrentIndex(newIndex);
 }
 
-void CatalogWidget::deleteMemo()
+void DbTreeWidget::deleteMemo()
 {
-    CatalogSelection selected(_catalogView);
+    DbTreeSelection selected(_treeView);
     if (!selected.memo) return;
 
     auto confirm = tr("Are you sure to delete memo '%1'?\n\n"
                       "This action can't be undone.").arg(selected.memo->title());
     if (!Ori::Dlg::yes(confirm)) return;
 
-    ItemRemoverGuard guard(_catalogModel, selected.index);
+    ItemRemoverGuard guard(_model, selected.index);
 
-    auto res = _catalog->removeMemo(selected.memo);
+    auto res = _db->removeMemo(selected.memo);
     if (!res.isEmpty()) return Ori::Dlg::error(res);
 
-    _catalogView->setCurrentIndex(guard.parentIndex);
+    _treeView->setCurrentIndex(guard.parentIndex);
 }
 
-void CatalogWidget::memoUpdated(MemoItem* item)
+void DbTreeWidget::memoUpdated(MemoItem* item)
 {
-    auto index = _catalogModel->findIndex(item);
+    auto index = _model->findIndex(item);
     if (index.isValid())
-        _catalogModel->itemRenamed(index);
+        _model->itemRenamed(index);
 }
 
-QStringList CatalogWidget::getExpandedIds() const
+QStringList DbTreeWidget::getExpandedIds() const
 {
     QStringList ids;
     fillExpandedIds(ids, QModelIndex());
     return ids;
 }
 
-void CatalogWidget::setExpandedIds(const QStringList& ids)
+void DbTreeWidget::setExpandedIds(const QStringList& ids)
 {
     setExpandedIds(ids, QModelIndex());
 }
 
-void CatalogWidget::fillExpandedIds(QStringList& ids, const QModelIndex& parentIndex) const
+void DbTreeWidget::fillExpandedIds(QStringList& ids, const QModelIndex& parentIndex) const
 {
-    int rowCount = _catalogModel->rowCount(parentIndex);
+    int rowCount = _model->rowCount(parentIndex);
     for (int row = 0; row < rowCount; row++)
     {
-        auto index = _catalogModel->index(row, 0, parentIndex);
-        if (_catalogModel->catalogItem(index)->isFolder())
+        auto index = _model->index(row, 0, parentIndex);
+        if (_model->dbItem(index)->isFolder())
         {
-            if (_catalogView->isExpanded(index))
-                ids << QString::number(_catalogModel->data(index, Qt::UserRole).toInt());
+            if (_treeView->isExpanded(index))
+                ids << QString::number(_model->data(index, Qt::UserRole).toInt());
             fillExpandedIds(ids, index);
         }
     }
 }
 
-void CatalogWidget::setExpandedIds(const QStringList& ids, const QModelIndex& parentIndex)
+void DbTreeWidget::setExpandedIds(const QStringList& ids, const QModelIndex& parentIndex)
 {
-    int rowCount = _catalogModel->rowCount(parentIndex);
+    int rowCount = _model->rowCount(parentIndex);
     for (int row = 0; row < rowCount; row++)
     {
-        auto index = _catalogModel->index(row, 0, parentIndex);
-        auto data = _catalogModel->data(index, Qt::UserRole);
+        auto index = _model->index(row, 0, parentIndex);
+        auto data = _model->data(index, Qt::UserRole);
         if (data.isNull()) continue;
         if (ids.contains(QString::number(data.toInt())))
-            _catalogView->expand(index);
+            _treeView->expand(index);
         setExpandedIds(ids, index);
     }
 }

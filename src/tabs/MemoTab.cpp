@@ -39,13 +39,13 @@ void updateOption(MemoItem* memo, const QString& name, const QVariant& value)
 {
     QString res = DB::memoManager()->updateOption(memo->id(), name, value);
     if (!res.isEmpty())
-        Ori::Dlg::error(QString("Unable to store memo option in catalog.\n\n%1").arg(res));
+        Ori::Dlg::error(QString("Unable to store memo option in database.\n\n%1").arg(res));
 }
 }
 
 
-MemoTab::MemoTab(Db *catalog, MemoItem *memoItem) : QWidget(),
-    _catalog(catalog), _memoItem(memoItem)
+MemoTab::MemoTab(Db *db, MemoItem *memoItem) : QWidget(),
+    _db(db), _memoItem(memoItem)
 {
     auto memoType = _memoItem->type();
 
@@ -135,7 +135,7 @@ bool MemoTab::saveEdit()
     update.title = _titleEditor->text().trimmed();
     update.data = _memoEditor->data();
 
-    auto res = _catalog->updateMemo(_memoItem, update);
+    auto res = _db->updateMemo(_memoItem, update);
     if (!res.isEmpty())
     {
         Ori::Dlg::error(res);

@@ -33,7 +33,7 @@
           "text": "CSS, QSS, SQL built-in syntax highlighters."
         },
         {
-          "text": "Can create custom highlighters stored in catalog."
+          "text": "Can create custom highlighters stored in database."
         },
         {
           "text": "Fix for restoring of expanded folders."
@@ -54,10 +54,10 @@
           "text": "New rules for Procyon syntax highlighter - inline code, inline font styles."
         },
         {
-          "text": "Store memo info in catalog - creation and modification date."
+          "text": "Store memo info in database - creation and modification date."
         },
         {
-          "text": "Store memo options in catalog - font, word wrap, spellcheck, highlighter."
+          "text": "Store memo options in database - font, word wrap, spellcheck, highlighter."
         }
       ]
     },

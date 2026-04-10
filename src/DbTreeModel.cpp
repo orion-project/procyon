@@ -1,25 +1,25 @@
-#include "CatalogModel.h"
+#include "DbTreeModel.h"
 
 #include "db/Db.h"
 
-CatalogModel::CatalogModel(Db* catalog) : _catalog(catalog)
+DbTreeModel::DbTreeModel(Db* db) : _db(db)
 {
     _iconMemo = QIcon(":/icon/memo_plain_text");
     _iconFolder = QIcon(":/icon/folder");
 }
 
-DbItem* CatalogModel::catalogItem(const QModelIndex &index)
+DbItem* DbTreeModel::dbItem(const QModelIndex &index)
 {
     return static_cast<DbItem*>(index.internalPointer());
 }
 
-QModelIndex CatalogModel::findIndex(DbItem* item, const QModelIndex &parent)
+QModelIndex DbTreeModel::findIndex(DbItem* item, const QModelIndex &parent)
 {
     int rows = rowCount(parent);
     for (int row = 0; row < rows; row++)
     {
         auto currentIndex = index(row, 0, parent);
-        auto currentItem = catalogItem(currentIndex);
+        auto currentItem = dbItem(currentIndex);
         if (currentItem == item) return currentIndex;
 
         auto targetIndex = findIndex(item, currentIndex);
@@ -28,16 +28,16 @@ QModelIndex CatalogModel::findIndex(DbItem* item, const QModelIndex &parent)
     return QModelIndex();
 }
 
-QModelIndex CatalogModel::index(int row, int column, const QModelIndex &parent) const
+QModelIndex DbTreeModel::index(int row, int column, const QModelIndex &parent) const
 {
     if (!parent.isValid())
     {
-        if (row < _catalog->topItems().size())
-            return createIndex(row, column, _catalog->topItems().at(row));
+        if (row < _db->topItems().size())
+            return createIndex(row, column, _db->topItems().at(row));
         return QModelIndex();
     }
 
-    auto parentItem = catalogItem(parent);
+    auto parentItem = dbItem(parent);
     if (!parentItem) return QModelIndex();
 
     auto parentFolder = parentItem->asFolder();
@@ -49,11 +49,11 @@ QModelIndex CatalogModel::index(int row, int column, const QModelIndex &parent) 
     return QModelIndex();
 }
 
-QModelIndex CatalogModel::parent(const QModelIndex &child) const
+QModelIndex DbTreeModel::parent(const QModelIndex &child) const
 {
     if (!child.isValid()) return QModelIndex();
 
-    auto childItem = catalogItem(child);
+    auto childItem = dbItem(child);
     if (!childItem) return QModelIndex();
 
     auto parentItem = childItem->parent();
@@ -61,32 +61,32 @@ QModelIndex CatalogModel::parent(const QModelIndex &child) const
 
     int row = parentItem->parent()
             ? parentItem->parent()->asFolder()->children().indexOf(parentItem)
-            : _catalog->topItems().indexOf(parentItem);
+            : _db->topItems().indexOf(parentItem);
 
     return createIndex(row, 0, parentItem);
 }
 
-int CatalogModel::rowCount(const QModelIndex &parent) const
+int DbTreeModel::rowCount(const QModelIndex &parent) const
 {
     if (!parent.isValid())
-        return _catalog->topItems().size();
+        return _db->topItems().size();
 
-    auto item = catalogItem(parent);
+    auto item = dbItem(parent);
     return item && item->isFolder() ? item->asFolder()->children().size() : 0;
 }
 
-int CatalogModel::columnCount(const QModelIndex &parent) const
+int DbTreeModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent)
     return 1;
 }
 
-QVariant CatalogModel::data(const QModelIndex &index, int role) const
+QVariant DbTreeModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid())
         return QVariant();
 
-    auto item = catalogItem(index);
+    auto item = dbItem(index);
     if (!item) return QVariant();
 
     switch (role)
@@ -108,17 +108,17 @@ QVariant CatalogModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-void CatalogModel::itemRenamed(const QModelIndex &index)
+void DbTreeModel::itemRenamed(const QModelIndex &index)
 {
     if (!index.isValid())
     {
-        qWarning() << "CatalogModel::itemRenamed(): invalid index";
+        qWarning() << "DbTreeModel::itemRenamed(): invalid index";
         return;
     }
     emit dataChanged(index, index);
 }
 
-QModelIndex CatalogModel::itemAdded(const QModelIndex &parent)
+QModelIndex DbTreeModel::itemAdded(const QModelIndex &parent)
 {
     int row = rowCount(parent) - 1;
     beginInsertRows(parent, row, row);
@@ -130,7 +130,7 @@ QModelIndex CatalogModel::itemAdded(const QModelIndex &parent)
 //                               ItemRemoverGuard
 //------------------------------------------------------------------------------
 
-ItemRemoverGuard::ItemRemoverGuard(CatalogModel* model, const QModelIndex &removingIndex) : _model(model)
+ItemRemoverGuard::ItemRemoverGuard(DbTreeModel* model, const QModelIndex &removingIndex) : _model(model)
 {
     parentIndex = _model->parent(removingIndex);
     _model->beginRemoveRows(parentIndex, removingIndex.row(), removingIndex.row());

@@ -20,7 +20,7 @@ class MemoTab : public QWidget
     Q_OBJECT
 
 public:
-    explicit MemoTab(Db* catalog, MemoItem* memoItem);
+    explicit MemoTab(Db* db, MemoItem* memoItem);
     ~MemoTab();
 
     MemoItem* memoItem() const { return _memoItem; }
@@ -53,7 +53,7 @@ signals:
     void onModified(bool modified);
 
 private:
-    Db* _catalog;
+    Db* _db;
     MemoItem* _memoItem;
     MemoEditor* _memoEditor;
     QLineEdit* _titleEditor;

@@ -1,5 +1,5 @@
-#ifndef CATALOGMODEL_H
-#define CATALOGMODEL_H
+#ifndef DBTREE_MODEL_H
+#define DBTREE_MODEL_H
 
 #include <QAbstractItemModel>
 #include <QDebug>
@@ -8,12 +8,12 @@
 class Db;
 class DbItem;
 
-class CatalogModel : public QAbstractItemModel
+class DbTreeModel : public QAbstractItemModel
 {
 public:
-    CatalogModel(Db* catalog);
+    DbTreeModel(Db* db);
 
-    static DbItem* catalogItem(const QModelIndex &index);
+    static DbItem* dbItem(const QModelIndex &index);
 
     QModelIndex findIndex(DbItem* item, const QModelIndex &parent = QModelIndex());
 
@@ -31,7 +31,7 @@ public:
     const QIcon& folderIcon() const { return _iconFolder; }
     const QIcon& memoIcon() const { return _iconMemo; }
 private:
-    Db* _catalog;
+    Db* _db;
     QIcon _iconFolder, _iconMemo;
 };
 
@@ -39,11 +39,11 @@ private:
 class ItemRemoverGuard
 {
 public:
-    ItemRemoverGuard(CatalogModel* model, const QModelIndex &removingIndex);
+    ItemRemoverGuard(DbTreeModel* model, const QModelIndex &removingIndex);
     ~ItemRemoverGuard();
     QModelIndex parentIndex;
 private:
-    CatalogModel* _model;
+    DbTreeModel* _model;
 };
 
-#endif // CATALOGMODEL_H
+#endif // DBTREE_MODEL_H

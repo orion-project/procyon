@@ -1,7 +1,7 @@
 #include "MainWindow.h"
 
 #include "AppSettings.h"
-#include "CatalogWidget.h"
+#include "DbTreeWidget.h"
 #include "OpenTabsWidget.h"
 #include "db/Db.h"
 #include "highlighter/PhlManager.h"
@@ -115,20 +115,20 @@ MainWindow::MainWindow() : QMainWindow()
     Ori::Wnd::setWindowIcon(this, ":/icon/main");
 
     _mruList = new Ori::MruFileList(this);
-    connect(_mruList, &Ori::MruFileList::clicked, this, &MainWindow::openCatalog);
+    connect(_mruList, &Ori::MruFileList::clicked, this, &MainWindow::openDb);
 
     _tabsView = new QStackedWidget;
 
     _openTabsView = new OpenTabsWidget;
     connect(_openTabsView, &OpenTabsWidget::onActivateTab, _tabsView, &QStackedWidget::setCurrentWidget);
 
-    _catalogView = new CatalogWidget;
-    connect(_catalogView, &CatalogWidget::onOpenMemo, this, &MainWindow::openMemoTab);
+    _treeView = new DbTreeWidget;
+    connect(_treeView, &DbTreeWidget::onOpenMemo, this, &MainWindow::openMemoTab);
 
     _splitter = new QSplitter;
     _splitter->addWidget(_openTabsView);
     _splitter->addWidget(_tabsView);
-    _splitter->addWidget(_catalogView);
+    _splitter->addWidget(_treeView);
     _splitter->setStretchFactor(0, 0);
     _splitter->setStretchFactor(1, 1);
     _splitter->setStretchFactor(2, 0);
@@ -157,8 +157,8 @@ MainWindow::MainWindow() : QMainWindow()
 
 MainWindow::~MainWindow()
 {
-    if (_catalog)
-        delete _catalog;
+    if (_db)
+        delete _db;
 }
 
 void MainWindow::createMenu()
@@ -168,8 +168,8 @@ void MainWindow::createMenu()
     menuBar()->setNativeMenuBar(AppSettings::instance().useNativeMenuBar);
 
     m = menuBar()->addMenu(tr("File"));
-    m->addAction(tr("New..."), this, &MainWindow::newCatalog);
-    m->addAction(tr("Open..."), this, &MainWindow::openCatalogViaDialog, QKeySequence::Open);
+    m->addAction(tr("New..."), this, &MainWindow::newDb);
+    m->addAction(tr("Open..."), this, &MainWindow::openDbViaDialog, QKeySequence::Open);
     m->addSeparator();
     /* TODO
     m->addAction(tr("Application Settings"), this, [this]{
@@ -181,15 +181,15 @@ void MainWindow::createMenu()
     new Ori::Widgets::MruMenuPart(_mruList, m, actionExit, this);
 
     m = menuBar()->addMenu(tr("Notebook"));
-    connect(m, &QMenu::aboutToShow, this, &MainWindow::updateMenuCatalog);
-    _actionCreateTopLevelFolder = m->addAction(tr("New Top Level Folder..."), this, [this](){ _catalogView->createTopLevelFolder(); });
-    _actionCreateFolder = m->addAction(tr("New Subfolder..."), this, [this](){ _catalogView->createFolder(); });
-    _actionRenameFolder = m->addAction(tr("Rename Folder..."), this, [this](){ _catalogView->renameFolder(); });
-    _actionDeleteFolder = m->addAction(tr("Delete Folder"), this, [this](){ _catalogView->deleteFolder(); });
+    connect(m, &QMenu::aboutToShow, this, &MainWindow::updateMenuDb);
+    _actionCreateTopLevelFolder = m->addAction(tr("New Top Level Folder..."), this, [this](){ _treeView->createTopLevelFolder(); });
+    _actionCreateFolder = m->addAction(tr("New Subfolder..."), this, [this](){ _treeView->createFolder(); });
+    _actionRenameFolder = m->addAction(tr("Rename Folder..."), this, [this](){ _treeView->renameFolder(); });
+    _actionDeleteFolder = m->addAction(tr("Delete Folder"), this, [this](){ _treeView->deleteFolder(); });
     m->addSeparator();
     _actionOpenMemo = m->addAction(tr("Open Memo"), this, &MainWindow::openMemo);
-    _actionCreateMemo = m->addAction(tr("New Memo..."), this, [this](){ _catalogView->createMemo(); });
-    _actionDeleteMemo = m->addAction(tr("Delete Memo"), this, [this](){ _catalogView->deleteMemo(); });
+    _actionCreateMemo = m->addAction(tr("New Memo..."), this, [this](){ _treeView->createMemo(); });
+    _actionDeleteMemo = m->addAction(tr("Delete Memo"), this, [this](){ _treeView->deleteMemo(); });
 
     m = menuBar()->addMenu(tr("Memo"));
     connect(m, &QMenu::aboutToShow, this, &MainWindow::optionsMenuAboutToShow);
@@ -227,7 +227,7 @@ void MainWindow::createMenu()
             openNewTab<SqlConsoleTab>(_tabsView, _openTabsView);
         });
         m->addAction(tr("Open Command Console"), this, [this]{
-            openNewTab<CmdConsoleTab>(_tabsView, _openTabsView, _catalog);
+            openNewTab<CmdConsoleTab>(_tabsView, _openTabsView, _db);
         });
     }
 
@@ -278,10 +278,10 @@ void MainWindow::saveSettings(QSettings* s)
 
     auto sizes = _splitter->sizes();
     s->setValue("memosPanel_width", sizes.at(0));
-    s->setValue("catalogPanel_width", sizes.at(2));
+    s->setValue("foldersPanel_width", sizes.at(2));
 
-    if (!_lastOpenedCatalog.isEmpty())
-        s->setValue("database", _lastOpenedCatalog);
+    if (!_lastOpenedDb.isEmpty())
+        s->setValue("database", _lastOpenedDb);
 }
 
 void MainWindow::loadSettings(QSettings* s)
@@ -292,49 +292,49 @@ void MainWindow::loadSettings(QSettings* s)
     _mruList->load(s);
 
     int w1 = s->value("memosPanel_width", 260).toInt();
-    int w3 = s->value("catalogPanel_width", 260).toInt();
+    int w3 = s->value("foldersPanel_width", 260).toInt();
     int w2 = _splitter->width() - w1 - w3;
     _splitter->setSizes({w1, w2, w3});
 
     auto lastFile = s->value("database").toString();
     if (!lastFile.isEmpty())
-        QTimer::singleShot(200, this, [this, lastFile](){ openCatalog(lastFile); });
+        QTimer::singleShot(200, this, [this, lastFile](){ openDb(lastFile); });
 }
 
 void MainWindow::loadSession()
 {
-    auto catalogUid = _catalog->uid();
-    if (catalogUid.isEmpty())
+    auto dbUid = _db->uid();
+    if (dbUid.isEmpty())
     {
-        qWarning() << "Unable to get catalog uid, session will not be restored:" << _catalog->fileName();
+        qWarning() << "Unable to get database uid, session will not be restored:" << _db->fileName();
         return;
     }
 
     Ori::Settings settings;
 
-    settings.beginGroup(catalogUid);
+    settings.beginGroup(dbUid);
     QStringList expandedIds = settings.value("expandedFolders").toString().split(',');
-    _catalogView->setExpandedIds(expandedIds);
+    _treeView->setExpandedIds(expandedIds);
 
     QStringList openedIds = settings.value("openedMemos").toString().split(',');
     for (const auto& idStr : openedIds)
     {
-        auto memoItem = _catalog->findMemoById(idStr.toInt());
+        auto memoItem = _db->findMemoById(idStr.toInt());
         if (!memoItem) continue;
         openMemoTab(memoItem);
     }
 
     int activeId = settings.value("activeMemo", -1).toInt();
-    auto activeMemoItem = _catalog->findMemoById(activeId);
+    auto activeMemoItem = _db->findMemoById(activeId);
     if (activeMemoItem) openMemoTab(activeMemoItem);
 }
 
 void MainWindow::saveSession()
 {
-    auto catalogUid = _catalog->getOrMakeUid();
-    if (catalogUid.isEmpty())
+    auto dbUid = _db->getOrMakeUid();
+    if (dbUid.isEmpty())
     {
-        qWarning() << "Unable to get catalog uid, session will not be saved:" << _catalog->fileName();
+        qWarning() << "Unable to get database uid, session will not be saved:" << _db->fileName();
         return;
     }
 
@@ -353,80 +353,80 @@ void MainWindow::saveSession()
         if (widget == activeWidget)
             activeId = memoId;
     }
-    QStringList expandedIds = _catalogView->getExpandedIds();
-    settings.beginGroup(catalogUid);
-    settings.setValue("path", _catalog->fileName());
+    QStringList expandedIds = _treeView->getExpandedIds();
+    settings.beginGroup(dbUid);
+    settings.setValue("path", _db->fileName());
     settings.setValue("expandedFolders", expandedIds.join(','));
     settings.setValue("openedMemos", openedIds.join(','));
     settings.setValue("activeMemo", activeId);
 }
 
-void MainWindow::newCatalog()
+void MainWindow::newDb()
 {
     QString fileName = Ori::Dlg::getSaveFileName(
                 tr("Create Notebook"), Db::fileFilter(), Db::defaultFileExt());
     if (fileName.isEmpty()) return;
 
-    if (!closeCatalog()) return;
+    if (!closeDb()) return;
 
     auto res = Db::create(fileName);
     if (res.ok())
-        catalogOpened(res.result());
+        dbOpened(res.result());
     else Ori::Dlg::error(tr("Unable to create notebook.\n\n%1").arg(res.error()));
 }
 
-void MainWindow::openCatalog(const QString &fileName)
+void MainWindow::openDb(const QString &fileName)
 {
     if (!QFile::exists(fileName)) return;
 
-    if (_catalog && QFileInfo(_catalog->fileName()) == QFileInfo(fileName))
+    if (_db && QFileInfo(_db->fileName()) == QFileInfo(fileName))
         return;
 
-    if (!closeCatalog()) return;
+    if (!closeDb()) return;
 
     auto res = Db::open(fileName);
     if (res.ok())
-        catalogOpened(res.result());
+        dbOpened(res.result());
     else Ori::Dlg::error(tr("Unable to load notebook %1.\n\n%2").arg(fileName, res.error()));
 }
 
-void MainWindow::openCatalogViaDialog()
+void MainWindow::openDbViaDialog()
 {
     QString fileName = QFileDialog::getOpenFileName(
                 this, tr("Open Notebook"), QString(), Db::fileFilter());
     if (!fileName.isEmpty())
-        openCatalog(fileName);
+        openDb(fileName);
 }
 
-void MainWindow::catalogOpened(Db* catalog)
+void MainWindow::dbOpened(Db* db)
 {
-    _catalog = catalog;
-    connect(_catalog, &Db::memoCreated, this, &MainWindow::memoCreated);
-    connect(_catalog, &Db::memoRemoved, this, &MainWindow::memoRemoved);
-    _catalogView->setCatalog(_catalog);
-    auto filePath = _catalog->fileName();
+    _db = db;
+    connect(_db, &Db::memoCreated, this, &MainWindow::memoCreated);
+    connect(_db, &Db::memoRemoved, this, &MainWindow::memoRemoved);
+    _treeView->setDb(_db);
+    auto filePath = _db->fileName();
     auto fileName = QFileInfo(filePath).fileName();
     setWindowTitle(fileName % " - " % qApp->applicationName());
     _mruList->append(filePath);
     _statusFileName->setText(QDir::toNativeSeparators(filePath));
-    _lastOpenedCatalog = filePath;
+    _lastOpenedDb = filePath;
     _highlighterControl->loadMetas();
     updateCounter();
     loadSession();
 
     auto cmdConsole = findTab<CmdConsoleTab>(_tabsView);
-    if (cmdConsole) cmdConsole->setCatalog(_catalog);
+    if (cmdConsole) cmdConsole->setDb(_db);
 }
 
-bool MainWindow::closeCatalog()
+bool MainWindow::closeDb()
 {
-    if (_catalog)
+    if (_db)
     {
         saveSession();
         if (!closeAllMemos()) return false;
-        _catalogView->setCatalog(nullptr);
-        delete _catalog;
-        _catalog = nullptr;
+        _treeView->setDb(nullptr);
+        delete _db;
+        _db = nullptr;
     }
     setWindowTitle(qApp->applicationName());
     _statusFileName->setText(tr("(n/a)"));
@@ -459,7 +459,7 @@ bool MainWindow::closeAllMemos()
 
 void MainWindow::updateCounter()
 {
-    auto res = _catalog->countMemos();
+    auto res = _db->countMemos();
     if (res.ok())
     {
         _statusMemoCount->setToolTip(QString());
@@ -472,18 +472,18 @@ void MainWindow::updateCounter()
     }
 }
 
-void MainWindow::updateMenuCatalog()
+void MainWindow::updateMenuDb()
 {
-    bool hasCatalog = _catalog;
+    bool hasDb = _db;
     bool hasFolder = false;
     bool hasMemo = false;
-    if (hasCatalog)
+    if (hasDb)
     {
-        auto selected = _catalogView->selection();
+        auto selected = _treeView->selection();
         hasFolder = selected.folder;
         hasMemo = selected.memo;
     }
-    _actionCreateTopLevelFolder->setEnabled(hasCatalog);
+    _actionCreateTopLevelFolder->setEnabled(hasDb);
     _actionCreateFolder->setEnabled(hasFolder);
     _actionRenameFolder->setEnabled(hasFolder);
     _actionDeleteFolder->setEnabled(hasFolder);
@@ -494,7 +494,7 @@ void MainWindow::updateMenuCatalog()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    if (!closeCatalog())
+    if (!closeDb())
     {
         event->ignore();
         return;
@@ -504,7 +504,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::openMemo()
 {
-    auto selected = _catalogView->selection();
+    auto selected = _treeView->selection();
     if (selected.memo) openMemoTab(selected.memo);
 }
 
@@ -512,7 +512,7 @@ void MainWindow::openMemoTab(MemoItem* item)
 {
     if (!item->isLoaded())
     {
-        auto res = _catalog->loadMemo(item);
+        auto res = _db->loadMemo(item);
         if (!res.isEmpty()) return Ori::Dlg::error(res);
     }
 
@@ -524,7 +524,7 @@ void MainWindow::openMemoTab(MemoItem* item)
         return;
     }
 
-    auto tab = new MemoTab(_catalog, item);
+    auto tab = new MemoTab(_db, item);
     _tabsView->addWidget(tab);
     _tabsView->setCurrentWidget(tab);
     _openTabsView->addOpenedTab(tab);

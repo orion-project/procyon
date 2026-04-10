@@ -169,28 +169,28 @@ DbResult Db::open(const QString& fileName)
     if (!res.isEmpty())
         return DbResult::fail(res);
 
-    Db* catalog = new Db;
-    catalog->_fileName = fileName;
+    Db* db = new Db;
+    db->_fileName = fileName;
 
     FoldersResult folders = DB::folderManager()->selectAll();
     if (!folders.error.isEmpty())
     {
-        delete catalog;
+        delete db;
         return DbResult::fail(folders.error);
     }
 
     for (FolderItem* item: folders.items.values())
     {
-        catalog->_allFolders[item->id()] = item;
+        db->_allFolders[item->id()] = item;
 
         if (!item->parent())
-            catalog->_topItems.append(item);
+            db->_topItems.append(item);
     }
 
     MemosResult memos = DB::memoManager()->selectAll();
     if (!memos.error.isEmpty())
     {
-        delete catalog;
+        delete db;
         return DbResult::fail(memos.error);
     }
 
@@ -218,12 +218,12 @@ DbResult Db::open(const QString& fileName)
         }
         else
             for (MemoItem* item: memos.items[folderId])
-                catalog->_topItems.append(item);
+                db->_topItems.append(item);
     }
 
-    catalog->_allMemos = memos.allMemos;
+    db->_allMemos = memos.allMemos;
 
-    return DbResult::ok(catalog);
+    return DbResult::ok(db);
 }
 
 DbResult Db::create(const QString& fileName)
@@ -235,10 +235,10 @@ DbResult Db::create(const QString& fileName)
     if (!res.isEmpty())
         return DbResult::fail(res);
 
-    Db* catalog = new Db;
-    catalog->_fileName = fileName;
+    Db* db = new Db;
+    db->_fileName = fileName;
 
-    return DbResult::ok(catalog);
+    return DbResult::ok(db);
 }
 
 Db::Db() : QObject()

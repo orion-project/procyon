@@ -49,8 +49,8 @@ SOURCES += src/main.cpp\
     src/db/MemoManager.cpp \
     src/db/SettingsManager.cpp \
     src/db/SqlHelper.cpp \
-    src/CatalogModel.cpp \
-    src/CatalogWidget.cpp \
+    src/DbTreeModel.cpp \
+    src/DbTreeWidget.cpp \
     src/editors/MarkdownMemoEditor.cpp \
     src/editors/MemoEditor.cpp \
     src/highlighter/EnotStorage.cpp \
@@ -84,8 +84,8 @@ HEADERS  += src/MainWindow.h \
     src/db/MemoManager.h \
     src/db/SettingsManager.h \
     src/db/SqlHelper.h \
-    src/CatalogModel.h \
-    src/CatalogWidget.h \
+    src/DbTreeModel.h \
+    src/DbTreeWidget.h \
     src/editors/MarkdownMemoEditor.h \
     src/editors/MemoEditor.h \
     src/highlighter/EnotStorage.h \

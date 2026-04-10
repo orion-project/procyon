@@ -1,5 +1,5 @@
-#ifndef CATALOG_WIDGET_H
-#define CATALOG_WIDGET_H
+#ifndef DBTREE_WIDGET_H
+#define DBTREE_WIDGET_H
 
 #include <QWidget>
 
@@ -12,25 +12,25 @@ QT_END_NAMESPACE
 
 class Db;
 class DbItem;
-class CatalogModel;
+class DbTreeModel;
 class FolderItem;
 class MemoItem;
 
-struct CatalogSelection;
+struct DbTreeSelection;
 struct SelectedItems
 {
     MemoItem* memo;
     FolderItem* folder;
 };
 
-class CatalogWidget : public QWidget
+class DbTreeWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    CatalogWidget();
+    DbTreeWidget();
 
-    void setCatalog(Db* catalog);
+    void setDb(Db* db);
 
     SelectedItems selection() const;
 
@@ -48,9 +48,9 @@ signals:
     void onOpenMemo(MemoItem* item);
 
 private:
-    Db* _catalog = nullptr;
-    QTreeView* _catalogView;
-    CatalogModel* _catalogModel = nullptr;
+    Db* _db = nullptr;
+    QTreeView* _treeView;
+    DbTreeModel* _model = nullptr;
     QMenu *_rootMenu, *_folderMenu, *_memoMenu;
     QAction *_openMemo;
 
@@ -59,10 +59,10 @@ private:
     void openSelectedMemo();
 
     void memoUpdated(MemoItem*);
-    void createFolderInternal(const CatalogSelection& selection);
+    void createFolderInternal(const DbTreeSelection& selection);
 
     void fillExpandedIds(QStringList& ids, const QModelIndex& parentIndex) const;
     void setExpandedIds(const QStringList& ids, const QModelIndex& parentIndex);
 };
 
-#endif // CATALOG_WIDGET_H
+#endif // DBTREE_WIDGET_H

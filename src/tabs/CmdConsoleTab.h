@@ -13,8 +13,8 @@ class CmdConsoleTab : public QWidget
 {
     Q_OBJECT
 public:
-    explicit CmdConsoleTab(Db* catalog);
-    void setCatalog(Db* catalog);
+    explicit CmdConsoleTab(Db* db);
+    void setDb(Db* db);
 private:
     QSharedPointer<CmdConsoleImpl::CmdConsole> _impl;
 };

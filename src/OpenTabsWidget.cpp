@@ -55,7 +55,7 @@ public:
 OpenTabsWidget::OpenTabsWidget() : QWidget()
 {
     _tabsList = new QListWidget;
-    _tabsList->setObjectName("pages_list");
+    _tabsList->setObjectName("tabs_list");
     connect(_tabsList, &QListWidget::currentItemChanged, this, &OpenTabsWidget::currentItemChanged);
 
     auto oldItemDelegate = _tabsList->itemDelegate();

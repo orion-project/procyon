@@ -241,7 +241,7 @@ ManagerDlg::ManagerDlg(Control *parent) : QWidget(), _parent(parent)
     setWindowFlags(Qt::Dialog | Qt::WindowStaysOnTopHint);
 
     _specList = new QListWidget;
-    _specList->setObjectName("pages_list");
+    _specList->setObjectName("tabs_list");
     auto it = specCache().allMetas.constBegin();
     while (it != specCache().allMetas.constEnd())
     {

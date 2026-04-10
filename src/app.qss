@@ -2,7 +2,7 @@ $base-color: #dadbde; /* General window color */
 $border-color: silver; /* Default border color */
 $border-radius: 4px; /* Default border radius */
 $default-border: 1px solid silver; /* Default border */
-$selection-color: steelBlue; 
+$selection-color: steelBlue;
 $main-font-size: 13px;
 $hover-color: #334682b4;
 
@@ -81,7 +81,7 @@ QLabel[role=context_menu_header_text] {
 /************************************
              List view
 ************************************/
-#pages_list {
+#tabs_list {
   font-size: $main-font-size;
   background-image: url(":/style/background");
   background-position: bottom left;
@@ -96,14 +96,14 @@ QLabel[role=context_menu_header_text] {
   margin-left: 3px;
   selection-color: white;
 }
-#pages_list::item {
+#tabs_list::item {
   height: 32px;
 }
-#pages_list::item:hover {
+#tabs_list::item:hover {
   background-color: $hover-color;
   border-radius: $border-radius;
 }
-#pages_list::item:selected {
+#tabs_list::item:selected {
   background-color: $selection-color;
   border-radius: $border-radius;
 }
@@ -111,7 +111,7 @@ QLabel[role=context_menu_header_text] {
 /************************************
              Tree view
 ************************************/
-#notebook_view {
+#tree_view {
   font-size: $main-font-size;
   background-color: white;
   border: $default-border;
@@ -123,14 +123,14 @@ QLabel[role=context_menu_header_text] {
   selection-color: white;
   selection-background-color: white;
 }
-#notebook_view::item {
+#tree_view::item {
   height: 24px;
 }
-#notebook_view::item:hover {
+#tree_view::item:hover {
   background-color: $hover-color;
   border-radius: $border-radius;
 }
-#notebook_view::item:selected {
+#tree_view::item:selected {
   background-color: $selection-color;
   border-radius: $border-radius;
 }

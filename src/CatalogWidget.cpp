@@ -104,7 +104,7 @@ CatalogWidget::CatalogWidget() : QWidget()
     _memoMenu->addAction(tr("New Top Level Folder..."), this, &CatalogWidget::createTopLevelFolder);
 
     _catalogView = new QTreeView;
-    _catalogView->setObjectName("notebook_view");
+    _catalogView->setObjectName("tree_view");
     _catalogView->setHeaderHidden(true);
     _catalogView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(_catalogView, &QTreeView::customContextMenuRequested, this, &CatalogWidget::contextMenuRequested);

@@ -3,12 +3,12 @@
 #include "TabHelpers.h"
 #include "../AppTheme.h"
 #include "../highlighter/PhlManager.h"
-#include "../widgets/PopupMessage.h"
 
-#include "orion/helpers/OriDialogs.h"
-#include "orion/helpers/OriLayouts.h"
-#include "orion/helpers/OriWidgets.h"
-#include "orion/widgets/OriCodeEditor.h"
+#include "helpers/OriDialogs.h"
+#include "helpers/OriLayouts.h"
+#include "helpers/OriWidgets.h"
+#include "widgets/OriCodeEditor.h"
+#include "widgets/OriPopupMessage.h"
 
 #include <QApplication>
 #include <QGroupBox>
@@ -63,17 +63,23 @@ QWidget* QssEditorTab::makePopupMsgTool()
 {
     auto textEdit = new QLineEdit("This is a popup message text");
 
-    auto buttonAffirm = new QPushButton("Show affirmation");
-    connect(buttonAffirm, &QPushButton::clicked, this, [textEdit]{
-        PopupMessage::affirm(textEdit->text(), 0);
+    auto buttonAffirm = Ori::Gui::button("Show affirmation", [textEdit]{
+        Ori::Gui::PopupMessage::affirm(textEdit->text(), 0);
     });
 
-    auto buttonError = new QPushButton("Show error");
-    connect(buttonError, &QPushButton::clicked, this, [textEdit]{
-        PopupMessage::error(textEdit->text(), 0);
+    auto buttonError = Ori::Gui::button("Show error", [textEdit]{
+        Ori::Gui::PopupMessage::error(textEdit->text(), 0);
     });
 
-    return Ori::Gui::groupV("Test Popup Message", {textEdit, buttonAffirm, buttonError});
+    auto buttonWarning = Ori::Gui::button("Show warning", [textEdit]{
+        Ori::Gui::PopupMessage::warning(textEdit->text(), 0);
+    });
+
+    auto buttonHint = Ori::Gui::button("Show hint", [textEdit]{
+        Ori::Gui::PopupMessage::hint(textEdit->text(), 0);
+    });
+
+    return Ori::Gui::groupV("Test Popup Message", {textEdit, buttonError, buttonWarning, buttonAffirm, buttonHint});
 }
 
 QWidget* QssEditorTab::makeWarningBox()
@@ -84,11 +90,10 @@ QWidget* QssEditorTab::makeWarningBox()
         "This tab is only for testing and developing style sheet. "
         "When it's done, the style sheet has to be saved into <code>app.qss</code> file and the app rebuilt");
     label->setWordWrap(true);
-    auto button = new QPushButton("Save app.qss");
-    connect(button, &QPushButton::clicked, this, [this]{
+    auto button = Ori::Gui::button("Save app.qss", [this]{
         auto res = AppTheme::saveRawStyleSheet(_editor->toPlainText());
         if (!res.isEmpty()) Ori::Dlg::error(res);
-        else PopupMessage::affirm("Saved successfully", 1000);
+        else Ori::Gui::PopupMessage::affirm("Saved successfully", 1000);
     });
     return Ori::Gui::groupV("Developer Mode", {label, button});
 }

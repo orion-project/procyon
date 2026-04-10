@@ -318,18 +318,26 @@ QToolButton:hover {
 /************************************
              PopupMessage
 ************************************/
-PopupMessage {
+#OriPopupMessage {
   border-radius: 6px;
 }
-PopupMessage QLabel {
+#OriPopupMessage QLabel {
   font-size: $main-font-size;
   margin: 15px;
 }
-PopupMessage[mode=affirm] {
+#OriPopupMessage[mode=affirm] {
   border: 1px solid #7ee87e;
   background: #b5fbb5;
 }
-PopupMessage[mode=error] {
+#OriPopupMessage[mode=error] {
   border: 1px solid #e87e7e;
   background: #ffb5b5;
+}
+#OriPopupMessage[mode=warning] {
+  border: 1px solid #f3af8f;
+  background: #ffdcbc;
+}
+#OriPopupMessage[mode=hint] {
+  border: 1px solid #e5c300;
+  background: #ffec7c;
 }

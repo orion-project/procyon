@@ -74,8 +74,7 @@ SOURCES += src/main.cpp\
     src/TextEditHelpers.cpp \
     src/Utils.cpp \
     src/widgets/MemoTextBrowser.cpp \
-    src/widgets/MemoTextEdit.cpp \
-    src/widgets/PopupMessage.cpp
+    src/widgets/MemoTextEdit.cpp
 
 HEADERS  += src/MainWindow.h \
     src/AppSettings.h \
@@ -108,8 +107,7 @@ HEADERS  += src/MainWindow.h \
     src/TextEditHelpers.h \
     src/Utils.h \
     src/widgets/MemoTextBrowser.h \
-    src/widgets/MemoTextEdit.h \
-    src/widgets/PopupMessage.h
+    src/widgets/MemoTextEdit.h
 
 DISTFILES += \
     src/app.qss \

@@ -1,11 +1,12 @@
 #include "PhlEditorTab.h"
+
 #include "TabHelpers.h"
 #include "../AppSettings.h"
 #include "../highlighter/PhlManager.h"
-#include "../widgets/PopupMessage.h"
 
-#include "orion/helpers/OriDialogs.h"
-#include "orion/widgets/OriCodeEditor.h"
+#include "helpers/OriDialogs.h"
+#include "widgets/OriCodeEditor.h"
+#include "widgets/OriPopupMessage.h"
 
 #include <QIcon>
 #include <QSplitter>
@@ -86,7 +87,7 @@ void PhlEditorTab::saveHighlighter()
     _highlight->rehighlight();
     if (!warnings.isEmpty())
     {
-        PopupMessage::error(tr("There are errors in the highlighter code, fix them before saving"));
+        Ori::Gui::PopupMessage::error(tr("There are errors in the highlighter code, fix them before saving"));
         return;
     }
     spec->raw[Ori::Highlighter::Spec::RAW_SAMPLE] = _sample->toPlainText();
@@ -94,6 +95,6 @@ void PhlEditorTab::saveHighlighter()
     if (!err.isEmpty())
         Ori::Dlg::error(tr("Failed to save highlighter\n\n%1").arg(err));
     else
-        PopupMessage::affirm(tr("Highlighter successfully saved\n\n"
+        Ori::Gui::PopupMessage::affirm(tr("Highlighter successfully saved\n\n"
             "Application is required to be restarted to reflect changes"));
 }

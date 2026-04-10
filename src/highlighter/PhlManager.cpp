@@ -1,9 +1,9 @@
 #include "PhlManager.h"
 
 #include "EnotStorage.h"
-#include "../widgets/PopupMessage.h"
 
-#include "orion/helpers/OriDialogs.h"
+#include "helpers/OriDialogs.h"
+#include "widgets/OriPopupMessage.h"
 
 #include <QActionGroup>
 #include <QApplication>
@@ -384,7 +384,7 @@ void ManagerDlg::deleteHighlighter()
     if (!res.isEmpty())
         Ori::Dlg::error(tr("There is an error during highlighter deletion\n\n%1").arg(res));
 
-    PopupMessage::affirm(tr("Highlighter successfully deleted\n\n"
+    Ori::Gui::PopupMessage::affirm(tr("Highlighter successfully deleted\n\n"
         "Application is required to be restarted to reflect changes"));
 
     delete _specList->currentItem();

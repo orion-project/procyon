@@ -1,7 +1,7 @@
 #include "CatalogWidget.h"
 
 #include "CatalogModel.h"
-#include "catalog/Catalog.h"
+#include "db/Db.h"
 #include "helpers/OriLayouts.h"
 #include "helpers/OriDialogs.h"
 #include "widgets/OriSelectableTile.h"
@@ -17,7 +17,7 @@
 struct CatalogSelection
 {
     QModelIndex index;
-    CatalogItem* item = nullptr;
+    DbItem* item = nullptr;
     FolderItem* folder = nullptr;
     MemoItem* memo = nullptr;
 
@@ -116,10 +116,10 @@ CatalogWidget::CatalogWidget() : QWidget()
             .useFor(this);
 }
 
-void CatalogWidget::setCatalog(Catalog* catalog)
+void CatalogWidget::setCatalog(Db* catalog)
 {
     if (_catalog)
-        disconnect(_catalog, &Catalog::memoUpdated, this, &CatalogWidget::memoUpdated);
+        disconnect(_catalog, &Db::memoUpdated, this, &CatalogWidget::memoUpdated);
 
     _catalog = catalog;
     if (_catalogModel)
@@ -130,7 +130,7 @@ void CatalogWidget::setCatalog(Catalog* catalog)
     if (_catalog)
     {
         _catalogModel = new CatalogModel(_catalog);
-        connect(_catalog, &Catalog::memoUpdated, this, &CatalogWidget::memoUpdated);
+        connect(_catalog, &Db::memoUpdated, this, &CatalogWidget::memoUpdated);
         //_rootTitle->setText(QFileInfo(_catalog->fileName()).baseName());
     }
     _catalogView->setModel(_catalogModel);
@@ -282,7 +282,7 @@ void CatalogWidget::createMemo()
 {
     if (_catalog->topItems().isEmpty())
     {
-        Ori::Dlg::info(tr("Catalog is empty, you have to create at least one top level folder first"));
+        Ori::Dlg::info(tr("Db is empty, you have to create at least one top level folder first"));
         createTopLevelFolder();
     }
 

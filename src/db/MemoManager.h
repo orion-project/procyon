@@ -35,4 +35,9 @@ public:
     QString updateOption(int memoId, const QString& name, const QVariant& value) const;
 };
 
+namespace DB
+{
+MemoManager* memoManager();
+}
+
 #endif // MEMO_MANAGER_H

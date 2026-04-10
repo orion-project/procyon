@@ -1,7 +1,7 @@
 #include "MemoEditor.h"
 
 #include "../TextEditHelpers.h"
-#include "../catalog/Catalog.h"
+#include "../db/Db.h"
 #include "../highlighter/PhlManager.h"
 #include "../spellcheck/TextEditSpellcheck.h"
 #include "../spellcheck/Spellchecker.h"

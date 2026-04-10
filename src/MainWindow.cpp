@@ -3,10 +3,8 @@
 #include "AppSettings.h"
 #include "CatalogWidget.h"
 #include "OpenTabsWidget.h"
-#include "catalog/Catalog.h"
-#include "catalog/CatalogStore.h"
+#include "db/Db.h"
 #include "highlighter/PhlManager.h"
-#include "tabs/AppSettingsTab.h"
 #include "tabs/HelpTab.h"
 #include "tabs/PhlEditorTab.h"
 #include "tabs/CssEditorTab.h"
@@ -24,9 +22,9 @@
 #include "helpers/OriWindows.h"
 #include "tools/OriMruList.h"
 #include "tools/OriSettings.h"
-#include "tools/OriWaitCursor.h"
 #include "widgets/OriMruMenu.h"
 
+#include <QApplication>
 #include <QCloseEvent>
 #include <QDebug>
 #include <QFileDialog>
@@ -366,12 +364,12 @@ void MainWindow::saveSession()
 void MainWindow::newCatalog()
 {
     QString fileName = Ori::Dlg::getSaveFileName(
-                tr("Create Notebook"), Catalog::fileFilter(), Catalog::defaultFileExt());
+                tr("Create Notebook"), Db::fileFilter(), Db::defaultFileExt());
     if (fileName.isEmpty()) return;
 
     if (!closeCatalog()) return;
 
-    auto res = Catalog::create(fileName);
+    auto res = Db::create(fileName);
     if (res.ok())
         catalogOpened(res.result());
     else Ori::Dlg::error(tr("Unable to create notebook.\n\n%1").arg(res.error()));
@@ -386,7 +384,7 @@ void MainWindow::openCatalog(const QString &fileName)
 
     if (!closeCatalog()) return;
 
-    auto res = Catalog::open(fileName);
+    auto res = Db::open(fileName);
     if (res.ok())
         catalogOpened(res.result());
     else Ori::Dlg::error(tr("Unable to load notebook %1.\n\n%2").arg(fileName, res.error()));
@@ -395,16 +393,16 @@ void MainWindow::openCatalog(const QString &fileName)
 void MainWindow::openCatalogViaDialog()
 {
     QString fileName = QFileDialog::getOpenFileName(
-                this, tr("Open Notebook"), QString(), Catalog::fileFilter());
+                this, tr("Open Notebook"), QString(), Db::fileFilter());
     if (!fileName.isEmpty())
         openCatalog(fileName);
 }
 
-void MainWindow::catalogOpened(Catalog* catalog)
+void MainWindow::catalogOpened(Db* catalog)
 {
     _catalog = catalog;
-    connect(_catalog, &Catalog::memoCreated, this, &MainWindow::memoCreated);
-    connect(_catalog, &Catalog::memoRemoved, this, &MainWindow::memoRemoved);
+    connect(_catalog, &Db::memoCreated, this, &MainWindow::memoCreated);
+    connect(_catalog, &Db::memoRemoved, this, &MainWindow::memoRemoved);
     _catalogView->setCatalog(_catalog);
     auto filePath = _catalog->fileName();
     auto fileName = QFileInfo(filePath).fileName();

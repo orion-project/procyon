@@ -1,19 +1,19 @@
 #include "CatalogModel.h"
 
-#include "catalog/Catalog.h"
+#include "db/Db.h"
 
-CatalogModel::CatalogModel(Catalog* catalog) : _catalog(catalog)
+CatalogModel::CatalogModel(Db* catalog) : _catalog(catalog)
 {
     _iconMemo = QIcon(":/icon/memo_plain_text");
     _iconFolder = QIcon(":/icon/folder");
 }
 
-CatalogItem* CatalogModel::catalogItem(const QModelIndex &index)
+DbItem* CatalogModel::catalogItem(const QModelIndex &index)
 {
-    return static_cast<CatalogItem*>(index.internalPointer());
+    return static_cast<DbItem*>(index.internalPointer());
 }
 
-QModelIndex CatalogModel::findIndex(CatalogItem* item, const QModelIndex &parent)
+QModelIndex CatalogModel::findIndex(DbItem* item, const QModelIndex &parent)
 {
     int rows = rowCount(parent);
     for (int row = 0; row < rows; row++)

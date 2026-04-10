@@ -7,14 +7,14 @@ namespace CmdConsoleImpl {
     struct CmdConsole;
 }
 
-class Catalog;
+class Db;
 
 class CmdConsoleTab : public QWidget
 {
     Q_OBJECT
 public:
-    explicit CmdConsoleTab(Catalog* catalog);
-    void setCatalog(Catalog* catalog);
+    explicit CmdConsoleTab(Db* catalog);
+    void setCatalog(Db* catalog);
 private:
     QSharedPointer<CmdConsoleImpl::CmdConsole> _impl;
 };

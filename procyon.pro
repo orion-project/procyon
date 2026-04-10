@@ -44,12 +44,11 @@ macx: ICON = img/icon/main.icns
 SOURCES += src/main.cpp\
     src/AppSettings.cpp \
     src/AppTheme.cpp \
-    src/catalog/Catalog.cpp \
-    src/catalog/CatalogStore.cpp \
-    src/catalog/FolderManager.cpp \
-    src/catalog/MemoManager.cpp \
-    src/catalog/SettingsManager.cpp \
-    src/catalog/SqlHelper.cpp \
+    src/db/Db.cpp \
+    src/db/FolderManager.cpp \
+    src/db/MemoManager.cpp \
+    src/db/SettingsManager.cpp \
+    src/db/SqlHelper.cpp \
     src/CatalogModel.cpp \
     src/CatalogWidget.cpp \
     src/editors/MarkdownMemoEditor.cpp \
@@ -81,12 +80,11 @@ SOURCES += src/main.cpp\
 HEADERS  += src/MainWindow.h \
     src/AppSettings.h \
     src/AppTheme.h \
-    src/catalog/Catalog.h \
-    src/catalog/CatalogStore.h \
-    src/catalog/FolderManager.h \
-    src/catalog/MemoManager.h \
-    src/catalog/SettingsManager.h \
-    src/catalog/SqlHelper.h \
+    src/db/Db.h \
+    src/db/FolderManager.h \
+    src/db/MemoManager.h \
+    src/db/SettingsManager.h \
+    src/db/SqlHelper.h \
     src/CatalogModel.h \
     src/CatalogWidget.h \
     src/editors/MarkdownMemoEditor.h \

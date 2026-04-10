@@ -1,8 +1,8 @@
 #include "CmdConsoleTab.h"
 
 #include "TabHelpers.h"
-#include "../catalog/Catalog.h"
-#include "../catalog/SqlHelper.h"
+#include "../db/Db.h"
+#include "../db/SqlHelper.h"
 
 #include "orion/helpers/OriLayouts.h"
 
@@ -22,7 +22,7 @@ public:
 
 struct CmdConsole {
     QMap<QString, QSharedPointer<Cmd>> cmds;
-    Catalog* catalog;
+    Db* catalog;
 
     QString formatNames() const
     {
@@ -63,7 +63,7 @@ public:
 private:
     const CmdConsole* _impl;
 
-    void printItem(QTextStream& res, int level, CatalogItem* it)
+    void printItem(QTextStream& res, int level, DbItem* it)
     {
         res << QString(level*4, ' ');
         if (it->isFolder())
@@ -81,7 +81,7 @@ private:
 
 using namespace CmdConsoleImpl;
 
-CmdConsoleTab::CmdConsoleTab(Catalog* catalog) : QWidget()
+CmdConsoleTab::CmdConsoleTab(Db* catalog) : QWidget()
 {
     setWindowTitle(tr("Command Console"));
     setWindowIcon(QIcon(":/icon/main"));
@@ -142,7 +142,7 @@ CmdConsoleTab::CmdConsoleTab(Catalog* catalog) : QWidget()
     Ori::Layouts::LayoutV({toolPanel, infoLabel, Ori::Layouts::Space(3), splitter}).setMargin(0).setSpacing(0).useFor(this);
 }
 
-void CmdConsoleTab::setCatalog(Catalog* catalog)
+void CmdConsoleTab::setCatalog(Db* catalog)
 {
     _impl->catalog = catalog;
 }

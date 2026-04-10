@@ -1,9 +1,14 @@
 #include "MemoManager.h"
 
-#include "Catalog.h"
+#include "Db.h"
 #include "SqlHelper.h"
 
 using namespace Ori::Sql;
+
+namespace DB
+{
+MemoManager* memoManager() { static MemoManager m; return &m; }
+}
 
 //------------------------------------------------------------------------------
 //                               MemoTableDef

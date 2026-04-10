@@ -11,7 +11,7 @@ class QToolBar;
 class QToolButton;
 QT_END_NAMESPACE
 
-class Catalog;
+class Db;
 class MemoEditor;
 class MemoItem;
 
@@ -20,7 +20,7 @@ class MemoTab : public QWidget
     Q_OBJECT
 
 public:
-    explicit MemoTab(Catalog* catalog, MemoItem* memoItem);
+    explicit MemoTab(Db* catalog, MemoItem* memoItem);
     ~MemoTab();
 
     MemoItem* memoItem() const { return _memoItem; }
@@ -53,7 +53,7 @@ signals:
     void onModified(bool modified);
 
 private:
-    Catalog* _catalog;
+    Db* _catalog;
     MemoItem* _memoItem;
     MemoEditor* _memoEditor;
     QLineEdit* _titleEditor;

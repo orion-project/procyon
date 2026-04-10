@@ -1,9 +1,14 @@
-#include "Catalog.h"
-#include "CatalogStore.h"
+#include "Db.h"
+
+#include "FolderManager.h"
+#include "MemoManager.h"
+#include "SettingsManager.h"
+#include "SqlHelper.h"
 
 #include <QDebug>
-#include <QUuid>
 #include <QFile>
+#include <QSqlDatabase>
+#include <QUuid>
 
 #define KEY_UID "UID"
 
@@ -38,16 +43,16 @@ MemoType* getMemoType(const QString& type)
 }
 
 //------------------------------------------------------------------------------
-//                                CatalogItem
+//                                DbItem
 //------------------------------------------------------------------------------
 
-CatalogItem::~CatalogItem() {}
-bool CatalogItem::isFolder() const { return dynamic_cast<const FolderItem*>(this); }
-bool CatalogItem::isMemo() const { return dynamic_cast<const MemoItem*>(this); }
-FolderItem* CatalogItem::asFolder() { return dynamic_cast<FolderItem*>(this); }
-MemoItem* CatalogItem::asMemo() { return dynamic_cast<MemoItem*>(this); }
+DbItem::~DbItem() {}
+bool DbItem::isFolder() const { return dynamic_cast<const FolderItem*>(this); }
+bool DbItem::isMemo() const { return dynamic_cast<const MemoItem*>(this); }
+FolderItem* DbItem::asFolder() { return dynamic_cast<FolderItem*>(this); }
+MemoItem* DbItem::asMemo() { return dynamic_cast<MemoItem*>(this); }
 
-const QString CatalogItem::path() const
+const QString DbItem::path() const
 {
     QStringList path;
     auto p = _parent;
@@ -77,33 +82,74 @@ MemoItem::~MemoItem()
 }
 
 //------------------------------------------------------------------------------
-//                                   Catalog
+//                                   Db
 //------------------------------------------------------------------------------
 
-QString Catalog::fileFilter()
+QString Db::fileFilter()
 {
     return tr("Procyon Notebooks (*.enot);;All files (*.*)");
 }
 
-QString Catalog::defaultFileExt()
+QString Db::defaultFileExt()
 {
     return QStringLiteral("enot");
 }
 
-CatalorResult Catalog::open(const QString& fileName)
+QString Db::prepareDb(const QString fileName)
 {
-    QString res = CatalogStore::openDatabase(fileName);
-    if (!res.isEmpty())
-        return CatalorResult::fail(res);
+    auto db = QSqlDatabase::database();
 
-    Catalog* catalog = new Catalog;
+    if (!db.isValid())
+        db = QSqlDatabase::addDatabase("QSQLITE");
+
+    if (db.isOpen())
+        db.close();
+
+    db.setDatabaseName(fileName);
+
+    if (!db.open())
+        return QString("Unable to open database connection.\n\n%1")
+                .arg(SqlHelper::errorText(db.lastError()));
+
+    QSqlQuery query;
+    if (!query.exec("PRAGMA foreign_keys = ON;"))
+        return QString("Failed to enable foreign keys.\n\n%1")
+                .arg(SqlHelper::errorText(query));
+
+    bool ok = db.transaction();
+    if (!ok)
+        return QString("Failed to begin transaction for setup database structure.\n\n%1")
+                .arg(SqlHelper::errorText(db.lastError()));
+
+    QString res;
+
+    res = DB::folderManager()->prepare();
+    if (!res.isEmpty()) return res;
+
+    res = DB::memoManager()->prepare();
+    if (!res.isEmpty()) return res;
+
+    res = DB::settingsManager()->prepare();
+    if (!res.isEmpty()) return res;
+
+    db.commit();
+    return QString();
+}
+
+DbResult Db::open(const QString& fileName)
+{
+    QString res = prepareDb(fileName);
+    if (!res.isEmpty())
+        return DbResult::fail(res);
+
+    Db* catalog = new Db;
     catalog->_fileName = fileName;
 
-    FoldersResult folders = CatalogStore::folderManager()->selectAll();
+    FoldersResult folders = DB::folderManager()->selectAll();
     if (!folders.error.isEmpty())
     {
         delete catalog;
-        return CatalorResult::fail(folders.error);
+        return DbResult::fail(folders.error);
     }
 
     for (FolderItem* item: folders.items.values())
@@ -114,15 +160,15 @@ CatalorResult Catalog::open(const QString& fileName)
             catalog->_topItems.append(item);
     }
 
-    MemosResult memos = CatalogStore::memoManager()->selectAll();
+    MemosResult memos = DB::memoManager()->selectAll();
     if (!memos.error.isEmpty())
     {
         delete catalog;
-        return CatalorResult::fail(memos.error);
+        return DbResult::fail(memos.error);
     }
 
     if (!memos.warnings.isEmpty())
-        for (auto warning: memos.warnings)
+        for (const auto &warning: std::as_const(memos.warnings))
             qWarning() << warning; // TODO make protocol window
 
     for (int folderId: memos.items.keys())
@@ -150,36 +196,36 @@ CatalorResult Catalog::open(const QString& fileName)
 
     catalog->_allMemos = memos.allMemos;
 
-    return CatalorResult::ok(catalog);
+    return DbResult::ok(catalog);
 }
 
-CatalorResult Catalog::create(const QString& fileName)
+DbResult Db::create(const QString& fileName)
 {
     if (QFile::exists(fileName) && !QFile::remove(fileName))
-        return CatalorResult::fail(QString("Unable to overwrite existing file, probably it is locked."));
+        return DbResult::fail(QString("Unable to overwrite existing file, probably it is locked."));
 
-    QString res = CatalogStore::openDatabase(fileName);
+    QString res = prepareDb(fileName);
     if (!res.isEmpty())
-        return CatalorResult::fail(res);
+        return DbResult::fail(res);
 
-    Catalog* catalog = new Catalog;
+    Db* catalog = new Db;
     catalog->_fileName = fileName;
 
-    return CatalorResult::ok(catalog);
+    return DbResult::ok(catalog);
 }
 
-Catalog::Catalog() : QObject()
+Db::Db() : QObject()
 {
 }
 
-Catalog::~Catalog()
+Db::~Db()
 {
     qDeleteAll(_topItems);
 }
 
-QString Catalog::renameFolder(FolderItem* item, const QString& title)
+QString Db::renameFolder(FolderItem* item, const QString& title)
 {
-    QString res = CatalogStore::folderManager()->rename(item->id(), title);
+    QString res = DB::folderManager()->rename(item->id(), title);
     if (!res.isEmpty()) return res;
 
     item->_title = title;
@@ -188,13 +234,13 @@ QString Catalog::renameFolder(FolderItem* item, const QString& title)
     return QString();
 }
 
-FolderResult Catalog::createFolder(FolderItem* parent, const QString& title)
+FolderResult Db::createFolder(FolderItem* parent, const QString& title)
 {
     FolderItem* folder = new FolderItem;
     folder->_title = title;
     folder->_parent = parent;
 
-    auto res = CatalogStore::folderManager()->create(folder);
+    auto res = DB::folderManager()->create(folder);
     if (!res.isEmpty())
     {
         delete folder;
@@ -208,18 +254,18 @@ FolderResult Catalog::createFolder(FolderItem* parent, const QString& title)
     return FolderResult::ok(folder);
 }
 
-QString Catalog::removeFolder(FolderItem* item)
+QString Db::removeFolder(FolderItem* item)
 {
-    QVector<CatalogItem*> subitems;
+    QVector<DbItem*> subitems;
     fillSubitemsFlat(item, subitems);
 
     // It removes all subfolders too
-    QString res = CatalogStore::folderManager()->remove(item);
+    QString res = DB::folderManager()->remove(item);
     if (!res.isEmpty()) return res;
 
     (item->parent() ? item->parent()->asFolder()->_children : _topItems).removeOne(item);
 
-    for (auto subitem : subitems)
+    for (auto subitem : std::as_const(subitems))
         if (subitem->isFolder())
             _allFolders.remove(subitem->id());
         else
@@ -235,7 +281,7 @@ QString Catalog::removeFolder(FolderItem* item)
     return QString();
 }
 
-MemoResult Catalog::createMemo(FolderItem* parent, MemoItem* item, MemoType* memoType)
+MemoResult Db::createMemo(FolderItem* parent, MemoItem* item, MemoType* memoType)
 {
     auto now = QDateTime::currentDateTime();
 
@@ -245,7 +291,7 @@ MemoResult Catalog::createMemo(FolderItem* parent, MemoItem* item, MemoType* mem
     item->_station = _station;
     item->_type = memoType;
 
-    auto res = CatalogStore::memoManager()->create(item);
+    auto res = DB::memoManager()->create(item);
     if (!res.isEmpty())
     {
         delete item;
@@ -261,12 +307,12 @@ MemoResult Catalog::createMemo(FolderItem* parent, MemoItem* item, MemoType* mem
     return MemoResult::ok(item);
 }
 
-QString Catalog::updateMemo(MemoItem* item, MemoUpdateParam update)
+QString Db::updateMemo(MemoItem* item, MemoUpdateParam update)
 {
     update.moment = QDateTime::currentDateTime();
     update.station = _station;
 
-    QString res = CatalogStore::memoManager()->update(item, update);
+    QString res = DB::memoManager()->update(item, update);
     if (!res.isEmpty()) return res;
 
     item->_title = update.title;
@@ -280,14 +326,14 @@ QString Catalog::updateMemo(MemoItem* item, MemoUpdateParam update)
     return QString();
 }
 
-QString Catalog::loadMemo(MemoItem* item)
+QString Db::loadMemo(MemoItem* item)
 {
-    return CatalogStore::memoManager()->load(item);
+    return DB::memoManager()->load(item);
 }
 
-QString Catalog::removeMemo(MemoItem* item)
+QString Db::removeMemo(MemoItem* item)
 {
-    QString res = CatalogStore::memoManager()->remove(item);
+    QString res = DB::memoManager()->remove(item);
     if (!res.isEmpty()) return res;
 
     (item->parent() ? item->parent()->asFolder()->_children : _topItems).removeOne(item);
@@ -299,10 +345,10 @@ QString Catalog::removeMemo(MemoItem* item)
     return QString();
 }
 
-IntResult Catalog::countMemos() const
+IntResult Db::countMemos() const
 {
     int count;
-    QString res = CatalogStore::memoManager()->countAll(&count);
+    QString res = DB::memoManager()->countAll(&count);
     return res.isEmpty() ? IntResult::ok(count) : IntResult::fail(res);
 }
 
@@ -318,7 +364,7 @@ TItem* findInContainerById(const QMap<int, TItem*>& container, int id)
     }
     if (!container.contains(id))
     {
-        qCritical() << "Inconsistent state! Catalog does not contain folder or memo" << id;
+        qCritical() << "Inconsistent state! Db does not contain folder or memo" << id;
         return nullptr;
     }
     return container[id];
@@ -326,19 +372,19 @@ TItem* findInContainerById(const QMap<int, TItem*>& container, int id)
 
 } // namespace
 
-MemoItem* Catalog::findMemoById(int id) const
+MemoItem* Db::findMemoById(int id) const
 {
     return findInContainerById(_allMemos, id);
 }
 
-FolderItem* Catalog::findFolderById(int id) const
+FolderItem* Db::findFolderById(int id) const
 {
     return findInContainerById(_allFolders, id);
 }
 
-void Catalog::fillSubitemsFlat(FolderItem* root, QVector<CatalogItem*>& subitems)
+void Db::fillSubitemsFlat(FolderItem* root, QVector<DbItem*>& subitems)
 {
-    for (CatalogItem* item : root->children())
+    for (DbItem* item : root->children())
     {
         subitems.append(item);
 
@@ -347,9 +393,9 @@ void Catalog::fillSubitemsFlat(FolderItem* root, QVector<CatalogItem*>& subitems
     }
 }
 
-void Catalog::fillMemoIdsFlat(FolderItem* root, QVector<int> &ids)
+void Db::fillMemoIdsFlat(FolderItem* root, QVector<int> &ids)
 {
-    for (CatalogItem* item : root->children())
+    for (DbItem* item : root->children())
     {
         if (item->isFolder())
             fillMemoIdsFlat(item->asFolder(), ids);
@@ -357,18 +403,18 @@ void Catalog::fillMemoIdsFlat(FolderItem* root, QVector<int> &ids)
     }
 }
 
-QString Catalog::uid() const
+QString Db::uid() const
 {
-    return CatalogStore::settingsManager()->readString(KEY_UID);
+    return DB::settingsManager()->readString(KEY_UID);
 }
 
-QString Catalog::getOrMakeUid()
+QString Db::getOrMakeUid()
 {
-    QString uid = CatalogStore::settingsManager()->readString(KEY_UID);
+    QString uid = DB::settingsManager()->readString(KEY_UID);
     if (uid.isEmpty())
     {
         uid = QUuid::createUuid().toString();
-        CatalogStore::settingsManager()->writeString(KEY_UID, uid);
+        DB::settingsManager()->writeString(KEY_UID, uid);
     }
     return uid;
 }

@@ -33,4 +33,9 @@ public:
     QVector<int> readIntArray(const QString& id) const;
 };
 
+namespace DB
+{
+SettingsManager* settingsManager();
+}
+
 #endif // SETTINGS_MANAGER_H

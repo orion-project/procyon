@@ -10,8 +10,8 @@ class QMenu;
 class QTreeView;
 QT_END_NAMESPACE
 
-class Catalog;
-class CatalogItem;
+class Db;
+class DbItem;
 class CatalogModel;
 class FolderItem;
 class MemoItem;
@@ -30,7 +30,7 @@ class CatalogWidget : public QWidget
 public:
     CatalogWidget();
 
-    void setCatalog(Catalog* catalog);
+    void setCatalog(Db* catalog);
 
     SelectedItems selection() const;
 
@@ -48,7 +48,7 @@ signals:
     void onOpenMemo(MemoItem* item);
 
 private:
-    Catalog* _catalog = nullptr;
+    Db* _catalog = nullptr;
     QTreeView* _catalogView;
     CatalogModel* _catalogModel = nullptr;
     QMenu *_rootMenu, *_folderMenu, *_memoMenu;

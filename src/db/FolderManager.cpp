@@ -1,9 +1,14 @@
 #include "FolderManager.h"
 
-#include "Catalog.h"
+#include "Db.h"
 #include "SqlHelper.h"
 
 using namespace Ori::Sql;
+
+namespace DB
+{
+FolderManager *folderManager() { static FolderManager m; return &m; }
+}
 
 //------------------------------------------------------------------------------
 //                                FolderTableDef

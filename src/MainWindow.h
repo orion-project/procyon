@@ -11,7 +11,7 @@ class QSplitter;
 class QSettings;
 QT_END_NAMESPACE
 
-class Catalog;
+class Db;
 class CatalogWidget;
 class OpenTabsWidget;
 class SpellcheckControl;
@@ -44,7 +44,7 @@ protected:
 
 private:
     QSplitter* _splitter;
-    Catalog* _catalog = nullptr;
+    Db* _catalog = nullptr;
     CatalogWidget* _catalogView;
     QStackedWidget* _tabsView;
     OpenTabsWidget* _openTabsView;
@@ -66,7 +66,7 @@ private:
     void newCatalog();
     void openCatalog(const QString &fileName);
     void openCatalogViaDialog();
-    void catalogOpened(Catalog* catalog);
+    void catalogOpened(Db* catalog);
     bool closeCatalog();
     void updateCounter();
     void updateMenuCatalog();

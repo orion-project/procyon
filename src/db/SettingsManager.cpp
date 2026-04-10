@@ -4,6 +4,11 @@
 
 using namespace Ori::Sql;
 
+namespace DB
+{
+SettingsManager* settingsManager() { static SettingsManager m; return &m; }
+}
+
 //------------------------------------------------------------------------------
 //                              SettingsTableDef
 //------------------------------------------------------------------------------
@@ -162,7 +167,7 @@ QString SettingsManager::writeIntArray(const QString& id, const QVector<int>& va
     {
         bool doSave = false;
         auto oldValues = readIntArray(id);
-        for (int value: oldValues)
+        for (int value: std::as_const(oldValues))
             if (!values.contains(value))
             {
                 doSave = true;

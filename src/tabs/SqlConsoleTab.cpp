@@ -1,7 +1,7 @@
 #include "SqlConsoleTab.h"
 
 #include "TabHelpers.h"
-#include "../catalog/SqlHelper.h"
+#include "../db/SqlHelper.h"
 #include "../highlighter/PhlManager.h"
 
 #include "orion/helpers/OriLayouts.h"

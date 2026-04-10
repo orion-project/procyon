@@ -3,8 +3,8 @@
 #include "TabHelpers.h"
 #include "../editors/MarkdownMemoEditor.h"
 #include "../editors/MemoEditor.h"
-#include "../catalog/Catalog.h"
-#include "../catalog/CatalogStore.h"
+#include "../db/Db.h"
+#include "../db/MemoManager.h"
 
 #include "helpers/OriDialogs.h"
 #include "helpers/OriWidgets.h"
@@ -37,14 +37,14 @@ namespace MemoOptions {
 
 void updateOption(MemoItem* memo, const QString& name, const QVariant& value)
 {
-    QString res = CatalogStore::memoManager()->updateOption(memo->id(), name, value);
+    QString res = DB::memoManager()->updateOption(memo->id(), name, value);
     if (!res.isEmpty())
         Ori::Dlg::error(QString("Unable to store memo option in catalog.\n\n%1").arg(res));
 }
 }
 
 
-MemoTab::MemoTab(Catalog *catalog, MemoItem *memoItem) : QWidget(),
+MemoTab::MemoTab(Db *catalog, MemoItem *memoItem) : QWidget(),
     _catalog(catalog), _memoItem(memoItem)
 {
     auto memoType = _memoItem->type();
@@ -258,7 +258,7 @@ void MemoTab::togglePreviewMode()
 
 void MemoTab::loadSettings()
 {
-    auto options = CatalogStore::memoManager()->selectOptions(_memoItem->id());
+    auto options = DB::memoManager()->selectOptions(_memoItem->id());
 
     auto memoFont = AppSettings::instance().memoFont;
     if (options.contains(MemoOptions::FONT))

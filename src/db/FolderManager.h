@@ -26,4 +26,9 @@ private:
     QString removeBranch(FolderItem* folder, const QString &path) const;
 };
 
+namespace DB
+{
+FolderManager* folderManager();
+}
+
 #endif // FOLDER_MANAGER_H

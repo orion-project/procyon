@@ -1,7 +1,7 @@
 #include "MarkdownMemoEditor.h"
 
 #include "../AppSettings.h"
-#include "../catalog/Catalog.h"
+#include "../db/Db.h"
 #include "../markdown/MarkdownHelper.h"
 #include "../widgets/MemoTextBrowser.h"
 #include "../widgets/MemoTextEdit.h"

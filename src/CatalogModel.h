@@ -5,17 +5,17 @@
 #include <QDebug>
 #include <QIcon>
 
-class Catalog;
-class CatalogItem;
+class Db;
+class DbItem;
 
 class CatalogModel : public QAbstractItemModel
 {
 public:
-    CatalogModel(Catalog* catalog);
+    CatalogModel(Db* catalog);
 
-    static CatalogItem* catalogItem(const QModelIndex &index);
+    static DbItem* catalogItem(const QModelIndex &index);
 
-    QModelIndex findIndex(CatalogItem* item, const QModelIndex &parent = QModelIndex());
+    QModelIndex findIndex(DbItem* item, const QModelIndex &parent = QModelIndex());
 
     QModelIndex index(int row, int column, const QModelIndex &parent) const override;
     QModelIndex parent(const QModelIndex &child) const override;
@@ -31,7 +31,7 @@ public:
     const QIcon& folderIcon() const { return _iconFolder; }
     const QIcon& memoIcon() const { return _iconMemo; }
 private:
-    Catalog* _catalog;
+    Db* _catalog;
     QIcon _iconFolder, _iconMemo;
 };
 

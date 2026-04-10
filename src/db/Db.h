@@ -7,7 +7,7 @@
 #include <QIcon>
 #include <QDateTime>
 
-class Catalog;
+class Db;
 class FolderItem;
 class MemoItem;
 
@@ -88,14 +88,14 @@ private:
 
 //------------------------------------------------------------------------------
 
-class CatalogItem
+class DbItem
 {
 public:
-    virtual ~CatalogItem();
+    virtual ~DbItem();
 
     int id() const { return _id; }
     const QString& title() const { return _title; }
-    CatalogItem* parent() const { return _parent; }
+    DbItem* parent() const { return _parent; }
     const QString path() const;
 
     bool isFolder() const;
@@ -106,32 +106,32 @@ public:
 private:
     int _id;
     QString _title;
-    CatalogItem* _parent = nullptr;
+    DbItem* _parent = nullptr;
 
-    friend class Catalog;
+    friend class Db;
     friend class FolderManager;
     friend class MemoManager;
 };
 
 //------------------------------------------------------------------------------
 
-class FolderItem : public CatalogItem
+class FolderItem : public DbItem
 {
 public:
     ~FolderItem();
 
-    const QList<CatalogItem*>& children() const { return _children; }
+    const QList<DbItem*>& children() const { return _children; }
 
 private:
-    QList<CatalogItem*> _children;
+    QList<DbItem*> _children;
 
-    friend class Catalog;
+    friend class Db;
     friend class FolderManager;
 };
 
 //------------------------------------------------------------------------------
 
-class MemoItem : public CatalogItem
+class MemoItem : public DbItem
 {
 public:
     ~MemoItem();
@@ -149,7 +149,7 @@ private:
     bool _isLoaded = false;
     QDateTime _created, _updated;
 
-    friend class Catalog;
+    friend class Db;
     friend class MemoManager;
 };
 
@@ -158,25 +158,25 @@ private:
 typedef OperationResult<int> IntResult;
 typedef OperationResult<MemoItem*> MemoResult;
 typedef OperationResult<FolderItem*> FolderResult;
-typedef OperationResult<Catalog*> CatalorResult;
+typedef OperationResult<Db*> DbResult;
 
 //------------------------------------------------------------------------------
 
-class Catalog : public QObject
+class Db : public QObject
 {
     Q_OBJECT
 
 public:
-    Catalog();
-    ~Catalog();
+    Db();
+    ~Db();
 
     static QString fileFilter();
     static QString defaultFileExt();
-    static CatalorResult open(const QString& fileName);
-    static CatalorResult create(const QString& fileName);
+    static DbResult open(const QString& fileName);
+    static DbResult create(const QString& fileName);
 
     const QString& fileName() const { return _fileName; }
-    const QList<CatalogItem*>& topItems() const { return _topItems; }
+    const QList<DbItem*>& topItems() const { return _topItems; }
     MemoItem* findMemoById(int id) const;
     FolderItem* findFolderById(int id) const;
 
@@ -193,7 +193,7 @@ public:
     QString removeMemo(MemoItem* item);
     QString loadMemo(MemoItem* item);
 
-    void fillSubitemsFlat(FolderItem* root, QVector<CatalogItem*> &subitems);
+    void fillSubitemsFlat(FolderItem* root, QVector<DbItem*> &subitems);
     void fillMemoIdsFlat(FolderItem* root, QVector<int> &ids);
 
 signals:
@@ -204,9 +204,11 @@ signals:
 private:
     QString _fileName;
     QString _station;
-    QList<CatalogItem*> _topItems;
+    QList<DbItem*> _topItems;
     QMap<int, MemoItem*> _allMemos;
     QMap<int, FolderItem*> _allFolders;
+
+    static QString prepareDb(const QString fileName);
 };
 
 #endif // CATALOG_H

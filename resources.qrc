@@ -20,7 +20,7 @@
     </qresource>
     <qresource prefix="/style">
         <file alias="about">img/about.png</file>
-        <file alias="app_main">src/app.qss</file>
+        <file alias="app">src/app.qss</file>
         <file alias="background">img/background.png</file>
         <file alias="markdown_css">src/markdown/markdown.css</file>
     </qresource>

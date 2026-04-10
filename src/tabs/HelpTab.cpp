@@ -1,7 +1,7 @@
 #include "HelpTab.h"
 
 #include "TabHelpers.h"
-#include "../Utils.h"
+#include "../AppSettings.h"
 #include "../markdown/MarkdownHelper.h"
 #include "../widgets/MemoTextBrowser.h"
 
@@ -10,6 +10,7 @@
 
 #include <QApplication>
 #include <QDesktopServices>
+#include <QFile>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QDialog>
@@ -19,13 +20,25 @@
 
 using namespace Ori::Layouts;
 
+static QString loadTextFromResource(const QString& fileName)
+{
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly))
+    {
+        qWarning() << "Unable to open resource file" << fileName << file.errorString();
+        return QString();
+    }
+    return QString::fromUtf8(file.readAll());
+}
+
+
 HelpTab::HelpTab(QWidget *parent) : QWidget(parent)
 {
     setWindowTitle(tr("Reference Manual"));
     setWindowIcon(QIcon(":/icon/help"));
 
     auto browser = new MemoTextBrowser;
-    browser->document()->setDefaultStyleSheet(loadTextFromResource(":/style/markdown_css"));
+    browser->document()->setDefaultStyleSheet(AppSettings::instance().markdownCss());
     browser->document()->setDocumentMargin(10);
     browser->setHtml(MarkdownHelper::markdownToHtml(loadTextFromResource(":/docs/help")));
 

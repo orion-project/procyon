@@ -43,7 +43,6 @@ macx: ICON = img/icon/main.icns
 
 SOURCES += src/main.cpp\
     src/AppSettings.cpp \
-    src/AppTheme.cpp \
     src/db/Db.cpp \
     src/db/FolderManager.cpp \
     src/db/MemoManager.cpp \
@@ -72,13 +71,11 @@ SOURCES += src/main.cpp\
     src/tabs/SqlConsoleTab.cpp \
     src/tabs/TabHelpers.cpp \
     src/TextEditHelpers.cpp \
-    src/Utils.cpp \
     src/widgets/MemoTextBrowser.cpp \
     src/widgets/MemoTextEdit.cpp
 
 HEADERS  += src/MainWindow.h \
     src/AppSettings.h \
-    src/AppTheme.h \
     src/db/Db.h \
     src/db/FolderManager.h \
     src/db/MemoManager.h \
@@ -105,7 +102,6 @@ HEADERS  += src/MainWindow.h \
     src/tabs/SqlConsoleTab.h \
     src/tabs/TabHelpers.h \
     src/TextEditHelpers.h \
-    src/Utils.h \
     src/widgets/MemoTextBrowser.h \
     src/widgets/MemoTextEdit.h
 

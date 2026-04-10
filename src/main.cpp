@@ -1,9 +1,8 @@
 #include "MainWindow.h"
 
 #include "AppSettings.h"
-#include "AppTheme.h"
-#include "Utils.h"
 
+#include "helpers/OriTheme.h"
 #include "tools/OriDebug.h"
 #include "tools/OriSettings.h"
 
@@ -64,7 +63,7 @@ int main(int argc, char *argv[])
 
     // Call `setStyleSheet` after setting loaded
     // to be able to apply custom colors.
-    app.setStyleSheet(AppTheme::makeStyleSheet(AppTheme::loadRawStyleSheet()));
+    app.setStyleSheet(Ori::Theme::makeStyleSheet(Ori::Theme::loadRawStyleSheet()));
 
     MainWindow  w;
     w.loadSettings(s1);

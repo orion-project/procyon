@@ -1,8 +1,8 @@
 #include "AppSettings.h"
 
-#include "Utils.h"
-
 #include "tools/OriSettings.h"
+
+#include <QFile>
 
 //------------------------------------------------------------------------------
 //                              AppSettings::Option(s)
@@ -93,7 +93,15 @@ void AppSettings::save(QSettings* s)
 QString AppSettings::markdownCss()
 {
     if (_markdownCss.isEmpty())
-        _markdownCss = loadTextFromResource(":/style/markdown_css");
+    {
+        QFile file(":/style/markdown_css");
+        if (!file.open(QIODevice::ReadOnly))
+        {
+            qWarning() << Q_FUNC_INFO << file.errorString();
+            return QString();
+        }
+        _markdownCss = QString::fromUtf8(file.readAll());
+    }
     return _markdownCss;
 }
 

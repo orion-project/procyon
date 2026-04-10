@@ -1,11 +1,11 @@
 #include "QssEditorTab.h"
 
 #include "TabHelpers.h"
-#include "../AppTheme.h"
 #include "../highlighter/PhlManager.h"
 
 #include "helpers/OriDialogs.h"
 #include "helpers/OriLayouts.h"
+#include "helpers/OriTheme.h"
 #include "helpers/OriWidgets.h"
 #include "widgets/OriCodeEditor.h"
 #include "widgets/OriPopupMessage.h"
@@ -24,7 +24,7 @@ QssEditorTab::QssEditorTab(QWidget *parent) : QWidget(parent)
     setWindowIcon(QIcon(":/icon/main"));
 
     _editor = new Ori::Widgets::CodeEditor;
-    _editor->setPlainText(AppTheme::loadRawStyleSheet());
+    _editor->setPlainText(Ori::Theme::loadRawStyleSheet());
     _editor->setProperty("role", "memo_editor");
     _editor->setObjectName("code_editor");
     Phl::createHighlighter(_editor, "qss");
@@ -33,7 +33,7 @@ QssEditorTab::QssEditorTab(QWidget *parent) : QWidget(parent)
 
     auto toolbar = new QToolBar;
     auto actionApply = toolbar->addAction(QIcon(":/toolbar/apply"), "Apply", this, [this]{
-        qApp->setStyleSheet(AppTheme::makeStyleSheet(_editor->toPlainText()));
+        qApp->setStyleSheet(Ori::Theme::makeStyleSheet(_editor->toPlainText()));
     });
     toolbar->addSeparator();
     toolbar->addAction(QIcon(":/toolbar/close"), "Close", this, &QssEditorTab::deleteLater);
@@ -91,7 +91,7 @@ QWidget* QssEditorTab::makeWarningBox()
         "When it's done, the style sheet has to be saved into <code>app.qss</code> file and the app rebuilt");
     label->setWordWrap(true);
     auto button = Ori::Gui::button("Save app.qss", [this]{
-        auto res = AppTheme::saveRawStyleSheet(_editor->toPlainText());
+        auto res = Ori::Theme::saveRawStyleSheet(_editor->toPlainText());
         if (!res.isEmpty()) Ori::Dlg::error(res);
         else Ori::Gui::PopupMessage::affirm("Saved successfully", 1000);
     });

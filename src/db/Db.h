@@ -1,11 +1,13 @@
-#ifndef CATALOG_H
-#define CATALOG_H
+#ifndef DB_H
+#define DB_H
 
 #include <QObject>
 #include <QList>
 #include <QMap>
 #include <QIcon>
 #include <QDateTime>
+
+#include "core/OriResult.h"
 
 class Db;
 class FolderItem;
@@ -23,33 +25,6 @@ public:
     virtual const QString iconPath() const = 0;
 };
 
-class PlainTextMemoType : public MemoType
-{
-public:
-    const QString name() const override { return QStringLiteral("plain_text"); }
-    const char* title() const override { return QT_TRANSLATE_NOOP("MemoType", "Plain Text"); }
-    const QIcon& icon() const override { static QIcon icon(iconPath()); return icon; }
-    const QString iconPath() const override { return QStringLiteral(":/icon/memo_plain_text"); }
-};
-
-class MarkdownMemoType : public MemoType
-{
-public:
-    const QString name() const override { return QStringLiteral("markdown"); }
-    const char* title() const override { return QT_TRANSLATE_NOOP("MemoType", "Markdown"); }
-    const QIcon& icon() const override { static QIcon icon(iconPath()); return icon; }
-    const QString iconPath() const override { return QStringLiteral(":/icon/memo_markdown"); }
-};
-
-class RichTextMemoType : public MemoType
-{
-public:
-    const QString name() const override { return QStringLiteral("rich_text"); }
-    const char* title() const override { return QT_TRANSLATE_NOOP("MemoType", "Rich Text"); }
-    const QIcon& icon() const override { static QIcon icon(iconPath()); return icon; }
-    const QString iconPath() const override { return QStringLiteral(":/icon/memo_rich_text"); }
-};
-
 MemoType* plainTextMemoType();
 MemoType* markdownMemoType();
 MemoType* richTextMemoType();
@@ -64,26 +39,6 @@ struct MemoUpdateParam
     QString data;
     QDateTime moment;
     QString station;
-};
-
-//------------------------------------------------------------------------------
-
-template <typename TResult> class OperationResult
-{
-public:
-    TResult result() const { return _result; }
-    const QString& error() const { return _error; }
-    bool ok() const { return _error.isEmpty(); }
-
-    static OperationResult fail(const QString& error) { return OperationResult(error); }
-    static OperationResult ok(TResult result) { return OperationResult(QString(), result); }
-
-private:
-    OperationResult(const QString& error): _error(error) {}
-    OperationResult(const QString& error, TResult result): _error(error), _result(result) {}
-
-    QString _error;
-    TResult _result;
 };
 
 //------------------------------------------------------------------------------
@@ -155,10 +110,10 @@ private:
 
 //------------------------------------------------------------------------------
 
-typedef OperationResult<int> IntResult;
-typedef OperationResult<MemoItem*> MemoResult;
-typedef OperationResult<FolderItem*> FolderResult;
-typedef OperationResult<Db*> DbResult;
+typedef Ori::Result<int> IntResult;
+typedef Ori::Result<MemoItem*> MemoResult;
+typedef Ori::Result<FolderItem*> FolderResult;
+typedef Ori::Result<Db*> DbResult;
 
 //------------------------------------------------------------------------------
 
@@ -211,5 +166,5 @@ private:
     static QString prepareDb(const QString fileName);
 };
 
-#endif // CATALOG_H
+#endif // DB_H
 

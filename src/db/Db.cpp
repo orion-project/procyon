@@ -20,6 +20,33 @@ MemoType::~MemoType()
 {
 }
 
+class PlainTextMemoType : public MemoType
+{
+public:
+    const QString name() const override { return QStringLiteral("plain_text"); }
+    const char* title() const override { return QT_TRANSLATE_NOOP("MemoType", "Plain Text"); }
+    const QIcon& icon() const override { static QIcon icon(iconPath()); return icon; }
+    const QString iconPath() const override { return QStringLiteral(":/icon/memo_plain_text"); }
+};
+
+class MarkdownMemoType : public MemoType
+{
+public:
+    const QString name() const override { return QStringLiteral("markdown"); }
+    const char* title() const override { return QT_TRANSLATE_NOOP("MemoType", "Markdown"); }
+    const QIcon& icon() const override { static QIcon icon(iconPath()); return icon; }
+    const QString iconPath() const override { return QStringLiteral(":/icon/memo_markdown"); }
+};
+
+class RichTextMemoType : public MemoType
+{
+public:
+    const QString name() const override { return QStringLiteral("rich_text"); }
+    const char* title() const override { return QT_TRANSLATE_NOOP("MemoType", "Rich Text"); }
+    const QIcon& icon() const override { static QIcon icon(iconPath()); return icon; }
+    const QString iconPath() const override { return QStringLiteral(":/icon/memo_rich_text"); }
+};
+
 MemoType* plainTextMemoType() { static PlainTextMemoType t; return &t; }
 MemoType* markdownMemoType() { static MarkdownMemoType t; return &t; }
 MemoType* richTextMemoType() { static RichTextMemoType t; return &t; }

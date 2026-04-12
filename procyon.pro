@@ -48,7 +48,6 @@ SOURCES += src/main.cpp\
     src/db/MemoManager.cpp \
     src/db/SettingsManager.cpp \
     src/db/SqlHelper.cpp \
-    src/DbTreeModel.cpp \
     src/DbTreeWidget.cpp \
     src/editors/MarkdownMemoEditor.cpp \
     src/editors/MemoEditor.cpp \
@@ -81,7 +80,6 @@ HEADERS  += src/MainWindow.h \
     src/db/MemoManager.h \
     src/db/SettingsManager.h \
     src/db/SqlHelper.h \
-    src/DbTreeModel.h \
     src/DbTreeWidget.h \
     src/editors/MarkdownMemoEditor.h \
     src/editors/MemoEditor.h \

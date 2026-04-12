@@ -1,6 +1,5 @@
 #include "DbTreeWidget.h"
 
-#include "DbTreeModel.h"
 #include "db/Db.h"
 #include "helpers/OriLayouts.h"
 #include "helpers/OriDialogs.h"
@@ -13,6 +12,164 @@
 #include <QTreeView>
 #include <QWidgetAction>
 #include <QFileInfo>
+
+class DbTreeModel : public QAbstractItemModel
+{
+public:
+    DbTreeModel(Db* db) : _db(db) {}
+
+    static DbItem* dbItem(const QModelIndex &index)
+    {
+        return static_cast<DbItem*>(index.internalPointer());
+    }
+
+    QModelIndex findIndex(DbItem* item, const QModelIndex &parent = QModelIndex())
+    {
+        int rows = rowCount(parent);
+        for (int row = 0; row < rows; row++)
+        {
+            auto currentIndex = index(row, 0, parent);
+            auto currentItem = dbItem(currentIndex);
+            if (currentItem == item) return currentIndex;
+    
+            auto targetIndex = findIndex(item, currentIndex);
+            if (targetIndex.isValid()) return targetIndex;
+        }
+        return QModelIndex();
+    }
+
+    QModelIndex index(int row, int column, const QModelIndex &parent) const override
+    {
+        if (!parent.isValid())
+        {
+            if (row < _db->topItems().size())
+                return createIndex(row, column, _db->topItems().at(row));
+            return QModelIndex();
+        }
+    
+        auto parentItem = dbItem(parent);
+        if (!parentItem) return QModelIndex();
+    
+        auto parentFolder = parentItem->asFolder();
+        if (!parentFolder) return QModelIndex();
+    
+        if (row < parentFolder->children().size())
+            return createIndex(row, column, parentFolder->children().at(row));
+    
+        return QModelIndex();
+    }
+
+    QModelIndex parent(const QModelIndex &child) const override
+    {
+        if (!child.isValid()) return QModelIndex();
+    
+        auto childItem = dbItem(child);
+        if (!childItem) return QModelIndex();
+    
+        auto parentItem = childItem->parent();
+        if (!parentItem) return QModelIndex();
+    
+        int row = parentItem->parent()
+                ? parentItem->parent()->asFolder()->children().indexOf(parentItem)
+                : _db->topItems().indexOf(parentItem);
+    
+        return createIndex(row, 0, parentItem);
+    }
+    
+    int rowCount(const QModelIndex &parent) const override
+    {
+        if (!parent.isValid())
+            return _db->topItems().size();
+    
+        auto item = dbItem(parent);
+        return item && item->isFolder() ? item->asFolder()->children().size() : 0;
+    }
+
+    int columnCount(const QModelIndex &parent) const override
+    {
+        Q_UNUSED(parent)
+        return 1;
+    }
+
+    QVariant data(const QModelIndex &index, int role) const override
+    {
+        if (!index.isValid())
+            return QVariant();
+    
+        auto item = dbItem(index);
+        if (!item) return QVariant();
+    
+        switch (role)
+        {
+        case Qt::DisplayRole:
+            return item->title();
+    
+        case Qt::UserRole:
+            return item->id();
+    
+        case Qt::DecorationRole:
+            // TODO different icons for opened and closed folder
+            if (item->isFolder())
+                return _iconFolder;
+            if (item->isMemo())
+                return item->asMemo()->type()->icon();
+            return _iconMemo;
+        }
+        return QVariant();
+    }
+
+    void itemRenamed(const QModelIndex &index)
+    {
+        if (!index.isValid())
+        {
+            qWarning() << "DbTreeModel::itemRenamed(): invalid index";
+            return;
+        }
+        emit dataChanged(index, index);
+    }
+
+    QModelIndex itemAdded(const QModelIndex &parent)
+    {
+        int row = rowCount(parent) - 1;
+        beginInsertRows(parent, row, row);
+        endInsertRows();
+        return index(row, 0, parent);
+    }
+
+    friend class ItemRemoverGuard;
+
+    const QIcon& folderIcon() const { return _iconFolder; }
+    const QIcon& memoIcon() const { return _iconMemo; }
+    
+private:
+    Db* _db;
+    QIcon _iconFolder = QIcon(":/icon/folder");
+    QIcon _iconMemo = QIcon(":/icon/memo_plain_text");
+};
+
+//------------------------------------------------------------------------------
+
+class ItemRemoverGuard
+{
+public:
+    ItemRemoverGuard(DbTreeModel* model, const QModelIndex &removingIndex) : _model(model)
+    {
+        parentIndex = _model->parent(removingIndex);
+        _model->beginRemoveRows(parentIndex, removingIndex.row(), removingIndex.row());
+    }
+    
+    ~ItemRemoverGuard()
+    {
+        _model->endRemoveRows();
+    }
+    
+    QModelIndex parentIndex;
+    
+private:
+    DbTreeModel* _model;
+};
+
+//------------------------------------------------------------------------------
 
 struct DbTreeSelection
 {
@@ -51,6 +208,8 @@ struct DbTreeSelection
     }
 };
 
+//------------------------------------------------------------------------------
+
 // We have to recreate the menu header at each menu open as it only takes the correct size when created.
 // Retaining the header action, we stick to the original calculated size, and it can be unsuitable
 // for subsequent menu open at items having longer titles.
@@ -76,6 +235,8 @@ static void makeMenuHeader(QMenu* menu, const QIcon& icon, const QString& title)
     headerAction->setDefaultWidget(panel);
     menu->insertAction(actions.first(), headerAction);
 }
+
+//------------------------------------------------------------------------------
 
 DbTreeWidget::DbTreeWidget() : QWidget()
 {

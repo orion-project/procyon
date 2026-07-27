@@ -124,15 +124,38 @@ QLabel[role=context_menu_header_text] {
   selection-background-color: white;
 }
 #tree_view::item {
-  height: 24px;
+  //height: 24px;
+  padding: 3px;
+  margin: 0;
+  border-radius: $border-radius;
 }
 #tree_view::item:hover {
   background-color: $hover-color;
-  border-radius: $border-radius;
 }
 #tree_view::item:selected {
   background-color: $selection-color;
-  border-radius: $border-radius;
+}
+#tree_view::branch {
+  background-color: white;
+}
+#tree_view::branch:has-siblings:!adjoins-item {
+  border-image: url(:/icon/tree_line);
+}
+#tree_view::branch:has-siblings:adjoins-item {
+  border-image: url(:/icon/tree_joint);
+}
+#tree_view::branch:!has-children:!has-siblings:adjoins-item {
+  border-image: url(:/icon/tree_corner);
+}
+#tree_view::branch:closed:has-children:!has-siblings,
+#tree_view::branch:closed:has-children:has-siblings {
+  border-image: url(:/icon/tree_joint);
+  image: url(:/icon/tree_close);
+}
+#tree_view::branch:open:has-children:!has-siblings,
+#tree_view::branch:open:has-children:has-siblings {
+  border-image: url(:/icon/tree_joint);
+  image: url(:/icon/tree_open);
 }
 
 /************************************

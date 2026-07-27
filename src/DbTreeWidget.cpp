@@ -22,6 +22,11 @@ public:
     {
         return static_cast<DbItem*>(index.internalPointer());
     }
+    
+    bool isRootIndex(const QModelIndex &index) const
+    {
+        return index.internalPointer() == _db;
+    }
 
     QModelIndex findIndex(DbItem* item, const QModelIndex &parent = QModelIndex())
     {
@@ -42,8 +47,10 @@ public:
     {
         if (!parent.isValid())
         {
-            if (row < _db->topItems().size())
-                return createIndex(row, column, _db->topItems().at(row));
+            if (row == 0)
+                return createIndex(row, column, _db);
+            if (row <= _db->topItems().size())
+                return createIndex(row, column, _db->topItems().at(row-1));
             return QModelIndex();
         }
     
@@ -62,6 +69,8 @@ public:
     QModelIndex parent(const QModelIndex &child) const override
     {
         if (!child.isValid()) return QModelIndex();
+        
+        if (isRootIndex(child)) return QModelIndex();
     
         auto childItem = dbItem(child);
         if (!childItem) return QModelIndex();
@@ -79,7 +88,7 @@ public:
     int rowCount(const QModelIndex &parent) const override
     {
         if (!parent.isValid())
-            return _db->topItems().size();
+            return _db->topItems().size() + 1;
     
         auto item = dbItem(parent);
         return item && item->isFolder() ? item->asFolder()->children().size() : 0;
@@ -95,6 +104,19 @@ public:
     {
         if (!index.isValid())
             return QVariant();
+            
+        if (isRootIndex(index))
+        {
+            switch (role)
+            {
+            case Qt::DisplayRole:
+                return _db->fileName();
+        
+            // case Qt::DecorationRole:
+            //     return _iconRoot;
+            }
+            return QVariant();
+        }
     
         auto item = dbItem(index);
         if (!item) return QVariant();
@@ -143,6 +165,7 @@ public:
     
 private:
     Db* _db;
+    QIcon _iconRoot = QIcon(":/icon/main");
     QIcon _iconFolder = QIcon(":/icon/folder");
     QIcon _iconMemo = QIcon(":/icon/memo_plain_text");
 };

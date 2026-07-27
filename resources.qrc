@@ -2,6 +2,7 @@
     <qresource prefix="/icon">
         <file alias="edit_mode">img/icon/pencil_black.svg</file>
         <file alias="folder">img/icon/folder_closed.svg</file>
+        <file alias="folder_open">img/icon/folder_open.svg</file>
         <file alias="help">img/icon/help.svg</file>
         <file alias="is_modified">img/icon/pencil_red.svg</file>
         <file alias="main">img/icon/main.svg</file>
@@ -9,6 +10,11 @@
         <file alias="memo_markdown">img/icon/memo_markdown.svg</file>
         <file alias="memo_rich_text">img/icon/memo_rich_text.svg</file>
         <file alias="settings">img/icon/settings.svg</file>
+        <file alias="tree_corner">img/icon/tree_corner.svg</file>
+        <file alias="tree_line">img/icon/tree_line.svg</file>
+        <file alias="tree_joint">img/icon/tree_joint.svg</file>
+        <file alias="tree_open">img/icon/tree_open.svg</file>
+        <file alias="tree_close">img/icon/tree_close.svg</file>
     </qresource>
     <qresource prefix="/toolbar">
         <file alias="apply">img/toolbar/check_green.svg</file>

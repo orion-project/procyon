@@ -4,7 +4,7 @@
 #include "../db/SqlHelper.h"
 #include "../highlighter/PhlManager.h"
 
-#include "orion/helpers/OriLayouts.h"
+#include "helpers/OriLayouts.h"
 
 #include <QLabel>
 #include <QSplitter>

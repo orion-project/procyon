@@ -77,7 +77,7 @@ void HelpTab::showAbout()
 
     f.setPixelSize(18);
 
-    auto labelDate = new QLabel(BUILDDATE);
+    auto labelDate = new QLabel(APP_VER_DATE);
     labelDate->setStyleSheet("color:#2e2f33");
     labelDate->setFont(f);
 

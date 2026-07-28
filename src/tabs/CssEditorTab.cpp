@@ -4,8 +4,8 @@
 #include "../AppSettings.h"
 #include "../highlighter/PhlManager.h"
 
-#include "orion/helpers/OriLayouts.h"
-#include "orion/widgets/OriCodeEditor.h"
+#include "helpers/OriLayouts.h"
+#include "widgets/OriCodeEditor.h"
 
 #include <QIcon>
 #include <QToolBar>

@@ -2,6 +2,15 @@
   "history":
   [
     {
+      "version": "1.0.1",
+      "date": "",
+      "changes": [
+        {
+          "text": "On Windows switch to msvc + vcpkg."
+        }
+      ]
+    },
+    {
       "version": "1.0.0",
       "date": "",
       "changes": [

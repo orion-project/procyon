@@ -43,6 +43,7 @@ bin/*.ini
 build
 tmp
 out
+vcpkg_qt/vcpkg_installed
 deps/hunspell
 deps/libreoffice*
 deps/hoedown

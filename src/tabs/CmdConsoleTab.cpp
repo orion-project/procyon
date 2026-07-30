@@ -56,7 +56,7 @@ public:
             return "Database is not opened";
         QString r;
         QTextStream res(&r);
-        for (auto f : _impl->db->topItems())
+        for (auto f : _impl->db->root()->children())
             printItem(res, 0, f);
         return r;
     }

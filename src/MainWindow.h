@@ -50,9 +50,9 @@ private:
     OpenTabsWidget* _openTabsView;
     Ori::MruFileList *_mruList;
     QLabel *_statusMemoCount, *_statusFileName;
-    QAction *_actionCreateTopLevelFolder, *_actionCreateFolder, *_actionRenameFolder, *_actionDeleteFolder;
+    //QAction *_actionCreateTopLevelFolder, *_actionCreateFolder, *_actionRenameFolder, *_actionDeleteFolder;
     QAction *_actionMemoFont, *_actionWordWrap, *_actionMemoExportPdf;
-    QAction *_actionOpenMemo, *_actionCreateMemo, *_actionDeleteMemo;
+    //QAction *_actionOpenMemo, *_actionCreateMemo, *_actionDeleteMemo;
     QString _lastOpenedDb;
     SpellcheckControl* _spellcheckControl;
     Phl::Control* _highlighterControl;
@@ -69,8 +69,8 @@ private:
     void dbOpened(Db* db);
     bool closeDb();
     void updateCounter();
-    void updateMenuDb();
-    void openMemo();
+    //void updateMenuDb();
+    //void openMemo();
     void chooseMemoFont();
     void toggleWordWrap();
     void memoCreated(MemoItem* item);

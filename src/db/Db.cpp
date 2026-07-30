@@ -79,7 +79,7 @@ bool DbItem::isMemo() const { return dynamic_cast<const MemoItem*>(this); }
 FolderItem* DbItem::asFolder() { return dynamic_cast<FolderItem*>(this); }
 MemoItem* DbItem::asMemo() { return dynamic_cast<MemoItem*>(this); }
 
-const QString DbItem::path() const
+QString DbItem::path() const
 {
     QStringList path;
     auto p = _parent;
@@ -169,59 +169,63 @@ DbResult Db::open(const QString& fileName)
     if (!res.isEmpty())
         return DbResult::fail(res);
 
-    Db* db = new Db;
-    db->_fileName = fileName;
+    Db* db = new Db(fileName);
 
-    FoldersResult folders = DB::folderManager()->selectAll();
-    if (!folders.error.isEmpty())
+    // Load folders
     {
-        delete db;
-        return DbResult::fail(folders.error);
-    }
-
-    for (FolderItem* item: folders.items.values())
-    {
-        db->_allFolders[item->id()] = item;
-
-        if (!item->parent())
-            db->_topItems.append(item);
-    }
-
-    MemosResult memos = DB::memoManager()->selectAll();
-    if (!memos.error.isEmpty())
-    {
-        delete db;
-        return DbResult::fail(memos.error);
-    }
-
-    if (!memos.warnings.isEmpty())
-        for (const auto &warning: std::as_const(memos.warnings))
-            qWarning() << warning; // TODO make protocol window
-
-    for (int folderId: memos.items.keys())
-    {
-        if (folderId > 0)
+        FoldersResult res = DB::folderManager()->selectAll();
+        if (!res.error.isEmpty())
         {
-            if (!folders.items.contains(folderId))
+            delete db;
+            return DbResult::fail(res.error);
+        }
+
+        for (const auto& item : std::as_const(res.items))
+        {
+            auto parent = db->_allFolders.value(item.parentId);
+            if (!parent)
             {
-                qWarning() << tr("Some memos are stored in folder #%1 but that "
-                                 "is not found in the directory.").arg(folderId);
-                qDeleteAll(memos.items[folderId]);
+                qWarning() << QString("Parent folder #%1 not found for folder #%2")
+                                    .arg(item.parentId).arg(item.folder->id());
+                delete item.folder;
                 continue;
             }
-            FolderItem *parent = folders.items[folderId];
-            for (MemoItem* item: memos.items[folderId])
-            {
-                item->_parent = parent;
-                parent->_children.append(item);
-            }
+
+            item.folder->_parent = parent;
+            parent->_children.append(item.folder);
+            db->_allFolders.insert(item.folder->id(), item.folder);
         }
-        else
-            for (MemoItem* item: memos.items[folderId])
-                db->_topItems.append(item);
     }
 
-    db->_allMemos = memos.allMemos;
+    // Load memos
+    {
+        MemosResult res = DB::memoManager()->selectAll();
+        if (!res.error.isEmpty())
+        {
+            delete db;
+            return DbResult::fail(res.error);
+        }
+
+        if (!res.warnings.isEmpty())
+            for (const auto &warning: std::as_const(res.warnings))
+                qWarning() << warning; // TODO make protocol window
+
+        for (const auto& item : std::as_const(res.items))
+        {
+            auto folder = db->_allFolders.value(item.folderId);
+            if (!folder)
+            {
+                qWarning() << QString("Folder #%1 not found for memo #%2")
+                                  .arg(item.folderId).arg(item.memo->id());
+                delete item.memo;
+                continue;
+            }
+
+            item.memo->_parent = folder;
+            folder->_children.append(item.memo);
+            db->_allMemos[item.memo->id()] = item.memo;
+        }
+    }
 
     return DbResult::ok(db);
 }
@@ -229,25 +233,28 @@ DbResult Db::open(const QString& fileName)
 DbResult Db::create(const QString& fileName)
 {
     if (QFile::exists(fileName) && !QFile::remove(fileName))
-        return DbResult::fail(QString("Unable to overwrite existing file, probably it is locked."));
+        return DbResult::fail("Unable to overwrite existing file, probably it is locked.");
 
     QString res = prepareDb(fileName);
     if (!res.isEmpty())
         return DbResult::fail(res);
 
-    Db* db = new Db;
-    db->_fileName = fileName;
+    Db* db = new Db(fileName);
 
     return DbResult::ok(db);
 }
 
-Db::Db() : QObject()
+Db::Db(const QString& fileName) : QObject(), _fileName(fileName)
 {
+    _root._id = 0;
+    _root._title = QFileInfo(fileName).baseName();
+    _allFolders.insert(_root.id(), &_root);
 }
 
 Db::~Db()
 {
-    qDeleteAll(_topItems);
+    // Don't clear _allMemos and _allFolders explicitly
+    // All items will be freed when the root item is deleted
 }
 
 QString Db::renameFolder(FolderItem* item, const QString& title)
@@ -263,6 +270,9 @@ QString Db::renameFolder(FolderItem* item, const QString& title)
 
 FolderResult Db::createFolder(FolderItem* parent, const QString& title)
 {
+    if (!parent)
+        return FolderResult::fail("Parent folder must be provided");
+
     FolderItem* folder = new FolderItem;
     folder->_title = title;
     folder->_parent = parent;
@@ -274,25 +284,29 @@ FolderResult Db::createFolder(FolderItem* parent, const QString& title)
         return FolderResult::fail(res);
     }
 
-    (parent ? parent->_children : _topItems).append(folder);
+    parent->_children.append(folder);
     _allFolders.insert(folder->id(), folder);
     // TODO sort items after inserting
 
     return FolderResult::ok(folder);
 }
 
-QString Db::removeFolder(FolderItem* item)
+QString Db::removeFolder(FolderItem* folder)
 {
+    if (!folder->parent())
+        return "Unable to remove root folder";
+
     QVector<DbItem*> subitems;
-    fillSubitemsFlat(item, subitems);
+    fillSubitemsFlat(folder, subitems);
 
     // It removes all subfolders too
-    QString res = DB::folderManager()->remove(item);
+    QString res = DB::folderManager()->remove(folder);
     if (!res.isEmpty()) return res;
 
-    (item->parent() ? item->parent()->asFolder()->_children : _topItems).removeOne(item);
+    folder->parentFolder()->_children.removeOne(folder);
 
     for (auto subitem : std::as_const(subitems))
+    {
         if (subitem->isFolder())
             _allFolders.remove(subitem->id());
         else
@@ -301,18 +315,19 @@ QString Db::removeFolder(FolderItem* item)
             emit memoRemoved(dynamic_cast<MemoItem*>(subitem));
             _allMemos.remove(subitem->id());
         }
+    }
 
-    _allFolders.remove(item->id());
+    _allFolders.remove(folder->id());
+    delete folder;
 
-    delete item;
     return QString();
 }
 
-MemoResult Db::createMemo(FolderItem* parent, MemoItem* item, MemoType* memoType)
+MemoResult Db::createMemo(FolderItem* folder, MemoItem* item, MemoType* memoType)
 {
     auto now = QDateTime::currentDateTime();
 
-    item->_parent = parent;
+    item->_parent = folder;
     item->_created = now;
     item->_updated = now;
     item->_station = _station;
@@ -325,7 +340,7 @@ MemoResult Db::createMemo(FolderItem* parent, MemoItem* item, MemoType* memoType
         return MemoResult::fail(res);
     }
 
-    (parent ? parent->asFolder()->_children : _topItems).append(item);
+    folder->_children.append(item);
     _allMemos.insert(item->id(), item);
     // TODO sort items after inserting
 
@@ -363,7 +378,7 @@ QString Db::removeMemo(MemoItem* item)
     QString res = DB::memoManager()->remove(item);
     if (!res.isEmpty()) return res;
 
-    (item->parent() ? item->parent()->asFolder()->_children : _topItems).removeOne(item);
+    item->parentFolder()->_children.removeOne(item);
     _allMemos.remove(item->id());
 
     emit memoRemoved(item);

@@ -65,18 +65,6 @@ QMenu::indicator {
 QMenu::indicator:checked {
   background: #2b506e;
 }
-QFrame[role=context_menu_header_panel] {
-  border-bottom: $default-border;
-  margin-bottom: 3px;
-  background: $base-color;
-  padding: 5px;
-}
-QLabel[role=context_menu_header_text] {
-  font-size: 12px;
-  font-weight: bold;
-  margin-left: 3px;
-  color: #32424c;
-}
 
 /************************************
              List view

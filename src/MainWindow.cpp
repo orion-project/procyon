@@ -169,7 +169,7 @@ void MainWindow::createMenu()
 
     m = menuBar()->addMenu(tr("File"));
     m->addAction(tr("New..."), this, &MainWindow::newDb);
-    m->addAction(tr("Open..."), this, &MainWindow::openDbViaDialog, QKeySequence::Open);
+    m->addAction(tr("Open..."), QKeySequence::Open, this, &MainWindow::openDbViaDialog);
     m->addSeparator();
     /* TODO
     m->addAction(tr("Application Settings"), this, [this]{
@@ -177,9 +177,10 @@ void MainWindow::createMenu()
     });
     m->addSeparator();
     */
-    auto actionExit = m->addAction(tr("Exit"), this, &MainWindow::close, QKeySequence::Quit);
+    auto actionExit = m->addAction(tr("Exit"), QKeySequence::Quit, this, &MainWindow::close);
     new Ori::Widgets::MruMenuPart(_mruList, m, actionExit, this);
 
+    /*
     m = menuBar()->addMenu(tr("Notebook"));
     connect(m, &QMenu::aboutToShow, this, &MainWindow::updateMenuDb);
     _actionCreateTopLevelFolder = m->addAction(tr("New Top Level Folder..."), this, [this](){ _treeView->createTopLevelFolder(); });
@@ -190,6 +191,7 @@ void MainWindow::createMenu()
     _actionOpenMemo = m->addAction(tr("Open Memo"), this, &MainWindow::openMemo);
     _actionCreateMemo = m->addAction(tr("New Memo..."), this, [this](){ _treeView->createMemo(); });
     _actionDeleteMemo = m->addAction(tr("Delete Memo"), this, [this](){ _treeView->deleteMemo(); });
+    */
 
     m = menuBar()->addMenu(tr("Memo"));
     connect(m, &QMenu::aboutToShow, this, &MainWindow::optionsMenuAboutToShow);
@@ -317,7 +319,7 @@ void MainWindow::loadSession()
     _treeView->setExpandedIds(expandedIds);
 
     QStringList openedIds = settings.value("openedMemos").toString().split(',');
-    for (const auto& idStr : openedIds)
+    for (const auto& idStr : std::as_const(openedIds))
     {
         auto memoItem = _db->findMemoById(idStr.toInt());
         if (!memoItem) continue;
@@ -452,7 +454,7 @@ bool MainWindow::closeAllMemos()
             return false;
         deletingPages << tab;
     }
-    for (auto tab : deletingPages)
+    for (auto tab : std::as_const(deletingPages))
         tab->deleteLater();
     return true;
 }
@@ -472,6 +474,7 @@ void MainWindow::updateCounter()
     }
 }
 
+/*
 void MainWindow::updateMenuDb()
 {
     bool hasDb = _db;
@@ -491,6 +494,7 @@ void MainWindow::updateMenuDb()
     _actionDeleteMemo->setEnabled(hasMemo);
     _actionCreateMemo->setEnabled(hasFolder);
 }
+*/
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
@@ -502,11 +506,13 @@ void MainWindow::closeEvent(QCloseEvent *event)
     event->accept();
 }
 
+/*
 void MainWindow::openMemo()
 {
     auto selected = _treeView->selection();
     if (selected.memo) openMemoTab(selected.memo);
 }
+*/
 
 void MainWindow::openMemoTab(MemoItem* item)
 {

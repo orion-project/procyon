@@ -13,11 +13,8 @@ struct MemosResult
     QString error;
     QStringList warnings;
 
-    // folderId -> [memoItems]
-    QMap<int, QList<MemoItem*>> items;
-
-    // memoId -> memoItem
-    QMap<int, MemoItem*> allMemos;
+    struct Item { int folderId; MemoItem* memo; };
+    QList<Item> items;
 };
 
 class MemoManager

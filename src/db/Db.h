@@ -49,14 +49,17 @@ public:
     virtual ~DbItem();
 
     int id() const { return _id; }
-    const QString& title() const { return _title; }
+    QString title() const { return _title; }
     DbItem* parent() const { return _parent; }
-    const QString path() const;
+    QString path() const;
 
+    bool isRoot() const { return !_parent; }
     bool isFolder() const;
     bool isMemo() const;
     FolderItem* asFolder();
     MemoItem* asMemo();
+
+    FolderItem* parentFolder() { return _parent ? _parent->asFolder() : nullptr; }
 
 private:
     int _id;
@@ -92,10 +95,10 @@ public:
     ~MemoItem();
 
     MemoType* type() { return _type; }
-    const QString& data() const { return _data; }
-    const QDateTime& created() const { return _created; }
-    const QDateTime& updated() const { return _updated; }
-    const QString& station() const { return _station; }
+    QString data() const { return _data; }
+    QDateTime created() const { return _created; }
+    QDateTime updated() const { return _updated; }
+    QString station() const { return _station; }
     bool isLoaded() const { return _isLoaded; }
 
 private:
@@ -122,7 +125,7 @@ class Db : public QObject
     Q_OBJECT
 
 public:
-    Db();
+    Db(const QString& fileName);
     ~Db();
 
     static QString fileFilter();
@@ -130,8 +133,10 @@ public:
     static DbResult open(const QString& fileName);
     static DbResult create(const QString& fileName);
 
-    const QString& fileName() const { return _fileName; }
-    const QList<DbItem*>& topItems() const { return _topItems; }
+    QString fileName() const { return _fileName; }
+
+    FolderItem* root() { return &_root; }
+
     MemoItem* findMemoById(int id) const;
     FolderItem* findFolderById(int id) const;
 
@@ -142,8 +147,8 @@ public:
 
     QString renameFolder(FolderItem* item, const QString& title);
     FolderResult createFolder(FolderItem* parent, const QString& title);
-    QString removeFolder(FolderItem* item);
-    MemoResult createMemo(FolderItem* parent, MemoItem* item, MemoType *memoType);
+    QString removeFolder(FolderItem* folder);
+    MemoResult createMemo(FolderItem* folder, MemoItem* item, MemoType *memoType);
     QString updateMemo(MemoItem* item, MemoUpdateParam update);
     QString removeMemo(MemoItem* item);
     QString loadMemo(MemoItem* item);
@@ -159,7 +164,7 @@ signals:
 private:
     QString _fileName;
     QString _station;
-    QList<DbItem*> _topItems;
+    FolderItem _root;
     QMap<int, MemoItem*> _allMemos;
     QMap<int, FolderItem*> _allFolders;
 

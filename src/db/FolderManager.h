@@ -9,7 +9,9 @@ class FolderItem;
 struct FoldersResult
 {
     QString error;
-    QMap<int, FolderItem*> items;
+
+    struct Item { int parentId; FolderItem* folder; };
+    QList<Item> items;
 };
 
 class FolderManager

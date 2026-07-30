@@ -150,19 +150,16 @@ MemosResult MemoManager::selectAll() const
     {
         auto r = query.record();
 
-        MemoItem *item = new MemoItem;
-        item->_id = r.value(table->id).toInt();
-        item->_title = r.value(table->title).toString();
-        item->_type = getMemoType(r.value(table->type).toString());
-        item->_created = r.value(table->created).toDateTime();
-        item->_updated = r.value(table->updated).toDateTime();
-        item->_station = r.value(table->station).toString();
+        MemoItem *memo = new MemoItem;
+        memo->_id = r.value(table->id).toInt();
+        memo->_title = r.value(table->title).toString();
+        memo->_type = getMemoType(r.value(table->type).toString());
+        memo->_created = r.value(table->created).toDateTime();
+        memo->_updated = r.value(table->updated).toDateTime();
+        memo->_station = r.value(table->station).toString();
 
-        int parentId = r.value(table->parent).toInt();
-        if (!result.items.contains(parentId))
-            result.items.insert(parentId, QList<MemoItem*>());
-        static_cast<QList<MemoItem*>&>(result.items[parentId]).append(item);
-        result.allMemos.insert(item->id(), item);
+        int folderId = r.value(table->parent).toInt();
+        result.items.append({folderId, memo});
     }
 
     return result;

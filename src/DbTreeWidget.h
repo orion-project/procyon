@@ -4,8 +4,6 @@
 #include <QWidget>
 
 QT_BEGIN_NAMESPACE
-class QAction;
-class QLabel;
 class QMenu;
 class QTreeView;
 QT_END_NAMESPACE
@@ -16,13 +14,6 @@ class DbTreeModel;
 class FolderItem;
 class MemoItem;
 
-struct DbTreeSelection;
-struct SelectedItems
-{
-    MemoItem* memo;
-    FolderItem* folder;
-};
-
 class DbTreeWidget : public QWidget
 {
     Q_OBJECT
@@ -31,15 +22,6 @@ public:
     DbTreeWidget();
 
     void setDb(Db* db);
-
-    SelectedItems selection() const;
-
-    void createFolder();
-    void renameFolder();
-    void deleteFolder();
-    void createMemo();
-    void deleteMemo();
-    void createTopLevelFolder();
 
     QStringList getExpandedIds() const;
     void setExpandedIds(const QStringList& ids);
@@ -52,14 +34,19 @@ private:
     QTreeView* _treeView;
     DbTreeModel* _model = nullptr;
     QMenu *_rootMenu, *_folderMenu, *_memoMenu;
-    QAction *_openMemo;
+
+    DbItem* selectedItem() const;
+
+    void createFolder();
+    void renameFolder();
+    void deleteFolder();
+    void createMemo();
+    void deleteMemo();
+    void openMemo();
 
     void contextMenuRequested(const QPoint &pos);
     void doubleClicked(const QModelIndex &);
-    void openSelectedMemo();
-
     void memoUpdated(MemoItem*);
-    void createFolderInternal(const DbTreeSelection& selection);
 
     void fillExpandedIds(QStringList& ids, const QModelIndex& parentIndex) const;
     void setExpandedIds(const QStringList& ids, const QModelIndex& parentIndex);

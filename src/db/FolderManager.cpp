@@ -64,7 +64,7 @@ QString FolderManager::create(FolderItem* folder) const
 
     auto res = ActionQuery(table->sqlInsert)
                 .param(table->id, folder->id())
-                .param(table->parent, folder->parent() ? folder->parent()->asFolder()->id() : 0)
+                .param(table->parent, folder->parent()->id())
                 .param(table->title, folder->title())
                 .exec();
     if (!res.isEmpty())
@@ -89,21 +89,11 @@ FoldersResult FolderManager::selectAll() const
     while (query.next())
     {
         auto r = query.record();
-        int id = r.value(table->id).toInt();
-        if (!result.items.contains(id))
-            result.items.insert(id, new FolderItem);
-        auto item = result.items[id];
-        item->_id = id;
-        item->_title = r.value(table->title).toString();
+        auto folder = new FolderItem;
+        folder->_id = r.value(table->id).toInt();;
+        folder->_title = r.value(table->title).toString();
         int parentId = r.value(table->parent).toInt();
-        if (parentId > 0)
-        {
-            if (!result.items.contains(parentId))
-                result.items.insert(parentId, new FolderItem);
-            auto parentItem = result.items[parentId];
-            parentItem->_children.append(item);
-            item->_parent = parentItem;
-        }
+        result.items.append({parentId, folder});
     }
 
     return result;
@@ -153,6 +143,9 @@ QString FolderManager::removeBranch(FolderItem* folder, const QString& path) con
             .param(table->id, folder->id())
             .exec();
     if (!res.isEmpty())
-        return QString("Failed to delete folder '%1'.\n\n%2").arg(thisPath).arg(res);
+        return QString("Failed to delete folder '%1'.\n\n%2").arg(thisPath, res);
+
+    // Memos are DB deleted by FK relation
+
     return QString();
 }

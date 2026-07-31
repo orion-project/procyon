@@ -4,6 +4,7 @@
 #include "DbTreeWidget.h"
 #include "OpenTabsWidget.h"
 #include "db/Db.h"
+#include "db/MemoType.h"
 #include "highlighter/PhlManager.h"
 #include "tabs/HelpTab.h"
 #include "tabs/PhlEditorTab.h"
@@ -616,7 +617,7 @@ void MainWindow::optionsMenuAboutToShow()
     auto memoPage = currentMemoTab();
     if (_spellcheckMenu)
         _spellcheckMenu->setEnabled(memoPage && !memoPage->isReadOnly());
-    _highlighterMenu->setEnabled(memoPage && memoPage->memoItem()->type() == plainTextMemoType());
+    _highlighterMenu->setEnabled(memoPage && memoPage->memoItem()->type() == MemoType::plainText());
     _actionMemoExportPdf->setEnabled(memoPage);
     _actionMemoFont->setEnabled(memoPage);
     _actionMemoFont->setChecked(memoPage && memoPage->wordWrap());

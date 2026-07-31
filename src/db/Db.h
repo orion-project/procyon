@@ -4,7 +4,6 @@
 #include <QObject>
 #include <QList>
 #include <QMap>
-#include <QIcon>
 #include <QDateTime>
 
 #include "core/OriResult.h"
@@ -12,24 +11,7 @@
 class Db;
 class FolderItem;
 class MemoItem;
-
-//------------------------------------------------------------------------------
-
-class MemoType
-{
-public:
-    virtual ~MemoType();
-    virtual const QString name() const = 0;
-    virtual const char* title() const = 0;
-    virtual const QIcon& icon() const = 0;
-    virtual const QString iconPath() const = 0;
-};
-
-MemoType* plainTextMemoType();
-MemoType* markdownMemoType();
-MemoType* richTextMemoType();
-const QMap<QString, MemoType*>& memoTypes();
-MemoType* getMemoType(const QString& type);
+class MemoType;
 
 //------------------------------------------------------------------------------
 

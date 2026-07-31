@@ -1,10 +1,11 @@
 #include "MemoTab.h"
 
 #include "TabHelpers.h"
-#include "../editors/MarkdownMemoEditor.h"
-#include "../editors/MemoEditor.h"
-#include "../db/Db.h"
-#include "../db/MemoManager.h"
+#include "editors/MarkdownMemoEditor.h"
+#include "editors/MemoEditor.h"
+#include "db/Db.h"
+#include "db/MemoManager.h"
+#include "db/MemoType.h"
 
 #include "helpers/OriDialogs.h"
 #include "helpers/OriWidgets.h"
@@ -51,7 +52,7 @@ MemoTab::MemoTab(Db *db, MemoItem *memoItem) : QWidget(),
 
     setWindowIcon(memoType->icon());
 
-    if (memoType == markdownMemoType())
+    if (memoType == MemoType::markdown())
         _memoEditor = new MarkdownMemoEditor(_memoItem);
     else
         _memoEditor = new TextMemoEditor(_memoItem);
@@ -154,7 +155,7 @@ void MemoTab::toggleEditMode(bool on)
     _actionCancel->setVisible(on);
     _actionEdit->setVisible(!on);
 
-    if (_memoItem->type() == markdownMemoType())
+    if (_memoItem->type() == MemoType::markdown())
     {
         if (on)
         {
@@ -168,7 +169,7 @@ void MemoTab::toggleEditMode(bool on)
             _previewButton->setDefaultAction(_actionPreview);
             _previewButton->setFixedWidth(PREVIEW_BUTTON_WIDTH);
 
-            auto firstAction = _toolbar->actions().first();
+            auto firstAction = _toolbar->actions().value(0);
             _actionPreviewButton = _toolbar->insertWidget(firstAction, _previewButton);
             _separatorPreview = _toolbar->insertSeparator(firstAction);
         }

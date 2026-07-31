@@ -112,6 +112,7 @@ set(PROJECT_SOURCES
     src/db/Db.cpp
     src/db/FolderManager.cpp
     src/db/MemoManager.cpp
+    src/db/MemoType.cpp
     src/db/SettingsManager.cpp
     src/db/SqlHelper.cpp
     src/DbTreeWidget.cpp

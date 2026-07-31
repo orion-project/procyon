@@ -1,6 +1,7 @@
 #include "MemoManager.h"
 
 #include "Db.h"
+#include "MemoType.h"
 #include "SqlHelper.h"
 
 using namespace Ori::Sql;
@@ -153,7 +154,7 @@ MemosResult MemoManager::selectAll() const
         MemoItem *memo = new MemoItem;
         memo->_id = r.value(table->id).toInt();
         memo->_title = r.value(table->title).toString();
-        memo->_type = getMemoType(r.value(table->type).toString());
+        memo->_type = MemoType::findByName(r.value(table->type).toString());
         memo->_created = r.value(table->created).toDateTime();
         memo->_updated = r.value(table->updated).toDateTime();
         memo->_station = r.value(table->station).toString();

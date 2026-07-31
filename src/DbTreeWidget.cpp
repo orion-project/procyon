@@ -1,17 +1,13 @@
 #include "DbTreeWidget.h"
 
 #include "db/Db.h"
-#include "helpers/OriLayouts.h"
-#include "helpers/OriDialogs.h"
-#include "widgets/OriSelectableTile.h"
+#include "db/MemoType.h"
 
-#include <QApplication>
-#include <QFrame>
-#include <QLabel>
+#include "helpers/OriDialogs.h"
+#include "helpers/OriLayouts.h"
+
 #include <QMenu>
 #include <QTreeView>
-#include <QWidgetAction>
-#include <QFileInfo>
 
 class DbTreeModel : public QAbstractItemModel
 {
@@ -325,43 +321,12 @@ void DbTreeWidget::deleteFolder()
     });
 }
 
-static MemoType* selectMemoTypeDlg()
-{
-    Ori::Widgets::SelectableTileRadioGroup tripTypeGroup;
-
-    auto tripTypeLayout = new QHBoxLayout();
-    tripTypeLayout->setContentsMargins(0, 0, 0, 0);
-    tripTypeLayout->setSpacing(12);
-    for (auto memoType : QVector<MemoType*>({plainTextMemoType(), markdownMemoType()}))
-    {
-        auto tile = new Ori::Widgets::SelectableTile;
-        tile->setPixmap(memoType->icon().pixmap(48, 48));
-        tile->setTitle(memoType->title());
-        tile->setData(QVariant::fromValue(reinterpret_cast<void*>(memoType)));
-        tile->setTitleStyleSheet("font-size:15px;margin:0 15px 0 15px;");
-        tile->selectionFollowsFocus = true;
-        tripTypeLayout->addWidget(tile);
-        tripTypeGroup.addTile(tile);
-    }
-
-    QWidget content;
-    Ori::Layouts::LayoutV({tripTypeLayout}).setMargin(0).setSpacing(12).useFor(&content);
-
-    auto dlg = Ori::Dlg::Dialog(&content, false)
-            .withTitle(qApp->tr("Choose Memo Type"))
-            .withContentToButtonsSpacingFactor(3)
-            .withOkSignal(&tripTypeGroup, SIGNAL(doubleClicked(QVariant)));
-    if (dlg.exec())
-        return reinterpret_cast<MemoType*>(tripTypeGroup.selectedData().value<void*>());
-    return nullptr;
-}
-
 void DbTreeWidget::createMemo()
 {
     auto item = selectedItem();
     if (!item || !item->isFolder()) return;
 
-    auto memoType = selectMemoTypeDlg();
+    auto memoType = MemoType::selectFromDlg();
     if (!memoType) return;
 
     _model->addItem(_treeView, [this, item, memoType]{

@@ -226,12 +226,9 @@ DbTreeWidget::DbTreeWidget() : QWidget()
     _treeView->setHeaderHidden(true);
     _treeView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(_treeView, &QTreeView::customContextMenuRequested, this, &Self::contextMenuRequested);
-    connect(_treeView, &QTreeView::doubleClicked, this, &Self::doubleClicked);
+    connect(_treeView, &QTreeView::doubleClicked, this, [this]{ openMemo(); });
 
-    Ori::Layouts::LayoutV({_treeView})
-            .setMargin(0)
-            .setSpacing(0)
-            .useFor(this);
+    Ori::Layouts::LayoutV({_treeView}).setMargin(0).setSpacing(0).useFor(this);
 }
 
 void DbTreeWidget::setDb(Db* db)
@@ -284,12 +281,7 @@ void DbTreeWidget::openMemo()
     auto item = selectedItem();
     if (!item || !item->isMemo()) return;
 
-    emit onOpenMemo(item->asMemo());
-}
-
-void DbTreeWidget::doubleClicked(const QModelIndex&)
-{
-    openMemo();
+    emit memoOpenRequested(item->asMemo());
 }
 
 void DbTreeWidget::createFolder()
@@ -301,10 +293,7 @@ void DbTreeWidget::createFolder()
     if (title.isEmpty()) return;
 
     _model->addItem(_treeView, [this, item, title] {
-        auto res = _db->createFolder(item->asFolder(), title);
-        if (res.ok()) return true;
-        Ori::Dlg::Defer::error(res.error());
-        return false;
+        return _db->createFolder(item->asFolder(), title).ok();
     });
 }
 
@@ -316,8 +305,8 @@ void DbTreeWidget::renameFolder()
     auto title = Ori::Dlg::inputText(tr("Folder title:"), item->title());
     if (title.isEmpty()) return;
 
-    auto res = _db->renameFolder(item->asFolder(), title);
-    if (!res.isEmpty()) return Ori::Dlg::error(res);
+    bool ok = _db->renameFolder(item->asFolder(), title);
+    if (!ok) return;
 
     _model->itemRenamed(_treeView->currentIndex());
     // TODO do something about items sorted after renaming
@@ -332,10 +321,7 @@ void DbTreeWidget::deleteFolder()
     if (!Ori::Dlg::yes(confirm)) return;
 
     _model->removeItem(_treeView, [this, item]{
-        auto res = _db->removeFolder(item->asFolder());
-        if (res.isEmpty()) return true;
-        Ori::Dlg::Defer::error(res);
-        return false;
+        return _db->removeFolder(item->asFolder());
     });
 }
 
@@ -379,12 +365,7 @@ void DbTreeWidget::createMemo()
     if (!memoType) return;
 
     _model->addItem(_treeView, [this, item, memoType]{
-        auto newMemo = new MemoItem;
-        auto res = _db->createMemo(item->asFolder(), newMemo, memoType);
-        if (res.ok()) return true;
-        delete newMemo;
-        Ori::Dlg::Defer::error(res.error());
-        return false;
+        return _db->createMemo(item->asFolder(), memoType).ok();
     });
 }
 
@@ -397,10 +378,7 @@ void DbTreeWidget::deleteMemo()
     if (!Ori::Dlg::yes(confirm)) return;
 
     _model->removeItem(_treeView, [this, item]{
-        auto res = _db->removeMemo(item->asMemo());
-        if (res.isEmpty()) return true;
-        Ori::Dlg::Defer::error(res);
-        return false;
+        return _db->removeMemo(item->asMemo());
     });
 }
 
@@ -414,40 +392,42 @@ void DbTreeWidget::memoUpdated(MemoItem* item)
 QStringList DbTreeWidget::getExpandedIds() const
 {
     QStringList ids;
-    fillExpandedIds(ids, QModelIndex());
+    std::function<void(const QModelIndex&)> fillExpandedIds;
+
+    fillExpandedIds = [this, &ids, &fillExpandedIds](const QModelIndex& parent){
+        int rowCount = _model->rowCount(parent);
+        for (int row = 0; row < rowCount; row++)
+        {
+            auto index = _model->index(row, 0, parent);
+            if (_model->dbItem(index)->isFolder())
+            {
+                if (_treeView->isExpanded(index))
+                    ids << QString::number(_model->data(index, Qt::UserRole).toInt());
+                fillExpandedIds(index);
+            }
+        }
+    };
+
+    fillExpandedIds(QModelIndex());
     return ids;
 }
 
 void DbTreeWidget::setExpandedIds(const QStringList& ids)
 {
-    setExpandedIds(ids, QModelIndex());
-}
+    std::function<void(const QModelIndex& parent)> setExpandedIds;
 
-void DbTreeWidget::fillExpandedIds(QStringList& ids, const QModelIndex& parentIndex) const
-{
-    int rowCount = _model->rowCount(parentIndex);
-    for (int row = 0; row < rowCount; row++)
-    {
-        auto index = _model->index(row, 0, parentIndex);
-        if (_model->dbItem(index)->isFolder())
+    setExpandedIds = [this, &ids, &setExpandedIds](const QModelIndex& parent){
+        int rowCount = _model->rowCount(parent);
+        for (int row = 0; row < rowCount; row++)
         {
-            if (_treeView->isExpanded(index))
-                ids << QString::number(_model->data(index, Qt::UserRole).toInt());
-            fillExpandedIds(ids, index);
+            auto index = _model->index(row, 0, parent);
+            auto data = _model->data(index, Qt::UserRole);
+            if (data.isNull()) continue;
+            if (ids.contains(QString::number(data.toInt())))
+                _treeView->expand(index);
+            setExpandedIds(index);
         }
-    }
-}
+    };
 
-void DbTreeWidget::setExpandedIds(const QStringList& ids, const QModelIndex& parentIndex)
-{
-    int rowCount = _model->rowCount(parentIndex);
-    for (int row = 0; row < rowCount; row++)
-    {
-        auto index = _model->index(row, 0, parentIndex);
-        auto data = _model->data(index, Qt::UserRole);
-        if (data.isNull()) continue;
-        if (ids.contains(QString::number(data.toInt())))
-            _treeView->expand(index);
-        setExpandedIds(ids, index);
-    }
+    setExpandedIds(QModelIndex());
 }

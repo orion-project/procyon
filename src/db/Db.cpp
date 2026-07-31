@@ -257,15 +257,19 @@ Db::~Db()
     // All items will be freed when the root item is deleted
 }
 
-QString Db::renameFolder(FolderItem* item, const QString& title)
+bool Db::renameFolder(FolderItem* item, const QString& title)
 {
     QString res = DB::folderManager()->rename(item->id(), title);
-    if (!res.isEmpty()) return res;
+    if (!res.isEmpty())
+    {
+        emit errorOccured(res);
+        return false;
+    }
 
     item->_title = title;
 
     // TODO sort items after renaming
-    return QString();
+    return true;
 }
 
 FolderResult Db::createFolder(FolderItem* parent, const QString& title)
@@ -281,6 +285,7 @@ FolderResult Db::createFolder(FolderItem* parent, const QString& title)
     if (!res.isEmpty())
     {
         delete folder;
+        emit errorOccured(res);
         return FolderResult::fail(res);
     }
 
@@ -291,7 +296,7 @@ FolderResult Db::createFolder(FolderItem* parent, const QString& title)
     return FolderResult::ok(folder);
 }
 
-QString Db::removeFolder(FolderItem* folder)
+bool Db::removeFolder(FolderItem* folder)
 {
     if (!folder->parent())
         return "Unable to remove root folder";
@@ -301,7 +306,11 @@ QString Db::removeFolder(FolderItem* folder)
 
     // It removes all subfolders too
     QString res = DB::folderManager()->remove(folder);
-    if (!res.isEmpty()) return res;
+    if (!res.isEmpty())
+    {
+        emit errorOccured(res);
+        return false;
+    }
 
     folder->parentFolder()->_children.removeOne(folder);
 
@@ -320,13 +329,14 @@ QString Db::removeFolder(FolderItem* folder)
     _allFolders.remove(folder->id());
     delete folder;
 
-    return QString();
+    return false;
 }
 
-MemoResult Db::createMemo(FolderItem* folder, MemoItem* item, MemoType* memoType)
+MemoResult Db::createMemo(FolderItem* folder, MemoType* memoType)
 {
     auto now = QDateTime::currentDateTime();
 
+    auto item = new MemoItem;
     item->_parent = folder;
     item->_created = now;
     item->_updated = now;
@@ -337,6 +347,7 @@ MemoResult Db::createMemo(FolderItem* folder, MemoItem* item, MemoType* memoType
     if (!res.isEmpty())
     {
         delete item;
+        emit errorOccured(res);
         return MemoResult::fail(res);
     }
 
@@ -345,17 +356,20 @@ MemoResult Db::createMemo(FolderItem* folder, MemoItem* item, MemoType* memoType
     // TODO sort items after inserting
 
     emit memoCreated(item);
-
     return MemoResult::ok(item);
 }
 
-QString Db::updateMemo(MemoItem* item, MemoUpdateParam update)
+bool Db::updateMemo(MemoItem* item, MemoUpdateParam update)
 {
     update.moment = QDateTime::currentDateTime();
     update.station = _station;
 
     QString res = DB::memoManager()->update(item, update);
-    if (!res.isEmpty()) return res;
+    if (!res.isEmpty())
+    {
+        emit errorOccured(res);
+        return false;
+    }
 
     item->_title = update.title;
     item->_data = update.data;
@@ -365,7 +379,7 @@ QString Db::updateMemo(MemoItem* item, MemoUpdateParam update)
     emit memoUpdated(item);
 
     // TODO sort items after renaming
-    return QString();
+    return true;
 }
 
 QString Db::loadMemo(MemoItem* item)
@@ -373,10 +387,14 @@ QString Db::loadMemo(MemoItem* item)
     return DB::memoManager()->load(item);
 }
 
-QString Db::removeMemo(MemoItem* item)
+bool Db::removeMemo(MemoItem* item)
 {
     QString res = DB::memoManager()->remove(item);
-    if (!res.isEmpty()) return res;
+    if (!res.isEmpty())
+    {
+        emit errorOccured(res);
+        return false;
+    }
 
     item->parentFolder()->_children.removeOne(item);
     _allMemos.remove(item->id());
@@ -384,7 +402,7 @@ QString Db::removeMemo(MemoItem* item)
     emit memoRemoved(item);
 
     delete item;
-    return QString();
+    return true;
 }
 
 IntResult Db::countMemos() const

@@ -145,12 +145,12 @@ public:
 
     IntResult countMemos() const;
 
-    QString renameFolder(FolderItem* item, const QString& title);
+    bool renameFolder(FolderItem* item, const QString& title);
     FolderResult createFolder(FolderItem* parent, const QString& title);
-    QString removeFolder(FolderItem* folder);
-    MemoResult createMemo(FolderItem* folder, MemoItem* item, MemoType *memoType);
-    QString updateMemo(MemoItem* item, MemoUpdateParam update);
-    QString removeMemo(MemoItem* item);
+    bool removeFolder(FolderItem* folder);
+    MemoResult createMemo(FolderItem* folder, MemoType *memoType);
+    bool updateMemo(MemoItem* item, MemoUpdateParam update);
+    bool removeMemo(MemoItem* item);
     QString loadMemo(MemoItem* item);
 
     void fillSubitemsFlat(FolderItem* root, QVector<DbItem*> &subitems);
@@ -160,6 +160,7 @@ signals:
     void memoCreated(MemoItem*);
     void memoRemoved(MemoItem*);
     void memoUpdated(MemoItem*);
+    void errorOccured(const QString& error);
 
 private:
     QString _fileName;

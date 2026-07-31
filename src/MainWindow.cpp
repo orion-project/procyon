@@ -123,7 +123,7 @@ MainWindow::MainWindow() : QMainWindow()
     connect(_openTabsView, &OpenTabsWidget::onActivateTab, _tabsView, &QStackedWidget::setCurrentWidget);
 
     _treeView = new DbTreeWidget;
-    connect(_treeView, &DbTreeWidget::onOpenMemo, this, &MainWindow::openMemoTab);
+    connect(_treeView, &DbTreeWidget::memoOpenRequested, this, &MainWindow::openMemoTab);
 
     _splitter = new QSplitter;
     _splitter->addWidget(_openTabsView);
@@ -405,6 +405,9 @@ void MainWindow::dbOpened(Db* db)
     _db = db;
     connect(_db, &Db::memoCreated, this, &MainWindow::memoCreated);
     connect(_db, &Db::memoRemoved, this, &MainWindow::memoRemoved);
+    connect(_db, &Db::errorOccured, this, [](const QString& error){
+        Ori::Dlg::Defer::error(error);
+    });
     _treeView->setDb(_db);
     auto filePath = _db->fileName();
     auto fileName = QFileInfo(filePath).fileName();

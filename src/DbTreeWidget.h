@@ -27,7 +27,7 @@ public:
     void setExpandedIds(const QStringList& ids);
 
 signals:
-    void onOpenMemo(MemoItem* item);
+    void memoOpenRequested(MemoItem* item);
 
 private:
     Db* _db = nullptr;
@@ -45,11 +45,7 @@ private:
     void openMemo();
 
     void contextMenuRequested(const QPoint &pos);
-    void doubleClicked(const QModelIndex &);
     void memoUpdated(MemoItem*);
-
-    void fillExpandedIds(QStringList& ids, const QModelIndex& parentIndex) const;
-    void setExpandedIds(const QStringList& ids, const QModelIndex& parentIndex);
 };
 
 #endif // DBTREE_WIDGET_H

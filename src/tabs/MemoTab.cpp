@@ -135,12 +135,8 @@ bool MemoTab::saveEdit()
     update.title = _titleEditor->text().trimmed();
     update.data = _memoEditor->data();
 
-    auto res = _db->updateMemo(_memoItem, update);
-    if (!res.isEmpty())
-    {
-        Ori::Dlg::error(res);
-        return false;
-    }
+    auto ok = _db->updateMemo(_memoItem, update);
+    if (!ok) return false;
 
     _memoEditor->saveEdit();
     _titleEditor->setModified(false);

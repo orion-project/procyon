@@ -32,13 +32,15 @@ MemoType* MemoType::richText()
     return &t;
 }
 
+MemoType* MemoType::gridView()
+{
+    static MemoType t("grid_view", QT_TRANSLATE_NOOP("MemoType", "Grid View"), ":/icon/memo_rich_text");
+    return &t;
+}
+
 const QList<MemoType*>& MemoType::all()
 {
-    static QList<MemoType*> types {
-        plainText(),
-        markdown(),
-        richText()
-    };
+    static QList<MemoType*> types { plainText(), markdown(), richText(), gridView() };
     return types;
 }
 
@@ -57,7 +59,7 @@ MemoType* MemoType::selectFromDlg()
     auto tripTypeLayout = new QHBoxLayout();
     tripTypeLayout->setContentsMargins(0, 0, 0, 0);
     tripTypeLayout->setSpacing(12);
-    for (auto memoType : QVector<MemoType*>({MemoType::plainText(), MemoType::markdown()}))
+    for (auto memoType : { plainText(), markdown(), gridView() })
     {
         auto tile = new Ori::Widgets::SelectableTile;
         tile->setPixmap(memoType->icon().pixmap(48, 48));

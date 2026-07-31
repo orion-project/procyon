@@ -11,6 +11,7 @@
 #include "tabs/CssEditorTab.h"
 #include "tabs/MemoTab.h"
 #include "tabs/TextMemoTab.h"
+#include "tabs/GridViewMemoTab.h"
 #include "tabs/SqlConsoleTab.h"
 #include "tabs/QssEditorTab.h"
 #include "tabs/CmdConsoleTab.h"
@@ -548,6 +549,8 @@ void MainWindow::openMemoTab(MemoItem* item)
         tab = new TextMemoTab(_db, item);
     else if (item->type() == MemoType::markdown())
         tab = new TextMemoTab(_db, item);
+    else if (item->type() == MemoType::gridView())
+        tab = new GridViewMemoTab(_db, item);
 
     if (!tab)
     {

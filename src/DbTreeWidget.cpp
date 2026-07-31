@@ -266,7 +266,12 @@ DbTreeWidget::DbTreeWidget() : QWidget()
 void DbTreeWidget::setDb(Db* db)
 {
     if (_db)
+    {
+        // TODO: Explain, how it's possible so that a new db is opened
+        // but the old one is still active and can be disconnected?
         disconnect(_db, &Db::memoUpdated, this, &Self::memoUpdated);
+        disconnect(_db, &Db::memoCreated, this, &Self::memoCreated);
+    }
 
     _db = db;
     if (_model)
@@ -278,6 +283,7 @@ void DbTreeWidget::setDb(Db* db)
     {
         _model = new DbTreeModel(_db);
         connect(_db, &Db::memoUpdated, this, &Self::memoUpdated);
+        connect(_db, &Db::memoCreated, this, &Self::memoCreated);
     }
     _treeView->setModel(_model);
 }
@@ -365,9 +371,13 @@ void DbTreeWidget::createMemo()
     auto memoType = MemoType::selectFromDlg();
     if (!memoType) return;
 
+    _skipMemoCreatedHandler = true;
+
     _model->addItem(_treeView, [this, item, memoType]{
         return _db->createMemo(item->asFolder(), memoType).ok();
     });
+
+    _skipMemoCreatedHandler = false;
 }
 
 void DbTreeWidget::deleteMemo()
@@ -388,6 +398,21 @@ void DbTreeWidget::memoUpdated(MemoItem* item)
     auto index = _model->findIndex(item);
     if (index.isValid())
         _model->itemRenamed(index);
+}
+
+void DbTreeWidget::memoCreated(MemoItem* item)
+{
+    if (_skipMemoCreatedHandler) return;
+
+    auto parentIndex = _model->findIndex(item->parent());
+    if (!parentIndex.isValid()) return;
+
+    // Collapsed item will be refresed automatically when expands
+    if (!_treeView->isExpanded(parentIndex)) return;
+
+    // TODO: is there more direct way to refresh the branch
+    _treeView->setExpanded(parentIndex, false);
+    _treeView->setExpanded(parentIndex, true);
 }
 
 QStringList DbTreeWidget::getExpandedIds() const

@@ -11,6 +11,7 @@
 #include <QApplication>
 #include <QDesktopServices>
 #include <QFile>
+#include <QLineEdit>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QDialog>

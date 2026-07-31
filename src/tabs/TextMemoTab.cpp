@@ -52,10 +52,7 @@ TextMemoTab::TextMemoTab(Db* db, MemoItem* memoItem) : MemoTab(db, memoItem)
     _titleEditor = TabHelpers::makeTitleEditor();
     connect(_titleEditor, &QLineEdit::textEdited, [this]{ emit onModified(true); });
 
-    _toolbar = new QToolBar;
-    _toolbar->setObjectName("memo_toolbar");
-    _toolbar->setContentsMargins(0, 0, 0, 0);
-    _toolbar->setIconSize(QSize(24, 24));
+    _toolbar = TabHelpers::makeHeaderToolBar();
 
     _actionEdit = _toolbar->addAction(QIcon(":/toolbar/edit"), tr("Edit"), this, &TextMemoTab::beginEdit);
     _actionSave = _toolbar->addAction(QIcon(":/toolbar/apply"), tr("Save"), this, &TextMemoTab::saveEdit);
@@ -75,7 +72,6 @@ TextMemoTab::TextMemoTab(Db* db, MemoItem* memoItem) : MemoTab(db, memoItem)
     showMemo();
     toggleEditMode(false);
     _memoEditor->setFocus();
-
 }
 
 QFont TextMemoTab::memoFont() const
@@ -197,6 +193,13 @@ void TextMemoTab::beginEdit()
 {
     toggleEditMode(true);
     _memoEditor->beginEdit();
+
+    if (_memoItem->data().isEmpty())
+    {
+        _titleEditor->setFocus();
+        _titleEditor->selectAll();
+    }
+
     emit onReadOnly(false);
 }
 
@@ -260,9 +263,7 @@ void TextMemoTab::toggleEditMode(bool on)
         }
     }
 
-    _titleEditor->setReadOnly(!on);
-    // Force updating editor's style sheet, seems it doesn't note changing of readOnly or a custom property
-    _titleEditor->setStyleSheet(QString("QLineEdit { background: %1 }").arg(on ? "white" : "transparent"));
+    TabHelpers::setTitleEditorReadOnly(_titleEditor, !on);
 }
 
 void TextMemoTab::togglePreviewMode()

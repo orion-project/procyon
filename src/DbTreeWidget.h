@@ -34,6 +34,7 @@ private:
     QTreeView* _treeView;
     DbTreeModel* _model = nullptr;
     QMenu *_rootMenu, *_folderMenu, *_memoMenu;
+    bool _skipMemoCreatedHandler = false;
 
     DbItem* selectedItem() const;
 
@@ -46,6 +47,7 @@ private:
 
     void contextMenuRequested(const QPoint &pos);
     void memoUpdated(MemoItem*);
+    void memoCreated(MemoItem*);
 };
 
 #endif // DBTREE_WIDGET_H

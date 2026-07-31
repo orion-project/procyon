@@ -130,6 +130,7 @@ set(PROJECT_SOURCES
     src/tabs/AppSettingsTab.cpp
     src/tabs/CmdConsoleTab.cpp
     src/tabs/CssEditorTab.cpp
+    src/tabs/GridViewMemoTab.cpp
     src/tabs/HelpTab.cpp
     src/tabs/MemoTab.cpp
     src/tabs/PhlEditorTab.cpp

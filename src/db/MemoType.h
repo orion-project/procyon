@@ -14,6 +14,7 @@ public:
     static MemoType* plainText();
     static MemoType* markdown();
     static MemoType* richText();
+    static MemoType* gridView();
 
     static const QList<MemoType*>& all();
 

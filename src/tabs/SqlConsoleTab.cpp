@@ -7,6 +7,7 @@
 #include "helpers/OriLayouts.h"
 
 #include <QLabel>
+#include <QLineEdit>
 #include <QSplitter>
 #include <QToolBar>
 #include <QPlainTextEdit>

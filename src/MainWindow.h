@@ -18,6 +18,7 @@ class SpellcheckControl;
 class InfoWidget;
 class MemoTab;
 class MemoItem;
+class TextMemoTab;
 
 namespace Ori {
 class MruFileList;
@@ -80,6 +81,7 @@ private:
     void exportToPdf();
     MemoTab* findMemoTab(MemoItem* item) const;
     MemoTab* currentMemoTab() const;
+    TextMemoTab* currentTextMemoTab() const;
     void optionsMenuAboutToShow();
     void spellcheckMenuAboutToShow();
     void highlighterMenuAboutToShow();

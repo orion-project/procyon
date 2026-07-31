@@ -10,6 +10,7 @@
 #include "tabs/PhlEditorTab.h"
 #include "tabs/CssEditorTab.h"
 #include "tabs/MemoTab.h"
+#include "tabs/TextMemoTab.h"
 #include "tabs/SqlConsoleTab.h"
 #include "tabs/QssEditorTab.h"
 #include "tabs/CmdConsoleTab.h"
@@ -24,6 +25,7 @@
 #include "tools/OriMruList.h"
 #include "tools/OriSettings.h"
 #include "widgets/OriMruMenu.h"
+#include "widgets/OriLabels.h"
 
 #include <QApplication>
 #include <QCloseEvent>
@@ -271,6 +273,12 @@ void MainWindow::createStatusBar()
 {
     statusBar()->addWidget(makeStatusPanel(tr("Memos:"), _statusMemoCount));
     statusBar()->addWidget(makeStatusPanel(tr("Notebook:"), _statusFileName));
+
+    auto versionLabel = new Ori::Widgets::Label(qApp->applicationVersion());
+    connect(versionLabel, &Ori::Widgets::Label::clicked, this, []{
+        HelpTab::showAbout();
+    });
+    statusBar()->addPermanentWidget(versionLabel);
 }
 
 void MainWindow::saveSettings(QSettings* s)
@@ -534,7 +542,19 @@ void MainWindow::openMemoTab(MemoItem* item)
         return;
     }
 
-    auto tab = new MemoTab(_db, item);
+    MemoTab* tab = nullptr;
+
+    if (item->type() == MemoType::plainText())
+        tab = new TextMemoTab(_db, item);
+    else if (item->type() == MemoType::markdown())
+        tab = new TextMemoTab(_db, item);
+
+    if (!tab)
+    {
+        qWarning() << "Unknown how to open the memo of type" << item->type()->name();
+        return;
+    }
+
     _tabsView->addWidget(tab);
     _tabsView->setCurrentWidget(tab);
     _openTabsView->addOpenedTab(tab);
@@ -564,9 +584,14 @@ MemoTab* MainWindow::currentMemoTab() const
     return dynamic_cast<MemoTab*>(_tabsView->currentWidget());
 }
 
+TextMemoTab* MainWindow::currentTextMemoTab() const
+{
+    return dynamic_cast<TextMemoTab*>(_tabsView->currentWidget());
+}
+
 void MainWindow::exportToPdf()
 {
-    auto memoPage = currentMemoTab();
+    auto memoPage = currentTextMemoTab();
     if (!memoPage) return;
 
     memoPage->exportToPdf();
@@ -574,7 +599,7 @@ void MainWindow::exportToPdf()
 
 void MainWindow::chooseMemoFont()
 {
-    auto memoPage = currentMemoTab();
+    auto memoPage = currentTextMemoTab();
     if (!memoPage) return;
 
     bool ok;
@@ -588,7 +613,7 @@ void MainWindow::chooseMemoFont()
 
 void MainWindow::toggleWordWrap()
 {
-    auto memoPage = currentMemoTab();
+    auto memoPage = currentTextMemoTab();
     if (!memoPage) return;
 
     memoPage->setWordWrap(!memoPage->wordWrap());
@@ -614,7 +639,7 @@ void MainWindow::memoRemoved(MemoItem* item)
 
 void MainWindow::optionsMenuAboutToShow()
 {
-    auto memoPage = currentMemoTab();
+    auto memoPage = currentTextMemoTab();
     if (_spellcheckMenu)
         _spellcheckMenu->setEnabled(memoPage && !memoPage->isReadOnly());
     _highlighterMenu->setEnabled(memoPage && memoPage->memoItem()->type() == MemoType::plainText());
@@ -628,7 +653,7 @@ void MainWindow::optionsMenuAboutToShow()
 void MainWindow::spellcheckMenuAboutToShow()
 {
 #ifdef ENABLE_SPELLCHECK
-    auto memoPage = currentMemoTab();
+    auto memoPage = currentTextMemoTab();
     if (memoPage)
         _spellcheckControl->showCurrentLang(memoPage->spellcheckLang());
 #endif
@@ -637,7 +662,7 @@ void MainWindow::spellcheckMenuAboutToShow()
 void MainWindow::highlighterMenuAboutToShow()
 {
     QString currentHighlighter;
-    auto memoPage = currentMemoTab();
+    auto memoPage = currentTextMemoTab();
     if (memoPage)
         currentHighlighter = memoPage->highlighter();
     _highlighterControl->showCurrent(currentHighlighter);
@@ -645,12 +670,12 @@ void MainWindow::highlighterMenuAboutToShow()
 
 void MainWindow::setMemoSpellcheckLang(const QString& lang)
 {
-    auto memoPage = currentMemoTab();
+    auto memoPage = currentTextMemoTab();
     if (memoPage) memoPage->setSpellcheckLang(lang);
 }
 
 void MainWindow::setMemoHighlighter(const QString& name)
 {
-    auto memoPage = currentMemoTab();
+    auto memoPage = currentTextMemoTab();
     if (memoPage) memoPage->setHighlighter(name);
 }

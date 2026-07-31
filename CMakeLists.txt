@@ -135,6 +135,7 @@ set(PROJECT_SOURCES
     src/tabs/PhlEditorTab.cpp
     src/tabs/QssEditorTab.cpp
     src/tabs/SqlConsoleTab.cpp
+    src/tabs/TextMemoTab.cpp
     src/tabs/TabHelpers.cpp
     src/TextEditHelpers.cpp
     src/widgets/MemoTextBrowser.cpp

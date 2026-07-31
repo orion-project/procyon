@@ -7,11 +7,9 @@
 class MemoType
 {
 public:
-    virtual ~MemoType();
-    virtual const QString name() const = 0;
-    virtual const char* title() const = 0;
-    virtual const QIcon& icon() const = 0;
-    virtual const QString iconPath() const = 0;
+    QString name() const { return _name; }
+    const char* title() const { return _title; }
+    const QIcon& icon() const { return _icon; }
 
     static MemoType* plainText();
     static MemoType* markdown();
@@ -22,6 +20,13 @@ public:
     static MemoType* findByName(const QString& name);
 
     static MemoType* selectFromDlg();
+
+private:
+    MemoType(const QString& name, const char* title, const QString& iconPath);
+
+    QString _name;
+    const char* _title;
+    QIcon _icon;
 };
 
 #endif // MEMO_TYPE_H

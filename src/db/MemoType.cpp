@@ -7,40 +7,30 @@
 #include <QApplication>
 #include <QHBoxLayout>
 
-MemoType::~MemoType()
+MemoType::MemoType(const QString& name, const char* title, const QString& iconPath)
 {
+    _name = name;
+    _title = title;
+    _icon = QIcon(iconPath);
 }
 
-class PlainTextMemoType : public MemoType
+MemoType* MemoType::plainText()
 {
-public:
-    const QString name() const override { return QStringLiteral("plain_text"); }
-    const char* title() const override { return QT_TRANSLATE_NOOP("MemoType", "Plain Text"); }
-    const QIcon& icon() const override { static QIcon icon(iconPath()); return icon; }
-    const QString iconPath() const override { return QStringLiteral(":/icon/memo_plain_text"); }
-};
+    static MemoType t("plain_text", QT_TRANSLATE_NOOP("MemoType", "Plain Text"), ":/icon/memo_plain_text");
+    return &t;
+}
 
-class MarkdownMemoType : public MemoType
+MemoType* MemoType::markdown()
 {
-public:
-    const QString name() const override { return QStringLiteral("markdown"); }
-    const char* title() const override { return QT_TRANSLATE_NOOP("MemoType", "Markdown"); }
-    const QIcon& icon() const override { static QIcon icon(iconPath()); return icon; }
-    const QString iconPath() const override { return QStringLiteral(":/icon/memo_markdown"); }
-};
+    static MemoType t("markdown", QT_TRANSLATE_NOOP("MemoType", "Markdown"), ":/icon/memo_markdown");
+    return &t;
+}
 
-class RichTextMemoType : public MemoType
+MemoType* MemoType::richText()
 {
-public:
-    const QString name() const override { return QStringLiteral("rich_text"); }
-    const char* title() const override { return QT_TRANSLATE_NOOP("MemoType", "Rich Text"); }
-    const QIcon& icon() const override { static QIcon icon(iconPath()); return icon; }
-    const QString iconPath() const override { return QStringLiteral(":/icon/memo_rich_text"); }
-};
-
-MemoType* MemoType::plainText() { static PlainTextMemoType t; return &t; }
-MemoType* MemoType::markdown() { static MarkdownMemoType t; return &t; }
-MemoType* MemoType::richText() { static RichTextMemoType t; return &t; }
+    static MemoType t("rich_text", QT_TRANSLATE_NOOP("MemoType", "Rich Text"), ":/icon/memo_rich_text");
+    return &t;
+}
 
 const QList<MemoType*>& MemoType::all()
 {

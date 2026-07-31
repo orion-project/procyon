@@ -9,6 +9,8 @@
 #include <QMenu>
 #include <QTreeView>
 
+#include <functional>
+
 class DbTreeModel : public QAbstractItemModel
 {
 public:
@@ -72,8 +74,27 @@ public:
         auto parentFolder = item->parentFolder();
         if (!parentFolder || parentFolder->isRoot())
             return QModelIndex();
-    
-        int row = parentFolder->children().indexOf(item);
+
+        // There should be row inside of parent folder inside its own parent
+        int row;
+
+        auto superParentFolder = parentFolder->parentFolder();
+        if (!superParentFolder)
+        {
+            // The parent of parent is the root
+            // This should not happen because the root tree-item has no children
+            row = 0;
+        }
+        else
+            row = superParentFolder->children().indexOf(parentFolder);
+
+        if (superParentFolder->isRoot())
+        {
+            // Inrease for the root item
+            // which is in the tree at the top level alongside with its own children
+            row++;
+        }
+
         return createIndex(row, 0, parentFolder);
     }
     
@@ -150,11 +171,12 @@ public:
         if (parentItem->isRoot())
             parentIndex = QModelIndex();
         int row = rowCount(parentIndex);
-        beginInsertRows(parentIndex, row, row);
-        auto ok = makeItem();
-        endInsertRows();
-        if (!ok)
-            return;
+        if (makeItem())
+        {
+            beginInsertRows(parentIndex, row, row);
+            endInsertRows();
+        }
+        else return;
         // Invalid parent index means we insert at the top level
         if (parentIndex.isValid() && !treeView->isExpanded(parentIndex))
             treeView->expand(parentIndex);
@@ -166,15 +188,17 @@ public:
     void removeItem(QTreeView *treeView, std::function<bool()> deleteItem)
     {
         QModelIndex removingIndex = treeView->currentIndex();
-        bool memoRemoved = dbItem(removingIndex)->isMemo();
+        DbItem* removingItem = dbItem(removingIndex);
+        DbItem* parentItem = removingItem->parent();
+        bool memoRemoved = removingItem->isMemo();
         QModelIndex parentIndex = parent(removingIndex);
-        DbItem *parentItem = dbItem(parentIndex);
         int row = removingIndex.row();
-        beginRemoveRows(parentIndex, row, row);
-        bool ok = deleteItem();
-        endRemoveRows();
-        if (!ok)
-            return;
+        if (deleteItem())
+        {
+            beginRemoveRows(parentIndex, row, row);
+            endRemoveRows();
+        }
+        else return;
         parentIndex = findIndex(parentItem);
         QModelIndex currentIndex = parentIndex;
         if (memoRemoved)

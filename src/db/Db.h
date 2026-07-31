@@ -142,7 +142,7 @@ signals:
     void memoCreated(MemoItem*);
     void memoRemoved(MemoItem*);
     void memoUpdated(MemoItem*);
-    void errorOccured(const QString& error);
+    void errorOccurred(const QString& error);
 
 private:
     QString _fileName;

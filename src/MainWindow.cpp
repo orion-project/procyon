@@ -406,7 +406,7 @@ void MainWindow::dbOpened(Db* db)
     _db = db;
     connect(_db, &Db::memoCreated, this, &MainWindow::memoCreated);
     connect(_db, &Db::memoRemoved, this, &MainWindow::memoRemoved);
-    connect(_db, &Db::errorOccured, this, [](const QString& error){
+    connect(_db, &Db::errorOccurred, this, [](const QString& error){
         Ori::Dlg::Defer::error(error);
     });
     _treeView->setDb(_db);

@@ -124,19 +124,20 @@ DbResult Db::open(const QString& fileName)
         }
 
         for (const auto& item : std::as_const(res.items))
+            db->_allFolders.insert(item.folder->id(), item.folder);
+
+        for (const auto& item : std::as_const(res.items))
         {
             auto parent = db->_allFolders.value(item.parentId);
             if (!parent)
             {
-                qWarning() << QString("Parent folder #%1 not found for folder #%2")
+                parent = db->root();
+                qWarning() << QString("Parent folder #%1 not found for folder #%2, reparented to the root")
                                     .arg(item.parentId).arg(item.folder->id());
-                delete item.folder;
-                continue;
             }
 
             item.folder->_parent = parent;
             parent->_children.append(item.folder);
-            db->_allFolders.insert(item.folder->id(), item.folder);
         }
     }
 
@@ -158,10 +159,9 @@ DbResult Db::open(const QString& fileName)
             auto folder = db->_allFolders.value(item.folderId);
             if (!folder)
             {
-                qWarning() << QString("Folder #%1 not found for memo #%2")
+                folder = db->root();
+                qWarning() << QString("Folder #%1 not found for memo #%2, reparented to the root")
                                   .arg(item.folderId).arg(item.memo->id());
-                delete item.memo;
-                continue;
             }
 
             item.memo->_parent = folder;
@@ -205,7 +205,7 @@ bool Db::renameFolder(FolderItem* item, const QString& title)
     QString res = DB::folderManager()->rename(item->id(), title);
     if (!res.isEmpty())
     {
-        emit errorOccured(res);
+        emit errorOccurred(res);
         return false;
     }
 
@@ -218,7 +218,11 @@ bool Db::renameFolder(FolderItem* item, const QString& title)
 FolderResult Db::createFolder(FolderItem* parent, const QString& title)
 {
     if (!parent)
-        return FolderResult::fail("Parent folder must be provided");
+    {
+        QString msg = "Parent folder must be provided";
+        emit errorOccurred(msg);
+        return FolderResult::fail(msg);
+    }
 
     FolderItem* folder = new FolderItem;
     folder->_title = title;
@@ -228,7 +232,7 @@ FolderResult Db::createFolder(FolderItem* parent, const QString& title)
     if (!res.isEmpty())
     {
         delete folder;
-        emit errorOccured(res);
+        emit errorOccurred(res);
         return FolderResult::fail(res);
     }
 
@@ -242,7 +246,11 @@ FolderResult Db::createFolder(FolderItem* parent, const QString& title)
 bool Db::removeFolder(FolderItem* folder)
 {
     if (!folder->parent())
-        return "Unable to remove root folder";
+    {
+        QString msg = "Unable to remove root folder";
+        emit errorOccurred(msg);
+        return false;
+    }
 
     QVector<DbItem*> subitems;
     fillSubitemsFlat(folder, subitems);
@@ -251,7 +259,7 @@ bool Db::removeFolder(FolderItem* folder)
     QString res = DB::folderManager()->remove(folder);
     if (!res.isEmpty())
     {
-        emit errorOccured(res);
+        emit errorOccurred(res);
         return false;
     }
 
@@ -272,7 +280,7 @@ bool Db::removeFolder(FolderItem* folder)
     _allFolders.remove(folder->id());
     delete folder;
 
-    return false;
+    return true;
 }
 
 MemoResult Db::createMemo(FolderItem* folder, MemoType* memoType)
@@ -290,7 +298,7 @@ MemoResult Db::createMemo(FolderItem* folder, MemoType* memoType)
     if (!res.isEmpty())
     {
         delete item;
-        emit errorOccured(res);
+        emit errorOccurred(res);
         return MemoResult::fail(res);
     }
 
@@ -310,7 +318,7 @@ bool Db::updateMemo(MemoItem* item, MemoUpdateParam update)
     QString res = DB::memoManager()->update(item, update);
     if (!res.isEmpty())
     {
-        emit errorOccured(res);
+        emit errorOccurred(res);
         return false;
     }
 
@@ -335,7 +343,7 @@ bool Db::removeMemo(MemoItem* item)
     QString res = DB::memoManager()->remove(item);
     if (!res.isEmpty())
     {
-        emit errorOccured(res);
+        emit errorOccurred(res);
         return false;
     }
 

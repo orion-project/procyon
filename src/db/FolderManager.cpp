@@ -90,7 +90,7 @@ FoldersResult FolderManager::selectAll() const
     {
         auto r = query.record();
         auto folder = new FolderItem;
-        folder->_id = r.value(table->id).toInt();;
+        folder->_id = r.value(table->id).toInt();
         folder->_title = r.value(table->title).toString();
         int parentId = r.value(table->parent).toInt();
         result.items.append({parentId, folder});

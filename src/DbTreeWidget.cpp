@@ -73,26 +73,31 @@ public:
     
         auto parentFolder = item->parentFolder();
         if (!parentFolder || parentFolder->isRoot())
+        {
+            // Root and all its children are on the top level
             return QModelIndex();
+        }
 
-        // There should be row inside of parent folder inside its own parent
+        // Row index of the parent folder inside its own parent
         int row;
 
         auto superParentFolder = parentFolder->parentFolder();
         if (!superParentFolder)
         {
             // The parent of parent is the root
-            // This should not happen because the root tree-item has no children
+            // This should not be the case because the root tree-item has no children
             row = 0;
         }
         else
+        {
             row = superParentFolder->children().indexOf(parentFolder);
 
-        if (superParentFolder->isRoot())
-        {
-            // Inrease for the root item
-            // which is in the tree at the top level alongside with its own children
-            row++;
+            if (superParentFolder->isRoot())
+            {
+                // Increase for the root item
+                // which is in the tree at the top level alongside with its own children
+                row++;
+            }
         }
 
         return createIndex(row, 0, parentFolder);
@@ -166,17 +171,20 @@ public:
     {
         QModelIndex parentIndex = treeView->currentIndex();
         DbItem* parentItem = DbTreeModel::dbItem(parentIndex);
-        // If the root item is selected then we actually insert a new item
-        // not inside it but at the top level (which doesn't have parent)
+        if (!parentItem) return;
         if (parentItem->isRoot())
-            parentIndex = QModelIndex();
-        int row = rowCount(parentIndex);
-        if (makeItem())
         {
-            beginInsertRows(parentIndex, row, row);
-            endInsertRows();
+            // If the root item is selected then we actually insert a new item
+            // not inside it but at the top level (which doesn't have parent)
+            parentIndex = QModelIndex();
         }
-        else return;
+        int row = rowCount(parentIndex);
+        // Shoul be called before underlying data mutation
+        beginInsertRows(parentIndex, row, row);
+        bool ok = makeItem();
+        endInsertRows();
+        if (!ok)
+            return;
         // Invalid parent index means we insert at the top level
         if (parentIndex.isValid() && !treeView->isExpanded(parentIndex))
             treeView->expand(parentIndex);
@@ -189,16 +197,20 @@ public:
     {
         QModelIndex removingIndex = treeView->currentIndex();
         DbItem* removingItem = dbItem(removingIndex);
-        DbItem* parentItem = removingItem->parent();
+        if (!removingItem) return;
         bool memoRemoved = removingItem->isMemo();
+
+        DbItem* parentItem = removingItem->parent();
+        // Only root item has no parent, it can't be removed
+        if (!parentItem) return;
+
         QModelIndex parentIndex = parent(removingIndex);
         int row = removingIndex.row();
-        if (deleteItem())
-        {
-            beginRemoveRows(parentIndex, row, row);
-            endRemoveRows();
-        }
-        else return;
+        beginRemoveRows(parentIndex, row, row);
+        bool ok = deleteItem();
+        endRemoveRows();
+        if (!ok)
+            return;
         parentIndex = findIndex(parentItem);
         QModelIndex currentIndex = parentIndex;
         if (memoRemoved)

@@ -276,7 +276,7 @@ void MainWindow::createStatusBar()
     statusBar()->addWidget(makeStatusPanel(tr("Notebook:"), _statusFileName));
 
     auto versionLabel = new Ori::Widgets::Label(qApp->applicationVersion());
-    connect(versionLabel, &Ori::Widgets::Label::clicked, this, []{
+    connect(versionLabel, &Ori::Widgets::Label::doubleClicked, this, []{
         HelpTab::showAbout();
     });
     statusBar()->addPermanentWidget(versionLabel);
@@ -550,7 +550,10 @@ void MainWindow::openMemoTab(MemoItem* item)
     else if (item->type() == MemoType::markdown())
         tab = new TextMemoTab(_db, item);
     else if (item->type() == MemoType::gridView())
+    {
         tab = new GridViewMemoTab(_db, item);
+        connect((GridViewMemoTab*)tab, &GridViewMemoTab::memoOpenRequested, this, &MainWindow::openMemoTab);
+    }
 
     if (!tab)
     {

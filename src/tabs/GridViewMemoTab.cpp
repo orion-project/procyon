@@ -5,8 +5,126 @@
 #include "db/MemoManager.h"
 #include "db/MemoType.h"
 
+#include <QAbstractTableModel>
+#include <QHeaderView>
+#include <QTableView>
 #include <QToolBar>
 #include <QLineEdit>
+#include <QMenu>
+
+namespace {
+
+enum { COL_ID, COL_TITLE, COL_UPDATED, COL_COUNT };
+
+}
+
+//------------------------------------------------------------------------------
+//                            GridViewTableModel
+//------------------------------------------------------------------------------
+
+class GridViewTableModel : public QAbstractTableModel
+{
+public:
+    GridViewTableModel(MemoItem *item) : QAbstractTableModel()
+    {
+        _self = item;
+        _folder = item->parentFolder();
+    }
+
+    int rowCount(const QModelIndex&) const override
+    {
+        return _folder->children().size();
+    }
+
+    int columnCount(const QModelIndex&) const override { return COL_COUNT; }
+
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const override
+    {
+        if (role == Qt::DisplayRole)
+        {
+            switch (orientation)
+            {
+            case Qt::Vertical:
+                return section + 1;
+            case Qt::Horizontal:
+                switch (section)
+                {
+                case COL_ID: return tr("ID");
+                case COL_TITLE: return tr("Title");
+                case COL_UPDATED: return tr("Updated");
+                }
+            }
+        }
+        return QVariant();
+    }
+
+    QVariant data(const QModelIndex &index, int role) const override
+    {
+        if (!index.isValid()) return QVariant();
+        int col = index.column();
+        int row = index.row();
+        const auto& item = _folder->children().at(row);
+
+        if (role == Qt::DecorationRole)
+        {
+            if (col == COL_ID)
+            {
+                auto memo = item->asMemo();
+                return memo ? memo->type()->icon() : _iconFolder;
+            }
+        }
+        else if (role == Qt::ToolTipRole)
+        {
+            if (col == COL_ID)
+            {
+                auto memo = item->asMemo();
+                return memo ? memo->type()->title() : tr("Folder");
+            }
+        }
+        else if (role == Qt::DisplayRole)
+        {
+            if (col == COL_ID)
+                return item->id();
+
+            if (col == COL_TITLE)
+                return item->title();
+
+            if (col == COL_UPDATED)
+            {
+                auto memo = item->asMemo();
+                return memo ? memo->updated() : QVariant();
+            }
+        }
+
+        return QVariant();
+    }
+
+    void memoCreated(MemoItem* newItem)
+    {
+        if (newItem->parentFolder() != _folder) return;
+        int row = _folder->children().indexOf(newItem);
+        if (row < 0) return;
+        beginInsertRows(QModelIndex(), row, row);
+        endInsertRows();
+    }
+
+    void memoRemoved(MemoItem* oldItem)
+    {
+        beginResetModel();
+        endResetModel();
+    }
+
+private:
+    MemoItem *_self;
+    FolderItem *_folder;
+    QIcon _iconFolder = QIcon(":/icon/folder");
+};
+
+//------------------------------------------------------------------------------
+//                             GridViewMemoTab
+//------------------------------------------------------------------------------
+
+typedef GridViewMemoTab Self;
 
 GridViewMemoTab::GridViewMemoTab(Db* db, MemoItem* memoItem) : MemoTab(db, memoItem)
 {
@@ -14,22 +132,46 @@ GridViewMemoTab::GridViewMemoTab(Db* db, MemoItem* memoItem) : MemoTab(db, memoI
 
     _toolbar = TabHelpers::makeHeaderToolBar();
 
-    _actionEdit = _toolbar->addAction(QIcon(":/toolbar/edit"), tr("Edit"), this, &GridViewMemoTab::beginEdit);
-    _actionSave = _toolbar->addAction(QIcon(":/toolbar/apply"), tr("Save"), this, &GridViewMemoTab::saveEdit);
-    _actionCancel = _toolbar->addAction(QIcon(":/toolbar/cancel"), tr("Cancel"), this, &GridViewMemoTab::cancelEdit);
+    _actionEdit = _toolbar->addAction(QIcon(":/toolbar/edit"), tr("Edit"), this, &Self::beginEdit);
+    _actionSave = _toolbar->addAction(QIcon(":/toolbar/apply"), tr("Save"), this, &Self::saveEdit);
+    _actionCancel = _toolbar->addAction(QIcon(":/toolbar/cancel"), tr("Cancel"), this, &Self::cancelEdit);
     _actionEdit->setShortcut(QKeySequence(Qt::Key_Return, Qt::Key_Return));
     _actionSave->setShortcut(QKeySequence::Save);
     _actionCancel->setShortcut(QKeySequence(Qt::Key_Escape, Qt::Key_Escape));
     _toolbar->addSeparator();
-    _toolbar->addAction(tr("New Memo"), this, &GridViewMemoTab::createMemo);
+    _toolbar->addAction(tr("New Memo"), this, &Self::createMemo);
     _toolbar->addSeparator();
     _toolbar->addAction(QIcon(":/toolbar/close"), tr("Close Tab"), [this](){
         if (canClose()) deleteLater();
     });
 
+    _contextMenu = new QMenu;
+    auto actionOpen = _contextMenu->addAction(tr("Open"), Qt::Key_Return, this, &Self::openSelectedMemo);
+
     auto toolPanel = TabHelpers::makeHeaderPanel({_titleEditor, _toolbar});
 
-    Ori::Layouts::LayoutV({toolPanel, Ori::Layouts::Stretch()}).setMargin(0).setSpacing(0).useFor(this);
+    _tableModel = new GridViewTableModel(memoItem);
+    connect(_db, &Db::memoCreated, _tableModel, &GridViewTableModel::memoCreated);
+    connect(_db, &Db::memoRemoved, _tableModel, &GridViewTableModel::memoRemoved);
+
+    _tableView = new QTableView;
+    _tableView->setModel(_tableModel);
+    _tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    _tableView->setSelectionMode(QAbstractItemView::SingleSelection);
+    _tableView->verticalHeader()->setVisible(false);
+    _tableView->setContextMenuPolicy(Qt::CustomContextMenu);
+    _tableView->addAction(actionOpen);
+    connect(_tableView, &QTableView::doubleClicked, this, &Self::openSelectedMemo);
+    connect(_tableView, &QTableView::customContextMenuRequested, this, &Self::showContextMenu);
+
+    auto h = _tableView->horizontalHeader();
+    h->setMinimumSectionSize(32);
+    h->setSectionResizeMode(COL_ID, QHeaderView::ResizeToContents);
+    h->setSectionResizeMode(COL_TITLE, QHeaderView::Stretch);
+    h->setSectionResizeMode(COL_UPDATED, QHeaderView::ResizeToContents);
+    h->setHighlightSections(false);
+
+    Ori::Layouts::LayoutV({toolPanel, _tableView}).setMargin(0).setSpacing(0).useFor(this);
 
     showMemo();
     toggleEditMode(false);
@@ -84,4 +226,26 @@ void GridViewMemoTab::createMemo()
     if (!memoType) return;
 
     _db->createMemo(_memoItem->parentFolder(), memoType);
+}
+
+DbItem* GridViewMemoTab::selectedItem() const
+{
+    QModelIndexList selection = _tableView->selectionModel()->selectedRows();
+    if (selection.empty()) return nullptr;
+    int row = selection.at(0).row();
+    return _memoItem->parentFolder()->children().at(row);
+}
+
+void GridViewMemoTab::showContextMenu(const QPoint& pos)
+{
+    auto dbItem = selectedItem();
+    if (dbItem->isMemo())
+        _contextMenu->popup(_tableView->mapToGlobal(pos));
+}
+
+void GridViewMemoTab::openSelectedMemo()
+{
+    auto dbItem = selectedItem();
+    if (dbItem->isMemo())
+        emit memoOpenRequested(dbItem->asMemo());
 }

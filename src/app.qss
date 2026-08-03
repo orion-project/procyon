@@ -3,7 +3,7 @@ $border-color: silver; /* Default border color */
 $border-radius: 4px; /* Default border radius */
 $default-border: 1px solid silver; /* Default border */
 $selection-color: steelBlue;
-$main-font-size: 13px;
+$main-font-size: 14px;
 $hover-color: #334682b4;
 
 /************************************
@@ -351,4 +351,11 @@ QToolButton:hover {
 #OriPopupMessage[mode=hint] {
   border: 1px solid #e5c300;
   background: #ffec7c;
+}
+
+/************************************
+             PopupMessage
+************************************/
+QTableView {
+  font-size: $main-font-size;
 }

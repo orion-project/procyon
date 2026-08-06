@@ -60,10 +60,14 @@ class FolderItem : public DbItem
 public:
     ~FolderItem();
 
-    const QList<DbItem*>& children() const { return _children; }
+    const QList<FolderItem*>& folders() const { return _folders; }
+    const QList<MemoItem*>& memos() const { return _memos; }
+
+    int childCount() const { return _folders.size() + _memos.size(); }
 
 private:
-    QList<DbItem*> _children;
+    QList<FolderItem*> _folders;
+    QList<MemoItem*> _memos;
 
     friend class Db;
     friend class FolderManager;
@@ -127,21 +131,21 @@ public:
 
     IntResult countMemos() const;
 
-    bool renameFolder(FolderItem* item, const QString& title);
     FolderResult createFolder(FolderItem* parent, const QString& title);
+    bool renameFolder(FolderItem* item, const QString& title);
     bool removeFolder(FolderItem* folder);
+
     MemoResult createMemo(FolderItem* folder, MemoType *memoType);
     bool updateMemo(MemoItem* item, MemoUpdateParam update);
     bool removeMemo(MemoItem* item);
     QString loadMemo(MemoItem* item);
 
-    void fillSubitemsFlat(FolderItem* root, QVector<DbItem*> &subitems);
-    void fillMemoIdsFlat(FolderItem* root, QVector<int> &ids);
-
 signals:
-    void memoCreated(MemoItem*);
-    void memoRemoved(MemoItem*);
-    void memoUpdated(MemoItem*);
+    void itemCreating(DbItem*, int);
+    void itemCreated(DbItem*);
+    void itemUpdated(DbItem*);
+    void itemRemoving(DbItem*);
+    void itemRemoved(DbItem*);
     void errorOccurred(const QString& error);
 
 private:
@@ -152,6 +156,9 @@ private:
     QMap<int, FolderItem*> _allFolders;
 
     static QString prepareDb(const QString fileName);
+
+    void fillFolderIdsFlat(FolderItem* root, QVector<int>& ids);
+    void fillMemoIdsFlat(FolderItem* root, QVector<int>& ids);
 };
 
 #endif // DB_H

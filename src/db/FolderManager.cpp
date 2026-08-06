@@ -132,12 +132,11 @@ QString FolderManager::removeBranch(FolderItem* folder, const QString& path) con
     auto table = folderTable();
     QString thisPath = path + '/' + folder->title();
 
-    for (auto item: folder->children())
-        if (item->isFolder())
-        {
-            QString res = removeBranch(item->asFolder(), thisPath);
-            if (!res.isEmpty()) return res;
-        }
+    for (auto item: folder->folders())
+    {
+        QString res = removeBranch(item->asFolder(), thisPath);
+        if (!res.isEmpty()) return res;
+    }
 
     QString res = ActionQuery(table->sqlDelete)
             .param(table->id, folder->id())

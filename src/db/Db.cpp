@@ -40,7 +40,8 @@ QString DbItem::path() const
 
 FolderItem::~FolderItem()
 {
-    qDeleteAll(_children);
+    qDeleteAll(_folders);
+    qDeleteAll(_memos);
 }
 
 //------------------------------------------------------------------------------
@@ -137,7 +138,7 @@ DbResult Db::open(const QString& fileName)
             }
 
             item.folder->_parent = parent;
-            parent->_children.append(item.folder);
+            parent->_folders.append(item.folder);
         }
     }
 
@@ -165,7 +166,7 @@ DbResult Db::open(const QString& fileName)
             }
 
             item.memo->_parent = folder;
-            folder->_children.append(item.memo);
+            folder->_memos.append(item.memo);
             db->_allMemos[item.memo->id()] = item.memo;
         }
     }
@@ -211,6 +212,8 @@ bool Db::renameFolder(FolderItem* item, const QString& title)
 
     item->_title = title;
 
+    emit itemUpdated(item);
+
     // TODO sort items after renaming
     return true;
 }
@@ -236,10 +239,13 @@ FolderResult Db::createFolder(FolderItem* parent, const QString& title)
         return FolderResult::fail(res);
     }
 
-    parent->_children.append(folder);
+    emit itemCreating(folder, parent->_folders.size());
+
+    parent->_folders.append(folder);
     _allFolders.insert(folder->id(), folder);
     // TODO sort items after inserting
 
+    emit itemCreated(folder);
     return FolderResult::ok(folder);
 }
 
@@ -252,8 +258,11 @@ bool Db::removeFolder(FolderItem* folder)
         return false;
     }
 
-    QVector<DbItem*> subitems;
-    fillSubitemsFlat(folder, subitems);
+    QVector<int> folderIds;
+    fillFolderIdsFlat(folder, folderIds);
+
+    QVector<int> memoIds;
+    fillMemoIdsFlat(folder, memoIds);
 
     // It removes all subfolders too
     QString res = DB::folderManager()->remove(folder);
@@ -263,23 +272,27 @@ bool Db::removeFolder(FolderItem* folder)
         return false;
     }
 
-    folder->parentFolder()->_children.removeOne(folder);
+    emit itemRemoving(folder);
 
-    for (auto subitem : std::as_const(subitems))
+    for (auto id : std::as_const(memoIds))
     {
-        if (subitem->isFolder())
-            _allFolders.remove(subitem->id());
-        else
-        {
-            // Memo in DB was already deleted by FK relation
-            emit memoRemoved(dynamic_cast<MemoItem*>(subitem));
-            _allMemos.remove(subitem->id());
-        }
+        auto memo = _allMemos.value(id);
+        emit itemRemoving(memo);
+
+        // Memo in DB was already deleted by FK relation
+        _allMemos.remove(id);
+
+        emit itemRemoved(memo);
     }
 
-    _allFolders.remove(folder->id());
-    delete folder;
+    folder->parentFolder()->_folders.removeOne(folder);
 
+    for (auto id : std::as_const(folderIds))
+        _allFolders.remove(id);
+
+    _allFolders.remove(folder->id());
+
+    delete folder;
     return true;
 }
 
@@ -302,11 +315,13 @@ MemoResult Db::createMemo(FolderItem* folder, MemoType* memoType)
         return MemoResult::fail(res);
     }
 
-    folder->_children.append(item);
+    emit itemCreating(item, folder->_memos.size());
+
+    folder->_memos.append(item);
     _allMemos.insert(item->id(), item);
     // TODO sort items after inserting
 
-    emit memoCreated(item);
+    emit itemCreated(item);
     return MemoResult::ok(item);
 }
 
@@ -327,7 +342,7 @@ bool Db::updateMemo(MemoItem* item, MemoUpdateParam update)
     item->_updated = update.moment;
     item->_station = update.station;
 
-    emit memoUpdated(item);
+    emit itemUpdated(item);
 
     // TODO sort items after renaming
     return true;
@@ -347,10 +362,12 @@ bool Db::removeMemo(MemoItem* item)
         return false;
     }
 
-    item->parentFolder()->_children.removeOne(item);
+    emit itemRemoving(item);
+
+    item->parentFolder()->_memos.removeOne(item);
     _allMemos.remove(item->id());
 
-    emit memoRemoved(item);
+    emit itemRemoved(item);
 
     delete item;
     return true;
@@ -393,25 +410,22 @@ FolderItem* Db::findFolderById(int id) const
     return findInContainerById(_allFolders, id);
 }
 
-void Db::fillSubitemsFlat(FolderItem* root, QVector<DbItem*>& subitems)
+void Db::fillFolderIdsFlat(FolderItem* root, QVector<int>& ids)
 {
-    for (DbItem* item : root->children())
+    for (auto folder : root->folders())
     {
-        subitems.append(item);
-
-        if (item->isFolder())
-            fillSubitemsFlat(item->asFolder(), subitems);
+        ids.append(folder->id());
+        fillFolderIdsFlat(folder, ids);
     }
 }
 
 void Db::fillMemoIdsFlat(FolderItem* root, QVector<int> &ids)
 {
-    for (DbItem* item : root->children())
-    {
-        if (item->isFolder())
-            fillMemoIdsFlat(item->asFolder(), ids);
-        else ids.append(item->id());
-    }
+    for (auto memo : root->memos())
+        ids.append(memo->id());
+
+    for (auto folder : root->folders())
+        fillMemoIdsFlat(folder, ids);
 }
 
 QString Db::uid() const

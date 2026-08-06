@@ -33,7 +33,7 @@ public:
 
     int rowCount(const QModelIndex&) const override
     {
-        return _folder->children().size();
+        return _folder->memos().size();
     }
 
     int columnCount(const QModelIndex&) const override { return COL_COUNT; }
@@ -63,61 +63,80 @@ public:
         if (!index.isValid()) return QVariant();
         int col = index.column();
         int row = index.row();
-        const auto& item = _folder->children().at(row);
+        const auto& memo = _folder->memos().at(row);
 
         if (role == Qt::DecorationRole)
         {
             if (col == COL_ID)
             {
-                auto memo = item->asMemo();
-                return memo ? memo->type()->icon() : _iconFolder;
+                return memo->type()->icon();
             }
         }
         else if (role == Qt::ToolTipRole)
         {
             if (col == COL_ID)
             {
-                auto memo = item->asMemo();
-                return memo ? memo->type()->title() : tr("Folder");
+                return memo->type()->title();
             }
         }
         else if (role == Qt::DisplayRole)
         {
             if (col == COL_ID)
-                return item->id();
+                return memo->id();
 
             if (col == COL_TITLE)
-                return item->title();
+                return memo->title();
 
             if (col == COL_UPDATED)
             {
-                auto memo = item->asMemo();
-                return memo ? memo->updated() : QVariant();
+                return memo->updated();
             }
         }
 
         return QVariant();
     }
 
-    void memoCreated(MemoItem* newItem)
+    void itemCreating(DbItem* item, int index)
     {
-        if (newItem->parentFolder() != _folder) return;
-        int row = _folder->children().indexOf(newItem);
-        if (row < 0) return;
-        beginInsertRows(QModelIndex(), row, row);
-        endInsertRows();
+        if (item->isMemo() && item->parentFolder() == _folder)
+        {
+            _isRowCountChanging = true;
+            beginInsertRows(QModelIndex(), index, index);
+        }
     }
 
-    void memoRemoved(MemoItem* oldItem)
+    void itemCreated(DbItem* item)
     {
-        beginResetModel();
-        endResetModel();
+        if (_isRowCountChanging)
+        {
+            _isRowCountChanging = false;
+            endInsertRows();
+        }
+    }
+
+    void itemRemoving(DbItem* item)
+    {
+        if (item->isMemo() && item->parentFolder() == _folder)
+        {
+            _isRowCountChanging = true;
+            int index = _folder->memos().indexOf(item);
+            beginRemoveRows(QModelIndex(), index, index);
+        }
+    }
+
+    void itemRemoved(DbItem* item)
+    {
+        if (_isRowCountChanging)
+        {
+            _isRowCountChanging = false;
+            endRemoveRows();
+        }
     }
 
 private:
     MemoItem *_self;
     FolderItem *_folder;
-    QIcon _iconFolder = QIcon(":/icon/folder");
+    bool _isRowCountChanging = false;
 };
 
 //------------------------------------------------------------------------------
@@ -151,8 +170,11 @@ GridViewMemoTab::GridViewMemoTab(Db* db, MemoItem* memoItem) : MemoTab(db, memoI
     auto toolPanel = TabHelpers::makeHeaderPanel({_titleEditor, _toolbar});
 
     _tableModel = new GridViewTableModel(memoItem);
-    connect(_db, &Db::memoCreated, _tableModel, &GridViewTableModel::memoCreated);
-    connect(_db, &Db::memoRemoved, _tableModel, &GridViewTableModel::memoRemoved);
+    connect(_db, &Db::itemCreating, _tableModel, &GridViewTableModel::itemCreating);
+    connect(_db, &Db::itemCreated, _tableModel, &GridViewTableModel::itemCreated);
+    connect(_db, &Db::itemRemoved, _tableModel, &GridViewTableModel::itemRemoved);
+    connect(_db, &Db::itemRemoving, _tableModel, &GridViewTableModel::itemRemoving);
+    connect(_db, &Db::itemRemoved, _tableModel, &GridViewTableModel::itemRemoved);
 
     _tableView = new QTableView;
     _tableView->setModel(_tableModel);
@@ -233,7 +255,7 @@ DbItem* GridViewMemoTab::selectedItem() const
     QModelIndexList selection = _tableView->selectionModel()->selectedRows();
     if (selection.empty()) return nullptr;
     int row = selection.at(0).row();
-    return _memoItem->parentFolder()->children().at(row);
+    return _memoItem->parentFolder()->memos().at(row);
 }
 
 void GridViewMemoTab::showContextMenu(const QPoint& pos)

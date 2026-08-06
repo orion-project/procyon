@@ -57,24 +57,25 @@ public:
             return "Database is not opened";
         QString r;
         QTextStream res(&r);
-        for (auto f : _impl->db->root()->children())
-            printItem(res, 0, f);
+        for (auto f : _impl->db->root()->folders())
+            printFolder(res, 0, f);
         return r;
     }
 private:
     const CmdConsole* _impl;
 
-    void printItem(QTextStream& res, int level, DbItem* it)
+    void printFolder(QTextStream& res, int level, FolderItem* folder)
     {
-        res << QString(level*4, ' ');
-        if (it->isFolder())
-        {
-            res << "[#" << it->id() << ' ' << it->title() << "]\n";
-            for (auto f : it->asFolder()->children())
-                printItem(res, level+1, f);
-        }
-        else
-            res << "· #" << it->id() << ' ' << it->title() << '\n';
+        res << QString(level*4, ' ') << "📁[" << folder->id() << "] " << folder->title()
+            << " (🔝" << folder->parentFolder()->id()  << ")\n";
+
+        QString ident((level+1)*4, ' ');
+        for (auto m : folder->memos())
+            res << ident << "📄(" << m->id() << ") " << m->title()
+                << " (🔝" << m->parentFolder()->id() << ")\n";
+
+        for (auto f : folder->folders())
+            printFolder(res, level+1, f);
     }
 };
 

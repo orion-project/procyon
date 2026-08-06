@@ -12,6 +12,7 @@ class QSettings;
 QT_END_NAMESPACE
 
 class Db;
+class DbItem;
 class DbTreeWidget;
 class OpenTabsWidget;
 class SpellcheckControl;
@@ -67,15 +68,17 @@ private:
     void newDb();
     void openDb(const QString &fileName);
     void openDbViaDialog();
-    void dbOpened(Db* db);
     bool closeDb();
     void updateCounter();
     //void updateMenuDb();
     //void openMemo();
     void chooseMemoFont();
     void toggleWordWrap();
-    void memoCreated(MemoItem* item);
-    void memoRemoved(MemoItem* item);
+
+    void dbOpened(Db* db);
+    void itemCreated(DbItem* item);
+    void itemRemoved(DbItem* item);
+
     bool closeAllMemos();
     void openMemoTab(MemoItem* item);
     void exportToPdf();

@@ -23,7 +23,7 @@ public:
 
     void setDb(Db* db);
 
-    QStringList getExpandedIds() const;
+    QStringList getExpandedIds();
     void setExpandedIds(const QStringList& ids);
 
 signals:
@@ -34,7 +34,8 @@ private:
     QTreeView* _treeView;
     DbTreeModel* _model = nullptr;
     QMenu *_rootMenu, *_folderMenu, *_memoMenu;
-    bool _skipMemoCreatedHandler = false;
+    QSet<int> _expandedIds;
+    bool _isFolderRemoving = false;
 
     DbItem* selectedItem() const;
 
@@ -46,8 +47,16 @@ private:
     void openMemo();
 
     void contextMenuRequested(const QPoint &pos);
-    void memoUpdated(MemoItem*);
-    void memoCreated(MemoItem*);
+    void itemCreating(DbItem*, int);
+    void itemCreated(DbItem*);
+    void itemUpdated(DbItem*);
+    void itemRemoving(DbItem*);
+    void itemRemoved(DbItem*);
+
+    void selectItem(DbItem*);
+
+    void stashExpandedIds();
+    void applyExpandedIds();
 };
 
 #endif // DBTREE_WIDGET_H

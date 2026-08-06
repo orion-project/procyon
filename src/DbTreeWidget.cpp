@@ -8,8 +8,7 @@
 
 #include <QMenu>
 #include <QTreeView>
-
-#include <functional>
+#include <QTimer>
 
 class DbTreeModel : public QAbstractItemModel
 {
@@ -26,39 +25,65 @@ public:
         auto item = dbItem(index);
         return item ? item->asFolder() : nullptr;
     }
-    
-    QModelIndex findIndex(DbItem* item, const QModelIndex &parent = QModelIndex())
+
+    int columnCount(const QModelIndex &parent) const override
     {
-        int rows = rowCount(parent);
-        for (int row = 0; row < rows; row++)
-        {
-            auto currentIndex = index(row, 0, parent);
-            auto currentItem = dbItem(currentIndex);
-            if (currentItem == item) return currentIndex;
-    
-            auto targetIndex = findIndex(item, currentIndex);
-            if (targetIndex.isValid()) return targetIndex;
-        }
-        return QModelIndex();
+        Q_UNUSED(parent)
+        return 1;
+    }
+
+    int rowCount(const QModelIndex &parent) const override
+    {
+        // When there is no parent, then we need top level items.
+        // We show the root AND all its children at the top level.
+        if (!parent.isValid())
+            return _db->root()->childCount() + 1;
+
+        auto folder = asFolder(parent);
+        if (!folder)
+            return 0;
+
+        // Since we display the root and its children at the top level
+        // there are no rows for the root folder
+        if (folder->isRoot())
+            return 0;
+
+        return folder->childCount();
     }
 
     QModelIndex index(int row, int column, const QModelIndex &parent) const override
     {
         DbItem* item = nullptr;
+        FolderItem* parentFolder = nullptr;
+        int index;
 
         if (!parent.isValid())
         {
             // We show the root AND all its children at the top level.
             if (row == 0)
                 item = _db->root();
-            else if (row-1 < _db->root()->children().size())
-                item = _db->root()->children().at(row-1);
+            else
+            {
+                parentFolder = _db->root();
+                index = row - 1;
+            }
         }
         else
         {
-            auto parentFolder = asFolder(parent);
-            if (parentFolder && row < parentFolder->children().size())
-                item = parentFolder->children().at(row);
+            parentFolder = asFolder(parent);
+            index = row;
+        }
+
+        if (!item && parentFolder)
+        {
+            if (index < parentFolder->memos().size())
+                item = parentFolder->memos().at(index);
+            else
+            {
+                index -= parentFolder->memos().size();
+                if (index < parentFolder->folders().size())
+                    item = parentFolder->folders().at(index);
+            }
         }
 
         return item ? createIndex(row, column, item) : QModelIndex();
@@ -90,7 +115,7 @@ public:
         }
         else
         {
-            row = superParentFolder->children().indexOf(parentFolder);
+            row = superParentFolder->folders().indexOf(parentFolder);
 
             if (superParentFolder->isRoot())
             {
@@ -103,31 +128,6 @@ public:
         return createIndex(row, 0, parentFolder);
     }
     
-    int rowCount(const QModelIndex &parent) const override
-    {
-        // When there is no parent, then we need top level items.
-        // We show the root AND all its children at the top level.
-        if (!parent.isValid())
-            return _db->root()->children().size() + 1;
-    
-        auto folder = asFolder(parent);
-        if (!folder)
-            return 0;
-
-        // Since we display the root and its children at the top level
-        // there are no rows for the root folder
-        if (folder->isRoot())
-            return 0;
-
-        return folder->children().size();
-    }
-
-    int columnCount(const QModelIndex &parent) const override
-    {
-        Q_UNUSED(parent)
-        return 1;
-    }
-
     QVariant data(const QModelIndex &index, int role) const override
     {
         if (!index.isValid())
@@ -157,8 +157,24 @@ public:
         return QVariant();
     }
 
-    void itemRenamed(const QModelIndex &index)
+    QModelIndex findIndex(DbItem* item, const QModelIndex &parent = QModelIndex())
     {
+        int rows = rowCount(parent);
+        for (int row = 0; row < rows; row++)
+        {
+            auto currentIndex = index(row, 0, parent);
+            auto currentItem = dbItem(currentIndex);
+            if (currentItem == item) return currentIndex;
+
+            auto targetIndex = findIndex(item, currentIndex);
+            if (targetIndex.isValid()) return targetIndex;
+        }
+        return QModelIndex();
+    }
+
+    void itemRenamed(DbItem* item)
+    {
+        auto index = findIndex(item);
         if (!index.isValid())
         {
             qWarning() << "DbTreeModel::itemRenamed(): invalid index";
@@ -167,63 +183,10 @@ public:
         emit dataChanged(index, index);
     }
 
-    void addItem(QTreeView *treeView, std::function<bool()> makeItem)
+    void reset()
     {
-        QModelIndex parentIndex = treeView->currentIndex();
-        DbItem* parentItem = DbTreeModel::dbItem(parentIndex);
-        if (!parentItem) return;
-        if (parentItem->isRoot())
-        {
-            // If the root item is selected then we actually insert a new item
-            // not inside it but at the top level (which doesn't have parent)
-            parentIndex = QModelIndex();
-        }
-        int row = rowCount(parentIndex);
-        // Shoul be called before underlying data mutation
-        beginInsertRows(parentIndex, row, row);
-        bool ok = makeItem();
-        endInsertRows();
-        if (!ok)
-            return;
-        // Invalid parent index means we insert at the top level
-        if (parentIndex.isValid() && !treeView->isExpanded(parentIndex))
-            treeView->expand(parentIndex);
-        auto newIndex = index(row, 0, parentIndex);
-        if (newIndex.isValid())
-            treeView->setCurrentIndex(newIndex);
-    }
-
-    void removeItem(QTreeView *treeView, std::function<bool()> deleteItem)
-    {
-        QModelIndex removingIndex = treeView->currentIndex();
-        DbItem* removingItem = dbItem(removingIndex);
-        if (!removingItem) return;
-        bool memoRemoved = removingItem->isMemo();
-
-        DbItem* parentItem = removingItem->parent();
-        // Only root item has no parent, it can't be removed
-        if (!parentItem) return;
-
-        QModelIndex parentIndex = parent(removingIndex);
-        int row = removingIndex.row();
-        beginRemoveRows(parentIndex, row, row);
-        bool ok = deleteItem();
-        endRemoveRows();
-        if (!ok)
-            return;
-        parentIndex = findIndex(parentItem);
-        QModelIndex currentIndex = parentIndex;
-        if (memoRemoved)
-        {
-            int remainingRows = rowCount(parentIndex);
-            if (remainingRows > 0)
-            {
-                if (row >= remainingRows)
-                    row = remainingRows - 1;
-                currentIndex = index(row, 0, parentIndex);
-            }
-        }
-        treeView->setCurrentIndex(currentIndex);
+        beginResetModel();
+        endResetModel();
     }
 
 private:
@@ -240,7 +203,8 @@ typedef DbTreeWidget Self;
 DbTreeWidget::DbTreeWidget() : QWidget()
 {
     _rootMenu = new QMenu(this);
-    _rootMenu->addAction(tr("New Memo..."), this, &Self::createMemo);
+    // TODO: Can't insert memo at the top level because of FK violation
+    //_rootMenu->addAction(tr("New Memo..."), this, &Self::createMemo);
     _rootMenu->addAction(tr("New Folder..."), this, &Self::createFolder);
 
     _folderMenu = new QMenu(this);
@@ -269,8 +233,11 @@ void DbTreeWidget::setDb(Db* db)
     {
         // TODO: Explain, how it's possible so that a new db is opened
         // but the old one is still active and can be disconnected?
-        disconnect(_db, &Db::memoUpdated, this, &Self::memoUpdated);
-        disconnect(_db, &Db::memoCreated, this, &Self::memoCreated);
+        disconnect(_db, &Db::itemCreating, this, &Self::itemCreating);
+        disconnect(_db, &Db::itemCreated, this, &Self::itemCreated);
+        disconnect(_db, &Db::itemUpdated, this, &Self::itemUpdated);
+        disconnect(_db, &Db::itemRemoving, this, &Self::itemRemoving);
+        disconnect(_db, &Db::itemRemoved, this, &Self::itemRemoved);
     }
 
     _db = db;
@@ -282,8 +249,11 @@ void DbTreeWidget::setDb(Db* db)
     if (_db)
     {
         _model = new DbTreeModel(_db);
-        connect(_db, &Db::memoUpdated, this, &Self::memoUpdated);
-        connect(_db, &Db::memoCreated, this, &Self::memoCreated);
+        connect(_db, &Db::itemCreating, this, &Self::itemCreating);
+        connect(_db, &Db::itemCreated, this, &Self::itemCreated);
+        connect(_db, &Db::itemUpdated, this, &Self::itemUpdated);
+        connect(_db, &Db::itemRemoving, this, &Self::itemRemoving);
+        connect(_db, &Db::itemRemoved, this, &Self::itemRemoved);
     }
     _treeView->setModel(_model);
 }
@@ -312,6 +282,20 @@ void DbTreeWidget::contextMenuRequested(const QPoint &pos)
         menu->popup(_treeView->mapToGlobal(pos));
 }
 
+void DbTreeWidget::selectItem(DbItem* item)
+{
+    QTimer::singleShot(0, this, [this, item]{
+        auto index = _model->findIndex(item);
+        if (!index.isValid()) return;
+
+        auto parentIndex = _model->findIndex(item->parentFolder());
+        if (parentIndex.isValid() && !_treeView->isExpanded(parentIndex))
+            _treeView->setExpanded(parentIndex, true);
+
+        _treeView->setCurrentIndex(index);
+    });
+}
+
 void DbTreeWidget::openMemo()
 {
     if (!_model) return;
@@ -330,9 +314,10 @@ void DbTreeWidget::createFolder()
     auto title = Ori::Dlg::inputText(tr("Folder title:"), "");
     if (title.isEmpty()) return;
 
-    _model->addItem(_treeView, [this, item, title] {
-        return _db->createFolder(item->asFolder(), title).ok();
-    });
+    auto res = _db->createFolder(item->asFolder(), title);
+    if (!res.ok()) return;
+
+    selectItem(res.result());
 }
 
 void DbTreeWidget::renameFolder()
@@ -343,11 +328,7 @@ void DbTreeWidget::renameFolder()
     auto title = Ori::Dlg::inputText(tr("Folder title:"), item->title());
     if (title.isEmpty()) return;
 
-    bool ok = _db->renameFolder(item->asFolder(), title);
-    if (!ok) return;
-
-    _model->itemRenamed(_treeView->currentIndex());
-    // TODO do something about items sorted after renaming
+    _db->renameFolder(item->asFolder(), title);
 }
 
 void DbTreeWidget::deleteFolder()
@@ -358,8 +339,13 @@ void DbTreeWidget::deleteFolder()
     auto confirm = tr("Are you sure to delete folder '%1' and all its content?").arg(item->title());
     if (!Ori::Dlg::yes(confirm)) return;
 
-    _model->removeItem(_treeView, [this, item]{
-        return _db->removeFolder(item->asFolder());
+    auto parentFolder = item->parentFolder();
+
+    bool ok = _db->removeFolder(item->asFolder());
+    if (!ok) return;
+
+    QTimer::singleShot(0, this, [this, parentFolder]{
+        _treeView->setCurrentIndex(_model->findIndex(parentFolder));
     });
 }
 
@@ -371,13 +357,10 @@ void DbTreeWidget::createMemo()
     auto memoType = MemoType::selectFromDlg();
     if (!memoType) return;
 
-    _skipMemoCreatedHandler = true;
+    auto res = _db->createMemo(item->asFolder(), memoType);
+    if (!res.ok()) return;
 
-    _model->addItem(_treeView, [this, item, memoType]{
-        return _db->createMemo(item->asFolder(), memoType).ok();
-    });
-
-    _skipMemoCreatedHandler = false;
+    selectItem(res.result());
 }
 
 void DbTreeWidget::deleteMemo()
@@ -388,72 +371,113 @@ void DbTreeWidget::deleteMemo()
     auto confirm = tr("Are you sure to delete memo '%1'?").arg(item->title());
     if (!Ori::Dlg::yes(confirm)) return;
 
-    _model->removeItem(_treeView, [this, item]{
-        return _db->removeMemo(item->asMemo());
+    auto parentFolder = item->parentFolder();
+
+    bool ok = _db->removeMemo(item->asMemo());
+    if (!ok) return;
+
+    QTimer::singleShot(0, this, [this, parentFolder]{
+        _treeView->setCurrentIndex(_model->findIndex(parentFolder));
     });
 }
 
-void DbTreeWidget::memoUpdated(MemoItem* item)
+void DbTreeWidget::itemCreating(DbItem* item, int index)
 {
-    auto index = _model->findIndex(item);
-    if (index.isValid())
-        _model->itemRenamed(index);
+    stashExpandedIds();
 }
 
-void DbTreeWidget::memoCreated(MemoItem* item)
+void DbTreeWidget::itemCreated(DbItem* item)
 {
-    if (_skipMemoCreatedHandler) return;
-
-    auto parentIndex = _model->findIndex(item->parent());
-    if (!parentIndex.isValid()) return;
-
-    // Collapsed item will be refresed automatically when expands
-    if (!_treeView->isExpanded(parentIndex)) return;
-
-    // TODO: is there more direct way to refresh the branch
-    _treeView->setExpanded(parentIndex, false);
-    _treeView->setExpanded(parentIndex, true);
+    _model->reset();
+    QTimer::singleShot(0, this, &DbTreeWidget::applyExpandedIds);
 }
 
-QStringList DbTreeWidget::getExpandedIds() const
+void DbTreeWidget::itemUpdated(DbItem* item)
 {
-    QStringList ids;
+    _model->itemRenamed(item);
+}
+
+void DbTreeWidget::itemRemoving(DbItem* item)
+{
+    if (item->isMemo() && _isFolderRemoving)
+        return;
+
+    if (item->isFolder())
+        _isFolderRemoving = true;
+
+    stashExpandedIds();
+}
+
+void DbTreeWidget::itemRemoved(DbItem* item)
+{
+    if (item->isMemo() && _isFolderRemoving)
+        return;
+
+    if (item->isFolder())
+        _isFolderRemoving = false;
+
+    _model->reset();
+    QTimer::singleShot(0, this, &DbTreeWidget::applyExpandedIds);
+}
+
+void DbTreeWidget::stashExpandedIds()
+{
     std::function<void(const QModelIndex&)> fillExpandedIds;
 
-    fillExpandedIds = [this, &ids, &fillExpandedIds](const QModelIndex& parent){
+    fillExpandedIds = [this, &fillExpandedIds](const QModelIndex& parent){
         int rowCount = _model->rowCount(parent);
         for (int row = 0; row < rowCount; row++)
         {
             auto index = _model->index(row, 0, parent);
-            if (_model->dbItem(index)->isFolder())
+            auto folder = _model->dbItem(index)->asFolder();
+            if (folder)
             {
                 if (_treeView->isExpanded(index))
-                    ids << QString::number(_model->data(index, Qt::UserRole).toInt());
+                    _expandedIds << folder->id();
                 fillExpandedIds(index);
             }
         }
     };
 
+    _expandedIds.clear();
     fillExpandedIds(QModelIndex());
+}
+
+void DbTreeWidget::applyExpandedIds()
+{
+    std::function<void(const QModelIndex& parent)> expandFolders;
+
+    expandFolders = [this, &expandFolders](const QModelIndex& parent){
+        int rowCount = _model->rowCount(parent);
+        for (int row = 0; row < rowCount; row++)
+        {
+            auto index = _model->index(row, 0, parent);
+            auto folder = _model->dbItem(index)->asFolder();
+            if (folder)
+            {
+                if (_expandedIds.contains(folder->id()))
+                    _treeView->expand(index);
+                expandFolders(index);
+            }
+        }
+    };
+
+    expandFolders(QModelIndex());
+}
+
+QStringList DbTreeWidget::getExpandedIds()
+{
+    stashExpandedIds();
+    QStringList ids;
+    for (int id : std::as_const(_expandedIds))
+        ids << QString::number(id);
     return ids;
 }
 
 void DbTreeWidget::setExpandedIds(const QStringList& ids)
 {
-    std::function<void(const QModelIndex& parent)> setExpandedIds;
-
-    setExpandedIds = [this, &ids, &setExpandedIds](const QModelIndex& parent){
-        int rowCount = _model->rowCount(parent);
-        for (int row = 0; row < rowCount; row++)
-        {
-            auto index = _model->index(row, 0, parent);
-            auto data = _model->data(index, Qt::UserRole);
-            if (data.isNull()) continue;
-            if (ids.contains(QString::number(data.toInt())))
-                _treeView->expand(index);
-            setExpandedIds(index);
-        }
-    };
-
-    setExpandedIds(QModelIndex());
+    _expandedIds.clear();
+    for (const auto &id : ids)
+        _expandedIds << id.toInt();
+    applyExpandedIds();
 }

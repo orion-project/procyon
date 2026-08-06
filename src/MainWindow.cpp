@@ -413,8 +413,8 @@ void MainWindow::openDbViaDialog()
 void MainWindow::dbOpened(Db* db)
 {
     _db = db;
-    connect(_db, &Db::memoCreated, this, &MainWindow::memoCreated);
-    connect(_db, &Db::memoRemoved, this, &MainWindow::memoRemoved);
+    connect(_db, &Db::itemCreated, this, &MainWindow::itemCreated);
+    connect(_db, &Db::itemRemoved, this, &MainWindow::itemRemoved);
     connect(_db, &Db::errorOccurred, this, [](const QString& error){
         Ori::Dlg::Defer::error(error);
     });
@@ -625,21 +625,27 @@ void MainWindow::toggleWordWrap()
     memoPage->setWordWrap(!memoPage->wordWrap());
 }
 
-void MainWindow::memoCreated(MemoItem* item)
+void MainWindow::itemCreated(DbItem* item)
 {
+    auto memo = item->asMemo();
+    if (!memo) return;
+
     updateCounter();
 
-    openMemoTab(item);
+    openMemoTab(memo);
 
-    auto tab = findMemoTab(item);
+    auto tab = findMemoTab(memo);
     if (tab) tab->beginEdit();
 }
 
-void MainWindow::memoRemoved(MemoItem* item)
+void MainWindow::itemRemoved(DbItem* item)
 {
+    auto memo = item->asMemo();
+    if (!memo) return;
+
     updateCounter();
 
-    auto tab = findMemoTab(item);
+    auto tab = findMemoTab(memo);
     if (tab) tab->deleteLater();
 }
 

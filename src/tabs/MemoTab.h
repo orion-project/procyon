@@ -25,10 +25,10 @@ signals:
     void onModified(bool modified);
 
 protected:
-    Enot* _db;
+    Enot* _enot;
     MemoItem* _memoItem;
 
-    explicit MemoTab(Enot* db, MemoItem* memoItem);
+    explicit MemoTab(Enot* enot, MemoItem* memoItem);
 };
 
 #endif // MEMO_TAB_H

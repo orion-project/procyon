@@ -107,32 +107,32 @@ QString Enot::prepareStore(const QString fileName)
     return QString();
 }
 
-DbResult Enot::open(const QString& fileName)
+EnotResult Enot::open(const QString& fileName)
 {
     QString res = prepareStore(fileName);
     if (!res.isEmpty())
-        return DbResult::fail(res);
+        return EnotResult::fail(res);
 
-    Enot* db = new Enot(fileName);
+    Enot* enot = new Enot(fileName);
 
     // Load folders
     {
         FoldersResult res = Store::folders()->selectAll();
         if (!res.error.isEmpty())
         {
-            delete db;
-            return DbResult::fail(res.error);
+            delete enot;
+            return EnotResult::fail(res.error);
         }
 
         for (const auto& item : std::as_const(res.items))
-            db->_allFolders.insert(item.folder->id(), item.folder);
+            enot->_allFolders.insert(item.folder->id(), item.folder);
 
         for (const auto& item : std::as_const(res.items))
         {
-            auto parent = db->_allFolders.value(item.parentId);
+            auto parent = enot->_allFolders.value(item.parentId);
             if (!parent)
             {
-                parent = db->root();
+                parent = enot->root();
                 qWarning() << QString("Parent folder #%1 not found for folder #%2, reparented to the root")
                                     .arg(item.parentId).arg(item.folder->id());
             }
@@ -147,8 +147,8 @@ DbResult Enot::open(const QString& fileName)
         MemosResult res = Store::memos()->selectAll();
         if (!res.error.isEmpty())
         {
-            delete db;
-            return DbResult::fail(res.error);
+            delete enot;
+            return EnotResult::fail(res.error);
         }
 
         if (!res.warnings.isEmpty())
@@ -157,35 +157,35 @@ DbResult Enot::open(const QString& fileName)
 
         for (const auto& item : std::as_const(res.items))
         {
-            auto folder = db->_allFolders.value(item.folderId);
+            auto folder = enot->_allFolders.value(item.folderId);
             if (!folder)
             {
-                folder = db->root();
+                folder = enot->root();
                 qWarning() << QString("Folder #%1 not found for memo #%2, reparented to the root")
                                   .arg(item.folderId).arg(item.memo->id());
             }
 
             item.memo->_parent = folder;
             folder->_memos.append(item.memo);
-            db->_allMemos[item.memo->id()] = item.memo;
+            enot->_allMemos[item.memo->id()] = item.memo;
         }
     }
 
-    return DbResult::ok(db);
+    return EnotResult::ok(enot);
 }
 
-DbResult Enot::create(const QString& fileName)
+EnotResult Enot::create(const QString& fileName)
 {
     if (QFile::exists(fileName) && !QFile::remove(fileName))
-        return DbResult::fail("Unable to overwrite existing file, probably it is locked.");
+        return EnotResult::fail("Unable to overwrite existing file, probably it is locked.");
 
     QString res = prepareStore(fileName);
     if (!res.isEmpty())
-        return DbResult::fail(res);
+        return EnotResult::fail(res);
 
-    Enot* db = new Enot(fileName);
+    Enot* enot = new Enot(fileName);
 
-    return DbResult::ok(db);
+    return EnotResult::ok(enot);
 }
 
 Enot::Enot(const QString& fileName) : QObject(), _fileName(fileName)

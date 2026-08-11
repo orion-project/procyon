@@ -41,7 +41,7 @@ void updateOption(MemoItem* memo, const QString& name, const QVariant& value)
 }
 }
 
-TextMemoTab::TextMemoTab(Enot* db, MemoItem* memoItem) : MemoTab(db, memoItem)
+TextMemoTab::TextMemoTab(Enot* enot, MemoItem* memoItem) : MemoTab(enot, memoItem)
 {
     if (_memoItem->type() == MemoType::markdown())
         _memoEditor = new MarkdownMemoEditor(_memoItem);
@@ -217,7 +217,7 @@ bool TextMemoTab::saveEdit()
     update.title = _titleEditor->text().trimmed();
     update.data = _memoEditor->data();
 
-    auto ok = _db->updateMemo(_memoItem, update);
+    auto ok = _enot->updateMemo(_memoItem, update);
     if (!ok) return false;
 
     _memoEditor->saveEdit();

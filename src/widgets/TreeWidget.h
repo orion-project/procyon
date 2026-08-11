@@ -21,7 +21,7 @@ class TreeWidget : public QWidget
 public:
     TreeWidget();
 
-    void setDb(Enot* db);
+    void setEnot(Enot* enot);
 
     QStringList getExpandedIds();
     void setExpandedIds(const QStringList& ids);
@@ -30,7 +30,7 @@ signals:
     void memoOpenRequested(MemoItem* item);
 
 private:
-    Enot* _db = nullptr;
+    Enot* _enot = nullptr;
     QTreeView* _treeView;
     TreeModel* _model = nullptr;
     QMenu *_rootMenu, *_folderMenu, *_memoMenu;

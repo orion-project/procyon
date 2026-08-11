@@ -13,7 +13,7 @@
 class TreeModel : public QAbstractItemModel
 {
 public:
-    TreeModel(Enot* db) : _db(db) {}
+    TreeModel(Enot* enot) : _enot(enot) {}
 
     static DbItem* dbItem(const QModelIndex &index)
     {
@@ -37,7 +37,7 @@ public:
         // When there is no parent, then we need top level items.
         // We show the root AND all its children at the top level.
         if (!parent.isValid())
-            return _db->root()->childCount() + 1;
+            return _enot->root()->childCount() + 1;
 
         auto folder = asFolder(parent);
         if (!folder)
@@ -61,10 +61,10 @@ public:
         {
             // We show the root AND all its children at the top level.
             if (row == 0)
-                item = _db->root();
+                item = _enot->root();
             else
             {
-                parentFolder = _db->root();
+                parentFolder = _enot->root();
                 index = row - 1;
             }
         }
@@ -190,7 +190,7 @@ public:
     }
 
 private:
-    Enot* _db;
+    Enot* _enot;
     QIcon _iconRoot = QIcon(":/icon/main");
     QIcon _iconFolder = QIcon(":/icon/folder");
     QIcon _iconMemo = QIcon(":/icon/memo_plain_text");
@@ -227,33 +227,22 @@ TreeWidget::TreeWidget() : QWidget()
     Ori::Layouts::LayoutV({_treeView}).setMargin(0).setSpacing(0).useFor(this);
 }
 
-void TreeWidget::setDb(Enot* db)
+void TreeWidget::setEnot(Enot* enot)
 {
-    if (_db)
-    {
-        // TODO: Explain, how it's possible so that a new db is opened
-        // but the old one is still active and can be disconnected?
-        disconnect(_db, &Enot::itemCreating, this, &Self::itemCreating);
-        disconnect(_db, &Enot::itemCreated, this, &Self::itemCreated);
-        disconnect(_db, &Enot::itemUpdated, this, &Self::itemUpdated);
-        disconnect(_db, &Enot::itemRemoving, this, &Self::itemRemoving);
-        disconnect(_db, &Enot::itemRemoved, this, &Self::itemRemoved);
-    }
-
-    _db = db;
+    _enot = enot;
     if (_model)
     {
         delete _model;
         _model = nullptr;
     }
-    if (_db)
+    if (_enot)
     {
-        _model = new TreeModel(_db);
-        connect(_db, &Enot::itemCreating, this, &Self::itemCreating);
-        connect(_db, &Enot::itemCreated, this, &Self::itemCreated);
-        connect(_db, &Enot::itemUpdated, this, &Self::itemUpdated);
-        connect(_db, &Enot::itemRemoving, this, &Self::itemRemoving);
-        connect(_db, &Enot::itemRemoved, this, &Self::itemRemoved);
+        _model = new TreeModel(_enot);
+        connect(_enot, &Enot::itemCreating, this, &Self::itemCreating);
+        connect(_enot, &Enot::itemCreated, this, &Self::itemCreated);
+        connect(_enot, &Enot::itemUpdated, this, &Self::itemUpdated);
+        connect(_enot, &Enot::itemRemoving, this, &Self::itemRemoving);
+        connect(_enot, &Enot::itemRemoved, this, &Self::itemRemoved);
     }
     _treeView->setModel(_model);
 }
@@ -314,7 +303,7 @@ void TreeWidget::createFolder()
     auto title = Ori::Dlg::inputText(tr("Folder title:"), "");
     if (title.isEmpty()) return;
 
-    auto res = _db->createFolder(item->asFolder(), title);
+    auto res = _enot->createFolder(item->asFolder(), title);
     if (!res.ok()) return;
 
     selectItem(res.result());
@@ -328,7 +317,7 @@ void TreeWidget::renameFolder()
     auto title = Ori::Dlg::inputText(tr("Folder title:"), item->title());
     if (title.isEmpty()) return;
 
-    _db->renameFolder(item->asFolder(), title);
+    _enot->renameFolder(item->asFolder(), title);
 }
 
 void TreeWidget::deleteFolder()
@@ -341,7 +330,7 @@ void TreeWidget::deleteFolder()
 
     auto parentFolder = item->parentFolder();
 
-    bool ok = _db->removeFolder(item->asFolder());
+    bool ok = _enot->removeFolder(item->asFolder());
     if (!ok) return;
 
     QTimer::singleShot(0, this, [this, parentFolder]{
@@ -357,7 +346,7 @@ void TreeWidget::createMemo()
     auto memoType = MemoType::selectFromDlg();
     if (!memoType) return;
 
-    auto res = _db->createMemo(item->asFolder(), memoType);
+    auto res = _enot->createMemo(item->asFolder(), memoType);
     if (!res.ok()) return;
 
     selectItem(res.result());
@@ -373,7 +362,7 @@ void TreeWidget::deleteMemo()
 
     auto parentFolder = item->parentFolder();
 
-    bool ok = _db->removeMemo(item->asMemo());
+    bool ok = _enot->removeMemo(item->asMemo());
     if (!ok) return;
 
     QTimer::singleShot(0, this, [this, parentFolder]{

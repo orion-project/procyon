@@ -119,7 +119,7 @@ MainWindow::MainWindow() : QMainWindow()
     Ori::Wnd::setWindowIcon(this, ":/icon/main");
 
     _mruList = new Ori::MruFileList(this);
-    connect(_mruList, &Ori::MruFileList::clicked, this, &MainWindow::openDb);
+    connect(_mruList, &Ori::MruFileList::clicked, this, &MainWindow::openEnot);
 
     _tabsView = new QStackedWidget;
 
@@ -161,8 +161,8 @@ MainWindow::MainWindow() : QMainWindow()
 
 MainWindow::~MainWindow()
 {
-    if (_db)
-        delete _db;
+    if (_enot)
+        delete _enot;
 }
 
 void MainWindow::createMenu()
@@ -172,8 +172,8 @@ void MainWindow::createMenu()
     menuBar()->setNativeMenuBar(AppSettings::instance().useNativeMenuBar);
 
     m = menuBar()->addMenu(tr("File"));
-    m->addAction(tr("New..."), this, &MainWindow::newDb);
-    m->addAction(tr("Open..."), QKeySequence::Open, this, &MainWindow::openDbViaDialog);
+    m->addAction(tr("New..."), this, &MainWindow::newEnot);
+    m->addAction(tr("Open..."), QKeySequence::Open, this, &MainWindow::openEnotViaDialog);
     m->addSeparator();
     /* TODO
     m->addAction(tr("Application Settings"), this, [this]{
@@ -183,19 +183,6 @@ void MainWindow::createMenu()
     */
     auto actionExit = m->addAction(tr("Exit"), QKeySequence::Quit, this, &MainWindow::close);
     new Ori::Widgets::MruMenuPart(_mruList, m, actionExit, this);
-
-    /*
-    m = menuBar()->addMenu(tr("Notebook"));
-    connect(m, &QMenu::aboutToShow, this, &MainWindow::updateMenuDb);
-    _actionCreateTopLevelFolder = m->addAction(tr("New Top Level Folder..."), this, [this](){ _treeView->createTopLevelFolder(); });
-    _actionCreateFolder = m->addAction(tr("New Subfolder..."), this, [this](){ _treeView->createFolder(); });
-    _actionRenameFolder = m->addAction(tr("Rename Folder..."), this, [this](){ _treeView->renameFolder(); });
-    _actionDeleteFolder = m->addAction(tr("Delete Folder"), this, [this](){ _treeView->deleteFolder(); });
-    m->addSeparator();
-    _actionOpenMemo = m->addAction(tr("Open Memo"), this, &MainWindow::openMemo);
-    _actionCreateMemo = m->addAction(tr("New Memo..."), this, [this](){ _treeView->createMemo(); });
-    _actionDeleteMemo = m->addAction(tr("Delete Memo"), this, [this](){ _treeView->deleteMemo(); });
-    */
 
     m = menuBar()->addMenu(tr("Memo"));
     connect(m, &QMenu::aboutToShow, this, &MainWindow::optionsMenuAboutToShow);
@@ -233,7 +220,7 @@ void MainWindow::createMenu()
             openNewTab<SqlConsoleTab>(_tabsView, _openTabsView);
         });
         m->addAction(tr("Open Command Console"), this, [this]{
-            openNewTab<CmdConsoleTab>(_tabsView, _openTabsView, _db);
+            openNewTab<CmdConsoleTab>(_tabsView, _openTabsView, _enot);
         });
     }
 
@@ -310,15 +297,15 @@ void MainWindow::loadSettings(QSettings* s)
 
     auto lastFile = s->value("database").toString();
     if (!lastFile.isEmpty())
-        QTimer::singleShot(200, this, [this, lastFile](){ openDb(lastFile); });
+        QTimer::singleShot(200, this, [this, lastFile](){ openEnot(lastFile); });
 }
 
 void MainWindow::loadSession()
 {
-    auto dbUid = _db->uid();
+    auto dbUid = _enot->uid();
     if (dbUid.isEmpty())
     {
-        qWarning() << "Unable to get database uid, session will not be restored:" << _db->fileName();
+        qWarning() << "Unable to get database uid, session will not be restored:" << _enot->fileName();
         return;
     }
 
@@ -331,22 +318,22 @@ void MainWindow::loadSession()
     QStringList openedIds = settings.value("openedMemos").toString().split(',');
     for (const auto& idStr : std::as_const(openedIds))
     {
-        auto memoItem = _db->findMemoById(idStr.toInt());
+        auto memoItem = _enot->findMemoById(idStr.toInt());
         if (!memoItem) continue;
         openMemoTab(memoItem);
     }
 
     int activeId = settings.value("activeMemo", -1).toInt();
-    auto activeMemoItem = _db->findMemoById(activeId);
+    auto activeMemoItem = _enot->findMemoById(activeId);
     if (activeMemoItem) openMemoTab(activeMemoItem);
 }
 
 void MainWindow::saveSession()
 {
-    auto dbUid = _db->getOrMakeUid();
+    auto dbUid = _enot->getOrMakeUid();
     if (dbUid.isEmpty())
     {
-        qWarning() << "Unable to get database uid, session will not be saved:" << _db->fileName();
+        qWarning() << "Unable to get database uid, session will not be saved:" << _enot->fileName();
         return;
     }
 
@@ -367,59 +354,59 @@ void MainWindow::saveSession()
     }
     QStringList expandedIds = _treeView->getExpandedIds();
     settings.beginGroup(dbUid);
-    settings.setValue("path", _db->fileName());
+    settings.setValue("path", _enot->fileName());
     settings.setValue("expandedFolders", expandedIds.join(','));
     settings.setValue("openedMemos", openedIds.join(','));
     settings.setValue("activeMemo", activeId);
 }
 
-void MainWindow::newDb()
+void MainWindow::newEnot()
 {
     QString fileName = Ori::Dlg::getSaveFileName(
                 tr("Create Notebook"), Enot::fileFilter(), Enot::defaultFileExt());
     if (fileName.isEmpty()) return;
 
-    if (!closeDb()) return;
+    if (!closeEnot()) return;
 
     auto res = Enot::create(fileName);
     if (res.ok())
-        dbOpened(res.result());
+        enotOpened(res.result());
     else Ori::Dlg::error(tr("Unable to create notebook.\n\n%1").arg(res.error()));
 }
 
-void MainWindow::openDb(const QString &fileName)
+void MainWindow::openEnot(const QString &fileName)
 {
     if (!QFile::exists(fileName)) return;
 
-    if (_db && QFileInfo(_db->fileName()) == QFileInfo(fileName))
+    if (_enot && QFileInfo(_enot->fileName()) == QFileInfo(fileName))
         return;
 
-    if (!closeDb()) return;
+    if (!closeEnot()) return;
 
     auto res = Enot::open(fileName);
     if (res.ok())
-        dbOpened(res.result());
+        enotOpened(res.result());
     else Ori::Dlg::error(tr("Unable to load notebook %1.\n\n%2").arg(fileName, res.error()));
 }
 
-void MainWindow::openDbViaDialog()
+void MainWindow::openEnotViaDialog()
 {
     QString fileName = QFileDialog::getOpenFileName(
                 this, tr("Open Notebook"), QString(), Enot::fileFilter());
     if (!fileName.isEmpty())
-        openDb(fileName);
+        openEnot(fileName);
 }
 
-void MainWindow::dbOpened(Enot* db)
+void MainWindow::enotOpened(Enot* enot)
 {
-    _db = db;
-    connect(_db, &Enot::itemCreated, this, &MainWindow::itemCreated);
-    connect(_db, &Enot::itemRemoved, this, &MainWindow::itemRemoved);
-    connect(_db, &Enot::errorOccurred, this, [](const QString& error){
+    _enot = enot;
+    connect(_enot, &Enot::itemCreated, this, &MainWindow::itemCreated);
+    connect(_enot, &Enot::itemRemoved, this, &MainWindow::itemRemoved);
+    connect(_enot, &Enot::errorOccurred, this, [](const QString& error){
         Ori::Dlg::Defer::error(error);
     });
-    _treeView->setDb(_db);
-    auto filePath = _db->fileName();
+    _treeView->setEnot(_enot);
+    auto filePath = _enot->fileName();
     auto fileName = QFileInfo(filePath).fileName();
     setWindowTitle(fileName % " - " % qApp->applicationName());
     _mruList->append(filePath);
@@ -430,18 +417,18 @@ void MainWindow::dbOpened(Enot* db)
     loadSession();
 
     auto cmdConsole = findTab<CmdConsoleTab>(_tabsView);
-    if (cmdConsole) cmdConsole->setDb(_db);
+    if (cmdConsole) cmdConsole->setEnot(_enot);
 }
 
-bool MainWindow::closeDb()
+bool MainWindow::closeEnot()
 {
-    if (_db)
+    if (_enot)
     {
         saveSession();
         if (!closeAllMemos()) return false;
-        _treeView->setDb(nullptr);
-        delete _db;
-        _db = nullptr;
+        _treeView->setEnot(nullptr);
+        delete _enot;
+        _enot = nullptr;
     }
     setWindowTitle(qApp->applicationName());
     _statusFileName->setText(tr("(n/a)"));
@@ -474,7 +461,7 @@ bool MainWindow::closeAllMemos()
 
 void MainWindow::updateCounter()
 {
-    auto res = _db->countMemos();
+    auto res = _enot->countMemos();
     if (res.ok())
     {
         _statusMemoCount->setToolTip(QString());
@@ -487,31 +474,9 @@ void MainWindow::updateCounter()
     }
 }
 
-/*
-void MainWindow::updateMenuDb()
-{
-    bool hasDb = _db;
-    bool hasFolder = false;
-    bool hasMemo = false;
-    if (hasDb)
-    {
-        auto selected = _treeView->selection();
-        hasFolder = selected.folder;
-        hasMemo = selected.memo;
-    }
-    _actionCreateTopLevelFolder->setEnabled(hasDb);
-    _actionCreateFolder->setEnabled(hasFolder);
-    _actionRenameFolder->setEnabled(hasFolder);
-    _actionDeleteFolder->setEnabled(hasFolder);
-    _actionOpenMemo->setEnabled(hasMemo);
-    _actionDeleteMemo->setEnabled(hasMemo);
-    _actionCreateMemo->setEnabled(hasFolder);
-}
-*/
-
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    if (!closeDb())
+    if (!closeEnot())
     {
         event->ignore();
         return;
@@ -519,19 +484,11 @@ void MainWindow::closeEvent(QCloseEvent *event)
     event->accept();
 }
 
-/*
-void MainWindow::openMemo()
-{
-    auto selected = _treeView->selection();
-    if (selected.memo) openMemoTab(selected.memo);
-}
-*/
-
 void MainWindow::openMemoTab(MemoItem* item)
 {
     if (!item->isLoaded())
     {
-        auto res = _db->loadMemo(item);
+        auto res = _enot->loadMemo(item);
         if (!res.isEmpty()) return Ori::Dlg::error(res);
     }
 
@@ -546,12 +503,12 @@ void MainWindow::openMemoTab(MemoItem* item)
     MemoTab* tab = nullptr;
 
     if (item->type() == MemoType::plainText())
-        tab = new TextMemoTab(_db, item);
+        tab = new TextMemoTab(_enot, item);
     else if (item->type() == MemoType::markdown())
-        tab = new TextMemoTab(_db, item);
+        tab = new TextMemoTab(_enot, item);
     else if (item->type() == MemoType::gridView())
     {
-        tab = new GridViewMemoTab(_db, item);
+        tab = new GridViewMemoTab(_enot, item);
         connect((GridViewMemoTab*)tab, &GridViewMemoTab::memoOpenRequested, this, &MainWindow::openMemoTab);
     }
 

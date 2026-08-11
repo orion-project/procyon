@@ -3,7 +3,7 @@
 #include "core/Enot.h"
 #include "core/MemoType.h"
 
-MemoTab::MemoTab(Enot *db, MemoItem *memoItem) : QWidget(), _db(db), _memoItem(memoItem)
+MemoTab::MemoTab(Enot *enot, MemoItem *memoItem) : QWidget(), _enot(enot), _memoItem(memoItem)
 {
     setWindowIcon(_memoItem->type()->icon());
 }

@@ -145,7 +145,7 @@ private:
 
 typedef GridViewMemoTab Self;
 
-GridViewMemoTab::GridViewMemoTab(Enot* db, MemoItem* memoItem) : MemoTab(db, memoItem)
+GridViewMemoTab::GridViewMemoTab(Enot* enot, MemoItem* memoItem) : MemoTab(enot, memoItem)
 {
     _titleEditor = TabHelpers::makeTitleEditor();
 
@@ -170,11 +170,11 @@ GridViewMemoTab::GridViewMemoTab(Enot* db, MemoItem* memoItem) : MemoTab(db, mem
     auto toolPanel = TabHelpers::makeHeaderPanel({_titleEditor, _toolbar});
 
     _tableModel = new GridViewTableModel(memoItem);
-    connect(_db, &Enot::itemCreating, _tableModel, &GridViewTableModel::itemCreating);
-    connect(_db, &Enot::itemCreated, _tableModel, &GridViewTableModel::itemCreated);
-    connect(_db, &Enot::itemRemoved, _tableModel, &GridViewTableModel::itemRemoved);
-    connect(_db, &Enot::itemRemoving, _tableModel, &GridViewTableModel::itemRemoving);
-    connect(_db, &Enot::itemRemoved, _tableModel, &GridViewTableModel::itemRemoved);
+    connect(_enot, &Enot::itemCreating, _tableModel, &GridViewTableModel::itemCreating);
+    connect(_enot, &Enot::itemCreated, _tableModel, &GridViewTableModel::itemCreated);
+    connect(_enot, &Enot::itemRemoved, _tableModel, &GridViewTableModel::itemRemoved);
+    connect(_enot, &Enot::itemRemoving, _tableModel, &GridViewTableModel::itemRemoving);
+    connect(_enot, &Enot::itemRemoved, _tableModel, &GridViewTableModel::itemRemoved);
 
     _tableView = new QTableView;
     _tableView->setModel(_tableModel);
@@ -225,7 +225,7 @@ bool GridViewMemoTab::saveEdit()
     MemoUpdateParam update;
     update.title = _titleEditor->text().trimmed();
 
-    auto ok = _db->updateMemo(_memoItem, update);
+    auto ok = _enot->updateMemo(_memoItem, update);
     if (!ok) return false;
 
     setWindowTitle(_memoItem->title());
@@ -247,7 +247,7 @@ void GridViewMemoTab::createMemo()
     auto memoType = MemoType::selectFromDlg();
     if (!memoType) return;
 
-    _db->createMemo(_memoItem->parentFolder(), memoType);
+    _enot->createMemo(_memoItem->parentFolder(), memoType);
 }
 
 DbItem* GridViewMemoTab::selectedItem() const

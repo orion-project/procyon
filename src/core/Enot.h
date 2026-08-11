@@ -102,7 +102,7 @@ private:
 typedef Ori::Result<int> IntResult;
 typedef Ori::Result<MemoItem*> MemoResult;
 typedef Ori::Result<FolderItem*> FolderResult;
-typedef Ori::Result<Enot*> DbResult;
+typedef Ori::Result<Enot*> EnotResult;
 
 //------------------------------------------------------------------------------
 
@@ -116,8 +116,8 @@ public:
 
     static QString fileFilter();
     static QString defaultFileExt();
-    static DbResult open(const QString& fileName);
-    static DbResult create(const QString& fileName);
+    static EnotResult open(const QString& fileName);
+    static EnotResult create(const QString& fileName);
 
     QString fileName() const { return _fileName; }
 

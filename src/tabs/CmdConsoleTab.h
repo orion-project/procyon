@@ -12,9 +12,11 @@ class Enot;
 class CmdConsoleTab : public QWidget
 {
     Q_OBJECT
+
 public:
-    explicit CmdConsoleTab(Enot* db);
-    void setDb(Enot* db);
+    explicit CmdConsoleTab(Enot* enot);
+    void setEnot(Enot* enot);
+
 private:
     QSharedPointer<CmdConsoleImpl::CmdConsole> _impl;
 };

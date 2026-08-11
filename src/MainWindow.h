@@ -46,15 +46,13 @@ protected:
 
 private:
     QSplitter* _splitter;
-    Enot* _db = nullptr;
+    Enot* _enot = nullptr;
     TreeWidget* _treeView;
     QStackedWidget* _tabsView;
     OpenTabsWidget* _openTabsView;
     Ori::MruFileList *_mruList;
     QLabel *_statusMemoCount, *_statusFileName;
-    //QAction *_actionCreateTopLevelFolder, *_actionCreateFolder, *_actionRenameFolder, *_actionDeleteFolder;
     QAction *_actionMemoFont, *_actionWordWrap, *_actionMemoExportPdf;
-    //QAction *_actionOpenMemo, *_actionCreateMemo, *_actionDeleteMemo;
     QString _lastOpenedDb;
     SpellcheckControl* _spellcheckControl;
     Phl::Control* _highlighterControl;
@@ -65,29 +63,33 @@ private:
     void createStatusBar();
     void loadSession();
     void saveSession();
-    void newDb();
-    void openDb(const QString &fileName);
-    void openDbViaDialog();
-    bool closeDb();
+
+    void newEnot();
+    void openEnot(const QString &fileName);
+    void openEnotViaDialog();
+    bool closeEnot();
+
     void updateCounter();
-    //void updateMenuDb();
-    //void openMemo();
+
     void chooseMemoFont();
     void toggleWordWrap();
 
-    void dbOpened(Enot* db);
+    void enotOpened(Enot* enot);
     void itemCreated(DbItem* item);
     void itemRemoved(DbItem* item);
 
     bool closeAllMemos();
     void openMemoTab(MemoItem* item);
     void exportToPdf();
+
     MemoTab* findMemoTab(MemoItem* item) const;
     MemoTab* currentMemoTab() const;
     TextMemoTab* currentTextMemoTab() const;
+
     void optionsMenuAboutToShow();
     void spellcheckMenuAboutToShow();
     void highlighterMenuAboutToShow();
+
     void setMemoSpellcheckLang(const QString& lang);
     void setMemoHighlighter(const QString& name);
 };

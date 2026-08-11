@@ -23,7 +23,7 @@ public:
 
 struct CmdConsole {
     QMap<QString, QSharedPointer<Cmd>> cmds;
-    Enot* db;
+    Enot* enot;
 
     QString formatNames() const
     {
@@ -53,11 +53,11 @@ public:
     PrintDbCmd(const CmdConsole* impl): _impl(impl) {}
     QString run() override
     {
-        if (!_impl->db)
+        if (!_impl->enot)
             return "Database is not opened";
         QString r;
         QTextStream res(&r);
-        for (auto f : _impl->db->root()->folders())
+        for (auto f : _impl->enot->root()->folders())
             printFolder(res, 0, f);
         return r;
     }
@@ -83,13 +83,13 @@ private:
 
 using namespace CmdConsoleImpl;
 
-CmdConsoleTab::CmdConsoleTab(Enot* db) : QWidget()
+CmdConsoleTab::CmdConsoleTab(Enot* enot) : QWidget()
 {
     setWindowTitle(tr("Command Console"));
     setWindowIcon(QIcon(":/icon/main"));
 
     _impl = QSharedPointer<CmdConsole>::create();
-    _impl->db = db;
+    _impl->enot = enot;
     _impl->cmds["help"] = QSharedPointer<HelpCmd>::create(_impl.get());
     _impl->cmds["print_db"] = QSharedPointer<PrintDbCmd>::create(_impl.get());
 
@@ -144,7 +144,7 @@ CmdConsoleTab::CmdConsoleTab(Enot* db) : QWidget()
     Ori::Layouts::LayoutV({toolPanel, infoLabel, Ori::Layouts::Space(3), splitter}).setMargin(0).setSpacing(0).useFor(this);
 }
 
-void CmdConsoleTab::setDb(Enot* db)
+void CmdConsoleTab::setEnot(Enot* enot)
 {
-    _impl->db = db;
+    _impl->enot = enot;
 }

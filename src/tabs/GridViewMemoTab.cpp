@@ -28,7 +28,7 @@ public:
     GridViewTableModel(Memo *memo) : QAbstractTableModel()
     {
         _self = memo;
-        _folder = memo->parentFolder();
+        _folder = memo->parent();
     }
 
     int rowCount(const QModelIndex&) const override
@@ -98,7 +98,7 @@ public:
 
     void itemCreating(Entry* entry, int index)
     {
-        if (entry->isMemo() && entry->parentFolder() == _folder)
+        if (entry->isMemo() && entry->parent() == _folder)
         {
             _isRowCountChanging = true;
             beginInsertRows(QModelIndex(), index, index);
@@ -116,7 +116,7 @@ public:
 
     void itemRemoving(Entry* entry)
     {
-        if (entry->isMemo() && entry->parentFolder() == _folder)
+        if (entry->isMemo() && entry->parent() == _folder)
         {
             _isRowCountChanging = true;
             int index = _folder->memos().indexOf(entry);
@@ -247,7 +247,7 @@ void GridViewMemoTab::createMemo()
     auto memoType = MemoType::selectFromDlg();
     if (!memoType) return;
 
-    _enot->createMemo(_memo->parentFolder(), memoType);
+    _enot->createMemo(_memo->parent(), memoType);
 }
 
 Entry* GridViewMemoTab::selectedEntry() const
@@ -255,7 +255,7 @@ Entry* GridViewMemoTab::selectedEntry() const
     QModelIndexList selection = _tableView->selectionModel()->selectedRows();
     if (selection.empty()) return nullptr;
     int row = selection.at(0).row();
-    return _memo->parentFolder()->memos().at(row);
+    return _memo->parent()->memos().at(row);
 }
 
 void GridViewMemoTab::showContextMenu(const QPoint& pos)

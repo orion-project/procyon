@@ -195,11 +195,11 @@ QString MemoStore::update(Memo* memo, const MemoUpdateParam& update) const
             .exec();
 }
 
-QString MemoStore::remove(Memo* item) const
+QString MemoStore::remove(Memo* memo) const
 {
     auto table = memoTable();
     return ActionQuery(table->sqlDelete)
-            .param(table->id, item->id())
+            .param(table->id, memo->id())
             .exec();
 }
 

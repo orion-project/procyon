@@ -96,7 +96,7 @@ public:
         auto entry = asEntry(child);
         if (!entry) return QModelIndex();
     
-        auto parentFolder = entry->parentFolder();
+        auto parentFolder = entry->parent();
         if (!parentFolder || parentFolder->isRoot())
         {
             // Root and all its children are on the top level
@@ -106,7 +106,7 @@ public:
         // Row index of the parent folder inside its own parent
         int row;
 
-        auto superParentFolder = parentFolder->parentFolder();
+        auto superParentFolder = parentFolder->parent();
         if (!superParentFolder)
         {
             // The parent of parent is the root
@@ -277,7 +277,7 @@ void TreeWidget::selectEntry(Entry* entry)
         auto index = _model->findIndex(entry);
         if (!index.isValid()) return;
 
-        auto parentIndex = _model->findIndex(entry->parentFolder());
+        auto parentIndex = _model->findIndex(entry->parent());
         if (parentIndex.isValid() && !_treeView->isExpanded(parentIndex))
             _treeView->setExpanded(parentIndex, true);
 
@@ -328,7 +328,7 @@ void TreeWidget::deleteFolder()
     auto confirm = tr("Are you sure to delete folder '%1' and all its content?").arg(entry->title());
     if (!Ori::Dlg::yes(confirm)) return;
 
-    auto parentFolder = entry->parentFolder();
+    auto parentFolder = entry->parent();
 
     bool ok = _enot->deleteFolder(entry->asFolder());
     if (!ok) return;
@@ -360,7 +360,7 @@ void TreeWidget::deleteMemo()
     auto confirm = tr("Are you sure to delete memo '%1'?").arg(entry->title());
     if (!Ori::Dlg::yes(confirm)) return;
 
-    auto parentFolder = entry->parentFolder();
+    auto parentFolder = entry->parent();
 
     bool ok = _enot->deleteMemo(entry->asMemo());
     if (!ok) return;

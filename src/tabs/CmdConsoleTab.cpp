@@ -2,7 +2,6 @@
 
 #include "TabHelpers.h"
 #include "core/Enot.h"
-#include "core/SqlHelper.h"
 
 #include "helpers/OriLayouts.h"
 
@@ -67,12 +66,12 @@ private:
     void printFolder(QTextStream& res, int level, Folder* folder)
     {
         res << QString(level*4, ' ') << "📁[" << folder->id() << "] " << folder->title()
-            << " (🔝" << folder->parentFolder()->id()  << ")\n";
+            << " (🔝" << folder->parent()->id()  << ")\n";
 
         QString ident((level+1)*4, ' ');
         for (auto m : folder->memos())
             res << ident << "📄(" << m->id() << ") " << m->title()
-                << " (🔝" << m->parentFolder()->id() << ")\n";
+                << " (🔝" << m->parent()->id() << ")\n";
 
         for (auto f : folder->folders())
             printFolder(res, level+1, f);

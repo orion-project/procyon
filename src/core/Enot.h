@@ -32,7 +32,7 @@ public:
 
     int id() const { return _id; }
     QString title() const { return _title; }
-    Entry* parent() const { return _parent; }
+    Folder* parent() const { return _parent; }
     QString path() const;
 
     bool isRoot() const { return !_parent; }
@@ -41,16 +41,14 @@ public:
     Folder* asFolder();
     Memo* asMemo();
 
-    Folder* parentFolder() { return _parent ? _parent->asFolder() : nullptr; }
-
 private:
     int _id;
     QString _title;
-    Entry* _parent = nullptr;
+    Folder* _parent = nullptr;
 
     friend class Enot;
-    friend class FolderStore;
     friend class MemoStore;
+    friend class FolderStore;
 };
 
 //------------------------------------------------------------------------------
@@ -100,9 +98,9 @@ private:
 //------------------------------------------------------------------------------
 
 typedef Ori::Result<int> IntResult;
+typedef Ori::Result<Enot*> EnotResult;
 typedef Ori::Result<Memo*> MemoResult;
 typedef Ori::Result<Folder*> FolderResult;
-typedef Ori::Result<Enot*> EnotResult;
 
 //------------------------------------------------------------------------------
 

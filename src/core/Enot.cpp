@@ -285,7 +285,7 @@ bool Enot::deleteFolder(Folder* folder)
         emit entryDeleted(memo);
     }
 
-    folder->parentFolder()->_folders.removeOne(folder);
+    folder->parent()->_folders.removeOne(folder);
 
     for (auto id : std::as_const(folderIds))
         _allFolders.remove(id);
@@ -364,7 +364,7 @@ bool Enot::deleteMemo(Memo* memo)
 
     emit entryDeleting(memo);
 
-    memo->parentFolder()->_memos.removeOne(memo);
+    memo->parent()->_memos.removeOne(memo);
     _allMemos.remove(memo->id());
 
     emit entryDeleted(memo);

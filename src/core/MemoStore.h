@@ -22,9 +22,9 @@ class MemoStore
 public:
     QString prepare();
 
-    QString create(Memo* item) const;
-    QString update(Memo *item, const MemoUpdateParam& update) const;
-    QString remove(Memo* item) const;
+    QString create(Memo* memo) const;
+    QString update(Memo *memo, const MemoUpdateParam& update) const;
+    QString remove(Memo* memo) const;
     QString load(Memo *memo) const;
     MemosResult selectAll() const;
     QString countAll(int* count) const;

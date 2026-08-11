@@ -2,7 +2,7 @@
 
 #include "AppSettings.h"
 #include "TextEditHelpers.h"
-#include "core/Db.h"
+#include "core/Enot.h"
 #include "markdown/MarkdownHelper.h"
 #include "widgets/MemoTextBrowser.h"
 #include "widgets/MemoTextEdit.h"

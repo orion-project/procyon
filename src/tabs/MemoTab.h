@@ -3,7 +3,7 @@
 
 #include <QWidget>
 
-class Db;
+class Enot;
 class MemoItem;
 
 class MemoTab : public QWidget
@@ -25,10 +25,10 @@ signals:
     void onModified(bool modified);
 
 protected:
-    Db* _db;
+    Enot* _db;
     MemoItem* _memoItem;
 
-    explicit MemoTab(Db* db, MemoItem* memoItem);
+    explicit MemoTab(Enot* db, MemoItem* memoItem);
 };
 
 #endif // MEMO_TAB_H

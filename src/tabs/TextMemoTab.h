@@ -16,7 +16,7 @@ class MemoEditor;
 class TextMemoTab : public MemoTab
 {
 public:
-    explicit TextMemoTab(Db* db, MemoItem* memoItem);
+    explicit TextMemoTab(Enot* db, MemoItem* memoItem);
 
     QFont memoFont() const;
     void setMemoFont(const QFont& font);

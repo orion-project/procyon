@@ -19,7 +19,7 @@ class GridViewMemoTab : public MemoTab
     Q_OBJECT
 
 public:
-    explicit GridViewMemoTab(Db* db, MemoItem* memoItem);
+    explicit GridViewMemoTab(Enot* db, MemoItem* memoItem);
 
     void beginEdit() override;
 

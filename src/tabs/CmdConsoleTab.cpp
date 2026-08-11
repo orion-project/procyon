@@ -1,7 +1,7 @@
 #include "CmdConsoleTab.h"
 
 #include "TabHelpers.h"
-#include "core/Db.h"
+#include "core/Enot.h"
 #include "core/SqlHelper.h"
 
 #include "helpers/OriLayouts.h"
@@ -23,7 +23,7 @@ public:
 
 struct CmdConsole {
     QMap<QString, QSharedPointer<Cmd>> cmds;
-    Db* db;
+    Enot* db;
 
     QString formatNames() const
     {
@@ -83,7 +83,7 @@ private:
 
 using namespace CmdConsoleImpl;
 
-CmdConsoleTab::CmdConsoleTab(Db* db) : QWidget()
+CmdConsoleTab::CmdConsoleTab(Enot* db) : QWidget()
 {
     setWindowTitle(tr("Command Console"));
     setWindowIcon(QIcon(":/icon/main"));
@@ -144,7 +144,7 @@ CmdConsoleTab::CmdConsoleTab(Db* db) : QWidget()
     Ori::Layouts::LayoutV({toolPanel, infoLabel, Ori::Layouts::Space(3), splitter}).setMargin(0).setSpacing(0).useFor(this);
 }
 
-void CmdConsoleTab::setDb(Db* db)
+void CmdConsoleTab::setDb(Enot* db)
 {
     _impl->db = db;
 }

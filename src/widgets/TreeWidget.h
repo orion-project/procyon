@@ -8,7 +8,7 @@ class QMenu;
 class QTreeView;
 QT_END_NAMESPACE
 
-class Db;
+class Enot;
 class DbItem;
 class TreeModel;
 class FolderItem;
@@ -21,7 +21,7 @@ class TreeWidget : public QWidget
 public:
     TreeWidget();
 
-    void setDb(Db* db);
+    void setDb(Enot* db);
 
     QStringList getExpandedIds();
     void setExpandedIds(const QStringList& ids);
@@ -30,7 +30,7 @@ signals:
     void memoOpenRequested(MemoItem* item);
 
 private:
-    Db* _db = nullptr;
+    Enot* _db = nullptr;
     QTreeView* _treeView;
     TreeModel* _model = nullptr;
     QMenu *_rootMenu, *_folderMenu, *_memoMenu;

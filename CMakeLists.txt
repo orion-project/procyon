@@ -109,7 +109,7 @@ set(PROJECT_SOURCES
     src/app.qrc
     src/main.cpp
     src/AppSettings.cpp
-    src/core/Db.cpp src/core/Db.h
+    src/core/Enot.cpp src/core/Enot.h
     src/core/FolderStore.cpp src/core/FolderStore.h
     src/core/MemoStore.cpp src/core/MemoStore.h
     src/core/MemoType.cpp src/core/MemoType.h

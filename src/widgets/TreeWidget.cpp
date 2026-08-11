@@ -1,6 +1,6 @@
 #include "TreeWidget.h"
 
-#include "core/Db.h"
+#include "core/Enot.h"
 #include "core/MemoType.h"
 
 #include "helpers/OriDialogs.h"
@@ -13,7 +13,7 @@
 class TreeModel : public QAbstractItemModel
 {
 public:
-    TreeModel(Db* db) : _db(db) {}
+    TreeModel(Enot* db) : _db(db) {}
 
     static DbItem* dbItem(const QModelIndex &index)
     {
@@ -190,7 +190,7 @@ public:
     }
 
 private:
-    Db* _db;
+    Enot* _db;
     QIcon _iconRoot = QIcon(":/icon/main");
     QIcon _iconFolder = QIcon(":/icon/folder");
     QIcon _iconMemo = QIcon(":/icon/memo_plain_text");
@@ -227,17 +227,17 @@ TreeWidget::TreeWidget() : QWidget()
     Ori::Layouts::LayoutV({_treeView}).setMargin(0).setSpacing(0).useFor(this);
 }
 
-void TreeWidget::setDb(Db* db)
+void TreeWidget::setDb(Enot* db)
 {
     if (_db)
     {
         // TODO: Explain, how it's possible so that a new db is opened
         // but the old one is still active and can be disconnected?
-        disconnect(_db, &Db::itemCreating, this, &Self::itemCreating);
-        disconnect(_db, &Db::itemCreated, this, &Self::itemCreated);
-        disconnect(_db, &Db::itemUpdated, this, &Self::itemUpdated);
-        disconnect(_db, &Db::itemRemoving, this, &Self::itemRemoving);
-        disconnect(_db, &Db::itemRemoved, this, &Self::itemRemoved);
+        disconnect(_db, &Enot::itemCreating, this, &Self::itemCreating);
+        disconnect(_db, &Enot::itemCreated, this, &Self::itemCreated);
+        disconnect(_db, &Enot::itemUpdated, this, &Self::itemUpdated);
+        disconnect(_db, &Enot::itemRemoving, this, &Self::itemRemoving);
+        disconnect(_db, &Enot::itemRemoved, this, &Self::itemRemoved);
     }
 
     _db = db;
@@ -249,11 +249,11 @@ void TreeWidget::setDb(Db* db)
     if (_db)
     {
         _model = new TreeModel(_db);
-        connect(_db, &Db::itemCreating, this, &Self::itemCreating);
-        connect(_db, &Db::itemCreated, this, &Self::itemCreated);
-        connect(_db, &Db::itemUpdated, this, &Self::itemUpdated);
-        connect(_db, &Db::itemRemoving, this, &Self::itemRemoving);
-        connect(_db, &Db::itemRemoved, this, &Self::itemRemoved);
+        connect(_db, &Enot::itemCreating, this, &Self::itemCreating);
+        connect(_db, &Enot::itemCreated, this, &Self::itemCreated);
+        connect(_db, &Enot::itemUpdated, this, &Self::itemUpdated);
+        connect(_db, &Enot::itemRemoving, this, &Self::itemRemoving);
+        connect(_db, &Enot::itemRemoved, this, &Self::itemRemoved);
     }
     _treeView->setModel(_model);
 }

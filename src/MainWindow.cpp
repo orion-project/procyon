@@ -1,7 +1,7 @@
 #include "MainWindow.h"
 
 #include "AppSettings.h"
-#include "core/Db.h"
+#include "core/Enot.h"
 #include "core/MemoType.h"
 #include "highlighter/PhlManager.h"
 #include "tabs/HelpTab.h"
@@ -376,12 +376,12 @@ void MainWindow::saveSession()
 void MainWindow::newDb()
 {
     QString fileName = Ori::Dlg::getSaveFileName(
-                tr("Create Notebook"), Db::fileFilter(), Db::defaultFileExt());
+                tr("Create Notebook"), Enot::fileFilter(), Enot::defaultFileExt());
     if (fileName.isEmpty()) return;
 
     if (!closeDb()) return;
 
-    auto res = Db::create(fileName);
+    auto res = Enot::create(fileName);
     if (res.ok())
         dbOpened(res.result());
     else Ori::Dlg::error(tr("Unable to create notebook.\n\n%1").arg(res.error()));
@@ -396,7 +396,7 @@ void MainWindow::openDb(const QString &fileName)
 
     if (!closeDb()) return;
 
-    auto res = Db::open(fileName);
+    auto res = Enot::open(fileName);
     if (res.ok())
         dbOpened(res.result());
     else Ori::Dlg::error(tr("Unable to load notebook %1.\n\n%2").arg(fileName, res.error()));
@@ -405,17 +405,17 @@ void MainWindow::openDb(const QString &fileName)
 void MainWindow::openDbViaDialog()
 {
     QString fileName = QFileDialog::getOpenFileName(
-                this, tr("Open Notebook"), QString(), Db::fileFilter());
+                this, tr("Open Notebook"), QString(), Enot::fileFilter());
     if (!fileName.isEmpty())
         openDb(fileName);
 }
 
-void MainWindow::dbOpened(Db* db)
+void MainWindow::dbOpened(Enot* db)
 {
     _db = db;
-    connect(_db, &Db::itemCreated, this, &MainWindow::itemCreated);
-    connect(_db, &Db::itemRemoved, this, &MainWindow::itemRemoved);
-    connect(_db, &Db::errorOccurred, this, [](const QString& error){
+    connect(_db, &Enot::itemCreated, this, &MainWindow::itemCreated);
+    connect(_db, &Enot::itemRemoved, this, &MainWindow::itemRemoved);
+    connect(_db, &Enot::errorOccurred, this, [](const QString& error){
         Ori::Dlg::Defer::error(error);
     });
     _treeView->setDb(_db);

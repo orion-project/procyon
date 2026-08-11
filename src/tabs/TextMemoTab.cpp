@@ -1,7 +1,7 @@
 #include "TextMemoTab.h"
 
 #include "TabHelpers.h"
-#include "core/Db.h"
+#include "core/Enot.h"
 #include "core/MemoStore.h"
 #include "core/MemoType.h"
 #include "editors/MarkdownMemoEditor.h"
@@ -41,7 +41,7 @@ void updateOption(MemoItem* memo, const QString& name, const QVariant& value)
 }
 }
 
-TextMemoTab::TextMemoTab(Db* db, MemoItem* memoItem) : MemoTab(db, memoItem)
+TextMemoTab::TextMemoTab(Enot* db, MemoItem* memoItem) : MemoTab(db, memoItem)
 {
     if (_memoItem->type() == MemoType::markdown())
         _memoEditor = new MarkdownMemoEditor(_memoItem);

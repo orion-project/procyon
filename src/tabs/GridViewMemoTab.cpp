@@ -1,7 +1,7 @@
 #include "GridViewMemoTab.h"
 
 #include "TabHelpers.h"
-#include "core/Db.h"
+#include "core/Enot.h"
 #include "core/MemoStore.h"
 #include "core/MemoType.h"
 
@@ -145,7 +145,7 @@ private:
 
 typedef GridViewMemoTab Self;
 
-GridViewMemoTab::GridViewMemoTab(Db* db, MemoItem* memoItem) : MemoTab(db, memoItem)
+GridViewMemoTab::GridViewMemoTab(Enot* db, MemoItem* memoItem) : MemoTab(db, memoItem)
 {
     _titleEditor = TabHelpers::makeTitleEditor();
 
@@ -170,11 +170,11 @@ GridViewMemoTab::GridViewMemoTab(Db* db, MemoItem* memoItem) : MemoTab(db, memoI
     auto toolPanel = TabHelpers::makeHeaderPanel({_titleEditor, _toolbar});
 
     _tableModel = new GridViewTableModel(memoItem);
-    connect(_db, &Db::itemCreating, _tableModel, &GridViewTableModel::itemCreating);
-    connect(_db, &Db::itemCreated, _tableModel, &GridViewTableModel::itemCreated);
-    connect(_db, &Db::itemRemoved, _tableModel, &GridViewTableModel::itemRemoved);
-    connect(_db, &Db::itemRemoving, _tableModel, &GridViewTableModel::itemRemoving);
-    connect(_db, &Db::itemRemoved, _tableModel, &GridViewTableModel::itemRemoved);
+    connect(_db, &Enot::itemCreating, _tableModel, &GridViewTableModel::itemCreating);
+    connect(_db, &Enot::itemCreated, _tableModel, &GridViewTableModel::itemCreated);
+    connect(_db, &Enot::itemRemoved, _tableModel, &GridViewTableModel::itemRemoved);
+    connect(_db, &Enot::itemRemoving, _tableModel, &GridViewTableModel::itemRemoving);
+    connect(_db, &Enot::itemRemoved, _tableModel, &GridViewTableModel::itemRemoved);
 
     _tableView = new QTableView;
     _tableView->setModel(_tableModel);

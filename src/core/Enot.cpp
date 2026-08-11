@@ -1,4 +1,4 @@
-#include "Db.h"
+#include "Enot.h"
 
 #include "FolderStore.h"
 #include "MemoStore.h"
@@ -53,20 +53,20 @@ MemoItem::~MemoItem()
 }
 
 //------------------------------------------------------------------------------
-//                                   Db
+//                                   Enot
 //------------------------------------------------------------------------------
 
-QString Db::fileFilter()
+QString Enot::fileFilter()
 {
     return tr("Procyon Notebooks (*.enot);;All files (*.*)");
 }
 
-QString Db::defaultFileExt()
+QString Enot::defaultFileExt()
 {
     return QStringLiteral("enot");
 }
 
-QString Db::prepareDb(const QString fileName)
+QString Enot::prepareStore(const QString fileName)
 {
     auto db = QSqlDatabase::database();
 
@@ -107,13 +107,13 @@ QString Db::prepareDb(const QString fileName)
     return QString();
 }
 
-DbResult Db::open(const QString& fileName)
+DbResult Enot::open(const QString& fileName)
 {
-    QString res = prepareDb(fileName);
+    QString res = prepareStore(fileName);
     if (!res.isEmpty())
         return DbResult::fail(res);
 
-    Db* db = new Db(fileName);
+    Enot* db = new Enot(fileName);
 
     // Load folders
     {
@@ -174,34 +174,34 @@ DbResult Db::open(const QString& fileName)
     return DbResult::ok(db);
 }
 
-DbResult Db::create(const QString& fileName)
+DbResult Enot::create(const QString& fileName)
 {
     if (QFile::exists(fileName) && !QFile::remove(fileName))
         return DbResult::fail("Unable to overwrite existing file, probably it is locked.");
 
-    QString res = prepareDb(fileName);
+    QString res = prepareStore(fileName);
     if (!res.isEmpty())
         return DbResult::fail(res);
 
-    Db* db = new Db(fileName);
+    Enot* db = new Enot(fileName);
 
     return DbResult::ok(db);
 }
 
-Db::Db(const QString& fileName) : QObject(), _fileName(fileName)
+Enot::Enot(const QString& fileName) : QObject(), _fileName(fileName)
 {
     _root._id = 0;
     _root._title = QFileInfo(fileName).baseName();
     _allFolders.insert(_root.id(), &_root);
 }
 
-Db::~Db()
+Enot::~Enot()
 {
     // Don't clear _allMemos and _allFolders explicitly
     // All items will be freed when the root item is deleted
 }
 
-bool Db::renameFolder(FolderItem* item, const QString& title)
+bool Enot::renameFolder(FolderItem* item, const QString& title)
 {
     QString res = Store::folders()->rename(item->id(), title);
     if (!res.isEmpty())
@@ -218,7 +218,7 @@ bool Db::renameFolder(FolderItem* item, const QString& title)
     return true;
 }
 
-FolderResult Db::createFolder(FolderItem* parent, const QString& title)
+FolderResult Enot::createFolder(FolderItem* parent, const QString& title)
 {
     if (!parent)
     {
@@ -249,7 +249,7 @@ FolderResult Db::createFolder(FolderItem* parent, const QString& title)
     return FolderResult::ok(folder);
 }
 
-bool Db::removeFolder(FolderItem* folder)
+bool Enot::removeFolder(FolderItem* folder)
 {
     if (!folder->parent())
     {
@@ -296,7 +296,7 @@ bool Db::removeFolder(FolderItem* folder)
     return true;
 }
 
-MemoResult Db::createMemo(FolderItem* folder, MemoType* memoType)
+MemoResult Enot::createMemo(FolderItem* folder, MemoType* memoType)
 {
     auto now = QDateTime::currentDateTime();
 
@@ -325,7 +325,7 @@ MemoResult Db::createMemo(FolderItem* folder, MemoType* memoType)
     return MemoResult::ok(item);
 }
 
-bool Db::updateMemo(MemoItem* item, MemoUpdateParam update)
+bool Enot::updateMemo(MemoItem* item, MemoUpdateParam update)
 {
     update.moment = QDateTime::currentDateTime();
     update.station = _station;
@@ -348,12 +348,12 @@ bool Db::updateMemo(MemoItem* item, MemoUpdateParam update)
     return true;
 }
 
-QString Db::loadMemo(MemoItem* item)
+QString Enot::loadMemo(MemoItem* item)
 {
     return Store::memos()->load(item);
 }
 
-bool Db::removeMemo(MemoItem* item)
+bool Enot::removeMemo(MemoItem* item)
 {
     QString res = Store::memos()->remove(item);
     if (!res.isEmpty())
@@ -373,7 +373,7 @@ bool Db::removeMemo(MemoItem* item)
     return true;
 }
 
-IntResult Db::countMemos() const
+IntResult Enot::countMemos() const
 {
     int count;
     QString res = Store::memos()->countAll(&count);
@@ -400,17 +400,17 @@ TItem* findInContainerById(const QMap<int, TItem*>& container, int id)
 
 } // namespace
 
-MemoItem* Db::findMemoById(int id) const
+MemoItem* Enot::findMemoById(int id) const
 {
     return findInContainerById(_allMemos, id);
 }
 
-FolderItem* Db::findFolderById(int id) const
+FolderItem* Enot::findFolderById(int id) const
 {
     return findInContainerById(_allFolders, id);
 }
 
-void Db::fillFolderIdsFlat(FolderItem* root, QVector<int>& ids)
+void Enot::fillFolderIdsFlat(FolderItem* root, QVector<int>& ids)
 {
     for (auto folder : root->folders())
     {
@@ -419,7 +419,7 @@ void Db::fillFolderIdsFlat(FolderItem* root, QVector<int>& ids)
     }
 }
 
-void Db::fillMemoIdsFlat(FolderItem* root, QVector<int> &ids)
+void Enot::fillMemoIdsFlat(FolderItem* root, QVector<int> &ids)
 {
     for (auto memo : root->memos())
         ids.append(memo->id());
@@ -428,12 +428,12 @@ void Db::fillMemoIdsFlat(FolderItem* root, QVector<int> &ids)
         fillMemoIdsFlat(folder, ids);
 }
 
-QString Db::uid() const
+QString Enot::uid() const
 {
     return Store::settings()->readString(KEY_UID);
 }
 
-QString Db::getOrMakeUid()
+QString Enot::getOrMakeUid()
 {
     QString uid = Store::settings()->readString(KEY_UID);
     if (uid.isEmpty())

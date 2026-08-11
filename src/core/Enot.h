@@ -1,5 +1,5 @@
-#ifndef DB_H
-#define DB_H
+#ifndef ENOT_H
+#define ENOT_H
 
 #include <QObject>
 #include <QList>
@@ -8,7 +8,7 @@
 
 #include "core/OriResult.h"
 
-class Db;
+class Enot;
 class FolderItem;
 class MemoItem;
 class MemoType;
@@ -48,7 +48,7 @@ private:
     QString _title;
     DbItem* _parent = nullptr;
 
-    friend class Db;
+    friend class Enot;
     friend class FolderStore;
     friend class MemoStore;
 };
@@ -69,7 +69,7 @@ private:
     QList<FolderItem*> _folders;
     QList<MemoItem*> _memos;
 
-    friend class Db;
+    friend class Enot;
     friend class FolderStore;
 };
 
@@ -93,7 +93,7 @@ private:
     bool _isLoaded = false;
     QDateTime _created, _updated;
 
-    friend class Db;
+    friend class Enot;
     friend class MemoStore;
 };
 
@@ -102,17 +102,17 @@ private:
 typedef Ori::Result<int> IntResult;
 typedef Ori::Result<MemoItem*> MemoResult;
 typedef Ori::Result<FolderItem*> FolderResult;
-typedef Ori::Result<Db*> DbResult;
+typedef Ori::Result<Enot*> DbResult;
 
 //------------------------------------------------------------------------------
 
-class Db : public QObject
+class Enot : public QObject
 {
     Q_OBJECT
 
 public:
-    Db(const QString& fileName);
-    ~Db();
+    Enot(const QString& fileName);
+    ~Enot();
 
     static QString fileFilter();
     static QString defaultFileExt();
@@ -155,11 +155,11 @@ private:
     QMap<int, MemoItem*> _allMemos;
     QMap<int, FolderItem*> _allFolders;
 
-    static QString prepareDb(const QString fileName);
+    static QString prepareStore(const QString fileName);
 
     void fillFolderIdsFlat(FolderItem* root, QVector<int>& ids);
     void fillMemoIdsFlat(FolderItem* root, QVector<int>& ids);
 };
 
-#endif // DB_H
+#endif // ENOT_H
 

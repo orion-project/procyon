@@ -11,7 +11,7 @@ class QSplitter;
 class QSettings;
 QT_END_NAMESPACE
 
-class Db;
+class Enot;
 class DbItem;
 class TreeWidget;
 class OpenTabsWidget;
@@ -46,7 +46,7 @@ protected:
 
 private:
     QSplitter* _splitter;
-    Db* _db = nullptr;
+    Enot* _db = nullptr;
     TreeWidget* _treeView;
     QStackedWidget* _tabsView;
     OpenTabsWidget* _openTabsView;
@@ -75,7 +75,7 @@ private:
     void chooseMemoFont();
     void toggleWordWrap();
 
-    void dbOpened(Db* db);
+    void dbOpened(Enot* db);
     void itemCreated(DbItem* item);
     void itemRemoved(DbItem* item);
 

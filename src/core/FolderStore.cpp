@@ -1,6 +1,6 @@
 #include "FolderStore.h"
 
-#include "Db.h"
+#include "Enot.h"
 #include "SqlHelper.h"
 
 using namespace Ori::Sql;

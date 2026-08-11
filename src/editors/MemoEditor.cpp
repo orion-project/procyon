@@ -1,7 +1,7 @@
 #include "MemoEditor.h"
 
 #include "TextEditHelpers.h"
-#include "core/Db.h"
+#include "core/Enot.h"
 #include "highlighter/PhlManager.h"
 #include "spellcheck/TextEditSpellcheck.h"
 #include "spellcheck/Spellchecker.h"

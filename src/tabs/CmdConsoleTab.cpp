@@ -64,7 +64,7 @@ public:
 private:
     const CmdConsole* _impl;
 
-    void printFolder(QTextStream& res, int level, FolderItem* folder)
+    void printFolder(QTextStream& res, int level, Folder* folder)
     {
         res << QString(level*4, ' ') << "📁[" << folder->id() << "] " << folder->title()
             << " (🔝" << folder->parentFolder()->id()  << ")\n";

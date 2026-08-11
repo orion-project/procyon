@@ -4,13 +4,13 @@
 #include <QString>
 #include <QMap>
 
-class FolderItem;
+class Folder;
 
 struct FoldersResult
 {
     QString error;
 
-    struct Item { int parentId; FolderItem* folder; };
+    struct Item { int parentId; Folder* folder; };
     QList<Item> items;
 };
 
@@ -19,13 +19,13 @@ class FolderStore
 public:
     QString prepare();
 
-    QString create(FolderItem* folder) const;
+    QString create(Folder* folder) const;
     QString rename(int folderId, const QString title) const;
-    QString remove(FolderItem* folder) const;
+    QString remove(Folder* folder) const;
     FoldersResult selectAll() const;
 
 private:
-    QString removeBranch(FolderItem* folder, const QString &path) const;
+    QString removeBranch(Folder* folder, const QString &path) const;
 };
 
 namespace Store

@@ -11,7 +11,7 @@ QT_END_NAMESPACE
 class Enot;
 class DbItem;
 class TreeModel;
-class FolderItem;
+class Folder;
 class MemoItem;
 
 class TreeWidget : public QWidget

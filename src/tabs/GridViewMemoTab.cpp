@@ -135,7 +135,7 @@ public:
 
 private:
     MemoItem *_self;
-    FolderItem *_folder;
+    Folder *_folder;
     bool _isRowCountChanging = false;
 };
 

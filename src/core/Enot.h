@@ -9,7 +9,7 @@
 #include "core/OriResult.h"
 
 class Enot;
-class FolderItem;
+class Folder;
 class MemoItem;
 class MemoType;
 
@@ -38,10 +38,10 @@ public:
     bool isRoot() const { return !_parent; }
     bool isFolder() const;
     bool isMemo() const;
-    FolderItem* asFolder();
+    Folder* asFolder();
     MemoItem* asMemo();
 
-    FolderItem* parentFolder() { return _parent ? _parent->asFolder() : nullptr; }
+    Folder* parentFolder() { return _parent ? _parent->asFolder() : nullptr; }
 
 private:
     int _id;
@@ -55,18 +55,18 @@ private:
 
 //------------------------------------------------------------------------------
 
-class FolderItem : public DbItem
+class Folder : public DbItem
 {
 public:
-    ~FolderItem();
+    ~Folder();
 
-    const QList<FolderItem*>& folders() const { return _folders; }
+    const QList<Folder*>& folders() const { return _folders; }
     const QList<MemoItem*>& memos() const { return _memos; }
 
     int childCount() const { return _folders.size() + _memos.size(); }
 
 private:
-    QList<FolderItem*> _folders;
+    QList<Folder*> _folders;
     QList<MemoItem*> _memos;
 
     friend class Enot;
@@ -101,7 +101,7 @@ private:
 
 typedef Ori::Result<int> IntResult;
 typedef Ori::Result<MemoItem*> MemoResult;
-typedef Ori::Result<FolderItem*> FolderResult;
+typedef Ori::Result<Folder*> FolderResult;
 typedef Ori::Result<Enot*> EnotResult;
 
 //------------------------------------------------------------------------------
@@ -121,21 +121,21 @@ public:
 
     QString fileName() const { return _fileName; }
 
-    FolderItem* root() { return &_root; }
+    Folder* root() { return &_root; }
 
     MemoItem* findMemoById(int id) const;
-    FolderItem* findFolderById(int id) const;
+    Folder* findFolderById(int id) const;
 
     QString uid() const;
     QString getOrMakeUid();
 
     IntResult countMemos() const;
 
-    FolderResult createFolder(FolderItem* parent, const QString& title);
-    bool renameFolder(FolderItem* item, const QString& title);
-    bool removeFolder(FolderItem* folder);
+    FolderResult createFolder(Folder* parent, const QString& title);
+    bool renameFolder(Folder* item, const QString& title);
+    bool removeFolder(Folder* folder);
 
-    MemoResult createMemo(FolderItem* folder, MemoType *memoType);
+    MemoResult createMemo(Folder* folder, MemoType *memoType);
     bool updateMemo(MemoItem* item, MemoUpdateParam update);
     bool removeMemo(MemoItem* item);
     QString loadMemo(MemoItem* item);
@@ -151,14 +151,14 @@ signals:
 private:
     QString _fileName;
     QString _station;
-    FolderItem _root;
+    Folder _root;
     QMap<int, MemoItem*> _allMemos;
-    QMap<int, FolderItem*> _allFolders;
+    QMap<int, Folder*> _allFolders;
 
     static QString prepareStore(const QString fileName);
 
-    void fillFolderIdsFlat(FolderItem* root, QVector<int>& ids);
-    void fillMemoIdsFlat(FolderItem* root, QVector<int>& ids);
+    void fillFolderIdsFlat(Folder* root, QVector<int>& ids);
+    void fillMemoIdsFlat(Folder* root, QVector<int>& ids);
 };
 
 #endif // ENOT_H

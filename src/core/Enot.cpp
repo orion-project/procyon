@@ -17,9 +17,9 @@
 //------------------------------------------------------------------------------
 
 DbItem::~DbItem() {}
-bool DbItem::isFolder() const { return dynamic_cast<const FolderItem*>(this); }
+bool DbItem::isFolder() const { return dynamic_cast<const Folder*>(this); }
 bool DbItem::isMemo() const { return dynamic_cast<const MemoItem*>(this); }
-FolderItem* DbItem::asFolder() { return dynamic_cast<FolderItem*>(this); }
+Folder* DbItem::asFolder() { return dynamic_cast<Folder*>(this); }
 MemoItem* DbItem::asMemo() { return dynamic_cast<MemoItem*>(this); }
 
 QString DbItem::path() const
@@ -35,10 +35,10 @@ QString DbItem::path() const
 }
 
 //------------------------------------------------------------------------------
-//                                  FolderItem
+//                                  Folder
 //------------------------------------------------------------------------------
 
-FolderItem::~FolderItem()
+Folder::~Folder()
 {
     qDeleteAll(_folders);
     qDeleteAll(_memos);
@@ -201,7 +201,7 @@ Enot::~Enot()
     // All items will be freed when the root item is deleted
 }
 
-bool Enot::renameFolder(FolderItem* item, const QString& title)
+bool Enot::renameFolder(Folder* item, const QString& title)
 {
     QString res = Store::folders()->rename(item->id(), title);
     if (!res.isEmpty())
@@ -218,7 +218,7 @@ bool Enot::renameFolder(FolderItem* item, const QString& title)
     return true;
 }
 
-FolderResult Enot::createFolder(FolderItem* parent, const QString& title)
+FolderResult Enot::createFolder(Folder* parent, const QString& title)
 {
     if (!parent)
     {
@@ -227,7 +227,7 @@ FolderResult Enot::createFolder(FolderItem* parent, const QString& title)
         return FolderResult::fail(msg);
     }
 
-    FolderItem* folder = new FolderItem;
+    Folder* folder = new Folder;
     folder->_title = title;
     folder->_parent = parent;
 
@@ -249,7 +249,7 @@ FolderResult Enot::createFolder(FolderItem* parent, const QString& title)
     return FolderResult::ok(folder);
 }
 
-bool Enot::removeFolder(FolderItem* folder)
+bool Enot::removeFolder(Folder* folder)
 {
     if (!folder->parent())
     {
@@ -296,7 +296,7 @@ bool Enot::removeFolder(FolderItem* folder)
     return true;
 }
 
-MemoResult Enot::createMemo(FolderItem* folder, MemoType* memoType)
+MemoResult Enot::createMemo(Folder* folder, MemoType* memoType)
 {
     auto now = QDateTime::currentDateTime();
 
@@ -405,12 +405,12 @@ MemoItem* Enot::findMemoById(int id) const
     return findInContainerById(_allMemos, id);
 }
 
-FolderItem* Enot::findFolderById(int id) const
+Folder* Enot::findFolderById(int id) const
 {
     return findInContainerById(_allFolders, id);
 }
 
-void Enot::fillFolderIdsFlat(FolderItem* root, QVector<int>& ids)
+void Enot::fillFolderIdsFlat(Folder* root, QVector<int>& ids)
 {
     for (auto folder : root->folders())
     {
@@ -419,7 +419,7 @@ void Enot::fillFolderIdsFlat(FolderItem* root, QVector<int>& ids)
     }
 }
 
-void Enot::fillMemoIdsFlat(FolderItem* root, QVector<int> &ids)
+void Enot::fillMemoIdsFlat(Folder* root, QVector<int> &ids)
 {
     for (auto memo : root->memos())
         ids.append(memo->id());

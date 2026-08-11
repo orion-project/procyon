@@ -52,7 +52,7 @@ QString FolderStore::prepare()
     return createTable(folderTable());
 }
 
-QString FolderStore::create(FolderItem* folder) const
+QString FolderStore::create(Folder* folder) const
 {
     auto table = folderTable();
 
@@ -89,7 +89,7 @@ FoldersResult FolderStore::selectAll() const
     while (query.next())
     {
         auto r = query.record();
-        auto folder = new FolderItem;
+        auto folder = new Folder;
         folder->_id = r.value(table->id).toInt();
         folder->_title = r.value(table->title).toString();
         int parentId = r.value(table->parent).toInt();
@@ -108,7 +108,7 @@ QString FolderStore::rename(int folderId, const QString title) const
             .exec();
 }
 
-QString FolderStore::remove(FolderItem *folder) const
+QString FolderStore::remove(Folder *folder) const
 {
     auto db = QSqlDatabase::database();
     bool ok = db.transaction();
@@ -127,7 +127,7 @@ QString FolderStore::remove(FolderItem *folder) const
     return QString();
 }
 
-QString FolderStore::removeBranch(FolderItem* folder, const QString& path) const
+QString FolderStore::removeBranch(Folder* folder, const QString& path) const
 {
     auto table = folderTable();
     QString thisPath = path + '/' + folder->title();

@@ -20,7 +20,7 @@ public:
         return static_cast<DbItem*>(index.internalPointer());
     }
 
-    static FolderItem* asFolder(const QModelIndex &index)
+    static Folder* asFolder(const QModelIndex &index)
     {
         auto item = dbItem(index);
         return item ? item->asFolder() : nullptr;
@@ -54,7 +54,7 @@ public:
     QModelIndex index(int row, int column, const QModelIndex &parent) const override
     {
         DbItem* item = nullptr;
-        FolderItem* parentFolder = nullptr;
+        Folder* parentFolder = nullptr;
         int index;
 
         if (!parent.isValid())

@@ -1,5 +1,5 @@
-#ifndef MEMO_MANAGER_H
-#define MEMO_MANAGER_H
+#ifndef MEMO_STORE_H
+#define MEMO_STORE_H
 
 #include <QString>
 #include <QMap>
@@ -17,7 +17,7 @@ struct MemosResult
     QList<Item> items;
 };
 
-class MemoManager
+class MemoStore
 {
 public:
     QString prepare();
@@ -32,9 +32,9 @@ public:
     QString updateOption(int memoId, const QString& name, const QVariant& value) const;
 };
 
-namespace DB
+namespace Store
 {
-MemoManager* memoManager();
+MemoStore* memos();
 }
 
-#endif // MEMO_MANAGER_H
+#endif // MEMO_STORE_H

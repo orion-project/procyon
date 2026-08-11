@@ -1,4 +1,4 @@
-#include "MemoManager.h"
+#include "MemoStore.h"
 
 #include "Db.h"
 #include "MemoType.h"
@@ -6,9 +6,9 @@
 
 using namespace Ori::Sql;
 
-namespace DB
+namespace Store
 {
-MemoManager* memoManager() { static MemoManager m; return &m; }
+MemoStore* memos() { static MemoStore s; return &s; }
 }
 
 //------------------------------------------------------------------------------
@@ -85,10 +85,10 @@ MemoOptionsTableDef* memoOptionsTable() { static MemoOptionsTableDef t; return &
 } // namespace
 
 //------------------------------------------------------------------------------
-//                               MemoManager
+//                               MemoStore
 //------------------------------------------------------------------------------
 
-QString MemoManager::prepare()
+QString MemoStore::prepare()
 {
     auto table = memoTable();
 
@@ -107,7 +107,7 @@ QString MemoManager::prepare()
     return createTable(memoOptionsTable());
 }
 
-QString MemoManager::create(MemoItem* item) const
+QString MemoStore::create(MemoItem* item) const
 {
     auto table = memoTable();
 
@@ -134,7 +134,7 @@ QString MemoManager::create(MemoItem* item) const
     return QString();
 }
 
-MemosResult MemoManager::selectAll() const
+MemosResult MemoStore::selectAll() const
 {
     auto table = memoTable();
 
@@ -166,7 +166,7 @@ MemosResult MemoManager::selectAll() const
     return result;
 }
 
-QString MemoManager::load(MemoItem* memo) const
+QString MemoStore::load(MemoItem* memo) const
 {
     auto table = memoTable();
 
@@ -183,7 +183,7 @@ QString MemoManager::load(MemoItem* memo) const
     return QString();
 }
 
-QString MemoManager::update(MemoItem* memo, const MemoUpdateParam& update) const
+QString MemoStore::update(MemoItem* memo, const MemoUpdateParam& update) const
 {
     auto table = memoTable();
     return ActionQuery(table->sqlUpdate)
@@ -195,7 +195,7 @@ QString MemoManager::update(MemoItem* memo, const MemoUpdateParam& update) const
             .exec();
 }
 
-QString MemoManager::remove(MemoItem* item) const
+QString MemoStore::remove(MemoItem* item) const
 {
     auto table = memoTable();
     return ActionQuery(table->sqlDelete)
@@ -203,7 +203,7 @@ QString MemoManager::remove(MemoItem* item) const
             .exec();
 }
 
-QString MemoManager::countAll(int *count) const
+QString MemoStore::countAll(int *count) const
 {
     auto table = memoTable();
     SelectQuery query(table->sqlCountAll());
@@ -214,7 +214,7 @@ QString MemoManager::countAll(int *count) const
     return QString();
 }
 
-QMap<QString, QVariant> MemoManager::selectOptions(int memoId) const
+QMap<QString, QVariant> MemoStore::selectOptions(int memoId) const
 {
     QMap<QString, QVariant> options;
     auto table = memoOptionsTable();
@@ -235,7 +235,7 @@ QMap<QString, QVariant> MemoManager::selectOptions(int memoId) const
     return options;
 }
 
-QString MemoManager::updateOption(int memoId, const QString& name, const QVariant& value) const
+QString MemoStore::updateOption(int memoId, const QString& name, const QVariant& value) const
 {
     auto table = memoOptionsTable();
     return ActionQuery(table->sqlUpdate)

@@ -2,7 +2,7 @@
 
 #include "TabHelpers.h"
 #include "core/Db.h"
-#include "core/MemoManager.h"
+#include "core/MemoStore.h"
 #include "core/MemoType.h"
 
 #include <QAbstractTableModel>

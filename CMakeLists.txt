@@ -111,7 +111,7 @@ set(PROJECT_SOURCES
     src/AppSettings.cpp
     src/core/Db.cpp src/core/Db.h
     src/core/FolderStore.cpp src/core/FolderStore.h
-    src/core/MemoManager.cpp src/core/MemoManager.h
+    src/core/MemoStore.cpp src/core/MemoStore.h
     src/core/MemoType.cpp src/core/MemoType.h
     src/core/SettingsManager.cpp src/core/SettingsManager.h
     src/core/SqlHelper.cpp src/core/SqlHelper.h

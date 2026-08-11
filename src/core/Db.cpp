@@ -1,7 +1,7 @@
 #include "Db.h"
 
 #include "FolderStore.h"
-#include "MemoManager.h"
+#include "MemoStore.h"
 #include "SettingsManager.h"
 #include "SqlHelper.h"
 
@@ -97,7 +97,7 @@ QString Db::prepareDb(const QString fileName)
     res = Store::folders()->prepare();
     if (!res.isEmpty()) return res;
 
-    res = DB::memoManager()->prepare();
+    res = Store::memos()->prepare();
     if (!res.isEmpty()) return res;
 
     res = DB::settingsManager()->prepare();
@@ -144,7 +144,7 @@ DbResult Db::open(const QString& fileName)
 
     // Load memos
     {
-        MemosResult res = DB::memoManager()->selectAll();
+        MemosResult res = Store::memos()->selectAll();
         if (!res.error.isEmpty())
         {
             delete db;
@@ -307,7 +307,7 @@ MemoResult Db::createMemo(FolderItem* folder, MemoType* memoType)
     item->_station = _station;
     item->_type = memoType;
 
-    auto res = DB::memoManager()->create(item);
+    auto res = Store::memos()->create(item);
     if (!res.isEmpty())
     {
         delete item;
@@ -330,7 +330,7 @@ bool Db::updateMemo(MemoItem* item, MemoUpdateParam update)
     update.moment = QDateTime::currentDateTime();
     update.station = _station;
 
-    QString res = DB::memoManager()->update(item, update);
+    QString res = Store::memos()->update(item, update);
     if (!res.isEmpty())
     {
         emit errorOccurred(res);
@@ -350,12 +350,12 @@ bool Db::updateMemo(MemoItem* item, MemoUpdateParam update)
 
 QString Db::loadMemo(MemoItem* item)
 {
-    return DB::memoManager()->load(item);
+    return Store::memos()->load(item);
 }
 
 bool Db::removeMemo(MemoItem* item)
 {
-    QString res = DB::memoManager()->remove(item);
+    QString res = Store::memos()->remove(item);
     if (!res.isEmpty())
     {
         emit errorOccurred(res);
@@ -376,7 +376,7 @@ bool Db::removeMemo(MemoItem* item)
 IntResult Db::countMemos() const
 {
     int count;
-    QString res = DB::memoManager()->countAll(&count);
+    QString res = Store::memos()->countAll(&count);
     return res.isEmpty() ? IntResult::ok(count) : IntResult::fail(res);
 }
 

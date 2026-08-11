@@ -50,7 +50,7 @@ private:
 
     friend class Db;
     friend class FolderStore;
-    friend class MemoManager;
+    friend class MemoStore;
 };
 
 //------------------------------------------------------------------------------
@@ -94,7 +94,7 @@ private:
     QDateTime _created, _updated;
 
     friend class Db;
-    friend class MemoManager;
+    friend class MemoStore;
 };
 
 //------------------------------------------------------------------------------

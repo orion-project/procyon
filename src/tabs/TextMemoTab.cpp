@@ -2,7 +2,7 @@
 
 #include "TabHelpers.h"
 #include "core/Db.h"
-#include "core/MemoManager.h"
+#include "core/MemoStore.h"
 #include "core/MemoType.h"
 #include "editors/MarkdownMemoEditor.h"
 #include "editors/MemoEditor.h"
@@ -35,7 +35,7 @@ const QString HIGHLIGHTER = "highlighter";
 
 void updateOption(MemoItem* memo, const QString& name, const QVariant& value)
 {
-    QString res = DB::memoManager()->updateOption(memo->id(), name, value);
+    QString res = Store::memos()->updateOption(memo->id(), name, value);
     if (!res.isEmpty())
         Ori::Dlg::error(QString("Unable to store memo option in database.\n\n%1").arg(res));
 }
@@ -139,7 +139,7 @@ void TextMemoTab::exportToPdf()
 
 void TextMemoTab::loadSettings()
 {
-    auto options = DB::memoManager()->selectOptions(_memoItem->id());
+    auto options = Store::memos()->selectOptions(_memoItem->id());
 
     auto memoFont = AppSettings::instance().memoFont;
     if (options.contains(MemoOptions::FONT))

@@ -122,7 +122,6 @@ set(PROJECT_SOURCES
     src/MainWindow.cpp
     src/markdown/MarkdownHelper.cpp
     src/markdown/ori_html.c
-    src/OpenTabsWidget.cpp
     src/spellcheck/LangCodeAndNames.cpp
     src/spellcheck/Spellchecker.cpp
     src/spellcheck/TextEditSpellcheck.cpp
@@ -140,6 +139,7 @@ set(PROJECT_SOURCES
     src/TextEditHelpers.cpp
     src/widgets/MemoTextBrowser.cpp
     src/widgets/MemoTextEdit.cpp
+    src/widgets/OpenTabsWidget.cpp src/widgets/OpenTabsWidget.h
     src/widgets/TreeWidget.cpp src/widgets/TreeWidget.h
 )
 

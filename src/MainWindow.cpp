@@ -1,7 +1,6 @@
 #include "MainWindow.h"
 
 #include "AppSettings.h"
-#include "OpenTabsWidget.h"
 #include "db/Db.h"
 #include "db/MemoType.h"
 #include "highlighter/PhlManager.h"
@@ -14,6 +13,7 @@
 #include "tabs/SqlConsoleTab.h"
 #include "tabs/QssEditorTab.h"
 #include "tabs/CmdConsoleTab.h"
+#include "widgets/OpenTabsWidget.h"
 #include "widgets/TreeWidget.h"
 
 #ifdef ENABLE_SPELLCHECK

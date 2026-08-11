@@ -117,7 +117,6 @@ public:
 protected:
     TableDef(const QString& tableName): _tableName(tableName) {}
 
-private:
     QString _tableName;
 };
 

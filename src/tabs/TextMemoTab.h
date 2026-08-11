@@ -12,6 +12,7 @@ class QToolButton;
 QT_END_NAMESPACE
 
 class MemoEditor;
+class MemoPropsPanel;
 
 class TextMemoTab : public MemoTab
 {
@@ -40,6 +41,7 @@ public:
 
 private:
     MemoEditor* _memoEditor;
+    MemoPropsPanel* _propsPanel;
     QLineEdit* _titleEditor;
     QToolBar* _toolbar;
     QAction *_actionEdit, *_actionSave, *_actionCancel;

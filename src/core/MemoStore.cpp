@@ -79,8 +79,37 @@ public:
         "REPLACE INTO MemoOptions (MemoId, Name, Value) VALUES (:MemoId, :Name, :Value)";
 };
 
+class MemoPropsTableDef : public Ori::Sql::TableDef
+{
+public:
+    MemoPropsTableDef() : Ori::Sql::TableDef("MemoProps") {}
+
+    const QString memoId = "MemoId";
+    const QString name = "Name";
+    const QString value = "Value";
+
+    QString sqlCreate() const override
+    {
+        return QString("CREATE TABLE IF NOT EXISTS %1 ("
+               "MemoId REFERENCES Memo(Id) ON DELETE CASCADE, "
+               "Name, Value)").arg(_tableName);
+    }
+
+    const QString sqlSelect(int memoId) const
+    {
+        return QString("SELECT Name, Value from %1 WHERE MemoId = %2").arg(_tableName).arg(memoId);
+    }
+
+    const QString sqlUpdate() const
+    {
+        return QString("REPLACE INTO %1 (MemoId, Name, Value) "
+                       "VALUES (:MemoId, :Name, :Value)").arg(_tableName);
+    }
+};
+
 MemoTableDef* memoTable() { static MemoTableDef t; return &t; }
 MemoOptionsTableDef* memoOptionsTable() { static MemoOptionsTableDef t; return &t; }
+MemoPropsTableDef* memoPropsTable() { static MemoPropsTableDef t; return &t; }
 
 } // namespace
 
@@ -104,7 +133,13 @@ QString MemoStore::prepare()
     res = addColumnIfNotExist(table->tableName(), table->station);
     if (!res.isEmpty()) return res;
 
-    return createTable(memoOptionsTable());
+    res = createTable(memoOptionsTable());
+    if (!res.isEmpty()) return res;
+
+    res = createTable(memoPropsTable());
+    if (!res.isEmpty()) return res;
+
+    return {};
 }
 
 QString MemoStore::create(Memo* memo) const

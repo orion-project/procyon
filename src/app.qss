@@ -5,6 +5,9 @@ $default-border: 1px solid silver; /* Default border */
 $selection-color: steelBlue;
 $main-font-size: 14px;
 $hover-color: #334682b4;
+$light-paper-color: #f6f7fa;
+$main-text-color: black;
+$quiter-text-color: #32424c;
 
 /************************************
              Main window
@@ -158,7 +161,7 @@ QMenu::indicator:checked {
   selection-background-color: $selection-color;
 }
 [role=memo_title] {
-  color: #32424c;
+  color: $quiter-text-color;
   font-size: 20px;
   font-weight: bold;
 }
@@ -209,7 +212,7 @@ QScrollBar:vertical {
 QScrollBar::handle:vertical {
   border: $default-border;
   border-radius: $border-radius;
-  background-color: #f6f7fa;
+  background-color: $light-paper-color;
   min-height: 20px;
 }
 QScrollBar::handle:vertical:hover {
@@ -359,3 +362,40 @@ QToolButton:hover {
 QTableView {
   font-size: $main-font-size;
 }
+
+/************************************
+             PropsPanel
+************************************/
+#props_panel {
+  background-color: $light-paper-color;
+  border: $default-border;
+  border-radius: $border-radius;
+  padding: 0 6px;
+  margin-bottom: 6px;
+}
+QLabel[role=prop_name] {
+  font-size: $main-font-size;
+}
+QLabel[role=prop_value] {
+  font-size: $main-font-size;
+  font-weight: bold;
+  margin-right: 8px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  padding-right: 6px;
+  color: $quiter-text-color;
+  border-radius: 0;
+  border-right: $default-border;
+}
+QLabel[role=prop_editor] {
+  color: $selection-color;
+  font-size: $main-font-size;
+  font-weight: bold;
+  margin-right: 8px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  padding-right: 6px;
+  border-radius: 0;
+  border-right: $default-border;
+}
+

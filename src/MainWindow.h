@@ -86,7 +86,7 @@ private:
     MemoTab* currentMemoTab() const;
     TextMemoTab* currentTextMemoTab() const;
 
-    void optionsMenuAboutToShow();
+    void memoMenuAboutToShow();
     void spellcheckMenuAboutToShow();
     void highlighterMenuAboutToShow();
 

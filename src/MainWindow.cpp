@@ -185,10 +185,7 @@ void MainWindow::createMenu()
     new Ori::Widgets::MruMenuPart(_mruList, m, actionExit, this);
 
     m = menuBar()->addMenu(tr("Memo"));
-    connect(m, &QMenu::aboutToShow, this, &MainWindow::optionsMenuAboutToShow);
-
-    _actionMemoExportPdf = m->addAction(tr("Export to PDF..."), this, &MainWindow::exportToPdf);
-    m->addSeparator();
+    connect(m, &QMenu::aboutToShow, this, &MainWindow::memoMenuAboutToShow);
 
 #ifdef ENABLE_SPELLCHECK
     _spellcheckMenu = _spellcheckControl->makeMenu(this);
@@ -206,6 +203,11 @@ void MainWindow::createMenu()
 
     _actionWordWrap = m->addAction(tr("Word Wrap"), this, &MainWindow::toggleWordWrap);
     _actionWordWrap->setCheckable(true);
+
+    m->addSeparator();
+    _actionMemoExportPdf = m->addAction(tr("Export to PDF..."), this, &MainWindow::exportToPdf);
+
+    m = menuBar()->addMenu(tr("Tools"));
 
     if (AppSettings::instance().isDevMode)
     {
@@ -606,15 +608,19 @@ void MainWindow::itemRemoved(Entry* entry)
     if (tab) tab->deleteLater();
 }
 
-void MainWindow::optionsMenuAboutToShow()
+void MainWindow::memoMenuAboutToShow()
 {
     auto memoPage = currentTextMemoTab();
+
     if (_spellcheckMenu)
         _spellcheckMenu->setEnabled(memoPage && !memoPage->isReadOnly());
+
     _highlighterMenu->setEnabled(memoPage && memoPage->memo()->type() == MemoType::plainText());
+
     _actionMemoExportPdf->setEnabled(memoPage);
+
     _actionMemoFont->setEnabled(memoPage);
-    _actionMemoFont->setChecked(memoPage && memoPage->wordWrap());
+
     _actionWordWrap->setEnabled(memoPage);
     _actionWordWrap->setChecked(memoPage && memoPage->wordWrap());
 }

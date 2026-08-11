@@ -133,19 +133,19 @@ public:
 
     FolderResult createFolder(Folder* parent, const QString& title);
     bool renameFolder(Folder* folder, const QString& title);
-    bool removeFolder(Folder* folder);
+    bool deleteFolder(Folder* folder);
 
     MemoResult createMemo(Folder* folder, MemoType *memoType);
     bool updateMemo(Memo* memo, MemoUpdateParam update);
-    bool removeMemo(Memo* memo);
+    bool deleteMemo(Memo* memo);
     QString loadMemo(Memo* memo);
 
 signals:
-    void itemCreating(Entry*, int);
-    void itemCreated(Entry*);
-    void itemUpdated(Entry*);
-    void itemRemoving(Entry*);
-    void itemRemoved(Entry*);
+    void entryCreating(Entry*, int);
+    void entryCreated(Entry*);
+    void entryUpdated(Entry*);
+    void entryDeleting(Entry*);
+    void entryDeleted(Entry*);
     void errorOccurred(const QString& error);
 
 private:

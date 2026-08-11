@@ -35,9 +35,10 @@ private:
     TreeModel* _model = nullptr;
     QMenu *_rootMenu, *_folderMenu, *_memoMenu;
     QSet<int> _expandedIds;
-    bool _isFolderRemoving = false;
+    bool _isFolderDeleting = false;
 
     Entry* selectedEntry() const;
+    void selectEntry(Entry*);
 
     void createFolder();
     void renameFolder();
@@ -47,13 +48,11 @@ private:
     void openMemo();
 
     void contextMenuRequested(const QPoint &pos);
-    void itemCreating(Entry*, int);
-    void itemCreated(Entry*);
-    void itemUpdated(Entry*);
-    void itemRemoving(Entry*);
-    void itemRemoved(Entry*);
-
-    void selectItem(Entry*);
+    void entryCreating(Entry*, int);
+    void entryCreated(Entry*);
+    void entryUpdated(Entry*);
+    void entryDeleting(Entry*);
+    void entryDeleted(Entry*);
 
     void stashExpandedIds();
     void applyExpandedIds();

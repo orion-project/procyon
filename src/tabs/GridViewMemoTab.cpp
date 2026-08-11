@@ -170,11 +170,11 @@ GridViewMemoTab::GridViewMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     auto toolPanel = TabHelpers::makeHeaderPanel({_titleEditor, _toolbar});
 
     _tableModel = new GridViewTableModel(memo);
-    connect(_enot, &Enot::itemCreating, _tableModel, &GridViewTableModel::itemCreating);
-    connect(_enot, &Enot::itemCreated, _tableModel, &GridViewTableModel::itemCreated);
-    connect(_enot, &Enot::itemRemoved, _tableModel, &GridViewTableModel::itemRemoved);
-    connect(_enot, &Enot::itemRemoving, _tableModel, &GridViewTableModel::itemRemoving);
-    connect(_enot, &Enot::itemRemoved, _tableModel, &GridViewTableModel::itemRemoved);
+    connect(_enot, &Enot::entryCreating, _tableModel, &GridViewTableModel::itemCreating);
+    connect(_enot, &Enot::entryCreated, _tableModel, &GridViewTableModel::itemCreated);
+    connect(_enot, &Enot::entryDeleted, _tableModel, &GridViewTableModel::itemRemoved);
+    connect(_enot, &Enot::entryDeleting, _tableModel, &GridViewTableModel::itemRemoving);
+    connect(_enot, &Enot::entryDeleted, _tableModel, &GridViewTableModel::itemRemoved);
 
     _tableView = new QTableView;
     _tableView->setModel(_tableModel);

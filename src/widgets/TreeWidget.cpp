@@ -238,11 +238,11 @@ void TreeWidget::setEnot(Enot* enot)
     if (_enot)
     {
         _model = new TreeModel(_enot);
-        connect(_enot, &Enot::itemCreating, this, &Self::itemCreating);
-        connect(_enot, &Enot::itemCreated, this, &Self::itemCreated);
-        connect(_enot, &Enot::itemUpdated, this, &Self::itemUpdated);
-        connect(_enot, &Enot::itemRemoving, this, &Self::itemRemoving);
-        connect(_enot, &Enot::itemRemoved, this, &Self::itemRemoved);
+        connect(_enot, &Enot::entryCreating, this, &Self::entryCreating);
+        connect(_enot, &Enot::entryCreated, this, &Self::entryCreated);
+        connect(_enot, &Enot::entryUpdated, this, &Self::entryUpdated);
+        connect(_enot, &Enot::entryDeleting, this, &Self::entryDeleting);
+        connect(_enot, &Enot::entryDeleted, this, &Self::entryDeleted);
     }
     _treeView->setModel(_model);
 }
@@ -271,7 +271,7 @@ void TreeWidget::contextMenuRequested(const QPoint &pos)
         menu->popup(_treeView->mapToGlobal(pos));
 }
 
-void TreeWidget::selectItem(Entry* entry)
+void TreeWidget::selectEntry(Entry* entry)
 {
     QTimer::singleShot(0, this, [this, entry]{
         auto index = _model->findIndex(entry);
@@ -306,7 +306,7 @@ void TreeWidget::createFolder()
     auto res = _enot->createFolder(entry->asFolder(), title);
     if (!res.ok()) return;
 
-    selectItem(res.result());
+    selectEntry(res.result());
 }
 
 void TreeWidget::renameFolder()
@@ -330,7 +330,7 @@ void TreeWidget::deleteFolder()
 
     auto parentFolder = entry->parentFolder();
 
-    bool ok = _enot->removeFolder(entry->asFolder());
+    bool ok = _enot->deleteFolder(entry->asFolder());
     if (!ok) return;
 
     QTimer::singleShot(0, this, [this, parentFolder]{
@@ -349,7 +349,7 @@ void TreeWidget::createMemo()
     auto res = _enot->createMemo(entry->asFolder(), memoType);
     if (!res.ok()) return;
 
-    selectItem(res.result());
+    selectEntry(res.result());
 }
 
 void TreeWidget::deleteMemo()
@@ -362,7 +362,7 @@ void TreeWidget::deleteMemo()
 
     auto parentFolder = entry->parentFolder();
 
-    bool ok = _enot->removeMemo(entry->asMemo());
+    bool ok = _enot->deleteMemo(entry->asMemo());
     if (!ok) return;
 
     QTimer::singleShot(0, this, [this, parentFolder]{
@@ -370,40 +370,40 @@ void TreeWidget::deleteMemo()
     });
 }
 
-void TreeWidget::itemCreating(Entry* entry, int index)
+void TreeWidget::entryCreating(Entry* entry, int index)
 {
     stashExpandedIds();
 }
 
-void TreeWidget::itemCreated(Entry* entry)
+void TreeWidget::entryCreated(Entry* entry)
 {
     _model->reset();
     QTimer::singleShot(0, this, &Self::applyExpandedIds);
 }
 
-void TreeWidget::itemUpdated(Entry* entry)
+void TreeWidget::entryUpdated(Entry* entry)
 {
     _model->itemRenamed(entry);
 }
 
-void TreeWidget::itemRemoving(Entry* entry)
+void TreeWidget::entryDeleting(Entry* entry)
 {
-    if (entry->isMemo() && _isFolderRemoving)
+    if (entry->isMemo() && _isFolderDeleting)
         return;
 
     if (entry->isFolder())
-        _isFolderRemoving = true;
+        _isFolderDeleting = true;
 
     stashExpandedIds();
 }
 
-void TreeWidget::itemRemoved(Entry* entry)
+void TreeWidget::entryDeleted(Entry* entry)
 {
-    if (entry->isMemo() && _isFolderRemoving)
+    if (entry->isMemo() && _isFolderDeleting)
         return;
 
     if (entry->isFolder())
-        _isFolderRemoving = false;
+        _isFolderDeleting = false;
 
     _model->reset();
     QTimer::singleShot(0, this, &Self::applyExpandedIds);

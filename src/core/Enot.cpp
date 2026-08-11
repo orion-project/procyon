@@ -212,7 +212,7 @@ bool Enot::renameFolder(Folder* folder, const QString& title)
 
     folder->_title = title;
 
-    emit itemUpdated(folder);
+    emit entryUpdated(folder);
 
     // TODO sort items after renaming
     return true;
@@ -239,17 +239,17 @@ FolderResult Enot::createFolder(Folder* parent, const QString& title)
         return FolderResult::fail(res);
     }
 
-    emit itemCreating(folder, parent->_folders.size());
+    emit entryCreating(folder, parent->_folders.size());
 
     parent->_folders.append(folder);
     _allFolders.insert(folder->id(), folder);
     // TODO sort items after inserting
 
-    emit itemCreated(folder);
+    emit entryCreated(folder);
     return FolderResult::ok(folder);
 }
 
-bool Enot::removeFolder(Folder* folder)
+bool Enot::deleteFolder(Folder* folder)
 {
     if (!folder->parent())
     {
@@ -272,17 +272,17 @@ bool Enot::removeFolder(Folder* folder)
         return false;
     }
 
-    emit itemRemoving(folder);
+    emit entryDeleting(folder);
 
     for (auto id : std::as_const(memoIds))
     {
         auto memo = _allMemos.value(id);
-        emit itemRemoving(memo);
+        emit entryDeleting(memo);
 
         // Memo in DB was already deleted by FK relation
         _allMemos.remove(id);
 
-        emit itemRemoved(memo);
+        emit entryDeleted(memo);
     }
 
     folder->parentFolder()->_folders.removeOne(folder);
@@ -300,76 +300,76 @@ MemoResult Enot::createMemo(Folder* folder, MemoType* memoType)
 {
     auto now = QDateTime::currentDateTime();
 
-    auto item = new Memo;
-    item->_parent = folder;
-    item->_created = now;
-    item->_updated = now;
-    item->_station = _station;
-    item->_type = memoType;
+    auto memo = new Memo;
+    memo->_parent = folder;
+    memo->_created = now;
+    memo->_updated = now;
+    memo->_station = _station;
+    memo->_type = memoType;
 
-    auto res = Store::memos()->create(item);
+    auto res = Store::memos()->create(memo);
     if (!res.isEmpty())
     {
-        delete item;
+        delete memo;
         emit errorOccurred(res);
         return MemoResult::fail(res);
     }
 
-    emit itemCreating(item, folder->_memos.size());
+    emit entryCreating(memo, folder->_memos.size());
 
-    folder->_memos.append(item);
-    _allMemos.insert(item->id(), item);
+    folder->_memos.append(memo);
+    _allMemos.insert(memo->id(), memo);
     // TODO sort items after inserting
 
-    emit itemCreated(item);
-    return MemoResult::ok(item);
+    emit entryCreated(memo);
+    return MemoResult::ok(memo);
 }
 
-bool Enot::updateMemo(Memo* item, MemoUpdateParam update)
+bool Enot::updateMemo(Memo* memo, MemoUpdateParam update)
 {
     update.moment = QDateTime::currentDateTime();
     update.station = _station;
 
-    QString res = Store::memos()->update(item, update);
+    QString res = Store::memos()->update(memo, update);
     if (!res.isEmpty())
     {
         emit errorOccurred(res);
         return false;
     }
 
-    item->_title = update.title;
-    item->_data = update.data;
-    item->_updated = update.moment;
-    item->_station = update.station;
+    memo->_title = update.title;
+    memo->_data = update.data;
+    memo->_updated = update.moment;
+    memo->_station = update.station;
 
-    emit itemUpdated(item);
+    emit entryUpdated(memo);
 
-    // TODO sort items after renaming
+    // TODO sort memos after renaming
     return true;
 }
 
-QString Enot::loadMemo(Memo* item)
+QString Enot::loadMemo(Memo* memo)
 {
-    return Store::memos()->load(item);
+    return Store::memos()->load(memo);
 }
 
-bool Enot::removeMemo(Memo* item)
+bool Enot::deleteMemo(Memo* memo)
 {
-    QString res = Store::memos()->remove(item);
+    QString res = Store::memos()->remove(memo);
     if (!res.isEmpty())
     {
         emit errorOccurred(res);
         return false;
     }
 
-    emit itemRemoving(item);
+    emit entryDeleting(memo);
 
-    item->parentFolder()->_memos.removeOne(item);
-    _allMemos.remove(item->id());
+    memo->parentFolder()->_memos.removeOne(memo);
+    _allMemos.remove(memo->id());
 
-    emit itemRemoved(item);
+    emit entryDeleted(memo);
 
-    delete item;
+    delete memo;
     return true;
 }
 

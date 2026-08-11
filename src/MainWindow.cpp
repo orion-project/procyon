@@ -400,8 +400,8 @@ void MainWindow::openEnotViaDialog()
 void MainWindow::enotOpened(Enot* enot)
 {
     _enot = enot;
-    connect(_enot, &Enot::itemCreated, this, &MainWindow::itemCreated);
-    connect(_enot, &Enot::itemRemoved, this, &MainWindow::itemRemoved);
+    connect(_enot, &Enot::entryCreated, this, &MainWindow::itemCreated);
+    connect(_enot, &Enot::entryDeleted, this, &MainWindow::itemRemoved);
     connect(_enot, &Enot::errorOccurred, this, [](const QString& error){
         Ori::Dlg::Defer::error(error);
     });

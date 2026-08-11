@@ -1,11 +1,11 @@
 #include "MemoEditor.h"
 
-#include "../TextEditHelpers.h"
-#include "../db/Db.h"
-#include "../highlighter/PhlManager.h"
-#include "../spellcheck/TextEditSpellcheck.h"
-#include "../spellcheck/Spellchecker.h"
-#include "../widgets/MemoTextEdit.h"
+#include "TextEditHelpers.h"
+#include "core/Db.h"
+#include "highlighter/PhlManager.h"
+#include "spellcheck/TextEditSpellcheck.h"
+#include "spellcheck/Spellchecker.h"
+#include "widgets/MemoTextEdit.h"
 
 #include "helpers/OriLayouts.h"
 

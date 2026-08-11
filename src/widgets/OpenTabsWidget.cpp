@@ -1,7 +1,7 @@
 #include "OpenTabsWidget.h"
 
 #include "tabs/MemoTab.h"
-#include "db/Db.h"
+#include "core/Db.h"
 
 #include "helpers/OriLayouts.h"
 

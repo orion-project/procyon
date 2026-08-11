@@ -1,9 +1,9 @@
 #include "TextMemoTab.h"
 
 #include "TabHelpers.h"
-#include "db/Db.h"
-#include "db/MemoManager.h"
-#include "db/MemoType.h"
+#include "core/Db.h"
+#include "core/MemoManager.h"
+#include "core/MemoType.h"
 #include "editors/MarkdownMemoEditor.h"
 #include "editors/MemoEditor.h"
 

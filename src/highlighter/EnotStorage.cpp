@@ -1,5 +1,6 @@
 #include "EnotStorage.h"
-#include "../db/SettingsManager.h"
+
+#include "core/SettingsManager.h"
 
 using namespace Ori::Highlighter;
 

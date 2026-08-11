@@ -1,8 +1,8 @@
 #include "MainWindow.h"
 
 #include "AppSettings.h"
-#include "db/Db.h"
-#include "db/MemoType.h"
+#include "core/Db.h"
+#include "core/MemoType.h"
 #include "highlighter/PhlManager.h"
 #include "tabs/HelpTab.h"
 #include "tabs/PhlEditorTab.h"

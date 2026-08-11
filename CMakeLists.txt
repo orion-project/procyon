@@ -109,12 +109,12 @@ set(PROJECT_SOURCES
     src/app.qrc
     src/main.cpp
     src/AppSettings.cpp
-    src/db/Db.cpp
-    src/db/FolderManager.cpp
-    src/db/MemoManager.cpp
-    src/db/MemoType.cpp
-    src/db/SettingsManager.cpp
-    src/db/SqlHelper.cpp
+    src/core/Db.cpp src/core/Db.h
+    src/core/FolderManager.cpp src/core/FolderManager.h
+    src/core/MemoManager.cpp src/core/MemoManager.h
+    src/core/MemoType.cpp src/core/MemoType.h
+    src/core/SettingsManager.cpp src/core/SettingsManager.h
+    src/core/SqlHelper.cpp src/core/SqlHelper.h
     src/editors/MarkdownMemoEditor.cpp
     src/editors/MemoEditor.cpp
     src/highlighter/EnotStorage.cpp

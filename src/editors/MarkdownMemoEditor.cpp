@@ -1,11 +1,11 @@
 #include "MarkdownMemoEditor.h"
 
-#include "../AppSettings.h"
-#include "../db/Db.h"
-#include "../markdown/MarkdownHelper.h"
-#include "../widgets/MemoTextBrowser.h"
-#include "../widgets/MemoTextEdit.h"
-#include "../TextEditHelpers.h"
+#include "AppSettings.h"
+#include "TextEditHelpers.h"
+#include "core/Db.h"
+#include "markdown/MarkdownHelper.h"
+#include "widgets/MemoTextBrowser.h"
+#include "widgets/MemoTextEdit.h"
 
 #include "helpers/OriLayouts.h"
 

@@ -1,8 +1,8 @@
 #include "CmdConsoleTab.h"
 
 #include "TabHelpers.h"
-#include "../db/Db.h"
-#include "../db/SqlHelper.h"
+#include "core/Db.h"
+#include "core/SqlHelper.h"
 
 #include "helpers/OriLayouts.h"
 

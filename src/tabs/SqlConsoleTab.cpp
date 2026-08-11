@@ -1,8 +1,8 @@
 #include "SqlConsoleTab.h"
 
 #include "TabHelpers.h"
-#include "../db/SqlHelper.h"
-#include "../highlighter/PhlManager.h"
+#include "core/SqlHelper.h"
+#include "highlighter/PhlManager.h"
 
 #include "helpers/OriLayouts.h"
 

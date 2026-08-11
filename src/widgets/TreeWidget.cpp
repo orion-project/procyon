@@ -1,7 +1,7 @@
 #include "TreeWidget.h"
 
-#include "../db/Db.h"
-#include "../db/MemoType.h"
+#include "core/Db.h"
+#include "core/MemoType.h"
 
 #include "helpers/OriDialogs.h"
 #include "helpers/OriLayouts.h"

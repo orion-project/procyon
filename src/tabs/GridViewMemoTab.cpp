@@ -25,10 +25,10 @@ enum { COL_ID, COL_TITLE, COL_UPDATED, COL_COUNT };
 class GridViewTableModel : public QAbstractTableModel
 {
 public:
-    GridViewTableModel(Memo *item) : QAbstractTableModel()
+    GridViewTableModel(Memo *memo) : QAbstractTableModel()
     {
-        _self = item;
-        _folder = item->parentFolder();
+        _self = memo;
+        _folder = memo->parentFolder();
     }
 
     int rowCount(const QModelIndex&) const override
@@ -96,16 +96,16 @@ public:
         return QVariant();
     }
 
-    void itemCreating(DbItem* item, int index)
+    void itemCreating(Entry* entry, int index)
     {
-        if (item->isMemo() && item->parentFolder() == _folder)
+        if (entry->isMemo() && entry->parentFolder() == _folder)
         {
             _isRowCountChanging = true;
             beginInsertRows(QModelIndex(), index, index);
         }
     }
 
-    void itemCreated(DbItem* item)
+    void itemCreated(Entry* entry)
     {
         if (_isRowCountChanging)
         {
@@ -114,17 +114,17 @@ public:
         }
     }
 
-    void itemRemoving(DbItem* item)
+    void itemRemoving(Entry* entry)
     {
-        if (item->isMemo() && item->parentFolder() == _folder)
+        if (entry->isMemo() && entry->parentFolder() == _folder)
         {
             _isRowCountChanging = true;
-            int index = _folder->memos().indexOf(item);
+            int index = _folder->memos().indexOf(entry);
             beginRemoveRows(QModelIndex(), index, index);
         }
     }
 
-    void itemRemoved(DbItem* item)
+    void itemRemoved(Entry* entry)
     {
         if (_isRowCountChanging)
         {
@@ -250,7 +250,7 @@ void GridViewMemoTab::createMemo()
     _enot->createMemo(_memo->parentFolder(), memoType);
 }
 
-DbItem* GridViewMemoTab::selectedItem() const
+Entry* GridViewMemoTab::selectedEntry() const
 {
     QModelIndexList selection = _tableView->selectionModel()->selectedRows();
     if (selection.empty()) return nullptr;
@@ -260,14 +260,14 @@ DbItem* GridViewMemoTab::selectedItem() const
 
 void GridViewMemoTab::showContextMenu(const QPoint& pos)
 {
-    auto dbItem = selectedItem();
-    if (dbItem->isMemo())
+    auto entry = selectedEntry();
+    if (entry->isMemo())
         _contextMenu->popup(_tableView->mapToGlobal(pos));
 }
 
 void GridViewMemoTab::openSelectedMemo()
 {
-    auto dbItem = selectedItem();
-    if (dbItem->isMemo())
-        emit memoOpenRequested(dbItem->asMemo());
+    auto entry = selectedEntry();
+    if (entry->isMemo())
+        emit memoOpenRequested(entry->asMemo());
 }

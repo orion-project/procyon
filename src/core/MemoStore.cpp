@@ -107,7 +107,7 @@ QString MemoStore::prepare()
     return createTable(memoOptionsTable());
 }
 
-QString MemoStore::create(Memo* item) const
+QString MemoStore::create(Memo* memo) const
 {
     auto table = memoTable();
 
@@ -116,17 +116,17 @@ QString MemoStore::create(Memo* item) const
         return QString("Unable to generate id for new memo.\n\n%1").arg(queryId.error());
 
     int newId = queryId.record().value(0).toInt() + 1;
-    item->_id = newId;
+    memo->_id = newId;
 
     auto res = ActionQuery(table->sqlInsert)
-            .param(table->parent, item->parent() ? item->parent()->asFolder()->id() : 0)
-            .param(table->id, item->id())
-            .param(table->title, item->title())
-            .param(table->type, item->type()->name())
-            .param(table->data, item->data())
-            .param(table->created, item->created())
-            .param(table->updated, item->updated())
-            .param(table->station, item->station())
+            .param(table->parent, memo->parent() ? memo->parent()->asFolder()->id() : 0)
+            .param(table->id, memo->id())
+            .param(table->title, memo->title())
+            .param(table->type, memo->type()->name())
+            .param(table->data, memo->data())
+            .param(table->created, memo->created())
+            .param(table->updated, memo->updated())
+            .param(table->station, memo->station())
             .exec();
     if (!res.isEmpty())
         return QString("Failed to create new memo.\n\n%1").arg(res);

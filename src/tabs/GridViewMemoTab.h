@@ -11,7 +11,7 @@ class QTableView;
 class QToolBar;
 QT_END_NAMESPACE
 
-class DbItem;
+class Entry;
 class GridViewTableModel;
 
 class GridViewMemoTab : public MemoTab
@@ -42,7 +42,7 @@ private:
     void openSelectedMemo();
     void showContextMenu(const QPoint& pos);
 
-    DbItem* selectedItem() const;
+    Entry* selectedEntry() const;
 };
 
 #endif // GRID_VIEW_MEMO_TAB_H

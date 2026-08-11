@@ -13,16 +13,16 @@
 #define KEY_UID "UID"
 
 //------------------------------------------------------------------------------
-//                                DbItem
+//                                Entry
 //------------------------------------------------------------------------------
 
-DbItem::~DbItem() {}
-bool DbItem::isFolder() const { return dynamic_cast<const Folder*>(this); }
-bool DbItem::isMemo() const { return dynamic_cast<const Memo*>(this); }
-Folder* DbItem::asFolder() { return dynamic_cast<Folder*>(this); }
-Memo* DbItem::asMemo() { return dynamic_cast<Memo*>(this); }
+Entry::~Entry() {}
+bool Entry::isFolder() const { return dynamic_cast<const Folder*>(this); }
+bool Entry::isMemo() const { return dynamic_cast<const Memo*>(this); }
+Folder* Entry::asFolder() { return dynamic_cast<Folder*>(this); }
+Memo* Entry::asMemo() { return dynamic_cast<Memo*>(this); }
 
-QString DbItem::path() const
+QString Entry::path() const
 {
     QStringList path;
     auto p = _parent;
@@ -198,21 +198,21 @@ Enot::Enot(const QString& fileName) : QObject(), _fileName(fileName)
 Enot::~Enot()
 {
     // Don't clear _allMemos and _allFolders explicitly
-    // All items will be freed when the root item is deleted
+    // All entries will be freed when the root folder is deleted
 }
 
-bool Enot::renameFolder(Folder* item, const QString& title)
+bool Enot::renameFolder(Folder* folder, const QString& title)
 {
-    QString res = Store::folders()->rename(item->id(), title);
+    QString res = Store::folders()->rename(folder->id(), title);
     if (!res.isEmpty())
     {
         emit errorOccurred(res);
         return false;
     }
 
-    item->_title = title;
+    folder->_title = title;
 
-    emit itemUpdated(item);
+    emit itemUpdated(folder);
 
     // TODO sort items after renaming
     return true;

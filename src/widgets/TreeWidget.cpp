@@ -15,15 +15,15 @@ class TreeModel : public QAbstractItemModel
 public:
     TreeModel(Enot* enot) : _enot(enot) {}
 
-    static DbItem* dbItem(const QModelIndex &index)
+    static Entry* asEntry(const QModelIndex &index)
     {
-        return static_cast<DbItem*>(index.internalPointer());
+        return static_cast<Entry*>(index.internalPointer());
     }
 
     static Folder* asFolder(const QModelIndex &index)
     {
-        auto item = dbItem(index);
-        return item ? item->asFolder() : nullptr;
+        auto entry = asEntry(index);
+        return entry ? entry->asFolder() : nullptr;
     }
 
     int columnCount(const QModelIndex &parent) const override
@@ -53,7 +53,7 @@ public:
 
     QModelIndex index(int row, int column, const QModelIndex &parent) const override
     {
-        DbItem* item = nullptr;
+        Entry* entry = nullptr;
         Folder* parentFolder = nullptr;
         int index;
 
@@ -61,7 +61,7 @@ public:
         {
             // We show the root AND all its children at the top level.
             if (row == 0)
-                item = _enot->root();
+                entry = _enot->root();
             else
             {
                 parentFolder = _enot->root();
@@ -74,29 +74,29 @@ public:
             index = row;
         }
 
-        if (!item && parentFolder)
+        if (!entry && parentFolder)
         {
             if (index < parentFolder->memos().size())
-                item = parentFolder->memos().at(index);
+                entry = parentFolder->memos().at(index);
             else
             {
                 index -= parentFolder->memos().size();
                 if (index < parentFolder->folders().size())
-                    item = parentFolder->folders().at(index);
+                    entry = parentFolder->folders().at(index);
             }
         }
 
-        return item ? createIndex(row, column, item) : QModelIndex();
+        return entry ? createIndex(row, column, entry) : QModelIndex();
     }
 
     QModelIndex parent(const QModelIndex &child) const override
     {
         if (!child.isValid()) return QModelIndex();
         
-        auto item = dbItem(child);
-        if (!item) return QModelIndex();
+        auto entry = asEntry(child);
+        if (!entry) return QModelIndex();
     
-        auto parentFolder = item->parentFolder();
+        auto parentFolder = entry->parentFolder();
         if (!parentFolder || parentFolder->isRoot())
         {
             // Root and all its children are on the top level
@@ -133,46 +133,46 @@ public:
         if (!index.isValid())
             return QVariant();
             
-        auto item = dbItem(index);
-        if (!item) return QVariant();
+        auto entry = asEntry(index);
+        if (!entry) return QVariant();
     
         switch (role)
         {
         case Qt::DisplayRole:
-            return item->title();
+            return entry->title();
     
         case Qt::UserRole:
-            return item->id();
+            return entry->id();
     
         case Qt::DecorationRole:
-            if (item->isRoot())
+            if (entry->isRoot())
                 return _iconRoot;
             // TODO different icons for opened and closed folder
-            if (item->isFolder())
+            if (entry->isFolder())
                 return _iconFolder;
-            if (item->isMemo())
-                return item->asMemo()->type()->icon();
+            if (entry->isMemo())
+                return entry->asMemo()->type()->icon();
             return _iconMemo;
         }
         return QVariant();
     }
 
-    QModelIndex findIndex(DbItem* item, const QModelIndex &parent = QModelIndex())
+    QModelIndex findIndex(Entry* entry, const QModelIndex &parent = QModelIndex())
     {
         int rows = rowCount(parent);
         for (int row = 0; row < rows; row++)
         {
             auto currentIndex = index(row, 0, parent);
-            auto currentItem = dbItem(currentIndex);
-            if (currentItem == item) return currentIndex;
+            auto currentEntry = asEntry(currentIndex);
+            if (currentEntry == entry) return currentIndex;
 
-            auto targetIndex = findIndex(item, currentIndex);
+            auto targetIndex = findIndex(entry, currentIndex);
             if (targetIndex.isValid()) return targetIndex;
         }
         return QModelIndex();
     }
 
-    void itemRenamed(DbItem* item)
+    void itemRenamed(Entry* item)
     {
         auto index = findIndex(item);
         if (!index.isValid())
@@ -247,37 +247,37 @@ void TreeWidget::setEnot(Enot* enot)
     _treeView->setModel(_model);
 }
 
-DbItem* TreeWidget::selectedItem() const
+Entry* TreeWidget::selectedEntry() const
 {
-    return TreeModel::dbItem(_treeView->currentIndex());
+    return TreeModel::asEntry(_treeView->currentIndex());
 }
 
 void TreeWidget::contextMenuRequested(const QPoint &pos)
 {
     if (!_model) return;
 
-    auto item = selectedItem();
-    if (!item) return;
+    auto entry = selectedEntry();
+    if (!entry) return;
 
     QMenu* menu = nullptr;
-    if (item->isRoot())
+    if (entry->isRoot())
         menu = _rootMenu;
-    else if (item->isFolder())
+    else if (entry->isFolder())
         menu = _folderMenu;
-    else if (item->isMemo())
+    else if (entry->isMemo())
         menu = _memoMenu;
 
     if (menu)
         menu->popup(_treeView->mapToGlobal(pos));
 }
 
-void TreeWidget::selectItem(DbItem* item)
+void TreeWidget::selectItem(Entry* entry)
 {
-    QTimer::singleShot(0, this, [this, item]{
-        auto index = _model->findIndex(item);
+    QTimer::singleShot(0, this, [this, entry]{
+        auto index = _model->findIndex(entry);
         if (!index.isValid()) return;
 
-        auto parentIndex = _model->findIndex(item->parentFolder());
+        auto parentIndex = _model->findIndex(entry->parentFolder());
         if (parentIndex.isValid() && !_treeView->isExpanded(parentIndex))
             _treeView->setExpanded(parentIndex, true);
 
@@ -289,21 +289,21 @@ void TreeWidget::openMemo()
 {
     if (!_model) return;
 
-    auto item = selectedItem();
-    if (!item || !item->isMemo()) return;
+    auto entry = selectedEntry();
+    if (!entry || !entry->isMemo()) return;
 
-    emit memoOpenRequested(item->asMemo());
+    emit memoOpenRequested(entry->asMemo());
 }
 
 void TreeWidget::createFolder()
 {
-    auto item = selectedItem();
-    if (!item || !item->isFolder()) return;
+    auto entry = selectedEntry();
+    if (!entry || !entry->isFolder()) return;
 
     auto title = Ori::Dlg::inputText(tr("Folder title:"), "");
     if (title.isEmpty()) return;
 
-    auto res = _enot->createFolder(item->asFolder(), title);
+    auto res = _enot->createFolder(entry->asFolder(), title);
     if (!res.ok()) return;
 
     selectItem(res.result());
@@ -311,26 +311,26 @@ void TreeWidget::createFolder()
 
 void TreeWidget::renameFolder()
 {
-    auto item = selectedItem();
-    if (!item || !item->isFolder()) return;
+    auto entry = selectedEntry();
+    if (!entry || !entry->isFolder()) return;
 
-    auto title = Ori::Dlg::inputText(tr("Folder title:"), item->title());
+    auto title = Ori::Dlg::inputText(tr("Folder title:"), entry->title());
     if (title.isEmpty()) return;
 
-    _enot->renameFolder(item->asFolder(), title);
+    _enot->renameFolder(entry->asFolder(), title);
 }
 
 void TreeWidget::deleteFolder()
 {
-    auto item = selectedItem();
-    if (!item || !item->isFolder()) return;
+    auto entry = selectedEntry();
+    if (!entry || !entry->isFolder()) return;
 
-    auto confirm = tr("Are you sure to delete folder '%1' and all its content?").arg(item->title());
+    auto confirm = tr("Are you sure to delete folder '%1' and all its content?").arg(entry->title());
     if (!Ori::Dlg::yes(confirm)) return;
 
-    auto parentFolder = item->parentFolder();
+    auto parentFolder = entry->parentFolder();
 
-    bool ok = _enot->removeFolder(item->asFolder());
+    bool ok = _enot->removeFolder(entry->asFolder());
     if (!ok) return;
 
     QTimer::singleShot(0, this, [this, parentFolder]{
@@ -340,13 +340,13 @@ void TreeWidget::deleteFolder()
 
 void TreeWidget::createMemo()
 {
-    auto item = selectedItem();
-    if (!item || !item->isFolder()) return;
+    auto entry = selectedEntry();
+    if (!entry || !entry->isFolder()) return;
 
     auto memoType = MemoType::selectFromDlg();
     if (!memoType) return;
 
-    auto res = _enot->createMemo(item->asFolder(), memoType);
+    auto res = _enot->createMemo(entry->asFolder(), memoType);
     if (!res.ok()) return;
 
     selectItem(res.result());
@@ -354,15 +354,15 @@ void TreeWidget::createMemo()
 
 void TreeWidget::deleteMemo()
 {
-    auto item = selectedItem();
-    if (!item || !item->isMemo()) return;
+    auto entry = selectedEntry();
+    if (!entry || !entry->isMemo()) return;
 
-    auto confirm = tr("Are you sure to delete memo '%1'?").arg(item->title());
+    auto confirm = tr("Are you sure to delete memo '%1'?").arg(entry->title());
     if (!Ori::Dlg::yes(confirm)) return;
 
-    auto parentFolder = item->parentFolder();
+    auto parentFolder = entry->parentFolder();
 
-    bool ok = _enot->removeMemo(item->asMemo());
+    bool ok = _enot->removeMemo(entry->asMemo());
     if (!ok) return;
 
     QTimer::singleShot(0, this, [this, parentFolder]{
@@ -370,39 +370,39 @@ void TreeWidget::deleteMemo()
     });
 }
 
-void TreeWidget::itemCreating(DbItem* item, int index)
+void TreeWidget::itemCreating(Entry* entry, int index)
 {
     stashExpandedIds();
 }
 
-void TreeWidget::itemCreated(DbItem* item)
+void TreeWidget::itemCreated(Entry* entry)
 {
     _model->reset();
     QTimer::singleShot(0, this, &Self::applyExpandedIds);
 }
 
-void TreeWidget::itemUpdated(DbItem* item)
+void TreeWidget::itemUpdated(Entry* entry)
 {
-    _model->itemRenamed(item);
+    _model->itemRenamed(entry);
 }
 
-void TreeWidget::itemRemoving(DbItem* item)
+void TreeWidget::itemRemoving(Entry* entry)
 {
-    if (item->isMemo() && _isFolderRemoving)
+    if (entry->isMemo() && _isFolderRemoving)
         return;
 
-    if (item->isFolder())
+    if (entry->isFolder())
         _isFolderRemoving = true;
 
     stashExpandedIds();
 }
 
-void TreeWidget::itemRemoved(DbItem* item)
+void TreeWidget::itemRemoved(Entry* entry)
 {
-    if (item->isMemo() && _isFolderRemoving)
+    if (entry->isMemo() && _isFolderRemoving)
         return;
 
-    if (item->isFolder())
+    if (entry->isFolder())
         _isFolderRemoving = false;
 
     _model->reset();
@@ -418,7 +418,7 @@ void TreeWidget::stashExpandedIds()
         for (int row = 0; row < rowCount; row++)
         {
             auto index = _model->index(row, 0, parent);
-            auto folder = _model->dbItem(index)->asFolder();
+            auto folder = _model->asEntry(index)->asFolder();
             if (folder)
             {
                 if (_treeView->isExpanded(index))
@@ -441,7 +441,7 @@ void TreeWidget::applyExpandedIds()
         for (int row = 0; row < rowCount; row++)
         {
             auto index = _model->index(row, 0, parent);
-            auto folder = _model->dbItem(index)->asFolder();
+            auto folder = _model->asEntry(index)->asFolder();
             if (folder)
             {
                 if (_expandedIds.contains(folder->id()))

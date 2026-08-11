@@ -12,7 +12,7 @@ class QSettings;
 QT_END_NAMESPACE
 
 class Enot;
-class DbItem;
+class Entry;
 class TreeWidget;
 class OpenTabsWidget;
 class SpellcheckControl;
@@ -75,14 +75,14 @@ private:
     void toggleWordWrap();
 
     void enotOpened(Enot* enot);
-    void itemCreated(DbItem* item);
-    void itemRemoved(DbItem* item);
+    void itemCreated(Entry* entry);
+    void itemRemoved(Entry* entry);
 
     bool closeAllMemos();
-    void openMemoTab(Memo* item);
+    void openMemoTab(Memo* memo);
     void exportToPdf();
 
-    MemoTab* findMemoTab(Memo* item) const;
+    MemoTab* findMemoTab(Memo* memo) const;
     MemoTab* currentMemoTab() const;
     TextMemoTab* currentTextMemoTab() const;
 

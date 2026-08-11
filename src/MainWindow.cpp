@@ -582,9 +582,9 @@ void MainWindow::toggleWordWrap()
     memoPage->setWordWrap(!memoPage->wordWrap());
 }
 
-void MainWindow::itemCreated(DbItem* item)
+void MainWindow::itemCreated(Entry* entry)
 {
-    auto memo = item->asMemo();
+    auto memo = entry->asMemo();
     if (!memo) return;
 
     updateCounter();
@@ -595,9 +595,9 @@ void MainWindow::itemCreated(DbItem* item)
     if (tab) tab->beginEdit();
 }
 
-void MainWindow::itemRemoved(DbItem* item)
+void MainWindow::itemRemoved(Entry* entry)
 {
-    auto memo = item->asMemo();
+    auto memo = entry->asMemo();
     if (!memo) return;
 
     updateCounter();

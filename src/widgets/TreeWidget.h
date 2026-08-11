@@ -9,7 +9,7 @@ class QTreeView;
 QT_END_NAMESPACE
 
 class Enot;
-class DbItem;
+class Entry;
 class TreeModel;
 class Folder;
 class Memo;
@@ -37,7 +37,7 @@ private:
     QSet<int> _expandedIds;
     bool _isFolderRemoving = false;
 
-    DbItem* selectedItem() const;
+    Entry* selectedEntry() const;
 
     void createFolder();
     void renameFolder();
@@ -47,13 +47,13 @@ private:
     void openMemo();
 
     void contextMenuRequested(const QPoint &pos);
-    void itemCreating(DbItem*, int);
-    void itemCreated(DbItem*);
-    void itemUpdated(DbItem*);
-    void itemRemoving(DbItem*);
-    void itemRemoved(DbItem*);
+    void itemCreating(Entry*, int);
+    void itemCreated(Entry*);
+    void itemUpdated(Entry*);
+    void itemRemoving(Entry*);
+    void itemRemoved(Entry*);
 
-    void selectItem(DbItem*);
+    void selectItem(Entry*);
 
     void stashExpandedIds();
     void applyExpandedIds();

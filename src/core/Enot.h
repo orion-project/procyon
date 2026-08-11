@@ -25,14 +25,14 @@ struct MemoUpdateParam
 
 //------------------------------------------------------------------------------
 
-class DbItem
+class Entry
 {
 public:
-    virtual ~DbItem();
+    virtual ~Entry();
 
     int id() const { return _id; }
     QString title() const { return _title; }
-    DbItem* parent() const { return _parent; }
+    Entry* parent() const { return _parent; }
     QString path() const;
 
     bool isRoot() const { return !_parent; }
@@ -46,7 +46,7 @@ public:
 private:
     int _id;
     QString _title;
-    DbItem* _parent = nullptr;
+    Entry* _parent = nullptr;
 
     friend class Enot;
     friend class FolderStore;
@@ -55,7 +55,7 @@ private:
 
 //------------------------------------------------------------------------------
 
-class Folder : public DbItem
+class Folder : public Entry
 {
 public:
     ~Folder();
@@ -75,7 +75,7 @@ private:
 
 //------------------------------------------------------------------------------
 
-class Memo : public DbItem
+class Memo : public Entry
 {
 public:
     ~Memo();
@@ -132,20 +132,20 @@ public:
     IntResult countMemos() const;
 
     FolderResult createFolder(Folder* parent, const QString& title);
-    bool renameFolder(Folder* item, const QString& title);
+    bool renameFolder(Folder* folder, const QString& title);
     bool removeFolder(Folder* folder);
 
     MemoResult createMemo(Folder* folder, MemoType *memoType);
-    bool updateMemo(Memo* item, MemoUpdateParam update);
-    bool removeMemo(Memo* item);
-    QString loadMemo(Memo* item);
+    bool updateMemo(Memo* memo, MemoUpdateParam update);
+    bool removeMemo(Memo* memo);
+    QString loadMemo(Memo* memo);
 
 signals:
-    void itemCreating(DbItem*, int);
-    void itemCreated(DbItem*);
-    void itemUpdated(DbItem*);
-    void itemRemoving(DbItem*);
-    void itemRemoved(DbItem*);
+    void itemCreating(Entry*, int);
+    void itemCreated(Entry*);
+    void itemUpdated(Entry*);
+    void itemRemoving(Entry*);
+    void itemRemoved(Entry*);
     void errorOccurred(const QString& error);
 
 private:

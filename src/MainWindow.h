@@ -13,7 +13,7 @@ QT_END_NAMESPACE
 
 class Db;
 class DbItem;
-class DbTreeWidget;
+class TreeWidget;
 class OpenTabsWidget;
 class SpellcheckControl;
 class InfoWidget;
@@ -47,7 +47,7 @@ protected:
 private:
     QSplitter* _splitter;
     Db* _db = nullptr;
-    DbTreeWidget* _treeView;
+    TreeWidget* _treeView;
     QStackedWidget* _tabsView;
     OpenTabsWidget* _openTabsView;
     Ori::MruFileList *_mruList;

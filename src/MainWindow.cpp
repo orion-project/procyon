@@ -1,7 +1,6 @@
 #include "MainWindow.h"
 
 #include "AppSettings.h"
-#include "DbTreeWidget.h"
 #include "OpenTabsWidget.h"
 #include "db/Db.h"
 #include "db/MemoType.h"
@@ -15,6 +14,7 @@
 #include "tabs/SqlConsoleTab.h"
 #include "tabs/QssEditorTab.h"
 #include "tabs/CmdConsoleTab.h"
+#include "widgets/TreeWidget.h"
 
 #ifdef ENABLE_SPELLCHECK
 #include "spellcheck/Spellchecker.h"
@@ -126,8 +126,8 @@ MainWindow::MainWindow() : QMainWindow()
     _openTabsView = new OpenTabsWidget;
     connect(_openTabsView, &OpenTabsWidget::onActivateTab, _tabsView, &QStackedWidget::setCurrentWidget);
 
-    _treeView = new DbTreeWidget;
-    connect(_treeView, &DbTreeWidget::memoOpenRequested, this, &MainWindow::openMemoTab);
+    _treeView = new TreeWidget;
+    connect(_treeView, &TreeWidget::memoOpenRequested, this, &MainWindow::openMemoTab);
 
     _splitter = new QSplitter;
     _splitter->addWidget(_openTabsView);

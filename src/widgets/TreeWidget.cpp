@@ -1,7 +1,7 @@
-#include "DbTreeWidget.h"
+#include "TreeWidget.h"
 
-#include "db/Db.h"
-#include "db/MemoType.h"
+#include "../db/Db.h"
+#include "../db/MemoType.h"
 
 #include "helpers/OriDialogs.h"
 #include "helpers/OriLayouts.h"
@@ -10,10 +10,10 @@
 #include <QTreeView>
 #include <QTimer>
 
-class DbTreeModel : public QAbstractItemModel
+class TreeModel : public QAbstractItemModel
 {
 public:
-    DbTreeModel(Db* db) : _db(db) {}
+    TreeModel(Db* db) : _db(db) {}
 
     static DbItem* dbItem(const QModelIndex &index)
     {
@@ -198,9 +198,9 @@ private:
 
 //------------------------------------------------------------------------------
 
-typedef DbTreeWidget Self;
+typedef TreeWidget Self;
 
-DbTreeWidget::DbTreeWidget() : QWidget()
+TreeWidget::TreeWidget() : QWidget()
 {
     _rootMenu = new QMenu(this);
     // TODO: Can't insert memo at the top level because of FK violation
@@ -227,7 +227,7 @@ DbTreeWidget::DbTreeWidget() : QWidget()
     Ori::Layouts::LayoutV({_treeView}).setMargin(0).setSpacing(0).useFor(this);
 }
 
-void DbTreeWidget::setDb(Db* db)
+void TreeWidget::setDb(Db* db)
 {
     if (_db)
     {
@@ -248,7 +248,7 @@ void DbTreeWidget::setDb(Db* db)
     }
     if (_db)
     {
-        _model = new DbTreeModel(_db);
+        _model = new TreeModel(_db);
         connect(_db, &Db::itemCreating, this, &Self::itemCreating);
         connect(_db, &Db::itemCreated, this, &Self::itemCreated);
         connect(_db, &Db::itemUpdated, this, &Self::itemUpdated);
@@ -258,12 +258,12 @@ void DbTreeWidget::setDb(Db* db)
     _treeView->setModel(_model);
 }
 
-DbItem* DbTreeWidget::selectedItem() const
+DbItem* TreeWidget::selectedItem() const
 {
-    return DbTreeModel::dbItem(_treeView->currentIndex());
+    return TreeModel::dbItem(_treeView->currentIndex());
 }
 
-void DbTreeWidget::contextMenuRequested(const QPoint &pos)
+void TreeWidget::contextMenuRequested(const QPoint &pos)
 {
     if (!_model) return;
 
@@ -282,7 +282,7 @@ void DbTreeWidget::contextMenuRequested(const QPoint &pos)
         menu->popup(_treeView->mapToGlobal(pos));
 }
 
-void DbTreeWidget::selectItem(DbItem* item)
+void TreeWidget::selectItem(DbItem* item)
 {
     QTimer::singleShot(0, this, [this, item]{
         auto index = _model->findIndex(item);
@@ -296,7 +296,7 @@ void DbTreeWidget::selectItem(DbItem* item)
     });
 }
 
-void DbTreeWidget::openMemo()
+void TreeWidget::openMemo()
 {
     if (!_model) return;
 
@@ -306,7 +306,7 @@ void DbTreeWidget::openMemo()
     emit memoOpenRequested(item->asMemo());
 }
 
-void DbTreeWidget::createFolder()
+void TreeWidget::createFolder()
 {
     auto item = selectedItem();
     if (!item || !item->isFolder()) return;
@@ -320,7 +320,7 @@ void DbTreeWidget::createFolder()
     selectItem(res.result());
 }
 
-void DbTreeWidget::renameFolder()
+void TreeWidget::renameFolder()
 {
     auto item = selectedItem();
     if (!item || !item->isFolder()) return;
@@ -331,7 +331,7 @@ void DbTreeWidget::renameFolder()
     _db->renameFolder(item->asFolder(), title);
 }
 
-void DbTreeWidget::deleteFolder()
+void TreeWidget::deleteFolder()
 {
     auto item = selectedItem();
     if (!item || !item->isFolder()) return;
@@ -349,7 +349,7 @@ void DbTreeWidget::deleteFolder()
     });
 }
 
-void DbTreeWidget::createMemo()
+void TreeWidget::createMemo()
 {
     auto item = selectedItem();
     if (!item || !item->isFolder()) return;
@@ -363,7 +363,7 @@ void DbTreeWidget::createMemo()
     selectItem(res.result());
 }
 
-void DbTreeWidget::deleteMemo()
+void TreeWidget::deleteMemo()
 {
     auto item = selectedItem();
     if (!item || !item->isMemo()) return;
@@ -381,23 +381,23 @@ void DbTreeWidget::deleteMemo()
     });
 }
 
-void DbTreeWidget::itemCreating(DbItem* item, int index)
+void TreeWidget::itemCreating(DbItem* item, int index)
 {
     stashExpandedIds();
 }
 
-void DbTreeWidget::itemCreated(DbItem* item)
+void TreeWidget::itemCreated(DbItem* item)
 {
     _model->reset();
-    QTimer::singleShot(0, this, &DbTreeWidget::applyExpandedIds);
+    QTimer::singleShot(0, this, &Self::applyExpandedIds);
 }
 
-void DbTreeWidget::itemUpdated(DbItem* item)
+void TreeWidget::itemUpdated(DbItem* item)
 {
     _model->itemRenamed(item);
 }
 
-void DbTreeWidget::itemRemoving(DbItem* item)
+void TreeWidget::itemRemoving(DbItem* item)
 {
     if (item->isMemo() && _isFolderRemoving)
         return;
@@ -408,7 +408,7 @@ void DbTreeWidget::itemRemoving(DbItem* item)
     stashExpandedIds();
 }
 
-void DbTreeWidget::itemRemoved(DbItem* item)
+void TreeWidget::itemRemoved(DbItem* item)
 {
     if (item->isMemo() && _isFolderRemoving)
         return;
@@ -417,10 +417,10 @@ void DbTreeWidget::itemRemoved(DbItem* item)
         _isFolderRemoving = false;
 
     _model->reset();
-    QTimer::singleShot(0, this, &DbTreeWidget::applyExpandedIds);
+    QTimer::singleShot(0, this, &Self::applyExpandedIds);
 }
 
-void DbTreeWidget::stashExpandedIds()
+void TreeWidget::stashExpandedIds()
 {
     std::function<void(const QModelIndex&)> fillExpandedIds;
 
@@ -443,7 +443,7 @@ void DbTreeWidget::stashExpandedIds()
     fillExpandedIds(QModelIndex());
 }
 
-void DbTreeWidget::applyExpandedIds()
+void TreeWidget::applyExpandedIds()
 {
     std::function<void(const QModelIndex& parent)> expandFolders;
 
@@ -465,7 +465,7 @@ void DbTreeWidget::applyExpandedIds()
     expandFolders(QModelIndex());
 }
 
-QStringList DbTreeWidget::getExpandedIds()
+QStringList TreeWidget::getExpandedIds()
 {
     stashExpandedIds();
     QStringList ids;
@@ -474,7 +474,7 @@ QStringList DbTreeWidget::getExpandedIds()
     return ids;
 }
 
-void DbTreeWidget::setExpandedIds(const QStringList& ids)
+void TreeWidget::setExpandedIds(const QStringList& ids)
 {
     _expandedIds.clear();
     for (const auto &id : ids)

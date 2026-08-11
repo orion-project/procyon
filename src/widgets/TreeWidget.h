@@ -10,16 +10,16 @@ QT_END_NAMESPACE
 
 class Db;
 class DbItem;
-class DbTreeModel;
+class TreeModel;
 class FolderItem;
 class MemoItem;
 
-class DbTreeWidget : public QWidget
+class TreeWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    DbTreeWidget();
+    TreeWidget();
 
     void setDb(Db* db);
 
@@ -32,7 +32,7 @@ signals:
 private:
     Db* _db = nullptr;
     QTreeView* _treeView;
-    DbTreeModel* _model = nullptr;
+    TreeModel* _model = nullptr;
     QMenu *_rootMenu, *_folderMenu, *_memoMenu;
     QSet<int> _expandedIds;
     bool _isFolderRemoving = false;

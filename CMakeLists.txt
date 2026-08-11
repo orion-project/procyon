@@ -115,7 +115,6 @@ set(PROJECT_SOURCES
     src/db/MemoType.cpp
     src/db/SettingsManager.cpp
     src/db/SqlHelper.cpp
-    src/DbTreeWidget.cpp
     src/editors/MarkdownMemoEditor.cpp
     src/editors/MemoEditor.cpp
     src/highlighter/EnotStorage.cpp
@@ -141,6 +140,7 @@ set(PROJECT_SOURCES
     src/TextEditHelpers.cpp
     src/widgets/MemoTextBrowser.cpp
     src/widgets/MemoTextEdit.cpp
+    src/widgets/TreeWidget.cpp src/widgets/TreeWidget.h
 )
 
 if(WIN32)

@@ -1,13 +1,13 @@
-#include "FolderManager.h"
+#include "FolderStore.h"
 
 #include "Db.h"
 #include "SqlHelper.h"
 
 using namespace Ori::Sql;
 
-namespace DB
+namespace Store
 {
-FolderManager *folderManager() { static FolderManager m; return &m; }
+FolderStore *folders() { static FolderStore s; return &s; }
 }
 
 //------------------------------------------------------------------------------
@@ -47,12 +47,12 @@ FolderTableDef* folderTable() { static FolderTableDef t; return &t; }
 //                                FolderManager
 //------------------------------------------------------------------------------
 
-QString FolderManager::prepare()
+QString FolderStore::prepare()
 {
     return createTable(folderTable());
 }
 
-QString FolderManager::create(FolderItem* folder) const
+QString FolderStore::create(FolderItem* folder) const
 {
     auto table = folderTable();
 
@@ -73,7 +73,7 @@ QString FolderManager::create(FolderItem* folder) const
     return QString();
 }
 
-FoldersResult FolderManager::selectAll() const
+FoldersResult FolderStore::selectAll() const
 {
     FoldersResult result;
 
@@ -99,7 +99,7 @@ FoldersResult FolderManager::selectAll() const
     return result;
 }
 
-QString FolderManager::rename(int folderId, const QString title) const
+QString FolderStore::rename(int folderId, const QString title) const
 {
     auto table = folderTable();
     return ActionQuery(table->sqlRename)
@@ -108,7 +108,7 @@ QString FolderManager::rename(int folderId, const QString title) const
             .exec();
 }
 
-QString FolderManager::remove(FolderItem *folder) const
+QString FolderStore::remove(FolderItem *folder) const
 {
     auto db = QSqlDatabase::database();
     bool ok = db.transaction();
@@ -127,7 +127,7 @@ QString FolderManager::remove(FolderItem *folder) const
     return QString();
 }
 
-QString FolderManager::removeBranch(FolderItem* folder, const QString& path) const
+QString FolderStore::removeBranch(FolderItem* folder, const QString& path) const
 {
     auto table = folderTable();
     QString thisPath = path + '/' + folder->title();

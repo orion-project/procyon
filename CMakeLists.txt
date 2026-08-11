@@ -110,7 +110,7 @@ set(PROJECT_SOURCES
     src/main.cpp
     src/AppSettings.cpp
     src/core/Db.cpp src/core/Db.h
-    src/core/FolderManager.cpp src/core/FolderManager.h
+    src/core/FolderStore.cpp src/core/FolderStore.h
     src/core/MemoManager.cpp src/core/MemoManager.h
     src/core/MemoType.cpp src/core/MemoType.h
     src/core/SettingsManager.cpp src/core/SettingsManager.h

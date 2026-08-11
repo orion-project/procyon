@@ -1,5 +1,5 @@
-#ifndef FOLDER_MANAGER_H
-#define FOLDER_MANAGER_H
+#ifndef FOLDER_STORE_H
+#define FOLDER_STORE_H
 
 #include <QString>
 #include <QMap>
@@ -14,7 +14,7 @@ struct FoldersResult
     QList<Item> items;
 };
 
-class FolderManager
+class FolderStore
 {
 public:
     QString prepare();
@@ -28,9 +28,9 @@ private:
     QString removeBranch(FolderItem* folder, const QString &path) const;
 };
 
-namespace DB
+namespace Store
 {
-FolderManager* folderManager();
+FolderStore* folders();
 }
 
-#endif // FOLDER_MANAGER_H
+#endif // FOLDER_STORE_H

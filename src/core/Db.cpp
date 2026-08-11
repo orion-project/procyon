@@ -1,6 +1,6 @@
 #include "Db.h"
 
-#include "FolderManager.h"
+#include "FolderStore.h"
 #include "MemoManager.h"
 #include "SettingsManager.h"
 #include "SqlHelper.h"
@@ -94,7 +94,7 @@ QString Db::prepareDb(const QString fileName)
 
     QString res;
 
-    res = DB::folderManager()->prepare();
+    res = Store::folders()->prepare();
     if (!res.isEmpty()) return res;
 
     res = DB::memoManager()->prepare();
@@ -117,7 +117,7 @@ DbResult Db::open(const QString& fileName)
 
     // Load folders
     {
-        FoldersResult res = DB::folderManager()->selectAll();
+        FoldersResult res = Store::folders()->selectAll();
         if (!res.error.isEmpty())
         {
             delete db;
@@ -203,7 +203,7 @@ Db::~Db()
 
 bool Db::renameFolder(FolderItem* item, const QString& title)
 {
-    QString res = DB::folderManager()->rename(item->id(), title);
+    QString res = Store::folders()->rename(item->id(), title);
     if (!res.isEmpty())
     {
         emit errorOccurred(res);
@@ -231,7 +231,7 @@ FolderResult Db::createFolder(FolderItem* parent, const QString& title)
     folder->_title = title;
     folder->_parent = parent;
 
-    auto res = DB::folderManager()->create(folder);
+    auto res = Store::folders()->create(folder);
     if (!res.isEmpty())
     {
         delete folder;
@@ -265,7 +265,7 @@ bool Db::removeFolder(FolderItem* folder)
     fillMemoIdsFlat(folder, memoIds);
 
     // It removes all subfolders too
-    QString res = DB::folderManager()->remove(folder);
+    QString res = Store::folders()->remove(folder);
     if (!res.isEmpty())
     {
         emit errorOccurred(res);

@@ -49,7 +49,7 @@ private:
     DbItem* _parent = nullptr;
 
     friend class Db;
-    friend class FolderManager;
+    friend class FolderStore;
     friend class MemoManager;
 };
 
@@ -70,7 +70,7 @@ private:
     QList<MemoItem*> _memos;
 
     friend class Db;
-    friend class FolderManager;
+    friend class FolderStore;
 };
 
 //------------------------------------------------------------------------------

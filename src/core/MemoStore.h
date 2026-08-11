@@ -5,7 +5,7 @@
 #include <QMap>
 #include <QVariant>
 
-class MemoItem;
+class Memo;
 struct MemoUpdateParam;
 
 struct MemosResult
@@ -13,7 +13,7 @@ struct MemosResult
     QString error;
     QStringList warnings;
 
-    struct Item { int folderId; MemoItem* memo; };
+    struct Item { int folderId; Memo* memo; };
     QList<Item> items;
 };
 
@@ -22,10 +22,10 @@ class MemoStore
 public:
     QString prepare();
 
-    QString create(MemoItem* item) const;
-    QString update(MemoItem *item, const MemoUpdateParam& update) const;
-    QString remove(MemoItem* item) const;
-    QString load(MemoItem *memo) const;
+    QString create(Memo* item) const;
+    QString update(Memo *item, const MemoUpdateParam& update) const;
+    QString remove(Memo* item) const;
+    QString load(Memo *memo) const;
     MemosResult selectAll() const;
     QString countAll(int* count) const;
     QMap<QString, QVariant> selectOptions(int memoId) const;

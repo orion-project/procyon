@@ -107,7 +107,7 @@ QString MemoStore::prepare()
     return createTable(memoOptionsTable());
 }
 
-QString MemoStore::create(MemoItem* item) const
+QString MemoStore::create(Memo* item) const
 {
     auto table = memoTable();
 
@@ -151,7 +151,7 @@ MemosResult MemoStore::selectAll() const
     {
         auto r = query.record();
 
-        MemoItem *memo = new MemoItem;
+        Memo *memo = new Memo;
         memo->_id = r.value(table->id).toInt();
         memo->_title = r.value(table->title).toString();
         memo->_type = MemoType::findByName(r.value(table->type).toString());
@@ -166,7 +166,7 @@ MemosResult MemoStore::selectAll() const
     return result;
 }
 
-QString MemoStore::load(MemoItem* memo) const
+QString MemoStore::load(Memo* memo) const
 {
     auto table = memoTable();
 
@@ -183,7 +183,7 @@ QString MemoStore::load(MemoItem* memo) const
     return QString();
 }
 
-QString MemoStore::update(MemoItem* memo, const MemoUpdateParam& update) const
+QString MemoStore::update(Memo* memo, const MemoUpdateParam& update) const
 {
     auto table = memoTable();
     return ActionQuery(table->sqlUpdate)
@@ -195,7 +195,7 @@ QString MemoStore::update(MemoItem* memo, const MemoUpdateParam& update) const
             .exec();
 }
 
-QString MemoStore::remove(MemoItem* item) const
+QString MemoStore::remove(Memo* item) const
 {
     auto table = memoTable();
     return ActionQuery(table->sqlDelete)

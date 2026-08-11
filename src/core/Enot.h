@@ -10,7 +10,7 @@
 
 class Enot;
 class Folder;
-class MemoItem;
+class Memo;
 class MemoType;
 
 //------------------------------------------------------------------------------
@@ -39,7 +39,7 @@ public:
     bool isFolder() const;
     bool isMemo() const;
     Folder* asFolder();
-    MemoItem* asMemo();
+    Memo* asMemo();
 
     Folder* parentFolder() { return _parent ? _parent->asFolder() : nullptr; }
 
@@ -61,13 +61,13 @@ public:
     ~Folder();
 
     const QList<Folder*>& folders() const { return _folders; }
-    const QList<MemoItem*>& memos() const { return _memos; }
+    const QList<Memo*>& memos() const { return _memos; }
 
     int childCount() const { return _folders.size() + _memos.size(); }
 
 private:
     QList<Folder*> _folders;
-    QList<MemoItem*> _memos;
+    QList<Memo*> _memos;
 
     friend class Enot;
     friend class FolderStore;
@@ -75,10 +75,10 @@ private:
 
 //------------------------------------------------------------------------------
 
-class MemoItem : public DbItem
+class Memo : public DbItem
 {
 public:
-    ~MemoItem();
+    ~Memo();
 
     MemoType* type() { return _type; }
     QString data() const { return _data; }
@@ -100,7 +100,7 @@ private:
 //------------------------------------------------------------------------------
 
 typedef Ori::Result<int> IntResult;
-typedef Ori::Result<MemoItem*> MemoResult;
+typedef Ori::Result<Memo*> MemoResult;
 typedef Ori::Result<Folder*> FolderResult;
 typedef Ori::Result<Enot*> EnotResult;
 
@@ -123,7 +123,7 @@ public:
 
     Folder* root() { return &_root; }
 
-    MemoItem* findMemoById(int id) const;
+    Memo* findMemoById(int id) const;
     Folder* findFolderById(int id) const;
 
     QString uid() const;
@@ -136,9 +136,9 @@ public:
     bool removeFolder(Folder* folder);
 
     MemoResult createMemo(Folder* folder, MemoType *memoType);
-    bool updateMemo(MemoItem* item, MemoUpdateParam update);
-    bool removeMemo(MemoItem* item);
-    QString loadMemo(MemoItem* item);
+    bool updateMemo(Memo* item, MemoUpdateParam update);
+    bool removeMemo(Memo* item);
+    QString loadMemo(Memo* item);
 
 signals:
     void itemCreating(DbItem*, int);
@@ -152,7 +152,7 @@ private:
     QString _fileName;
     QString _station;
     Folder _root;
-    QMap<int, MemoItem*> _allMemos;
+    QMap<int, Memo*> _allMemos;
     QMap<int, Folder*> _allFolders;
 
     static QString prepareStore(const QString fileName);

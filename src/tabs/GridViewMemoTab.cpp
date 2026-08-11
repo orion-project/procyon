@@ -25,7 +25,7 @@ enum { COL_ID, COL_TITLE, COL_UPDATED, COL_COUNT };
 class GridViewTableModel : public QAbstractTableModel
 {
 public:
-    GridViewTableModel(MemoItem *item) : QAbstractTableModel()
+    GridViewTableModel(Memo *item) : QAbstractTableModel()
     {
         _self = item;
         _folder = item->parentFolder();
@@ -134,7 +134,7 @@ public:
     }
 
 private:
-    MemoItem *_self;
+    Memo *_self;
     Folder *_folder;
     bool _isRowCountChanging = false;
 };
@@ -145,7 +145,7 @@ private:
 
 typedef GridViewMemoTab Self;
 
-GridViewMemoTab::GridViewMemoTab(Enot* enot, MemoItem* memoItem) : MemoTab(enot, memoItem)
+GridViewMemoTab::GridViewMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
 {
     _titleEditor = TabHelpers::makeTitleEditor();
 
@@ -169,7 +169,7 @@ GridViewMemoTab::GridViewMemoTab(Enot* enot, MemoItem* memoItem) : MemoTab(enot,
 
     auto toolPanel = TabHelpers::makeHeaderPanel({_titleEditor, _toolbar});
 
-    _tableModel = new GridViewTableModel(memoItem);
+    _tableModel = new GridViewTableModel(memo);
     connect(_enot, &Enot::itemCreating, _tableModel, &GridViewTableModel::itemCreating);
     connect(_enot, &Enot::itemCreated, _tableModel, &GridViewTableModel::itemCreated);
     connect(_enot, &Enot::itemRemoved, _tableModel, &GridViewTableModel::itemRemoved);
@@ -201,9 +201,9 @@ GridViewMemoTab::GridViewMemoTab(Enot* enot, MemoItem* memoItem) : MemoTab(enot,
 
 void GridViewMemoTab::showMemo()
 {
-    _titleEditor->setText(_memoItem->title());
+    _titleEditor->setText(_memo->title());
 
-    setWindowTitle(_memoItem->title());
+    setWindowTitle(_memo->title());
 }
 
 void GridViewMemoTab::beginEdit()
@@ -225,10 +225,10 @@ bool GridViewMemoTab::saveEdit()
     MemoUpdateParam update;
     update.title = _titleEditor->text().trimmed();
 
-    auto ok = _enot->updateMemo(_memoItem, update);
+    auto ok = _enot->updateMemo(_memo, update);
     if (!ok) return false;
 
-    setWindowTitle(_memoItem->title());
+    setWindowTitle(_memo->title());
     toggleEditMode(false);
     return true;
 }
@@ -247,7 +247,7 @@ void GridViewMemoTab::createMemo()
     auto memoType = MemoType::selectFromDlg();
     if (!memoType) return;
 
-    _enot->createMemo(_memoItem->parentFolder(), memoType);
+    _enot->createMemo(_memo->parentFolder(), memoType);
 }
 
 DbItem* GridViewMemoTab::selectedItem() const
@@ -255,7 +255,7 @@ DbItem* GridViewMemoTab::selectedItem() const
     QModelIndexList selection = _tableView->selectionModel()->selectedRows();
     if (selection.empty()) return nullptr;
     int row = selection.at(0).row();
-    return _memoItem->parentFolder()->memos().at(row);
+    return _memo->parentFolder()->memos().at(row);
 }
 
 void GridViewMemoTab::showContextMenu(const QPoint& pos)

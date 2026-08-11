@@ -12,7 +12,7 @@ class Enot;
 class DbItem;
 class TreeModel;
 class Folder;
-class MemoItem;
+class Memo;
 
 class TreeWidget : public QWidget
 {
@@ -27,7 +27,7 @@ public:
     void setExpandedIds(const QStringList& ids);
 
 signals:
-    void memoOpenRequested(MemoItem* item);
+    void memoOpenRequested(Memo* item);
 
 private:
     Enot* _enot = nullptr;

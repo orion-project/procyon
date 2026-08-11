@@ -318,9 +318,9 @@ void MainWindow::loadSession()
     QStringList openedIds = settings.value("openedMemos").toString().split(',');
     for (const auto& idStr : std::as_const(openedIds))
     {
-        auto memoItem = _enot->findMemoById(idStr.toInt());
-        if (!memoItem) continue;
-        openMemoTab(memoItem);
+        auto memo = _enot->findMemoById(idStr.toInt());
+        if (!memo) continue;
+        openMemoTab(memo);
     }
 
     int activeId = settings.value("activeMemo", -1).toInt();
@@ -347,7 +347,7 @@ void MainWindow::saveSession()
         auto widget = _tabsView->widget(i);
         auto memoWindow = qobject_cast<MemoTab*>(widget);
         if (!memoWindow) continue;
-        int memoId = memoWindow->memoItem()->id();
+        int memoId = memoWindow->memo()->id();
         openedIds << QString::number(memoId);
         if (widget == activeWidget)
             activeId = memoId;
@@ -484,15 +484,15 @@ void MainWindow::closeEvent(QCloseEvent *event)
     event->accept();
 }
 
-void MainWindow::openMemoTab(MemoItem* item)
+void MainWindow::openMemoTab(Memo* memo)
 {
-    if (!item->isLoaded())
+    if (!memo->isLoaded())
     {
-        auto res = _enot->loadMemo(item);
+        auto res = _enot->loadMemo(memo);
         if (!res.isEmpty()) return Ori::Dlg::error(res);
     }
 
-    auto existedPage = findMemoTab(item);
+    auto existedPage = findMemoTab(memo);
     if (existedPage)
     {
         _tabsView->setCurrentWidget(existedPage);
@@ -502,19 +502,19 @@ void MainWindow::openMemoTab(MemoItem* item)
 
     MemoTab* tab = nullptr;
 
-    if (item->type() == MemoType::plainText())
-        tab = new TextMemoTab(_enot, item);
-    else if (item->type() == MemoType::markdown())
-        tab = new TextMemoTab(_enot, item);
-    else if (item->type() == MemoType::gridView())
+    if (memo->type() == MemoType::plainText())
+        tab = new TextMemoTab(_enot, memo);
+    else if (memo->type() == MemoType::markdown())
+        tab = new TextMemoTab(_enot, memo);
+    else if (memo->type() == MemoType::gridView())
     {
-        tab = new GridViewMemoTab(_enot, item);
+        tab = new GridViewMemoTab(_enot, memo);
         connect((GridViewMemoTab*)tab, &GridViewMemoTab::memoOpenRequested, this, &MainWindow::openMemoTab);
     }
 
     if (!tab)
     {
-        qWarning() << "Unknown how to open the memo of type" << item->type()->name();
+        qWarning() << "Unknown how to open the memo of type" << memo->type()->name();
         return;
     }
 
@@ -529,14 +529,14 @@ void MainWindow::openMemoTab(MemoItem* item)
     tab->loadSettings();
 }
 
-MemoTab* MainWindow::findMemoTab(MemoItem* item) const
+MemoTab* MainWindow::findMemoTab(Memo* memo) const
 {
     for (int i = 0; i < _tabsView->count(); i++)
     {
         auto widget = _tabsView->widget(i);
         auto tab = qobject_cast<MemoTab*>(widget);
         if (!tab) continue;
-        if (tab->memoItem() == item)
+        if (tab->memo() == memo)
             return tab;
     }
     return nullptr;
@@ -611,7 +611,7 @@ void MainWindow::optionsMenuAboutToShow()
     auto memoPage = currentTextMemoTab();
     if (_spellcheckMenu)
         _spellcheckMenu->setEnabled(memoPage && !memoPage->isReadOnly());
-    _highlighterMenu->setEnabled(memoPage && memoPage->memoItem()->type() == MemoType::plainText());
+    _highlighterMenu->setEnabled(memoPage && memoPage->memo()->type() == MemoType::plainText());
     _actionMemoExportPdf->setEnabled(memoPage);
     _actionMemoFont->setEnabled(memoPage);
     _actionMemoFont->setChecked(memoPage && memoPage->wordWrap());

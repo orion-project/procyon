@@ -19,12 +19,12 @@ class GridViewMemoTab : public MemoTab
     Q_OBJECT
 
 public:
-    explicit GridViewMemoTab(Enot* enot, MemoItem* memoItem);
+    explicit GridViewMemoTab(Enot* enot, Memo* memo);
 
     void beginEdit() override;
 
 signals:
-    void memoOpenRequested(MemoItem* item);
+    void memoOpenRequested(Memo* item);
 
 private:
     QLineEdit* _titleEditor;

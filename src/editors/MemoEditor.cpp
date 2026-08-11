@@ -16,7 +16,7 @@
 //                                 MemoEditor
 //------------------------------------------------------------------------------
 
-MemoEditor::MemoEditor(MemoItem *memoItem) : QWidget(), _memoItem(memoItem)
+MemoEditor::MemoEditor(Memo *memo) : QWidget(), _memo(memo)
 {
 }
 
@@ -24,11 +24,11 @@ MemoEditor::MemoEditor(MemoItem *memoItem) : QWidget(), _memoItem(memoItem)
 //                                TextMemoEditor
 //------------------------------------------------------------------------------
 
-TextMemoEditor::TextMemoEditor(MemoItem* memoItem) : TextMemoEditor(memoItem, true)
+TextMemoEditor::TextMemoEditor(Memo* memo) : TextMemoEditor(memo, true)
 {
 }
 
-TextMemoEditor::TextMemoEditor(MemoItem* memoItem, bool createEditor) : MemoEditor(memoItem)
+TextMemoEditor::TextMemoEditor(Memo* memo, bool createEditor) : MemoEditor(memo)
 {
     if (!createEditor) return;
 
@@ -157,7 +157,7 @@ void TextMemoEditor::exportToPdf(const QString& fileName)
 
 void TextMemoEditor::showMemo()
 {
-    _editor->setPlainText(_memoItem->data());
+    _editor->setPlainText(_memo->data());
     _editor->document()->setModified(false);
 }
 

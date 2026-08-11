@@ -18,7 +18,7 @@ class OpenTabsWidget;
 class SpellcheckControl;
 class InfoWidget;
 class MemoTab;
-class MemoItem;
+class Memo;
 class TextMemoTab;
 
 namespace Ori {
@@ -79,10 +79,10 @@ private:
     void itemRemoved(DbItem* item);
 
     bool closeAllMemos();
-    void openMemoTab(MemoItem* item);
+    void openMemoTab(Memo* item);
     void exportToPdf();
 
-    MemoTab* findMemoTab(MemoItem* item) const;
+    MemoTab* findMemoTab(Memo* item) const;
     MemoTab* currentMemoTab() const;
     TextMemoTab* currentTextMemoTab() const;
 

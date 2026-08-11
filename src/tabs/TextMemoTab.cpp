@@ -33,7 +33,7 @@ const QString SPELLCHECK = "spellcheck";
 const QString HIGHLIGHTER = "highlighter";
 };
 
-void updateOption(MemoItem* memo, const QString& name, const QVariant& value)
+void updateOption(Memo* memo, const QString& name, const QVariant& value)
 {
     QString res = Store::memos()->updateOption(memo->id(), name, value);
     if (!res.isEmpty())
@@ -41,12 +41,12 @@ void updateOption(MemoItem* memo, const QString& name, const QVariant& value)
 }
 }
 
-TextMemoTab::TextMemoTab(Enot* enot, MemoItem* memoItem) : MemoTab(enot, memoItem)
+TextMemoTab::TextMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
 {
-    if (_memoItem->type() == MemoType::markdown())
-        _memoEditor = new MarkdownMemoEditor(_memoItem);
+    if (_memo->type() == MemoType::markdown())
+        _memoEditor = new MarkdownMemoEditor(_memo);
     else
-        _memoEditor = new TextMemoEditor(_memoItem);
+        _memoEditor = new TextMemoEditor(_memo);
     connect(_memoEditor, &MemoEditor::onModified, this, &TextMemoTab::onModified);
 
     _titleEditor = TabHelpers::makeTitleEditor();
@@ -82,7 +82,7 @@ QFont TextMemoTab::memoFont() const
 void TextMemoTab::setMemoFont(const QFont& font)
 {
     _memoEditor->setFont(font);
-    updateOption(_memoItem, MemoOptions::FONT, font.toString());
+    updateOption(_memo, MemoOptions::FONT, font.toString());
 }
 
 bool TextMemoTab::wordWrap() const
@@ -93,13 +93,13 @@ bool TextMemoTab::wordWrap() const
 void TextMemoTab::setWordWrap(bool wrap)
 {
     _memoEditor->setWordWrap(wrap);
-    updateOption(_memoItem, MemoOptions::WORD_WRAP, wrap);
+    updateOption(_memo, MemoOptions::WORD_WRAP, wrap);
 }
 
 void TextMemoTab::setSpellcheckLang(const QString &lang)
 {
     _memoEditor->setSpellcheckLang(lang);
-    updateOption(_memoItem, MemoOptions::SPELLCHECK, lang);
+    updateOption(_memo, MemoOptions::SPELLCHECK, lang);
 }
 
 QString TextMemoTab::spellcheckLang() const
@@ -114,7 +114,7 @@ void TextMemoTab::setHighlighter(const QString& name)
     {
         bool modified = editor->isModified();
         editor->setHighlighterName(name);
-        updateOption(_memoItem, MemoOptions::HIGHLIGHTER, name);
+        updateOption(_memo, MemoOptions::HIGHLIGHTER, name);
         editor->setModified(modified);
     }
 }
@@ -139,7 +139,7 @@ void TextMemoTab::exportToPdf()
 
 void TextMemoTab::loadSettings()
 {
-    auto options = Store::memos()->selectOptions(_memoItem->id());
+    auto options = Store::memos()->selectOptions(_memo->id());
 
     auto memoFont = AppSettings::instance().memoFont;
     if (options.contains(MemoOptions::FONT))
@@ -178,10 +178,10 @@ void TextMemoTab::showMemo()
 {
     _memoEditor->showMemo();
 
-    _titleEditor->setText(_memoItem->title());
+    _titleEditor->setText(_memo->title());
     _titleEditor->setModified(false);
 
-    setWindowTitle(_memoItem->title());
+    setWindowTitle(_memo->title());
 }
 
 bool TextMemoTab::isModified() const
@@ -194,7 +194,7 @@ void TextMemoTab::beginEdit()
     toggleEditMode(true);
     _memoEditor->beginEdit();
 
-    if (_memoItem->data().isEmpty())
+    if (_memo->data().isEmpty())
     {
         _titleEditor->setFocus();
         _titleEditor->selectAll();
@@ -217,12 +217,12 @@ bool TextMemoTab::saveEdit()
     update.title = _titleEditor->text().trimmed();
     update.data = _memoEditor->data();
 
-    auto ok = _enot->updateMemo(_memoItem, update);
+    auto ok = _enot->updateMemo(_memo, update);
     if (!ok) return false;
 
     _memoEditor->saveEdit();
     _titleEditor->setModified(false);
-    setWindowTitle(_memoItem->title());
+    setWindowTitle(_memo->title());
     toggleEditMode(false);
     emit onReadOnly(true);
     return true;
@@ -236,7 +236,7 @@ void TextMemoTab::toggleEditMode(bool on)
     _actionCancel->setVisible(on);
     _actionEdit->setVisible(!on);
 
-    if (_memoItem->type() == MemoType::markdown())
+    if (_memo->type() == MemoType::markdown())
     {
         if (on)
         {

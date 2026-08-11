@@ -4,14 +4,14 @@
 #include <QWidget>
 
 class Enot;
-class MemoItem;
+class Memo;
 
 class MemoTab : public QWidget
 {
     Q_OBJECT
 
 public:
-    MemoItem* memoItem() const { return _memoItem; }
+    Memo* memo() const { return _memo; }
 
     virtual void loadSettings() {}
     virtual bool canClose() { return true; }
@@ -26,9 +26,9 @@ signals:
 
 protected:
     Enot* _enot;
-    MemoItem* _memoItem;
+    Memo* _memo;
 
-    explicit MemoTab(Enot* enot, MemoItem* memoItem);
+    explicit MemoTab(Enot* enot, Memo* memo);
 };
 
 #endif // MEMO_TAB_H

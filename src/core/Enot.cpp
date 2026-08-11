@@ -18,9 +18,9 @@
 
 DbItem::~DbItem() {}
 bool DbItem::isFolder() const { return dynamic_cast<const Folder*>(this); }
-bool DbItem::isMemo() const { return dynamic_cast<const MemoItem*>(this); }
+bool DbItem::isMemo() const { return dynamic_cast<const Memo*>(this); }
 Folder* DbItem::asFolder() { return dynamic_cast<Folder*>(this); }
-MemoItem* DbItem::asMemo() { return dynamic_cast<MemoItem*>(this); }
+Memo* DbItem::asMemo() { return dynamic_cast<Memo*>(this); }
 
 QString DbItem::path() const
 {
@@ -45,10 +45,10 @@ Folder::~Folder()
 }
 
 //------------------------------------------------------------------------------
-//                                   MemoItem
+//                                   Memo
 //------------------------------------------------------------------------------
 
-MemoItem::~MemoItem()
+Memo::~Memo()
 {
 }
 
@@ -300,7 +300,7 @@ MemoResult Enot::createMemo(Folder* folder, MemoType* memoType)
 {
     auto now = QDateTime::currentDateTime();
 
-    auto item = new MemoItem;
+    auto item = new Memo;
     item->_parent = folder;
     item->_created = now;
     item->_updated = now;
@@ -325,7 +325,7 @@ MemoResult Enot::createMemo(Folder* folder, MemoType* memoType)
     return MemoResult::ok(item);
 }
 
-bool Enot::updateMemo(MemoItem* item, MemoUpdateParam update)
+bool Enot::updateMemo(Memo* item, MemoUpdateParam update)
 {
     update.moment = QDateTime::currentDateTime();
     update.station = _station;
@@ -348,12 +348,12 @@ bool Enot::updateMemo(MemoItem* item, MemoUpdateParam update)
     return true;
 }
 
-QString Enot::loadMemo(MemoItem* item)
+QString Enot::loadMemo(Memo* item)
 {
     return Store::memos()->load(item);
 }
 
-bool Enot::removeMemo(MemoItem* item)
+bool Enot::removeMemo(Memo* item)
 {
     QString res = Store::memos()->remove(item);
     if (!res.isEmpty())
@@ -400,7 +400,7 @@ TItem* findInContainerById(const QMap<int, TItem*>& container, int id)
 
 } // namespace
 
-MemoItem* Enot::findMemoById(int id) const
+Memo* Enot::findMemoById(int id) const
 {
     return findInContainerById(_allMemos, id);
 }

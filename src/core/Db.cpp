@@ -2,7 +2,7 @@
 
 #include "FolderStore.h"
 #include "MemoStore.h"
-#include "SettingsManager.h"
+#include "SettingsStore.h"
 #include "SqlHelper.h"
 
 #include <QDebug>
@@ -100,7 +100,7 @@ QString Db::prepareDb(const QString fileName)
     res = Store::memos()->prepare();
     if (!res.isEmpty()) return res;
 
-    res = DB::settingsManager()->prepare();
+    res = Store::settings()->prepare();
     if (!res.isEmpty()) return res;
 
     db.commit();
@@ -430,16 +430,16 @@ void Db::fillMemoIdsFlat(FolderItem* root, QVector<int> &ids)
 
 QString Db::uid() const
 {
-    return DB::settingsManager()->readString(KEY_UID);
+    return Store::settings()->readString(KEY_UID);
 }
 
 QString Db::getOrMakeUid()
 {
-    QString uid = DB::settingsManager()->readString(KEY_UID);
+    QString uid = Store::settings()->readString(KEY_UID);
     if (uid.isEmpty())
     {
         uid = QUuid::createUuid().toString();
-        DB::settingsManager()->writeString(KEY_UID, uid);
+        Store::settings()->writeString(KEY_UID, uid);
     }
     return uid;
 }

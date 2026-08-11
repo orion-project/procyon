@@ -1,12 +1,12 @@
-#include "SettingsManager.h"
+#include "SettingsStore.h"
 
 #include "SqlHelper.h"
 
 using namespace Ori::Sql;
 
-namespace DB
+namespace Store
 {
-SettingsManager* settingsManager() { static SettingsManager m; return &m; }
+SettingsStore* settings() { static SettingsStore s; return &s; }
 }
 
 //------------------------------------------------------------------------------
@@ -36,15 +36,15 @@ SettingsTableDef* settingsTable() { static SettingsTableDef t; return &t; }
 } // namespace
 
 //------------------------------------------------------------------------------
-//                              SettingsManager
+//                              SettingsStore
 //------------------------------------------------------------------------------
 
-QString SettingsManager::prepare()
+QString SettingsStore::prepare()
 {
     return createTable(settingsTable());
 }
 
-QMap<QString, QVariant> SettingsManager::readSettings(const QString& idPattern) const
+QMap<QString, QVariant> SettingsStore::readSettings(const QString& idPattern) const
 {
     auto table = settingsTable();
 
@@ -63,7 +63,7 @@ QMap<QString, QVariant> SettingsManager::readSettings(const QString& idPattern) 
     return values;
 }
 
-QString SettingsManager::remove(const QString& id)
+QString SettingsStore::remove(const QString& id)
 {
     auto table = settingsTable();
     auto res = ActionQuery(QString("DELETE FROM %1 WHERE id = '%2'").arg(table->tableName(), id)).exec();
@@ -75,7 +75,7 @@ QString SettingsManager::remove(const QString& id)
     return QString();
 }
 
-QString SettingsManager::writeValue(const QString& id, const QVariant& value) const
+QString SettingsStore::writeValue(const QString& id, const QVariant& value) const
 {
     auto table = settingsTable();
 
@@ -98,7 +98,7 @@ QString SettingsManager::writeValue(const QString& id, const QVariant& value) co
     return QString();
 }
 
-QVariant SettingsManager::readValue(const QString& id, const QVariant& defValue, bool *hasValue) const
+QVariant SettingsStore::readValue(const QString& id, const QVariant& defValue, bool *hasValue) const
 {
     auto table = settingsTable();
 
@@ -119,7 +119,7 @@ QVariant SettingsManager::readValue(const QString& id, const QVariant& defValue,
     return query.record().field(table->value).value();
 }
 
-QString SettingsManager::writeString(const QString& id, const QString& value) const
+QString SettingsStore::writeString(const QString& id, const QString& value) const
 {
     bool hasValue = false;
     QString oldValue = readValue(id, QVariant(), &hasValue).toString();
@@ -128,12 +128,12 @@ QString SettingsManager::writeString(const QString& id, const QString& value) co
     return QString();
 }
 
-QString SettingsManager::readString(const QString& id, const QString& defValue) const
+QString SettingsStore::readString(const QString& id, const QString& defValue) const
 {
     return readValue(id, defValue).toString();
 }
 
-QString SettingsManager::writeBool(const QString& id, bool value) const
+QString SettingsStore::writeBool(const QString& id, bool value) const
 {
     bool hasValue = false;
     bool oldValue = readValue(id, QVariant(), &hasValue).toBool();
@@ -142,12 +142,12 @@ QString SettingsManager::writeBool(const QString& id, bool value) const
     return QString();
 }
 
-bool SettingsManager::readBool(const QString& id, bool defValue) const
+bool SettingsStore::readBool(const QString& id, bool defValue) const
 {
     return readValue(id, defValue).toBool();
 }
 
-QString SettingsManager::writeInt(const QString& id, int value) const
+QString SettingsStore::writeInt(const QString& id, int value) const
 {
     bool hasValue = false;
     int oldValue = readValue(id, QVariant(), &hasValue).toInt();
@@ -156,12 +156,12 @@ QString SettingsManager::writeInt(const QString& id, int value) const
     return QString();
 }
 
-int SettingsManager::readInt(const QString& id, int defValue) const
+int SettingsStore::readInt(const QString& id, int defValue) const
 {
     return readValue(id, defValue).toInt();
 }
 
-QString SettingsManager::writeIntArray(const QString& id, const QVector<int>& values, TrackChangesFlag trackChangesFlag) const
+QString SettingsStore::writeIntArray(const QString& id, const QVector<int>& values, TrackChangesFlag trackChangesFlag) const
 {
     if (trackChangesFlag == IgnoreValuesOrder)
     {
@@ -198,7 +198,7 @@ QString SettingsManager::writeIntArray(const QString& id, const QVector<int>& va
     return writeValue(id, valueStr);
 }
 
-QVector<int> SettingsManager::readIntArray(const QString& id) const
+QVector<int> SettingsStore::readIntArray(const QString& id) const
 {
     QVector<int> result;
     QString valuesStr = readValue(id).toString();

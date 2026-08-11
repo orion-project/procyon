@@ -1,11 +1,11 @@
-#ifndef SETTINGS_MANAGER_H
-#define SETTINGS_MANAGER_H
+#ifndef SETTINGS_STORE_H
+#define SETTINGS_STORE_H
 
 #include <QString>
 #include <QVector>
 #include <QVariant>
 
-class SettingsManager
+class SettingsStore
 {
 public:
     enum TrackChangesFlag { IgnoreValuesOrder, RespectValuesOrder };
@@ -33,9 +33,9 @@ public:
     QVector<int> readIntArray(const QString& id) const;
 };
 
-namespace DB
+namespace Store
 {
-SettingsManager* settingsManager();
+SettingsStore* settings();
 }
 
-#endif // SETTINGS_MANAGER_H
+#endif // SETTINGS_STORE_H

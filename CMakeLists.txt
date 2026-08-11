@@ -113,7 +113,7 @@ set(PROJECT_SOURCES
     src/core/FolderStore.cpp src/core/FolderStore.h
     src/core/MemoStore.cpp src/core/MemoStore.h
     src/core/MemoType.cpp src/core/MemoType.h
-    src/core/SettingsManager.cpp src/core/SettingsManager.h
+    src/core/SettingsStore.cpp src/core/SettingsStore.h
     src/core/SqlHelper.cpp src/core/SqlHelper.h
     src/editors/MarkdownMemoEditor.cpp
     src/editors/MemoEditor.cpp

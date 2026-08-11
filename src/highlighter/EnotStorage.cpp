@@ -1,6 +1,6 @@
 #include "EnotStorage.h"
 
-#include "core/SettingsManager.h"
+#include "core/SettingsStore.h"
 
 using namespace Ori::Highlighter;
 
@@ -19,7 +19,7 @@ QString specKey(const QString& name)
 QVector<Meta> EnotHighlighterStorage::loadMetas() const
 {
     QVector<Meta> metas;
-    auto settings = DB::settingsManager()->readSettings(QStringLiteral("highlighter/%%/meta"));
+    auto settings = Store::settings()->readSettings(QStringLiteral("highlighter/%%/meta"));
     auto it = settings.constBegin();
     while (it != settings.constEnd())
     {
@@ -35,7 +35,7 @@ QVector<Meta> EnotHighlighterStorage::loadMetas() const
 
 QSharedPointer<Spec> EnotHighlighterStorage::loadSpec(const Meta &meta, bool withRawData) const
 {
-    auto sm = DB::settingsManager();
+    auto sm = Store::settings();
     auto text = sm->readString(specKey(meta.name), QStringLiteral("---"));
     if (text == QStringLiteral("---")) return QSharedPointer<Spec>();
     QSharedPointer<Spec> spec(new Spec);
@@ -45,7 +45,7 @@ QSharedPointer<Spec> EnotHighlighterStorage::loadSpec(const Meta &meta, bool wit
 
 QString EnotHighlighterStorage::saveSpec(const QSharedPointer<Spec>& spec)
 {
-    auto sm = DB::settingsManager();
+    auto sm = Store::settings();
     auto res = sm->writeString(metaKey(spec->meta.name), spec->meta.title);
     if (res.isEmpty())
         res = sm->writeString(specKey(spec->meta.name), spec->storableString());
@@ -54,7 +54,7 @@ QString EnotHighlighterStorage::saveSpec(const QSharedPointer<Spec>& spec)
 
 QString EnotHighlighterStorage::deleteSpec(const Meta &meta)
 {
-    auto sm = DB::settingsManager();
+    auto sm = Store::settings();
     auto res = sm->remove(specKey(meta.name));
     if (res.isEmpty())
         res = sm->remove(metaKey(meta.name));

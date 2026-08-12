@@ -21,6 +21,7 @@ struct MemoUpdateParam
     QString data;
     QDateTime moment;
     QString station;
+    std::optional<QHash<QString, QString>> props;
 };
 
 //------------------------------------------------------------------------------
@@ -84,6 +85,7 @@ public:
     QDateTime updated() const { return _updated; }
     QString station() const { return _station; }
     bool isLoaded() const { return _isLoaded; }
+    QString propValue(const QString& name) const;
 
 private:
     MemoType* _type = nullptr;
@@ -138,6 +140,10 @@ public:
     bool deleteMemo(Memo* memo);
     QString loadMemo(Memo* memo);
 
+    QList<QString> propNames();
+    QList<QString> propValues(const QString& name);
+    void addPossiblePropValue(const QString& name, const QString& value);
+
 signals:
     void entryCreating(Entry*, int);
     void entryCreated(Entry*);
@@ -152,6 +158,8 @@ private:
     Folder _root;
     QMap<int, Memo*> _allMemos;
     QMap<int, Folder*> _allFolders;
+    std::optional<QList<QString>> _propNames;
+    QHash<QString, QList<QString>> _propValues;
 
     static QString prepareStore(const QString fileName);
 

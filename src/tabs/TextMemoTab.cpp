@@ -6,14 +6,15 @@
 #include "core/MemoType.h"
 #include "editors/MarkdownMemoEditor.h"
 #include "editors/MemoEditor.h"
+#include "widgets/MemoPropsPanel.h"
 
 #include "helpers/OriDialogs.h"
-#include "widgets/OriFlowLayout.h"
 
 #include <QMessageBox>
 #include <QToolBar>
 #include <QToolButton>
 #include <QLabel>
+#include <QMenu>
 
 namespace {
 const int PREVIEW_BUTTON_WIDTH = 100;
@@ -44,94 +45,8 @@ void updateOption(Memo* memo, const QString& name, const QVariant& value)
 }
 
 //------------------------------------------------------------------------------
-//                                MemoPropsPanel
-//------------------------------------------------------------------------------
-
-class MemoPropsPanel : public QFrame
-{
-public:
-    MemoPropsPanel() : QFrame()
-    {
-        setObjectName("props_panel");
-
-        _layout = new Ori::Widgets::FlowLayout(this, 0, 0, 5);
-    }
-
-    void addProp(const QString& name, const QString& value)
-    {
-        auto labelName = new QLabel(name);
-        labelName->setProperty("role", "prop_name");
-
-        auto labelValue = new QLabel(value);
-        labelValue->setProperty("role", "prop_value");
-
-        auto widget = Ori::Layouts::LayoutH({labelName, labelValue}).setMargin(0).setSpacing(0).makeWidget();
-
-        _valueViews.append(ValueView{
-            .name = name,
-            .value = value,
-            .contentWidget = widget,
-            .readonlyLabel = labelValue,
-        });
-
-        _layout->addWidget(widget);
-    }
-
-    void setReadOnly(bool on)
-    {
-        if (on) switchToEditable();
-        else switchToReadonly();
-    }
-
-private:
-    QLayout *_layout;
-    QMenu *_valueMenu;
-
-    struct ValueView
-    {
-        QString name;
-        QString value;
-        QWidget *contentWidget;
-        QLabel *readonlyLabel;
-        QLabel *editableLabel = nullptr;
-    };
-
-    QList<ValueView> _valueViews;
-
-    void switchToEditable()
-    {
-        for (ValueView& view : _valueViews)
-        {
-            if (!view.editableLabel)
-            {
-                view.editableLabel = new QLabel;
-                view.editableLabel->setProperty("role", "prop_editor");
-                view.editableLabel->setCursor(Qt::PointingHandCursor);
-                view.contentWidget->layout()->addWidget(view.editableLabel);
-            }
-
-            view.editableLabel->setText(view.value);
-            view.editableLabel->setVisible(true);
-            view.readonlyLabel->setVisible(false);
-        }
-    }
-
-    void switchToReadonly()
-    {
-        for (ValueView& view : _valueViews)
-        {
-            if (view.editableLabel)
-                view.editableLabel->setVisible(false);
-            view.readonlyLabel->setText(view.value);
-            view.readonlyLabel->setVisible(true);
-        }
-    }
-};
-
-//------------------------------------------------------------------------------
 //                                TextMemoTab
 //------------------------------------------------------------------------------
-
 
 TextMemoTab::TextMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
 {
@@ -159,9 +74,10 @@ TextMemoTab::TextMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
 
     auto toolPanel = TabHelpers::makeHeaderPanel({_titleEditor, _toolbar});
 
-    _propsPanel = new MemoPropsPanel();
-    _propsPanel->addProp("Category:", "CheckList");
-    _propsPanel->addProp("Severity:", "Task");
+    _propsPanel = new MemoPropsPanel(enot);
+    _propsPanel->setVisible(false);
+    for (const auto& name : enot->propNames())
+        _propsPanel->addProp(name, memo->propValue(name));
 
     Ori::Layouts::LayoutV({toolPanel, _propsPanel, _memoEditor}).setMargin(0).setSpacing(0).useFor(this);
 
@@ -309,9 +225,13 @@ void TextMemoTab::cancelEdit()
 
 bool TextMemoTab::saveEdit()
 {
+    _propsPanel->apply();
+
     MemoUpdateParam update;
     update.title = _titleEditor->text().trimmed();
     update.data = _memoEditor->data();
+    if (_propsPanel->hasValues())
+        update.props = _propsPanel->values();
 
     auto ok = _enot->updateMemo(_memo, update);
     if (!ok) return false;
@@ -374,3 +294,7 @@ void TextMemoTab::togglePreviewMode()
     editor->togglePreviewMode(!isPreview);
 }
 
+void TextMemoTab::addMemoProp()
+{
+    _propsPanel->addPropViaDlg();
+}

@@ -32,8 +32,10 @@ public:
     QString highlighter() const;
 
     void exportToPdf();
+    void addMemoProp();
 
     void loadSettings() override;
+    bool canHaveProps() const override { return true; }
     bool canClose() override;
     void beginEdit() override;
     bool isReadOnly() const override { return !_isEditMode; }

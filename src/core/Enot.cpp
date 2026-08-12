@@ -52,6 +52,12 @@ Memo::~Memo()
 {
 }
 
+QString Memo::propValue(const QString& name) const
+{
+    // TODO: read from DB
+    return {};
+}
+
 //------------------------------------------------------------------------------
 //                                   Enot
 //------------------------------------------------------------------------------
@@ -442,4 +448,39 @@ QString Enot::getOrMakeUid()
         Store::settings()->writeString(KEY_UID, uid);
     }
     return uid;
+}
+
+QList<QString> Enot::propNames()
+{
+    if (!_propNames)
+    {
+        // TODO: load from DB
+        _propNames = QList<QString>();
+    }
+    return _propNames.value();
+}
+
+QList<QString> Enot::propValues(const QString& name)
+{
+    if (!_propValues.contains(name))
+    {
+        // TODO: load from DB
+    }
+    return _propValues.value(name);
+}
+
+void Enot::addPossiblePropValue(const QString& name, const QString& value)
+{
+    if (!_propNames->contains(name))
+    {
+        _propNames->append(name);
+        _propNames->sort();
+    }
+
+    auto& values = _propValues[name];
+    if (!values.contains(value))
+    {
+        values.append(value);
+        values.sort();
+    }
 }

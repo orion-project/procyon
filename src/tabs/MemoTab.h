@@ -14,6 +14,7 @@ public:
     Memo* memo() const { return _memo; }
 
     virtual void loadSettings() {}
+    virtual bool canHaveProps() const { return false; }
     virtual bool canClose() { return true; }
     virtual bool isReadOnly() const { return true; }
     virtual bool isModified() const { return false; }

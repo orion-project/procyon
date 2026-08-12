@@ -204,6 +204,8 @@ void MainWindow::createMenu()
     _actionWordWrap = m->addAction(tr("Word Wrap"), this, &MainWindow::toggleWordWrap);
     _actionWordWrap->setCheckable(true);
 
+    _actionAddMemoProp = m->addAction(tr("Add Property..."), this, &MainWindow::addMemoProp);
+
     m->addSeparator();
     _actionMemoExportPdf = m->addAction(tr("Export to PDF..."), this, &MainWindow::exportToPdf);
 
@@ -623,6 +625,8 @@ void MainWindow::memoMenuAboutToShow()
 
     _actionWordWrap->setEnabled(memoPage);
     _actionWordWrap->setChecked(memoPage && memoPage->wordWrap());
+
+    _actionAddMemoProp->setEnabled(memoPage && memoPage->canHaveProps() && !memoPage->isReadOnly());
 }
 
 void MainWindow::spellcheckMenuAboutToShow()
@@ -653,4 +657,11 @@ void MainWindow::setMemoHighlighter(const QString& name)
 {
     auto memoPage = currentTextMemoTab();
     if (memoPage) memoPage->setHighlighter(name);
+}
+
+void MainWindow::addMemoProp()
+{
+    auto memoPage = currentTextMemoTab();
+    if (memoPage && memoPage->canHaveProps())
+        memoPage->addMemoProp();
 }

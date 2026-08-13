@@ -357,9 +357,19 @@ QToolButton:hover {
 }
 
 /************************************
-             PopupMessage
+             Table View
 ************************************/
 QTableView {
+  font-size: $main-font-size;
+  selection-background-color: $selection-color;
+  selection-color: white;
+  gridline-color: LightGray;
+}
+QTableView::item {
+  padding: 1px 4px;
+}
+QHeaderView {
+  min-height: 24px;
   font-size: $main-font-size;
 }
 

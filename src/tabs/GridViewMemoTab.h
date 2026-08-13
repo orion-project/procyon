@@ -32,7 +32,17 @@ private:
     QAction *_actionEdit, *_actionSave, *_actionCancel;
     QTableView *_tableView;
     GridViewTableModel *_tableModel;
-    QMenu *_contextMenu;
+    QMenu *_contextMenu, *_toolMenu;
+
+    struct Config
+    {
+        QStringList propColumns;
+
+        QString toString() const;
+        void load(const QString&);
+    };
+
+    Config _config;
 
     void showMemo();
     void cancelEdit();
@@ -41,8 +51,11 @@ private:
     void createMemo();
     void openSelectedMemo();
     void showContextMenu(const QPoint& pos);
+    void chooseColumns();
 
     Entry* selectedEntry() const;
+
+    void applyColumns();
 };
 
 #endif // GRID_VIEW_MEMO_TAB_H

@@ -5,17 +5,35 @@
 #include "core/MemoStore.h"
 #include "core/MemoType.h"
 
+#include "helpers/OriDialogs.h"
+#include "helpers/OriLayouts.h"
+
 #include <QAbstractTableModel>
+#include <QApplication>
+#include <QCheckBox>
 #include <QHeaderView>
-#include <QTableView>
-#include <QToolBar>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QLabel>
 #include <QLineEdit>
 #include <QMenu>
+#include <QTableView>
+#include <QToolBar>
+#include <QToolButton>
+#include <QVBoxLayout>
 
 namespace {
 
-enum { COL_ID, COL_TITLE, COL_UPDATED, COL_COUNT };
+enum class ColumnKind { NONE, ID };
 
+struct ColumnDef
+{
+    ColumnKind kind = ColumnKind::NONE;
+    std::function<QString()> header;
+    std::function<QVariant(Memo*)> value;
+    QHeaderView::ResizeMode resizeMode = QHeaderView::ResizeToContents;
+};
 }
 
 //------------------------------------------------------------------------------
@@ -36,7 +54,10 @@ public:
         return _folder->memos().size();
     }
 
-    int columnCount(const QModelIndex&) const override { return COL_COUNT; }
+    int columnCount(const QModelIndex&) const override
+    {
+        return _columnDefs.size();
+    }
 
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override
     {
@@ -47,12 +68,7 @@ public:
             case Qt::Vertical:
                 return section + 1;
             case Qt::Horizontal:
-                switch (section)
-                {
-                case COL_ID: return tr("ID");
-                case COL_TITLE: return tr("Title");
-                case COL_UPDATED: return tr("Updated");
-                }
+                return _columnDefs.at(section).header();
             }
         }
         return QVariant();
@@ -61,36 +77,23 @@ public:
     QVariant data(const QModelIndex &index, int role) const override
     {
         if (!index.isValid()) return QVariant();
-        int col = index.column();
-        int row = index.row();
-        const auto& memo = _folder->memos().at(row);
+
+        const auto& memo = _folder->memos().at(index.row());
+        const auto& column = _columnDefs.at(index.column());
 
         if (role == Qt::DecorationRole)
         {
-            if (col == COL_ID)
-            {
+            if (column.kind == ColumnKind::ID)
                 return memo->type()->icon();
-            }
         }
         else if (role == Qt::ToolTipRole)
         {
-            if (col == COL_ID)
-            {
+            if (column.kind == ColumnKind::ID)
                 return memo->type()->title();
-            }
         }
         else if (role == Qt::DisplayRole)
         {
-            if (col == COL_ID)
-                return memo->id();
-
-            if (col == COL_TITLE)
-                return memo->title();
-
-            if (col == COL_UPDATED)
-            {
-                return memo->updated();
-            }
+            return column.value(memo);
         }
 
         return QVariant();
@@ -133,11 +136,83 @@ public:
         }
     }
 
+    void setPropColumns(const QStringList& propNames)
+    {
+        _columnDefs.clear();
+        _columnDefs << ColumnDef {
+            .kind = ColumnKind::ID,
+            .header = []{ return qApp->tr("ID"); },
+            .value = [](Memo* memo){ return memo->id(); },
+        };
+        _columnDefs << ColumnDef {
+            .header = []{ return qApp->tr("Title"); },
+            .value = [](Memo* memo){ return memo->title(); },
+            .resizeMode = QHeaderView::Stretch
+        };
+        for (const auto& propName : propNames)
+        {
+            _columnDefs << ColumnDef {
+                .header = [propName]{ return propName; },
+                .value = [propName](Memo* memo){ return memo->props().value(propName); },
+            };
+        }
+        _columnDefs << ColumnDef {
+            .header = []{ return qApp->tr("Updated"); },
+            .value = [](Memo* memo){ return memo->updated(); },
+        };
+    }
+
+    void reset()
+    {
+        beginResetModel();
+        endResetModel();
+    }
+
+    const QList<ColumnDef>& columnDefs() const { return _columnDefs; }
+
 private:
     Memo *_self;
     Folder *_folder;
     bool _isRowCountChanging = false;
+    QList<ColumnDef> _columnDefs;
 };
+
+//------------------------------------------------------------------------------
+//                           GridViewMemoTab::Config
+//------------------------------------------------------------------------------
+
+QString GridViewMemoTab::Config::toString() const
+{
+    QJsonArray jsonCols;
+    for (const auto& propName : propColumns)
+        jsonCols.append(propName);
+
+    QJsonObject jsonRoot;
+    jsonRoot["propColumns"] = jsonCols;
+
+    return QJsonDocument(jsonRoot).toJson();
+}
+
+void GridViewMemoTab::Config::load(const QString& s)
+{
+    QJsonParseError jsonErr;
+    auto jsonDoc = QJsonDocument::fromJson(s.toUtf8(), &jsonErr);
+    if (jsonErr.error != QJsonParseError::NoError)
+    {
+        qWarning() << "Failed to parse grid config" << jsonErr.errorString();
+        return;
+    }
+
+    auto jsonRoot = jsonDoc.object();
+
+    auto jsonCols = jsonRoot["propColumns"].toArray();
+    for (auto it = jsonCols.cbegin(); it != jsonCols.cend(); it++)
+    {
+        auto propName = it->toString();
+        if (!propName.isEmpty())
+            propColumns << propName;
+    }
+}
 
 //------------------------------------------------------------------------------
 //                             GridViewMemoTab
@@ -151,6 +226,15 @@ GridViewMemoTab::GridViewMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
 
     _toolbar = TabHelpers::makeHeaderToolBar();
 
+    _toolMenu = new QMenu(this);
+    _toolMenu->addAction(tr("Show columns..."), this, &Self::chooseColumns);
+
+    auto toolMenuButton = new QToolButton;
+    toolMenuButton->setPopupMode(QToolButton::InstantPopup);
+    toolMenuButton->setToolTip(tr("Options"));
+    toolMenuButton->setIcon(QIcon(":/icon/settings"));
+    toolMenuButton->setMenu(_toolMenu);
+
     _actionEdit = _toolbar->addAction(QIcon(":/toolbar/edit"), tr("Edit"), this, &Self::beginEdit);
     _actionSave = _toolbar->addAction(QIcon(":/toolbar/apply"), tr("Save"), this, &Self::saveEdit);
     _actionCancel = _toolbar->addAction(QIcon(":/toolbar/cancel"), tr("Cancel"), this, &Self::cancelEdit);
@@ -158,7 +242,9 @@ GridViewMemoTab::GridViewMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     _actionSave->setShortcut(QKeySequence::Save);
     _actionCancel->setShortcut(QKeySequence(Qt::Key_Escape, Qt::Key_Escape));
     _toolbar->addSeparator();
-    _toolbar->addAction(tr("New Memo"), this, &Self::createMemo);
+    _toolbar->addAction(QIcon(":/icon/memo_plain_text"), tr("New Memo"), this, &Self::createMemo);
+    _toolbar->addSeparator();
+    _toolbar->addWidget(toolMenuButton);
     _toolbar->addSeparator();
     _toolbar->addAction(QIcon(":/toolbar/close"), tr("Close Tab"), [this](){
         if (canClose()) deleteLater();
@@ -188,9 +274,6 @@ GridViewMemoTab::GridViewMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
 
     auto h = _tableView->horizontalHeader();
     h->setMinimumSectionSize(32);
-    h->setSectionResizeMode(COL_ID, QHeaderView::ResizeToContents);
-    h->setSectionResizeMode(COL_TITLE, QHeaderView::Stretch);
-    h->setSectionResizeMode(COL_UPDATED, QHeaderView::ResizeToContents);
     h->setHighlightSections(false);
 
     Ori::Layouts::LayoutV({toolPanel, _tableView}).setMargin(0).setSpacing(0).useFor(this);
@@ -202,6 +285,9 @@ GridViewMemoTab::GridViewMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
 void GridViewMemoTab::showMemo()
 {
     _titleEditor->setText(_memo->title());
+
+    _config.load(_memo->data());
+    applyColumns();
 
     setWindowTitle(_memo->title());
 }
@@ -271,3 +357,68 @@ void GridViewMemoTab::openSelectedMemo()
     if (entry->isMemo())
         emit memoOpenRequested(entry->asMemo());
 }
+
+void GridViewMemoTab::applyColumns()
+{
+    _tableModel->setPropColumns(_config.propColumns);
+    _tableModel->reset();
+
+    auto h = _tableView->horizontalHeader();
+    const auto& cols = _tableModel->columnDefs();
+    for (int i = 0; i < cols.size(); i++)
+        h->setSectionResizeMode(i, cols.at(i).resizeMode);
+}
+
+void GridViewMemoTab::chooseColumns()
+{
+    auto w = Ori::Layouts::LayoutV({}).makeWidgetAuto();
+
+    QList<QCheckBox*> flags;
+    for (const auto& propName : _enot->propNames())
+    {
+        auto flag = new QCheckBox(propName);
+        flag->setChecked(_config.propColumns.contains(propName));
+        w->layout()->addWidget(flag);
+        flags << flag;
+    }
+
+    if (!Ori::Dlg::Dialog(w).exec()) return;
+
+    _config.propColumns.clear();
+    for (auto flag : std::as_const(flags))
+        if (flag->isChecked())
+            _config.propColumns << flag->text();
+    applyColumns();
+
+    MemoUpdateParam update;
+    update.data = _config.toString();
+    _enot->updateMemo(_memo, update);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -50,10 +50,6 @@ public:
         "INSERT INTO Memo (Id, Parent, Title, Type, Data, Created, Updated, Station) "
         "VALUES (:Id, :Parent, :Title, :Type, :Data, :Created, :Updated, :Station)";
 
-    const QString sqlUpdate =
-        "UPDATE Memo SET Title = :Title, Data = :Data, Updated = :Updated, Station = :Station "
-        "WHERE Id = :Id";
-
     const QString sqlDelete = "DELETE FROM Memo WHERE Id = :Id";
 };
 
@@ -225,13 +221,31 @@ QString MemoStore::load(Memo* memo) const
 QString MemoStore::update(Memo* memo, const MemoUpdateParam& update) const
 {
     auto table = memoTable();
-    return ActionQuery(table->sqlUpdate)
-            .param(table->id, memo->id())
-            .param(table->title, update.title)
-            .param(table->data, update.data)
-            .param(table->updated, update.moment)
-            .param(table->station, update.station)
-            .exec();
+
+    QStringList sql;
+    sql << u"UPDATE Memo SET"_s;
+    if (update.title)
+        sql << u"Title = :Title,"_s;
+    if (update.data)
+        sql << u"Data = :Data,"_s;
+    if (update.station)
+        sql << u"Station = :Station,"_s;
+    sql << u"Updated = :Updated WHERE Id = :Id"_s;
+
+    auto q = AnyQuery(sql.join(' ')).param(table->id, memo->id());
+    if (update.title)
+        q.param(table->title, *update.title);
+    if (update.data)
+        q.param(table->data, *update.data);
+    if (update.station)
+        q.param(table->station, *update.station);
+    if (update.moment)
+        q.param(table->updated, *update.moment);
+    else
+        q.param(table->updated, QDateTime::currentDateTime());
+
+    q.exec();
+    return q.error();
 }
 
 QString MemoStore::remove(Memo* memo) const

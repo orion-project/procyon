@@ -30,6 +30,11 @@ public:
     QString countAll(int* count) const;
     QMap<QString, QVariant> selectOptions(int memoId) const;
     QString updateOption(int memoId, const QString& name, const QVariant& value) const;
+    QHash<QString, QString> loadProps(int memoId) const;
+    QStringList loadPropNames() const;
+    QStringList loadPropValues(const QString& name) const;
+    QString deleteProp(int memoId, const QString& name) const;
+    QString updateProp(int memoId, const QString& name, const QString& value) const;
 };
 
 namespace Store

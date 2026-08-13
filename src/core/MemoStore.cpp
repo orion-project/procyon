@@ -5,6 +5,7 @@
 #include "SqlHelper.h"
 
 using namespace Ori::Sql;
+using namespace Qt::StringLiterals;
 
 namespace Store
 {
@@ -79,37 +80,40 @@ public:
         "REPLACE INTO MemoOptions (MemoId, Name, Value) VALUES (:MemoId, :Name, :Value)";
 };
 
-class MemoPropsTableDef : public Ori::Sql::TableDef
+struct MemoPropsTable
 {
-public:
-    MemoPropsTableDef() : Ori::Sql::TableDef("MemoProps") {}
+    inline static const auto& tableName = u"MemoProps"_s;
 
-    const QString memoId = "MemoId";
-    const QString name = "Name";
-    const QString value = "Value";
-
-    QString sqlCreate() const override
+    struct C
     {
-        return QString("CREATE TABLE IF NOT EXISTS %1 ("
-               "MemoId REFERENCES Memo(Id) ON DELETE CASCADE, "
-               "Name, Value)").arg(_tableName);
-    }
+        inline static const auto& memoId = u"MemoId"_s;
+        inline static const auto& name = u"Name"_s;
+        inline static const auto& value = u"Value"_s;
+    };
 
-    const QString sqlSelect(int memoId) const
-    {
-        return QString("SELECT Name, Value from %1 WHERE MemoId = %2").arg(_tableName).arg(memoId);
-    }
+    inline static const auto& sqlCreate =
+        u"CREATE TABLE IF NOT EXISTS MemoProps ("
+       "MemoId REFERENCES Memo(Id) ON DELETE CASCADE, "
+       "Name, Value)"_s;
 
-    const QString sqlUpdate() const
-    {
-        return QString("REPLACE INTO %1 (MemoId, Name, Value) "
-                       "VALUES (:MemoId, :Name, :Value)").arg(_tableName);
-    }
+    inline static const auto& sqlSelect =
+        u"SELECT Name, Value from MemoProps WHERE MemoId = :MemoId"_s;
+
+    inline static const auto& sqlUpdate =
+        u"REPLACE INTO MemoProps (MemoId, Name, Value) VALUES (:MemoId, :Name, :Value)"_s;
+
+    inline static const auto& sqlDelete =
+        u"DELETE FROM MemoProps WHERE MemoId = :MemoId AND Name = :Name"_s;
+
+    inline static const auto& sqlSelectNames =
+        u"SELECT DISTINCT Name from MemoProps ORDER BY Name"_s;
+
+    inline static const auto& sqlSelectValues =
+        u"SELECT DISTINCT Value from MemoProps WHERE Name = :Name ORDER BY Value"_s;
 };
 
 MemoTableDef* memoTable() { static MemoTableDef t; return &t; }
 MemoOptionsTableDef* memoOptionsTable() { static MemoOptionsTableDef t; return &t; }
-MemoPropsTableDef* memoPropsTable() { static MemoPropsTableDef t; return &t; }
 
 } // namespace
 
@@ -136,7 +140,7 @@ QString MemoStore::prepare()
     res = createTable(memoOptionsTable());
     if (!res.isEmpty()) return res;
 
-    res = createTable(memoPropsTable());
+    res = createTable<MemoPropsTable>();
     if (!res.isEmpty()) return res;
 
     return {};
@@ -184,7 +188,7 @@ MemosResult MemoStore::selectAll() const
 
     while (query.next())
     {
-        auto r = query.record();
+        const auto& r = query.record();
 
         Memo *memo = new Memo;
         memo->_id = r.value(table->id).toInt();
@@ -212,7 +216,7 @@ QString MemoStore::load(Memo* memo) const
     if (!query.next())
         return QString("Memo #%1 does not exist.").arg(memo->id());
 
-    QSqlRecord r = query.record();
+    const auto& r = query.record();
     memo->_data = r.value(table->data).toString();
     memo->_isLoaded = true;
     return QString();
@@ -263,7 +267,7 @@ QMap<QString, QVariant> MemoStore::selectOptions(int memoId) const
 
     while (query.next())
     {
-        auto r = query.record();
+        const auto& r = query.record();
         options[r.value(table->name).toString()] = r.value(table->value);
     }
 
@@ -278,4 +282,79 @@ QString MemoStore::updateOption(int memoId, const QString& name, const QVariant&
             .param(table->name, name)
             .param(table->value, value)
             .exec();
+}
+
+QHash<QString, QString> MemoStore::loadProps(int memoId) const
+{
+    using T = MemoPropsTable;
+
+    auto q = AnyQuery(T::sqlSelect).param(T::C::memoId, memoId).exec();
+    if (q.isFailed())
+    {
+        // TODO: add protocol
+        qWarning() << "Unable to load props for memo" << memoId << q.error();
+        return {};
+    }
+
+    QHash<QString, QString> result;
+    while (q.next())
+        result.insert(q.valueStr(T::C::name), q.valueStr(T::C::value));
+    return result;
+}
+
+QStringList MemoStore::loadPropNames() const
+{
+    using T = MemoPropsTable;
+
+    auto q = AnyQuery(T::sqlSelectNames).exec();
+    if (q.isFailed())
+    {
+        // TODO: add protocol
+        qWarning() << "Unable to load memo props names" << q.error();
+        return {};
+    }
+
+    QStringList result;
+    while (q.next())
+        result.append(q.valueStr(T::C::name));
+    return result;
+}
+
+QStringList MemoStore::loadPropValues(const QString& name) const
+{
+    using T = MemoPropsTable;
+
+    auto q = AnyQuery(T::sqlSelectValues).param(T::C::name, name).exec();
+    if (q.isFailed())
+    {
+        // TODO: add protocol
+        qWarning() << "Unable to load values for prop" << name << q.error();
+        return {};
+    }
+
+    QStringList result;
+    while (q.next())
+        result.append(q.valueStr(T::C::value));
+    return result;
+}
+
+QString MemoStore::deleteProp(int memoId, const QString& name) const
+{
+    using T = MemoPropsTable;
+    return AnyQuery(T::sqlDelete)
+        .param(T::C::memoId, memoId)
+        .param(T::C::name, name)
+        .exec()
+        .error();
+}
+
+QString MemoStore::updateProp(int memoId, const QString& name, const QString& value) const
+{
+    using T = MemoPropsTable;
+    return AnyQuery(T::sqlUpdate)
+        .param(T::C::memoId, memoId)
+        .param(T::C::name, name)
+        .param(T::C::value, value)
+        .exec()
+        .error();
 }

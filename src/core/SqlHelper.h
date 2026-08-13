@@ -77,6 +77,49 @@ private:
 };
 
 
+class AnyQuery
+{
+public:
+    AnyQuery(const QString& sql)
+    {
+        _error = QStringLiteral("Query is not executed");
+        _query.prepare(sql);
+    }
+
+    AnyQuery& param(const QString& name, const QVariant& value)
+    {
+        _query.bindValue(':' + name, value);
+        return *this;
+    }
+
+    AnyQuery& exec()
+    {
+        if (!_query.exec())
+            _error = SqlHelper::errorText(_query, true);
+        else _error.clear();
+        return *this;
+    }
+
+    bool next()
+    {
+        if (!_query.isSelect()) return false;
+        bool ok =  _query.isValid() ? _query.next(): _query.first();
+        if (ok) _record = _query.record();
+        return ok;
+    }
+
+    bool isFailed() const { return !_error.isEmpty(); }
+    const QString& error() const { return _error; }
+    const QSqlRecord& record() const { return _record; }
+
+    QString valueStr(QAnyStringView name) const { return _record.value(name).toString(); }
+
+private:
+    QString _error;
+    QSqlQuery _query;
+    QSqlRecord _record;
+};
+
 class TableDef
 {
 public:
@@ -120,6 +163,17 @@ protected:
     QString _tableName;
 };
 
+template <class T>
+QString createTable()
+{
+    auto res = ActionQuery(T::sqlCreate).exec();
+    if (!res.isEmpty())
+    {
+        QSqlDatabase::database().rollback();
+        return QString("Unable to create table '%1'.\n\n%2").arg(T::tableName, res);
+    }
+    return QString();
+}
 
 QString createTable(TableDef *table);
 QString addColumnIfNotExist(const QString& tableName, const QString& columnName);

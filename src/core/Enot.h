@@ -85,13 +85,14 @@ public:
     QDateTime updated() const { return _updated; }
     QString station() const { return _station; }
     bool isLoaded() const { return _isLoaded; }
-    QString propValue(const QString& name) const;
+    const QHash<QString, QString>& props();
 
 private:
     MemoType* _type = nullptr;
     QString _data, _station;
     bool _isLoaded = false;
     QDateTime _created, _updated;
+    std::optional<QHash<QString, QString>> _props;
 
     friend class Enot;
     friend class MemoStore;
@@ -140,8 +141,8 @@ public:
     bool deleteMemo(Memo* memo);
     QString loadMemo(Memo* memo);
 
-    QList<QString> propNames();
-    QList<QString> propValues(const QString& name);
+    QStringList propNames();
+    QStringList propValues(const QString& name);
     void addPossiblePropValue(const QString& name, const QString& value);
 
 signals:
@@ -158,8 +159,8 @@ private:
     Folder _root;
     QMap<int, Memo*> _allMemos;
     QMap<int, Folder*> _allFolders;
-    std::optional<QList<QString>> _propNames;
-    QHash<QString, QList<QString>> _propValues;
+    std::optional<QStringList> _propNames;
+    QHash<QString, QStringList> _propValues;
 
     static QString prepareStore(const QString fileName);
 

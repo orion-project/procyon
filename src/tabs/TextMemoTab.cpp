@@ -76,10 +76,12 @@ TextMemoTab::TextMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
 
     _propsPanel = new MemoPropsPanel(enot);
     _propsPanel->setVisible(false);
-    for (const auto& name : enot->propNames())
-        _propsPanel->addProp(name, memo->propValue(name));
 
     Ori::Layouts::LayoutV({toolPanel, _propsPanel, _memoEditor}).setMargin(0).setSpacing(0).useFor(this);
+
+    const auto& props = memo->props();
+    for (auto it = props.cbegin(); it != props.cend(); it++)
+        _propsPanel->addProp(it.key(), it.value());
 
     showMemo();
     toggleEditMode(false);

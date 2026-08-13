@@ -52,10 +52,11 @@ Memo::~Memo()
 {
 }
 
-QString Memo::propValue(const QString& name) const
+const QHash<QString, QString>& Memo::props()
 {
-    // TODO: read from DB
-    return {};
+    if (!_props)
+        _props = Store::memos()->loadProps(id());
+    return _props.value();
 }
 
 //------------------------------------------------------------------------------
@@ -348,6 +349,45 @@ bool Enot::updateMemo(Memo* memo, MemoUpdateParam update)
     memo->_updated = update.moment;
     memo->_station = update.station;
 
+    if (update.props)
+    {
+        QStringList errors;
+
+        auto names = memo->props().keys();
+        for (const auto& name : std::as_const(names))
+        {
+            if (!update.props->contains(name))
+            {
+                auto err = Store::memos()->deleteProp(memo->id(), name);
+                if (!err.isEmpty())
+                    errors << err;
+                else
+                    memo->_props->remove(name);
+            }
+        }
+
+        for (auto it = update.props->cbegin(); it != update.props->cend(); it++)
+        {
+            auto name = it.key();
+            auto value = it.value();
+            if (value != memo->_props->value(name))
+            {
+                auto err = Store::memos()->updateProp(memo->id(), name, value);
+                if (!err.isEmpty())
+                    errors << err;
+                else
+                    memo->_props->insert(name, value);
+            }
+        }
+
+        if (!errors.isEmpty())
+        {
+            emit errorOccurred(errors.join('\n'));
+            // Don't return false here,
+            // since the memo itself is saved successfully
+        }
+    }
+
     emit entryUpdated(memo);
 
     // TODO sort memos after renaming
@@ -450,22 +490,17 @@ QString Enot::getOrMakeUid()
     return uid;
 }
 
-QList<QString> Enot::propNames()
+QStringList Enot::propNames()
 {
     if (!_propNames)
-    {
-        // TODO: load from DB
-        _propNames = QList<QString>();
-    }
+        _propNames = Store::memos()->loadPropNames();
     return _propNames.value();
 }
 
-QList<QString> Enot::propValues(const QString& name)
+QStringList Enot::propValues(const QString& name)
 {
     if (!_propValues.contains(name))
-    {
-        // TODO: load from DB
-    }
+        _propValues.insert(name, Store::memos()->loadPropValues(name));
     return _propValues.value(name);
 }
 

@@ -2,7 +2,7 @@
 
 namespace SqlHelper {
 
-void addField(QSqlRecord &record, const QString &name, QVariant::Type type, const QVariant &value)
+void addField(QSqlRecord &record, const QString &name, QMetaType type, const QVariant &value)
 {
     QSqlField field(name, type);
     field.setValue(value);
@@ -11,7 +11,7 @@ void addField(QSqlRecord &record, const QString &name, QVariant::Type type, cons
 
 void addField(QSqlRecord &record, const QString &name, const QVariant &value)
 {
-    QSqlField field(name, value.type());
+    QSqlField field(name, value.metaType());
     field.setValue(value);
     record.append(field);
 }
@@ -41,7 +41,7 @@ QString errorText(const QSqlTableModel *model)
 
 QString errorText(const QSqlError &error)
 {
-    return QString("%1\n%2").arg(error.driverText()).arg(error.databaseText());
+    return QString("%1\n%2").arg(error.driverText(), error.databaseText());
 }
 
 } // namespace SqlHelper
@@ -58,7 +58,7 @@ QString createTable(TableDef *table)
     if (!res.isEmpty())
     {
         QSqlDatabase::database().rollback();
-        return QString("Unable to create table '%1'.\n\n%2").arg(table->tableName()).arg(res);
+        return QString("Unable to create table '%1'.\n\n%2").arg(table->tableName(), res);
     }
     return QString();
 }

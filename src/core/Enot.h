@@ -17,10 +17,10 @@ class MemoType;
 
 struct MemoUpdateParam
 {
-    QString title;
-    QString data;
-    QDateTime moment;
-    QString station;
+    std::optional<QString> title;
+    std::optional<QString> data;
+    std::optional<QDateTime> moment;
+    std::optional<QString> station;
     std::optional<QHash<QString, QString>> props;
 };
 

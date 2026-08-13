@@ -344,10 +344,14 @@ bool Enot::updateMemo(Memo* memo, MemoUpdateParam update)
         return false;
     }
 
-    memo->_title = update.title;
-    memo->_data = update.data;
-    memo->_updated = update.moment;
-    memo->_station = update.station;
+    if (update.title)
+        memo->_title = *update.title;
+    if (update.data)
+        memo->_data = *update.data;
+    if (update.moment)
+        memo->_updated = *update.moment;
+    if (update.station)
+        memo->_station = *update.station;
 
     if (update.props)
     {

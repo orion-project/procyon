@@ -2,7 +2,7 @@
 #define MEMO_STORE_H
 
 #include <QString>
-#include <QMap>
+#include <QHash>
 #include <QVariant>
 
 class Memo;
@@ -28,7 +28,7 @@ public:
     QString load(Memo *memo) const;
     MemosResult selectAll() const;
     QString countAll(int* count) const;
-    QMap<QString, QVariant> selectOptions(int memoId) const;
+    QHash<QString, QVariant> selectOptions(int memoId) const;
     QString updateOption(int memoId, const QString& name, const QVariant& value) const;
     QHash<QString, QString> loadProps(int memoId) const;
     QStringList loadPropNames() const;

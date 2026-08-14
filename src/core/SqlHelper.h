@@ -176,7 +176,8 @@ QString createTable()
 }
 
 QString createTable(TableDef *table);
-QString addColumnIfNotExist(const QString& tableName, const QString& columnName);
+QString maybeAddColumn(const QString& tableName, const QString& columnName);
+QString maybeAddConstrain(const QString& tableName, const QStringList& columns);
 
 } // namespace Sql
 } // namespace Ori

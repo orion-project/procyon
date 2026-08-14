@@ -53,27 +53,28 @@ public:
     const QString sqlDelete = "DELETE FROM Memo WHERE Id = :Id";
 };
 
-class MemoOptionsTableDef : public Ori::Sql::TableDef
+struct MemoOptionsTable
 {
-public:
-    MemoOptionsTableDef() : Ori::Sql::TableDef("MemoOptions") {}
+    inline static const auto& tableName = u"MemoOptions"_s;
 
-    const QString memoId = "MemoId";
-    const QString name = "Name";
-    const QString value = "Value";
+    struct C
+    {
+        inline static const auto& memoId = u"MemoId"_s;
+        inline static const auto& name = u"Name"_s;
+        inline static const auto& value = u"Value"_s;
+    };
 
-    QString sqlCreate() const override {
-        return "CREATE TABLE IF NOT EXISTS MemoOptions ("
-               "MemoId REFERENCES Memo(Id) ON DELETE CASCADE, "
-               "Name, Value)";
-    }
+    inline static const auto& sqlCreate =
+        u"CREATE TABLE IF NOT EXISTS MemoOptions ("
+        "MemoId REFERENCES Memo(Id) ON DELETE CASCADE, "
+        "Name, Value)"_s;
 
-    const QString sqlSelect(int memoId) const {
-        return QString("SELECT Name, Value from MemoOptions WHERE MemoId = %1").arg(memoId);
-    }
+    inline static const auto& sqlSelect =
+        u"SELECT Name, Value from MemoOptions WHERE MemoId = :MemoId"_s;
 
-    const QString sqlUpdate =
-        "REPLACE INTO MemoOptions (MemoId, Name, Value) VALUES (:MemoId, :Name, :Value)";
+    inline static const auto& sqlUpdate =
+        u"REPLACE INTO MemoOptions (MemoId, Name, Value) VALUES (:MemoId, :Name, :Value)"
+        "ON CONFLICT (MemoId, Name) DO UPDATE SET Value = :Value"_s;
 };
 
 struct MemoPropsTable
@@ -96,7 +97,8 @@ struct MemoPropsTable
         u"SELECT Name, Value from MemoProps WHERE MemoId = :MemoId"_s;
 
     inline static const auto& sqlUpdate =
-        u"REPLACE INTO MemoProps (MemoId, Name, Value) VALUES (:MemoId, :Name, :Value)"_s;
+        u"INSERT INTO MemoProps (MemoId, Name, Value) VALUES (:MemoId, :Name, :Value) "
+        "ON CONFLICT (MemoId, Name) DO UPDATE SET Value = :Value"_s;
 
     inline static const auto& sqlDelete =
         u"DELETE FROM MemoProps WHERE MemoId = :MemoId AND Name = :Name"_s;
@@ -109,7 +111,6 @@ struct MemoPropsTable
 };
 
 MemoTableDef* memoTable() { static MemoTableDef t; return &t; }
-MemoOptionsTableDef* memoOptionsTable() { static MemoOptionsTableDef t; return &t; }
 
 } // namespace
 
@@ -124,20 +125,33 @@ QString MemoStore::prepare()
     QString res = createTable(table);
     if (!res.isEmpty()) return res;
 
-    res = addColumnIfNotExist(table->tableName(), table->updated);
+    res = maybeAddColumn(table->tableName(), table->updated);
     if (!res.isEmpty()) return res;
 
-    res = addColumnIfNotExist(table->tableName(), table->created);
+    res = maybeAddColumn(table->tableName(), table->created);
     if (!res.isEmpty()) return res;
 
-    res = addColumnIfNotExist(table->tableName(), table->station);
+    res = maybeAddColumn(table->tableName(), table->station);
     if (!res.isEmpty()) return res;
 
-    res = createTable(memoOptionsTable());
-    if (!res.isEmpty()) return res;
+    {
+        using T = MemoOptionsTable;
 
-    res = createTable<MemoPropsTable>();
-    if (!res.isEmpty()) return res;
+        res = createTable<T>();
+        if (!res.isEmpty()) return res;
+
+        res = maybeAddConstrain(T::tableName, {T::C::memoId, T::C::name});
+        if (!res.isEmpty()) return res;
+    }
+    {
+        using T = MemoPropsTable;
+
+        res = createTable<T>();
+        if (!res.isEmpty()) return res;
+
+        //res = maybeAddConstrain(T::tableName, {T::C::memoId, T::C::name});
+        //if (!res.isEmpty()) return res;
+    }
 
     return {};
 }
@@ -267,35 +281,32 @@ QString MemoStore::countAll(int *count) const
     return QString();
 }
 
-QMap<QString, QVariant> MemoStore::selectOptions(int memoId) const
+QHash<QString, QVariant> MemoStore::selectOptions(int memoId) const
 {
-    QMap<QString, QVariant> options;
-    auto table = memoOptionsTable();
+    using T = MemoOptionsTable;
 
-    SelectQuery query(table->sqlSelect(memoId));
-    if (query.isFailed())
+    auto q = AnyQuery(T::sqlSelect).param(T::C::memoId, memoId).exec();
+    if (q.isFailed())
     {
-        qWarning() << "Unable to select options for memo" << memoId << query.error();
-        return options;
+        qWarning() << "Unable to select options for memo" << memoId << q.error();
+        return {};
     }
 
-    while (query.next())
-    {
-        const auto& r = query.record();
-        options[r.value(table->name).toString()] = r.value(table->value);
-    }
-
+    QHash<QString, QVariant> options;
+    while (q.next())
+        options.insert(q.valueStr(T::C::name), q.valueStr(T::C::value));
     return options;
 }
 
 QString MemoStore::updateOption(int memoId, const QString& name, const QVariant& value) const
 {
-    auto table = memoOptionsTable();
-    return ActionQuery(table->sqlUpdate)
-            .param(table->memoId, memoId)
-            .param(table->name, name)
-            .param(table->value, value)
-            .exec();
+    using T = MemoOptionsTable;
+    return AnyQuery(T::sqlUpdate)
+            .param(T::C::memoId, memoId)
+            .param(T::C::name, name)
+            .param(T::C::value, value)
+            .exec()
+            .error();
 }
 
 QHash<QString, QString> MemoStore::loadProps(int memoId) const

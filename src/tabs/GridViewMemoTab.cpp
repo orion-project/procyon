@@ -21,11 +21,12 @@
 #include <QTableView>
 #include <QToolBar>
 #include <QToolButton>
+#include <QSortFilterProxyModel>
 #include <QVBoxLayout>
 
 namespace {
 
-enum class ColumnKind { NONE, ID };
+enum class ColumnKind { NONE, ID, PROP };
 
 struct ColumnDef
 {
@@ -43,7 +44,7 @@ struct ColumnDef
 class GridViewTableModel : public QAbstractTableModel
 {
 public:
-    GridViewTableModel(Memo *memo) : QAbstractTableModel()
+    GridViewTableModel(QObject *parent, Memo *memo) : QAbstractTableModel(parent)
     {
         _self = memo;
         _folder = memo->parent();
@@ -152,6 +153,7 @@ public:
         for (const auto& propName : propNames)
         {
             _columnDefs << ColumnDef {
+                .kind = ColumnKind::PROP,
                 .header = [propName]{ return propName; },
                 .value = [propName](Memo* memo){ return memo->props().value(propName); },
             };
@@ -176,46 +178,6 @@ private:
     bool _isRowCountChanging = false;
     QList<ColumnDef> _columnDefs;
 };
-
-//------------------------------------------------------------------------------
-//                           GridViewMemoTab::Config
-//------------------------------------------------------------------------------
-
-QString GridViewMemoTab::Config::toString() const
-{
-    QJsonArray jsonCols;
-    for (const auto& propName : propColumns)
-        jsonCols.append(propName);
-
-    QJsonObject jsonRoot;
-    jsonRoot["propColumns"] = jsonCols;
-
-    return QJsonDocument(jsonRoot).toJson();
-}
-
-void GridViewMemoTab::Config::load(const QString& s)
-{
-    if (s.isEmpty())
-        return;
-
-    QJsonParseError jsonErr;
-    auto jsonDoc = QJsonDocument::fromJson(s.toUtf8(), &jsonErr);
-    if (jsonErr.error != QJsonParseError::NoError)
-    {
-        qWarning() << "Failed to parse grid config" << jsonErr.errorString();
-        return;
-    }
-
-    auto jsonRoot = jsonDoc.object();
-
-    auto jsonCols = jsonRoot["propColumns"].toArray();
-    for (auto it = jsonCols.cbegin(); it != jsonCols.cend(); it++)
-    {
-        auto propName = it->toString();
-        if (!propName.isEmpty())
-            propColumns << propName;
-    }
-}
 
 //------------------------------------------------------------------------------
 //                             GridViewMemoTab
@@ -258,26 +220,31 @@ GridViewMemoTab::GridViewMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
 
     auto toolPanel = TabHelpers::makeHeaderPanel({_titleEditor, _toolbar});
 
-    _tableModel = new GridViewTableModel(memo);
+    _tableModel = new GridViewTableModel(this, memo);
     connect(_enot, &Enot::entryCreating, _tableModel, &GridViewTableModel::itemCreating);
     connect(_enot, &Enot::entryCreated, _tableModel, &GridViewTableModel::itemCreated);
     connect(_enot, &Enot::entryDeleted, _tableModel, &GridViewTableModel::itemRemoved);
     connect(_enot, &Enot::entryDeleting, _tableModel, &GridViewTableModel::itemRemoving);
     connect(_enot, &Enot::entryDeleted, _tableModel, &GridViewTableModel::itemRemoved);
 
+    _proxyModel = new QSortFilterProxyModel(this);
+    _proxyModel->setSourceModel(_tableModel);
+
     _tableView = new QTableView;
-    _tableView->setModel(_tableModel);
+    _tableView->setModel(_proxyModel);
     _tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     _tableView->setSelectionMode(QAbstractItemView::SingleSelection);
     _tableView->verticalHeader()->setVisible(false);
     _tableView->setContextMenuPolicy(Qt::CustomContextMenu);
     _tableView->addAction(actionOpen);
+    _tableView->setSortingEnabled(true);
     connect(_tableView, &QTableView::doubleClicked, this, &Self::openSelectedMemo);
     connect(_tableView, &QTableView::customContextMenuRequested, this, &Self::showContextMenu);
 
     auto h = _tableView->horizontalHeader();
     h->setMinimumSectionSize(32);
     h->setHighlightSections(false);
+    connect(h, &QHeaderView::sectionClicked, this, &Self::saveSortMode);
 
     Ori::Layouts::LayoutV({toolPanel, _tableView}).setMargin(0).setSpacing(0).useFor(this);
 
@@ -289,8 +256,19 @@ void GridViewMemoTab::showMemo()
 {
     _titleEditor->setText(_memo->title());
 
-    _config.load(_memo->data());
-    applyColumns();
+    auto config = Store::memos()->selectOptions(_memo->id());
+
+    QString sortOption = config.value("sort").toString();
+    int sortColumn = qAbs(sortOption.toInt());
+    auto sortOrder = sortOption.startsWith('-') ? Qt::DescendingOrder : Qt::AscendingOrder;
+    _proxyModel->sort(sortColumn, sortOrder);
+
+    QStringList propColumns;
+    QString columnOption = config.value("columns").toString();
+    for (const auto& prop : QJsonDocument::fromJson(columnOption.toUtf8()).array())
+        propColumns << prop.toString();
+
+    applyColumns(propColumns);
 
     setWindowTitle(_memo->title());
 }
@@ -343,7 +321,7 @@ Entry* GridViewMemoTab::selectedEntry() const
 {
     QModelIndexList selection = _tableView->selectionModel()->selectedRows();
     if (selection.empty()) return nullptr;
-    int row = selection.at(0).row();
+    int row = _proxyModel->mapToSource(selection.at(0)).row();
     return _memo->parent()->memos().at(row);
 }
 
@@ -361,9 +339,9 @@ void GridViewMemoTab::openSelectedMemo()
         emit memoOpenRequested(entry->asMemo());
 }
 
-void GridViewMemoTab::applyColumns()
+void GridViewMemoTab::applyColumns(const QStringList &propNames)
 {
-    _tableModel->setPropColumns(_config.propColumns);
+    _tableModel->setPropColumns(propNames);
     _tableModel->reset();
 
     auto h = _tableView->horizontalHeader();
@@ -376,29 +354,39 @@ void GridViewMemoTab::chooseColumns()
 {
     auto w = Ori::Layouts::LayoutV({}).makeWidgetAuto();
 
+    QSet<QString> curColumns;
+    for (const auto& colDef : _tableModel->columnDefs())
+        if (colDef.kind == ColumnKind::PROP)
+            curColumns << colDef.header();
+
     QList<QCheckBox*> flags;
     for (const auto& propName : _enot->propNames())
     {
         auto flag = new QCheckBox(propName);
-        flag->setChecked(_config.propColumns.contains(propName));
+        flag->setChecked(curColumns.contains(propName));
         w->layout()->addWidget(flag);
         flags << flag;
     }
 
     if (!Ori::Dlg::Dialog(w).exec()) return;
 
-    _config.propColumns.clear();
+    QStringList newColumns;
     for (auto flag : std::as_const(flags))
         if (flag->isChecked())
-            _config.propColumns << flag->text();
-    applyColumns();
+            newColumns << flag->text();
+    applyColumns(newColumns);
 
-    MemoUpdateParam update;
-    update.data = _config.toString();
-    _enot->updateMemo(_memo, update);
+    Store::memos()->updateOption(_memo->id(), "columns",
+        QJsonDocument(QJsonArray::fromStringList(newColumns)).toJson(QJsonDocument::Compact));
 }
 
-
+void GridViewMemoTab::saveSortMode()
+{
+    QString value = QString::number(_proxyModel->sortColumn());
+    if (_proxyModel->sortOrder() == Qt::DescendingOrder)
+        value = '-' + value;
+    Store::memos()->updateOption(_memo->id(), "sort", value);
+}
 
 
 

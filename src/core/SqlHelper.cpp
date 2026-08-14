@@ -63,7 +63,7 @@ QString createTable(TableDef *table)
     return QString();
 }
 
-QString addColumnIfNotExist(const QString& tableName, const QString& columnName)
+QString maybeAddColumn(const QString& tableName, const QString& columnName)
 {
     SelectQuery query(QString("SELECT * FROM sqlite_master WHERE type = 'table' "
                               "AND name = '%1' AND sql LIKE '%%%2%%'").arg(tableName, columnName));
@@ -86,6 +86,14 @@ QString addColumnIfNotExist(const QString& tableName, const QString& columnName)
     }
 
     return QString();
+}
+
+QString maybeAddConstrain(const QString& tableName, const QStringList& columns)
+{
+    QString name = QString("%1_%2").arg(tableName, columns.join('_'));
+    QString sql = QString("CREATE UNIQUE INDEX IF NOT EXISTS %1 ON %2 (%3)")
+                      .arg(name, tableName, columns.join(','));
+    return AnyQuery(sql).exec().error();
 }
 
 } // namespace Sql

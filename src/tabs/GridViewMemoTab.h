@@ -9,6 +9,7 @@ class QLineEdit;
 class QMenu;
 class QTableView;
 class QToolBar;
+class QSortFilterProxyModel;
 QT_END_NAMESPACE
 
 class Entry;
@@ -32,17 +33,8 @@ private:
     QAction *_actionEdit, *_actionSave, *_actionCancel;
     QTableView *_tableView;
     GridViewTableModel *_tableModel;
+    QSortFilterProxyModel *_proxyModel;
     QMenu *_contextMenu, *_toolMenu;
-
-    struct Config
-    {
-        QStringList propColumns;
-
-        QString toString() const;
-        void load(const QString&);
-    };
-
-    Config _config;
 
     void showMemo();
     void cancelEdit();
@@ -55,7 +47,8 @@ private:
 
     Entry* selectedEntry() const;
 
-    void applyColumns();
+    void applyColumns(const QStringList& propNames);
+    void saveSortMode();
 };
 
 #endif // GRID_VIEW_MEMO_TAB_H

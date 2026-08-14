@@ -230,8 +230,11 @@ bool TextMemoTab::saveEdit()
     _propsPanel->apply();
 
     MemoUpdateParam update;
-    update.title = _titleEditor->text().trimmed();
-    update.data = _memoEditor->data();
+    QString newTitle = _titleEditor->text().trimmed();
+    if (newTitle != _memo->title())
+        update.title = newTitle;
+    if (_memoEditor->isModified())
+        update.data = _memoEditor->data();
     if (_propsPanel->hasValues())
         update.props = _propsPanel->values();
 

@@ -195,6 +195,9 @@ QString GridViewMemoTab::Config::toString() const
 
 void GridViewMemoTab::Config::load(const QString& s)
 {
+    if (s.isEmpty())
+        return;
+
     QJsonParseError jsonErr;
     auto jsonDoc = QJsonDocument::fromJson(s.toUtf8(), &jsonErr);
     if (jsonErr.error != QJsonParseError::NoError)
@@ -232,7 +235,7 @@ GridViewMemoTab::GridViewMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     auto toolMenuButton = new QToolButton;
     toolMenuButton->setPopupMode(QToolButton::InstantPopup);
     toolMenuButton->setToolTip(tr("Options"));
-    toolMenuButton->setIcon(QIcon(":/icon/settings"));
+    toolMenuButton->setIcon(QIcon(":/toolbar/menu"));
     toolMenuButton->setMenu(_toolMenu);
 
     _actionEdit = _toolbar->addAction(QIcon(":/toolbar/edit"), tr("Edit"), this, &Self::beginEdit);

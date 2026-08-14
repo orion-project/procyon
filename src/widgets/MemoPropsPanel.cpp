@@ -114,12 +114,25 @@ MemoPropsPanel::MemoPropsPanel(Enot* enot) : QFrame(), _enot(enot)
 
 void MemoPropsPanel::addPropViaDlg()
 {
+    auto valueEditor = new QComboBox;
+    valueEditor->setEditable(true);
+
     auto nameEditor = new QComboBox;
     nameEditor->setEditable(true);
     for (const auto& propName : _enot->propNames())
         nameEditor->addItem(propName);
 
-    auto valueEditor = new QLineEdit;
+    auto fillPropValues = [this, nameEditor, valueEditor]{
+        //auto oldText = valueEditor->currentText();
+        auto propName = nameEditor->currentText();
+        valueEditor->clear();
+        for (const auto& propValue : _enot->propValues(propName))
+            valueEditor->addItem(propValue);
+        //valueEditor->setCurrentText(oldText);
+    };
+
+    connect(nameEditor, &QComboBox::currentTextChanged, this, fillPropValues);
+    fillPropValues();
 
     auto widget = Ori::Layouts::LayoutV({
         tr("Name:"), nameEditor,
@@ -131,7 +144,7 @@ void MemoPropsPanel::addPropViaDlg()
         .withVerification([nameEditor, valueEditor]{
             if (nameEditor->currentText().trimmed().isEmpty())
                 return tr("Property name must not be empty");
-            if (valueEditor->text().trimmed().isEmpty())
+            if (valueEditor->currentText().trimmed().isEmpty())
                 return tr("Property value must not be empty");
             return QString();
         });
@@ -139,7 +152,7 @@ void MemoPropsPanel::addPropViaDlg()
     if (dlg.exec())
     {
         auto name = nameEditor->currentText().trimmed();
-        auto value = valueEditor->text().trimmed();
+        auto value = valueEditor->currentText().trimmed();
         _enot->addPossiblePropValue(name, value);
         if (_valueViews.contains(name))
         {

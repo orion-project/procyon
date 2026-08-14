@@ -200,6 +200,7 @@ Enot::Enot(const QString& fileName) : QObject(), _fileName(fileName)
     _root._id = 0;
     _root._title = QFileInfo(fileName).baseName();
     _allFolders.insert(_root.id(), &_root);
+    _station = QSysInfo::machineHostName();
 }
 
 Enot::~Enot()
@@ -334,6 +335,9 @@ MemoResult Enot::createMemo(Folder* folder, MemoType* memoType)
 
 bool Enot::updateMemo(Memo* memo, MemoUpdateParam update)
 {
+    if (update.IsEmpty())
+        return true;
+
     update.moment = QDateTime::currentDateTime();
     update.station = _station;
 
@@ -348,10 +352,8 @@ bool Enot::updateMemo(Memo* memo, MemoUpdateParam update)
         memo->_title = *update.title;
     if (update.data)
         memo->_data = *update.data;
-    if (update.moment)
-        memo->_updated = *update.moment;
-    if (update.station)
-        memo->_station = *update.station;
+    memo->_updated = *update.moment;
+    memo->_station = *update.station;
 
     if (update.props)
     {
@@ -510,6 +512,9 @@ QStringList Enot::propValues(const QString& name)
 
 void Enot::addPossiblePropValue(const QString& name, const QString& value)
 {
+    if (!_propNames)
+        _propNames = Store::memos()->loadPropNames();
+
     if (!_propNames->contains(name))
     {
         _propNames->append(name);

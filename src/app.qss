@@ -299,7 +299,10 @@ QToolButton {
 QToolButton:hover {
   background: $selection-color;
 }
-#button_preview {
+QToolButton::menu-indicator {
+  image: none;
+}
+#button_preview {memom
   font-size: $main-font-size;
 }
 

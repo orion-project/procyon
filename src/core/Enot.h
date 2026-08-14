@@ -22,6 +22,11 @@ struct MemoUpdateParam
     std::optional<QDateTime> moment;
     std::optional<QString> station;
     std::optional<QHash<QString, QString>> props;
+
+    bool IsEmpty() const
+    {
+        return !title && !data && !moment && !station && !props;
+    }
 };
 
 //------------------------------------------------------------------------------

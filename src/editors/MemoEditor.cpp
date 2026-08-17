@@ -7,7 +7,7 @@
 #include "../spellcheck/Spellchecker.h"
 #include "../widgets/MemoTextEdit.h"
 
-#include "orion/helpers/OriLayouts.h"
+#include "helpers/OriLayouts.h"
 
 #include <QStyle>
 #include <QTimer>

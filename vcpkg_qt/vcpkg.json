@@ -1,0 +1,23 @@
+{
+  "dependencies": [
+    "hoedown",
+    "hunspell",
+    {
+      "name": "qtbase",
+      "features": [
+        "widgets"
+      ]
+    },
+    "qtsvg"
+  ],
+  "overrides": [
+    {
+      "name": "qtbase",
+      "version": "6.11.1"
+    },
+    {
+      "name": "qtsvg",
+      "version": "6.11.1"
+    }
+  ]
+}

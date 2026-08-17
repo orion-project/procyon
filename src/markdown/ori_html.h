@@ -7,8 +7,16 @@
 extern "C" {
 #endif
 
-hoedown_renderer* hoedown_html_renderer_new_ori() __attribute__ ((malloc));
+#if defined(_MSC_VER)
+#define HOEDOWN_MALLOC
+#else
+#define HOEDOWN_MALLOC __attribute__ ((malloc))
+#endif
+
+hoedown_renderer* hoedown_html_renderer_new_ori() HOEDOWN_MALLOC;
 void hoedown_html_renderer_free_ori(hoedown_renderer *renderer);
+
+#undef HOEDOWN_MALLOC
 
 #ifdef __cplusplus
 }

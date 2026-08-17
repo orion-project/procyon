@@ -3,7 +3,7 @@
 
 #include <QWidget>
 
-#include "orion/tools/OriHighlighter.h"
+#include "tools/OriHighlighter.h"
 
 QT_BEGIN_NAMESPACE
 class QActionGroup;

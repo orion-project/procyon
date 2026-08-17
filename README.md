@@ -28,8 +28,10 @@ Clone the repo:
 ```bash
 git clone https://github.com/orion-project/procyon
 cd procyon
-git submodule update --init --recursive 
+git submodule update --init --recursive
 ```
+
+### Build with Qt provided by vcpkg
 
 Configure the project:
 
@@ -41,7 +43,7 @@ cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%/scripts/buildsystems/vcp
 cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake -DUSE_VCPKG_QT=ON
 
 # For MSVC, regenerate *.vcxproj
-# Normally should be done automatically, but can be usefull to run manually 
+# Normally should be done automatically, but can be usefull to run manually
 # in case of build issues because of configuration mismatch,
 # e.g. after switching between shared and static builds or renaming some source files
 cmake -S . -B build
@@ -53,6 +55,20 @@ Build the project:
 # Build in debug mode, results will be in build*/Debug
 cmake --build build
 
-# Build in release mode, results will be in build*/Release 
+# Build in release mode, results will be in build*/Release
 cmake --build build --config Release
 ```
+
+In [Qt Creator](https://github.com/qt-creator/qt-creator) open CMakeLists.txt as project and import configuration from the `build` directory.
+
+### Build with Qt provided by Online Installer
+
+Prepare dependencies. This command downloads dependencies and builds them into the `vcpkg_installed` directory.
+
+```bash
+vcpkg install
+```
+
+In [Qt Creator](https://github.com/qt-creator/qt-creator) open CMakeLists.txt as project and configure with one of installed Qt kit, e.g. `Desktop Qt 6.10.0 MSVC2022 64bit` or newer. Use [CMake 4.\*](https://cmake.org), Cmake 3.\* likely will not found dependencies' cmake-files when configuring the project.
+
+The `build` directory is not used in this mode. Resulting executable goes to the `bin` directory.

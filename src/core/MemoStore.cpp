@@ -168,7 +168,7 @@ QString MemoStore::create(Memo* memo) const
     memo->_id = newId;
 
     auto res = ActionQuery(table->sqlInsert)
-            .param(table->parent, memo->parent() ? memo->parent()->asFolder()->id() : 0)
+            .param(table->parent, memo->parent() ? memo->parent()->id() : 0)
             .param(table->id, memo->id())
             .param(table->title, memo->title())
             .param(table->type, memo->type()->name())

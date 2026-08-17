@@ -145,11 +145,14 @@ public:
             return entry->id();
     
         case Qt::DecorationRole:
-            if (entry->isRoot())
-                return _iconRoot;
-            // TODO different icons for opened and closed folder
-            if (entry->isFolder())
+            auto folder = entry->asFolder();
+            if (folder)
+            {
+                if (folder->isRoot())
+                    return _iconRoot;
+                // TODO different icons for opened and closed folder
                 return _iconFolder;
+            }
             if (entry->isMemo())
                 return entry->asMemo()->type()->icon();
             return _iconMemo;
@@ -260,10 +263,9 @@ void TreeWidget::contextMenuRequested(const QPoint &pos)
     if (!entry) return;
 
     QMenu* menu = nullptr;
-    if (entry->isRoot())
-        menu = _rootMenu;
-    else if (entry->isFolder())
-        menu = _folderMenu;
+    auto folder = entry->asFolder();
+    if (folder)
+        menu = folder->isRoot() ? _rootMenu : _folderMenu;
     else if (entry->isMemo())
         menu = _memoMenu;
 

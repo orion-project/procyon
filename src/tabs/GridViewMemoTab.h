@@ -14,6 +14,7 @@ QT_END_NAMESPACE
 
 class Entry;
 class GridViewTableModel;
+class GridViewFilterModel;
 
 class GridViewMemoTab : public MemoTab
 {
@@ -33,7 +34,7 @@ private:
     QAction *_actionEdit, *_actionSave, *_actionCancel;
     QTableView *_tableView;
     GridViewTableModel *_tableModel;
-    QSortFilterProxyModel *_proxyModel;
+    GridViewFilterModel *_filterModel;
     QMenu *_contextMenu, *_toolMenu;
 
     void showMemo();

@@ -134,7 +134,7 @@ QString FolderStore::removeBranch(Folder* folder, const QString& path) const
 
     for (auto item: folder->folders())
     {
-        QString res = removeBranch(item->asFolder(), thisPath);
+        QString res = removeBranch(item, thisPath);
         if (!res.isEmpty()) return res;
     }
 

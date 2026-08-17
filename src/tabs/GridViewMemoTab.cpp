@@ -4,6 +4,7 @@
 #include "core/Enot.h"
 #include "core/MemoStore.h"
 #include "core/MemoType.h"
+#include "widgets/GridFilterPanel.h"
 
 #include "helpers/OriDialogs.h"
 #include "helpers/OriLayouts.h"
@@ -23,6 +24,8 @@
 #include <QToolButton>
 #include <QSortFilterProxyModel>
 #include <QVBoxLayout>
+
+using namespace Qt::StringLiterals;
 
 namespace {
 
@@ -137,6 +140,15 @@ public:
         }
     }
 
+    QStringList propColumns() const
+    {
+        QStringList columns;
+        for (const auto& colDef : _columnDefs)
+            if (colDef.kind == ColumnKind::PROP)
+                columns << colDef.header();
+        return columns;
+    }
+
     void setPropColumns(const QStringList& propNames)
     {
         _columnDefs.clear();
@@ -198,11 +210,46 @@ public:
         if (memo->type() == MemoType::gridView())
             return false;
 
+        if (!_titleFilter.isEmpty())
+            if (!memo->title().contains(_titleFilter, Qt::CaseInsensitive))
+                return false;
+
+        if (!_propsFilters.isEmpty())
+        {
+            const auto& memoProps = memo->props();
+            for (const auto& filter : std::as_const(_propsFilters))
+            {
+                if (filter.second.isEmpty())
+                    continue;
+                if (!memoProps.contains(filter.first))
+                    return false;
+                if (memoProps.value(filter.first) != filter.second)
+                    return false;
+            }
+        }
+
         return true;
+    }
+
+    void setFilters(const QString& title, const QList<QPair<QString, QString>>& props)
+    {
+        beginResetModel();
+        _titleFilter = title;
+        _propsFilters = props;
+        endResetModel();
+    }
+
+    void setPropFilters(const QList<QPair<QString, QString>>& props)
+    {
+        beginResetModel();
+        _propsFilters = props;
+        endResetModel();
     }
 
 private:
     Folder *_folder;
+    QString _titleFilter;
+    QList<QPair<QString, QString>> _propsFilters;
 };
 
 //------------------------------------------------------------------------------
@@ -219,6 +266,10 @@ GridViewMemoTab::GridViewMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
 
     _toolMenu = new QMenu(this);
     _toolMenu->addAction(tr("Show columns..."), this, &Self::chooseColumns);
+    _toolMenu->addSeparator();
+    auto actionFilter = _toolMenu->addAction(tr("Show Filters"), this, &Self::showFilterPanel);
+    actionFilter->setShortcut(QKeySequence(Qt::ControlModifier | Qt::Key_F));
+    _toolMenu->addAction(tr("Clear Filters"), this, &Self::clearFilters);
 
     auto toolMenuButton = new QToolButton;
     toolMenuButton->setPopupMode(QToolButton::InstantPopup);
@@ -272,7 +323,11 @@ GridViewMemoTab::GridViewMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     h->setHighlightSections(false);
     connect(h, &QHeaderView::sectionClicked, this, &Self::saveSortMode);
 
-    Ori::Layouts::LayoutV({toolPanel, _tableView}).setMargin(0).setSpacing(0).useFor(this);
+    _filterPanel = new GridFilterPanel(_enot);
+    _filterPanel->setVisible(false);
+    connect(_filterPanel, &GridFilterPanel::filterChanged, this, &Self::applyFilters);
+
+    Ori::Layouts::LayoutV({toolPanel, _filterPanel, _tableView}).setMargin(0).setSpacing(0).useFor(this);
 
     showMemo();
     toggleEditMode(false);
@@ -284,17 +339,36 @@ void GridViewMemoTab::showMemo()
 
     auto config = Store::memos()->selectOptions(_memo->id());
 
-    QString sortOption = config.value("sort").toString();
+    QString sortOption = config.value(u"sort"_s).toString();
     int sortColumn = qAbs(sortOption.toInt());
     auto sortOrder = sortOption.startsWith('-') ? Qt::DescendingOrder : Qt::AscendingOrder;
     _filterModel->sort(sortColumn, sortOrder);
 
     QStringList propColumns;
-    QString columnOption = config.value("columns").toString();
+    QString columnOption = config.value(u"columns"_s).toString();
     for (const auto& prop : QJsonDocument::fromJson(columnOption.toUtf8()).array())
         propColumns << prop.toString();
-
     applyColumns(propColumns);
+
+    QString filterOption = config.value(u"filter"_s).toString();
+    auto filtersJson = QJsonDocument::fromJson(filterOption.toUtf8()).object();
+    auto titleFilter = filtersJson["title"_L1].toString();
+    bool hasFilters = !titleFilter.isEmpty();
+    _filterPanel->setTitleFilter(titleFilter);
+    auto propFiltersJson = filtersJson["props"_L1].toObject();
+    QList<QPair<QString, QString>> propFilters;
+    for (const auto& propName : std::as_const(propColumns))
+    {
+        auto value = propFiltersJson[propName].toString();
+        if (!value.isEmpty()) hasFilters = true;
+        propFilters << qMakePair(propName, value);
+    }
+    if (hasFilters)
+    {
+        _filterPanel->setVisible(true);
+        _filterPanel->setPropFilters(propFilters);
+        _filterModel->setFilters(titleFilter, propFilters);
+    }
 
     setWindowTitle(_memo->title());
 }
@@ -310,7 +384,7 @@ void GridViewMemoTab::beginEdit()
 void GridViewMemoTab::cancelEdit()
 {
     toggleEditMode(false);
-    showMemo();
+    _titleEditor->setText(_memo->title());
 }
 
 bool GridViewMemoTab::saveEdit()
@@ -360,9 +434,35 @@ void GridViewMemoTab::showContextMenu(const QPoint& pos)
 
 void GridViewMemoTab::openSelectedMemo()
 {
+    if (!_tableView->hasFocus())
+    {
+        _filterPanel->tryApplyFilters();
+        return;
+    }
+
     auto entry = selectedEntry();
     if (entry->isMemo())
         emit memoOpenRequested(entry->asMemo());
+}
+
+void GridViewMemoTab::applyFilters()
+{
+    auto titleFilter = _filterPanel->titleFilter();
+    auto propFilters = _filterPanel->propFilters();
+    _filterModel->setFilters(titleFilter, propFilters);
+
+    QJsonObject filterJson;
+    if (!titleFilter.isEmpty())
+        filterJson["title"_L1] = titleFilter;
+    if (!propFilters.isEmpty())
+    {
+        QJsonObject propsJson;
+        for (const auto& filter : std::as_const(propFilters))
+            propsJson[filter.first] = filter.second;
+        filterJson["props"_L1] = propsJson;
+    }
+    Store::memos()->updateOption(_memo->id(), u"filter"_s,
+        QJsonDocument(filterJson).toJson(QJsonDocument::Compact));
 }
 
 void GridViewMemoTab::applyColumns(const QStringList &propNames)
@@ -380,12 +480,8 @@ void GridViewMemoTab::chooseColumns()
 {
     auto w = Ori::Layouts::LayoutV({}).makeWidgetAuto();
 
-    QSet<QString> curColumns;
-    for (const auto& colDef : _tableModel->columnDefs())
-        if (colDef.kind == ColumnKind::PROP)
-            curColumns << colDef.header();
-
     QList<QCheckBox*> flags;
+    auto curColumns = _tableModel->propColumns();
     for (const auto& propName : _enot->propNames())
     {
         auto flag = new QCheckBox(propName);
@@ -404,6 +500,26 @@ void GridViewMemoTab::chooseColumns()
 
     Store::memos()->updateOption(_memo->id(), "columns",
         QJsonDocument(QJsonArray::fromStringList(newColumns)).toJson(QJsonDocument::Compact));
+
+    // Reinitialize filters
+    if (_filterPanel->isVisible())
+    {
+        auto oldPropFilters = _filterPanel->propFilters();
+        QList<QPair<QString, QString>> newPropFilters;
+        for (const auto& propName : std::as_const(newColumns))
+        {
+            auto newFilter = qMakePair(propName, QString());
+            for (const auto& oldFilter : std::as_const(oldPropFilters))
+                if (oldFilter.first == propName)
+                {
+                    newFilter.second = oldFilter.second;
+                    break;
+                }
+            newPropFilters << newFilter;
+        }
+        _filterPanel->setPropFilters(newPropFilters);
+        applyFilters();
+    }
 }
 
 void GridViewMemoTab::saveSortMode()
@@ -414,12 +530,29 @@ void GridViewMemoTab::saveSortMode()
     Store::memos()->updateOption(_memo->id(), "sort", value);
 }
 
+void GridViewMemoTab::showFilterPanel()
+{
+    if (!_filterPanel->isVisible())
+    {
+        QList<QPair<QString, QString>> propFilters;
+        auto propColumns = _tableModel->propColumns();
+        for (const auto& propName : std::as_const(propColumns))
+            propFilters << qMakePair(propName, QString());
+        _filterPanel->setPropFilters(propFilters);
+        _filterPanel->setTitleFilter({});
+        _filterPanel->show();
+    }
+    _filterPanel->focusTitleFilter();
+}
 
+void GridViewMemoTab::clearFilters()
+{
+    if (!_filterPanel->isVisible()) return;
 
-
-
-
-
+    _filterPanel->hide();
+    _filterModel->setFilters({}, {});
+    Store::memos()->updateOption(_memo->id(), u"filter"_s, QString());
+}
 
 
 

@@ -412,3 +412,91 @@ QLabel[role=prop_editor] {
   border-right: $default-border;
 }
 
+/************************************
+             QLineEdit
+************************************/
+QLineEdit {
+  font-size: $main-font-size;
+  border: $default-border;
+  border-radius: $border-radius;
+  padding: 2px;
+  selection-color: white;
+  selection-background-color: $selection-color;
+}
+QLineEdit:focus {
+  border: 1px solid $selection-color;
+}
+
+/************************************
+             QComboBox
+************************************/
+QComboBox {
+  font-size: $main-font-size;
+  border: $default-border;
+  border-radius: $border-radius;
+  padding: 2px;
+  selection-color: white;
+  selection-background-color: $selection-color;
+}
+QComboBox:focus {
+  border: 1px solid $selection-color;
+}
+QComboBox::drop-down {
+  border: none;
+  width: 20px;
+}
+QComboBox::drop-down:hover {
+  background-color: $hover-color;
+}
+QComboBox::down-arrow {
+  image: url(:/icon/drop_down);
+}
+
+/************************************
+             QPushButton
+************************************/
+/*QPushButton {
+  font-size: $main-font-size;
+  border: $default-border;
+  border-radius: $border-radius;
+  padding: 3px 12px;
+  background-color: $light-paper-color;
+}
+QPushButton:hover {
+  border: 1px solid $selection-color;
+  background-color: $hover-color;
+}
+QPushButton:pressed {
+  background-color: $selection-color;
+  color: white;
+}
+}*/
+
+/************************************
+             FilterPanel
+************************************/
+#filter_panel {
+  background-color: $light-paper-color;
+  border: $default-border;
+  border-radius: $border-radius;
+  padding: 6px;
+  margin-bottom: 6px;
+}
+#filter_panel {
+  background-color: $light-paper-color;
+  border: $default-border;
+  border-radius: $border-radius;
+  padding: 6px;
+  margin-bottom: 6px;
+}
+#filter_panel QLineEdit {
+  min-width: 200px;
+}
+#filter_panel QLabel{
+  font-size: $main-font-size;
+  color: $quiter-text-color;
+}
+#filter_panel QComboBox {
+  padding: 2px 6px;
+}
+

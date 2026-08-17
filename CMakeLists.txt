@@ -137,6 +137,7 @@ set(PROJECT_SOURCES
     src/tabs/TextMemoTab.cpp
     src/tabs/TabHelpers.cpp
     src/TextEditHelpers.cpp
+    src/widgets/GridFilterPanel.cpp src/widgets/GridFilterPanel.h
     src/widgets/MemoPropsPanel.cpp src/widgets/MemoPropsPanel.h
     src/widgets/MemoTextBrowser.cpp
     src/widgets/MemoTextEdit.cpp

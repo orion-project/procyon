@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/icon">
         <file alias="edit_mode">../img/icon/pencil_black.svg</file>
+        <file alias="drop_down">../img/icon/drop_down.svg</file>
         <file alias="folder">../img/icon/folder_closed.svg</file>
         <file alias="folder_open">../img/icon/folder_open.svg</file>
         <file alias="help">../img/icon/help.svg</file>

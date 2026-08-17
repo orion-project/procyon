@@ -13,6 +13,7 @@ class QSortFilterProxyModel;
 QT_END_NAMESPACE
 
 class Entry;
+class GridFilterPanel;
 class GridViewTableModel;
 class GridViewFilterModel;
 
@@ -35,6 +36,7 @@ private:
     QTableView *_tableView;
     GridViewTableModel *_tableModel;
     GridViewFilterModel *_filterModel;
+    GridFilterPanel *_filterPanel;
     QMenu *_contextMenu, *_toolMenu;
 
     void showMemo();
@@ -45,9 +47,12 @@ private:
     void openSelectedMemo();
     void showContextMenu(const QPoint& pos);
     void chooseColumns();
+    void showFilterPanel();
 
     Entry* selectedEntry() const;
 
+    void clearFilters();
+    void applyFilters();
     void applyColumns(const QStringList& propNames);
     void saveSortMode();
 };

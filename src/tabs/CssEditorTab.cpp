@@ -7,6 +7,7 @@
 #include "helpers/OriLayouts.h"
 #include "widgets/OriCodeEditor.h"
 
+#include <QLineEdit>
 #include <QIcon>
 #include <QToolBar>
 

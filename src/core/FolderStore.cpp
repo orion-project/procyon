@@ -1,13 +1,13 @@
-#include "FolderManager.h"
+#include "FolderStore.h"
 
-#include "Db.h"
+#include "Enot.h"
 #include "SqlHelper.h"
 
 using namespace Ori::Sql;
 
-namespace DB
+namespace Store
 {
-FolderManager *folderManager() { static FolderManager m; return &m; }
+FolderStore *folders() { static FolderStore s; return &s; }
 }
 
 //------------------------------------------------------------------------------
@@ -47,12 +47,12 @@ FolderTableDef* folderTable() { static FolderTableDef t; return &t; }
 //                                FolderManager
 //------------------------------------------------------------------------------
 
-QString FolderManager::prepare()
+QString FolderStore::prepare()
 {
     return createTable(folderTable());
 }
 
-QString FolderManager::create(FolderItem* folder) const
+QString FolderStore::create(Folder* folder) const
 {
     auto table = folderTable();
 
@@ -64,7 +64,7 @@ QString FolderManager::create(FolderItem* folder) const
 
     auto res = ActionQuery(table->sqlInsert)
                 .param(table->id, folder->id())
-                .param(table->parent, folder->parent() ? folder->parent()->asFolder()->id() : 0)
+                .param(table->parent, folder->parent()->id())
                 .param(table->title, folder->title())
                 .exec();
     if (!res.isEmpty())
@@ -73,7 +73,7 @@ QString FolderManager::create(FolderItem* folder) const
     return QString();
 }
 
-FoldersResult FolderManager::selectAll() const
+FoldersResult FolderStore::selectAll() const
 {
     FoldersResult result;
 
@@ -89,27 +89,17 @@ FoldersResult FolderManager::selectAll() const
     while (query.next())
     {
         auto r = query.record();
-        int id = r.value(table->id).toInt();
-        if (!result.items.contains(id))
-            result.items.insert(id, new FolderItem);
-        auto item = result.items[id];
-        item->_id = id;
-        item->_title = r.value(table->title).toString();
+        auto folder = new Folder;
+        folder->_id = r.value(table->id).toInt();
+        folder->_title = r.value(table->title).toString();
         int parentId = r.value(table->parent).toInt();
-        if (parentId > 0)
-        {
-            if (!result.items.contains(parentId))
-                result.items.insert(parentId, new FolderItem);
-            auto parentItem = result.items[parentId];
-            parentItem->_children.append(item);
-            item->_parent = parentItem;
-        }
+        result.items.append({parentId, folder});
     }
 
     return result;
 }
 
-QString FolderManager::rename(int folderId, const QString title) const
+QString FolderStore::rename(int folderId, const QString title) const
 {
     auto table = folderTable();
     return ActionQuery(table->sqlRename)
@@ -118,7 +108,7 @@ QString FolderManager::rename(int folderId, const QString title) const
             .exec();
 }
 
-QString FolderManager::remove(FolderItem *folder) const
+QString FolderStore::remove(Folder *folder) const
 {
     auto db = QSqlDatabase::database();
     bool ok = db.transaction();
@@ -137,22 +127,24 @@ QString FolderManager::remove(FolderItem *folder) const
     return QString();
 }
 
-QString FolderManager::removeBranch(FolderItem* folder, const QString& path) const
+QString FolderStore::removeBranch(Folder* folder, const QString& path) const
 {
     auto table = folderTable();
     QString thisPath = path + '/' + folder->title();
 
-    for (auto item: folder->children())
-        if (item->isFolder())
-        {
-            QString res = removeBranch(item->asFolder(), thisPath);
-            if (!res.isEmpty()) return res;
-        }
+    for (auto item: folder->folders())
+    {
+        QString res = removeBranch(item->asFolder(), thisPath);
+        if (!res.isEmpty()) return res;
+    }
 
     QString res = ActionQuery(table->sqlDelete)
             .param(table->id, folder->id())
             .exec();
     if (!res.isEmpty())
-        return QString("Failed to delete folder '%1'.\n\n%2").arg(thisPath).arg(res);
+        return QString("Failed to delete folder '%1'.\n\n%2").arg(thisPath, res);
+
+    // Memos are DB deleted by FK relation
+
     return QString();
 }

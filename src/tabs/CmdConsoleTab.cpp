@@ -1,12 +1,12 @@
 #include "CmdConsoleTab.h"
 
 #include "TabHelpers.h"
-#include "../db/Db.h"
-#include "../db/SqlHelper.h"
+#include "core/Enot.h"
 
 #include "helpers/OriLayouts.h"
 
 #include <QLabel>
+#include <QLineEdit>
 #include <QSplitter>
 #include <QToolBar>
 #include <QPlainTextEdit>
@@ -22,7 +22,7 @@ public:
 
 struct CmdConsole {
     QMap<QString, QSharedPointer<Cmd>> cmds;
-    Db* db;
+    Enot* enot;
 
     QString formatNames() const
     {
@@ -52,28 +52,29 @@ public:
     PrintDbCmd(const CmdConsole* impl): _impl(impl) {}
     QString run() override
     {
-        if (!_impl->db)
+        if (!_impl->enot)
             return "Database is not opened";
         QString r;
         QTextStream res(&r);
-        for (auto f : _impl->db->topItems())
-            printItem(res, 0, f);
+        for (auto f : _impl->enot->root()->folders())
+            printFolder(res, 0, f);
         return r;
     }
 private:
     const CmdConsole* _impl;
 
-    void printItem(QTextStream& res, int level, DbItem* it)
+    void printFolder(QTextStream& res, int level, Folder* folder)
     {
-        res << QString(level*4, ' ');
-        if (it->isFolder())
-        {
-            res << "[#" << it->id() << ' ' << it->title() << "]\n";
-            for (auto f : it->asFolder()->children())
-                printItem(res, level+1, f);
-        }
-        else
-            res << "· #" << it->id() << ' ' << it->title() << '\n';
+        res << QString(level*4, ' ') << "📁[" << folder->id() << "] " << folder->title()
+            << " (🔝" << folder->parent()->id()  << ")\n";
+
+        QString ident((level+1)*4, ' ');
+        for (auto m : folder->memos())
+            res << ident << "📄(" << m->id() << ") " << m->title()
+                << " (🔝" << m->parent()->id() << ")\n";
+
+        for (auto f : folder->folders())
+            printFolder(res, level+1, f);
     }
 };
 
@@ -81,13 +82,13 @@ private:
 
 using namespace CmdConsoleImpl;
 
-CmdConsoleTab::CmdConsoleTab(Db* db) : QWidget()
+CmdConsoleTab::CmdConsoleTab(Enot* enot) : QWidget()
 {
     setWindowTitle(tr("Command Console"));
     setWindowIcon(QIcon(":/icon/main"));
 
     _impl = QSharedPointer<CmdConsole>::create();
-    _impl->db = db;
+    _impl->enot = enot;
     _impl->cmds["help"] = QSharedPointer<HelpCmd>::create(_impl.get());
     _impl->cmds["print_db"] = QSharedPointer<PrintDbCmd>::create(_impl.get());
 
@@ -142,7 +143,7 @@ CmdConsoleTab::CmdConsoleTab(Db* db) : QWidget()
     Ori::Layouts::LayoutV({toolPanel, infoLabel, Ori::Layouts::Space(3), splitter}).setMargin(0).setSpacing(0).useFor(this);
 }
 
-void CmdConsoleTab::setDb(Db* db)
+void CmdConsoleTab::setEnot(Enot* enot)
 {
-    _impl->db = db;
+    _impl->enot = enot;
 }

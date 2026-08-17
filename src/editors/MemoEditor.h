@@ -3,7 +3,7 @@
 
 #include <QWidget>
 
-class MemoItem;
+class Memo;
 class MemoTextEdit;
 class TextEditSpellcheck;
 
@@ -37,9 +37,9 @@ signals:
     void onModified(bool modified);
 
 protected:
-    explicit MemoEditor(MemoItem* memoItem);
+    explicit MemoEditor(Memo* memo);
 
-    MemoItem* _memoItem;
+    Memo* _memo;
 };
 
 
@@ -67,9 +67,9 @@ public:
     QString highlighterName() const;
     void setHighlighterName(const QString& name);
 
-    explicit TextMemoEditor(MemoItem* memoItem);
+    explicit TextMemoEditor(Memo* memo);
 protected:
-    explicit TextMemoEditor(MemoItem* memoItem, bool createEditor);
+    explicit TextMemoEditor(Memo* memo, bool createEditor);
 
     MemoTextEdit* _editor = nullptr;
     TextEditSpellcheck* _spellcheck = nullptr;

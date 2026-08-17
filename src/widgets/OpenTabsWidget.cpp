@@ -1,7 +1,7 @@
 #include "OpenTabsWidget.h"
 
 #include "tabs/MemoTab.h"
-#include "db/Db.h"
+#include "core/Enot.h"
 
 #include "helpers/OriLayouts.h"
 
@@ -121,10 +121,10 @@ void OpenTabsWidget::currentItemChanged(QListWidgetItem *current, QListWidgetIte
 
 void OpenTabsWidget::updateTooltip(QListWidgetItem *item, MemoTab *memoPage)
 {
-    auto memoItem = memoPage->memoItem();
+    auto memo = memoPage->memo();
     QString tooltip;
     QTextStream stream(&tooltip);
-    stream << QStringLiteral("<p style='white-space:pre'>/%1/<b>%2</b>").arg(memoItem->path(), memoItem->title());
+    stream << QStringLiteral("<p style='white-space:pre'>/%1/<b>%2</b>").arg(memo->path(), memo->title());
     if (!memoPage->isReadOnly())
     {
         stream << QStringLiteral("<br><span style='color:gray'>(");

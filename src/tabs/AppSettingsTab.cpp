@@ -5,6 +5,7 @@
 #include "helpers/OriLayouts.h"
 
 #include <QDebug>
+#include <QLineEdit>
 #include <QListWidget>
 #include <QScrollArea>
 #include <QToolBar>

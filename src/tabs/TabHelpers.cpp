@@ -1,7 +1,20 @@
 #include "TabHelpers.h"
 
+#include <QFrame>
+#include <QLineEdit>
+#include <QToolBar>
+
 namespace TabHelpers
 {
+
+QToolBar* makeHeaderToolBar()
+{
+    auto toolBar = new QToolBar;
+    toolBar->setObjectName("memo_toolbar");
+    toolBar->setContentsMargins(0, 0, 0, 0);
+    toolBar->setIconSize(QSize(24, 24));
+    return toolBar;
+}
 
 QLineEdit* makeTitleEditor(const QString &title)
 {
@@ -29,6 +42,13 @@ QString formatInfo(const QString& info)
 QString formatError(const QString& msg)
 {
     return QString("<span style='color:red;white-space:pre'>%1</span>").arg(msg);
+}
+
+void setTitleEditorReadOnly(QLineEdit *titleEditor, bool on)
+{
+    titleEditor->setReadOnly(on);
+    // Force updating editor's style sheet, seems it doesn't note changing of readOnly or a custom property
+    titleEditor->setStyleSheet(QString("QLineEdit { background: %1 }").arg(on ? "transparent" : "white"));
 }
 
 } // namespace TabHelpers

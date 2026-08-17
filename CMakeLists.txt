@@ -109,12 +109,12 @@ set(PROJECT_SOURCES
     src/app.qrc
     src/main.cpp
     src/AppSettings.cpp
-    src/db/Db.cpp
-    src/db/FolderManager.cpp
-    src/db/MemoManager.cpp
-    src/db/SettingsManager.cpp
-    src/db/SqlHelper.cpp
-    src/DbTreeWidget.cpp
+    src/core/Enot.cpp src/core/Enot.h
+    src/core/FolderStore.cpp src/core/FolderStore.h
+    src/core/MemoStore.cpp src/core/MemoStore.h
+    src/core/MemoType.cpp src/core/MemoType.h
+    src/core/SettingsStore.cpp src/core/SettingsStore.h
+    src/core/SqlHelper.cpp src/core/SqlHelper.h
     src/editors/MarkdownMemoEditor.cpp
     src/editors/MemoEditor.cpp
     src/highlighter/EnotStorage.cpp
@@ -122,22 +122,25 @@ set(PROJECT_SOURCES
     src/MainWindow.cpp
     src/markdown/MarkdownHelper.cpp
     src/markdown/ori_html.c
-    src/OpenTabsWidget.cpp
     src/spellcheck/LangCodeAndNames.cpp
     src/spellcheck/Spellchecker.cpp
     src/spellcheck/TextEditSpellcheck.cpp
     src/tabs/AppSettingsTab.cpp
     src/tabs/CmdConsoleTab.cpp
     src/tabs/CssEditorTab.cpp
+    src/tabs/GridViewMemoTab.cpp
     src/tabs/HelpTab.cpp
     src/tabs/MemoTab.cpp
     src/tabs/PhlEditorTab.cpp
     src/tabs/QssEditorTab.cpp
     src/tabs/SqlConsoleTab.cpp
+    src/tabs/TextMemoTab.cpp
     src/tabs/TabHelpers.cpp
     src/TextEditHelpers.cpp
     src/widgets/MemoTextBrowser.cpp
     src/widgets/MemoTextEdit.cpp
+    src/widgets/OpenTabsWidget.cpp src/widgets/OpenTabsWidget.h
+    src/widgets/TreeWidget.cpp src/widgets/TreeWidget.h
 )
 
 if(WIN32)

@@ -1,17 +1,17 @@
 #include "MarkdownMemoEditor.h"
 
-#include "../AppSettings.h"
-#include "../db/Db.h"
-#include "../markdown/MarkdownHelper.h"
-#include "../widgets/MemoTextBrowser.h"
-#include "../widgets/MemoTextEdit.h"
-#include "../TextEditHelpers.h"
+#include "AppSettings.h"
+#include "TextEditHelpers.h"
+#include "core/Enot.h"
+#include "markdown/MarkdownHelper.h"
+#include "widgets/MemoTextBrowser.h"
+#include "widgets/MemoTextEdit.h"
 
 #include "helpers/OriLayouts.h"
 
 #include <QStackedLayout>
 
-MarkdownMemoEditor::MarkdownMemoEditor(MemoItem* memoItem) : TextMemoEditor(memoItem, false)
+MarkdownMemoEditor::MarkdownMemoEditor(Memo* memo) : TextMemoEditor(memo, false)
 {
     _view = new MemoTextBrowser;
     _view->document()->setDefaultStyleSheet(AppSettings::instance().markdownCss());
@@ -36,7 +36,7 @@ MarkdownMemoEditor::~MarkdownMemoEditor()
 
 void MarkdownMemoEditor::showMemo()
 {
-    _view->setHtml(MarkdownHelper::markdownToHtml(_memoItem->data()));
+    _view->setHtml(MarkdownHelper::markdownToHtml(_memo->data()));
 }
 
 void MarkdownMemoEditor::setFocus()
@@ -86,7 +86,7 @@ void MarkdownMemoEditor::beginEdit()
         _editor->setFont(_memoFont);
         _editor->setWordWrap(_wordWrap);
         // TODO: set highlighter
-        _editor->setPlainText(_memoItem->data());
+        _editor->setPlainText(_memo->data());
         _tabs->addWidget(_editor);
     }
     _tabs->setCurrentWidget(_editor);
@@ -133,7 +133,7 @@ void MarkdownMemoEditor::optionChanged(AppSettingsOption option)
 {
     if (option != AppSettingsOption::MARKDOWN_CSS) return;
     _view->document()->setDefaultStyleSheet(AppSettings::instance().markdownCss());
-    _view->setHtml(MarkdownHelper::markdownToHtml(_editor ? _editor->toPlainText() : _memoItem->data()));
+    _view->setHtml(MarkdownHelper::markdownToHtml(_editor ? _editor->toPlainText() : _memo->data()));
 }
 
 void MarkdownMemoEditor::exportToPdf(const QString& fileName)

@@ -1,13 +1,14 @@
-#include "MemoManager.h"
+#include "MemoStore.h"
 
-#include "Db.h"
+#include "Enot.h"
+#include "MemoType.h"
 #include "SqlHelper.h"
 
 using namespace Ori::Sql;
 
-namespace DB
+namespace Store
 {
-MemoManager* memoManager() { static MemoManager m; return &m; }
+MemoStore* memos() { static MemoStore s; return &s; }
 }
 
 //------------------------------------------------------------------------------
@@ -84,10 +85,10 @@ MemoOptionsTableDef* memoOptionsTable() { static MemoOptionsTableDef t; return &
 } // namespace
 
 //------------------------------------------------------------------------------
-//                               MemoManager
+//                               MemoStore
 //------------------------------------------------------------------------------
 
-QString MemoManager::prepare()
+QString MemoStore::prepare()
 {
     auto table = memoTable();
 
@@ -106,7 +107,7 @@ QString MemoManager::prepare()
     return createTable(memoOptionsTable());
 }
 
-QString MemoManager::create(MemoItem* item) const
+QString MemoStore::create(Memo* memo) const
 {
     auto table = memoTable();
 
@@ -115,17 +116,17 @@ QString MemoManager::create(MemoItem* item) const
         return QString("Unable to generate id for new memo.\n\n%1").arg(queryId.error());
 
     int newId = queryId.record().value(0).toInt() + 1;
-    item->_id = newId;
+    memo->_id = newId;
 
     auto res = ActionQuery(table->sqlInsert)
-            .param(table->parent, item->parent() ? item->parent()->asFolder()->id() : 0)
-            .param(table->id, item->id())
-            .param(table->title, item->title())
-            .param(table->type, item->type()->name())
-            .param(table->data, item->data())
-            .param(table->created, item->created())
-            .param(table->updated, item->updated())
-            .param(table->station, item->station())
+            .param(table->parent, memo->parent() ? memo->parent()->asFolder()->id() : 0)
+            .param(table->id, memo->id())
+            .param(table->title, memo->title())
+            .param(table->type, memo->type()->name())
+            .param(table->data, memo->data())
+            .param(table->created, memo->created())
+            .param(table->updated, memo->updated())
+            .param(table->station, memo->station())
             .exec();
     if (!res.isEmpty())
         return QString("Failed to create new memo.\n\n%1").arg(res);
@@ -133,7 +134,7 @@ QString MemoManager::create(MemoItem* item) const
     return QString();
 }
 
-MemosResult MemoManager::selectAll() const
+MemosResult MemoStore::selectAll() const
 {
     auto table = memoTable();
 
@@ -150,25 +151,22 @@ MemosResult MemoManager::selectAll() const
     {
         auto r = query.record();
 
-        MemoItem *item = new MemoItem;
-        item->_id = r.value(table->id).toInt();
-        item->_title = r.value(table->title).toString();
-        item->_type = getMemoType(r.value(table->type).toString());
-        item->_created = r.value(table->created).toDateTime();
-        item->_updated = r.value(table->updated).toDateTime();
-        item->_station = r.value(table->station).toString();
+        Memo *memo = new Memo;
+        memo->_id = r.value(table->id).toInt();
+        memo->_title = r.value(table->title).toString();
+        memo->_type = MemoType::findByName(r.value(table->type).toString());
+        memo->_created = r.value(table->created).toDateTime();
+        memo->_updated = r.value(table->updated).toDateTime();
+        memo->_station = r.value(table->station).toString();
 
-        int parentId = r.value(table->parent).toInt();
-        if (!result.items.contains(parentId))
-            result.items.insert(parentId, QList<MemoItem*>());
-        static_cast<QList<MemoItem*>&>(result.items[parentId]).append(item);
-        result.allMemos.insert(item->id(), item);
+        int folderId = r.value(table->parent).toInt();
+        result.items.append({folderId, memo});
     }
 
     return result;
 }
 
-QString MemoManager::load(MemoItem* memo) const
+QString MemoStore::load(Memo* memo) const
 {
     auto table = memoTable();
 
@@ -185,7 +183,7 @@ QString MemoManager::load(MemoItem* memo) const
     return QString();
 }
 
-QString MemoManager::update(MemoItem* memo, const MemoUpdateParam& update) const
+QString MemoStore::update(Memo* memo, const MemoUpdateParam& update) const
 {
     auto table = memoTable();
     return ActionQuery(table->sqlUpdate)
@@ -197,15 +195,15 @@ QString MemoManager::update(MemoItem* memo, const MemoUpdateParam& update) const
             .exec();
 }
 
-QString MemoManager::remove(MemoItem* item) const
+QString MemoStore::remove(Memo* memo) const
 {
     auto table = memoTable();
     return ActionQuery(table->sqlDelete)
-            .param(table->id, item->id())
+            .param(table->id, memo->id())
             .exec();
 }
 
-QString MemoManager::countAll(int *count) const
+QString MemoStore::countAll(int *count) const
 {
     auto table = memoTable();
     SelectQuery query(table->sqlCountAll());
@@ -216,7 +214,7 @@ QString MemoManager::countAll(int *count) const
     return QString();
 }
 
-QMap<QString, QVariant> MemoManager::selectOptions(int memoId) const
+QMap<QString, QVariant> MemoStore::selectOptions(int memoId) const
 {
     QMap<QString, QVariant> options;
     auto table = memoOptionsTable();
@@ -237,7 +235,7 @@ QMap<QString, QVariant> MemoManager::selectOptions(int memoId) const
     return options;
 }
 
-QString MemoManager::updateOption(int memoId, const QString& name, const QVariant& value) const
+QString MemoStore::updateOption(int memoId, const QString& name, const QVariant& value) const
 {
     auto table = memoOptionsTable();
     return ActionQuery(table->sqlUpdate)

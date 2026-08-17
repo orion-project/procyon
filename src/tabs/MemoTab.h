@@ -3,70 +3,32 @@
 
 #include <QWidget>
 
-QT_BEGIN_NAMESPACE
-class QAction;
-class QLineEdit;
-class QSyntaxHighlighter;
-class QToolBar;
-class QToolButton;
-QT_END_NAMESPACE
-
-class Db;
-class MemoEditor;
-class MemoItem;
+class Enot;
+class Memo;
 
 class MemoTab : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit MemoTab(Db* db, MemoItem* memoItem);
-    ~MemoTab();
+    Memo* memo() const { return _memo; }
 
-    MemoItem* memoItem() const { return _memoItem; }
-
-    void loadSettings();
-
-    QFont memoFont() const;
-    void setMemoFont(const QFont& font);
-
-    bool wordWrap() const;
-    void setWordWrap(bool wrap);
-
-    void setSpellcheckLang(const QString& lang);
-    QString spellcheckLang() const;
-
-    void setHighlighter(const QString& name);
-    QString highlighter() const;
-
-    void beginEdit();
-    bool saveEdit();
-    bool isModified() const;
-    bool isReadOnly() const { return !_isEditMode; }
-    bool canClose();
-
-    void exportToPdf();
+    virtual void loadSettings() {}
+    virtual bool canClose() { return true; }
+    virtual bool isReadOnly() const { return true; }
+    virtual bool isModified() const { return false; }
+    virtual void beginEdit() {}
 
 signals:
     bool onAboutToBeClosed();
     void onReadOnly(bool readOnly);
     void onModified(bool modified);
 
-private:
-    Db* _db;
-    MemoItem* _memoItem;
-    MemoEditor* _memoEditor;
-    QLineEdit* _titleEditor;
-    QToolBar* _toolbar;
-    QAction *_actionEdit, *_actionSave, *_actionCancel;
-    QAction *_actionPreview = nullptr, *_actionPreviewButton, *_separatorPreview;
-    QToolButton *_previewButton;
-    bool _isEditMode = false;
+protected:
+    Enot* _enot;
+    Memo* _memo;
 
-    void showMemo();
-    void cancelEdit();
-    void toggleEditMode(bool on);
-    void togglePreviewMode();
+    explicit MemoTab(Enot* enot, Memo* memo);
 };
 
 #endif // MEMO_TAB_H

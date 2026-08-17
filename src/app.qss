@@ -3,7 +3,7 @@ $border-color: silver; /* Default border color */
 $border-radius: 4px; /* Default border radius */
 $default-border: 1px solid silver; /* Default border */
 $selection-color: steelBlue;
-$main-font-size: 13px;
+$main-font-size: 14px;
 $hover-color: #334682b4;
 
 /************************************
@@ -64,18 +64,6 @@ QMenu::indicator {
 }
 QMenu::indicator:checked {
   background: #2b506e;
-}
-QFrame[role=context_menu_header_panel] {
-  border-bottom: $default-border;
-  margin-bottom: 3px;
-  background: $base-color;
-  padding: 5px;
-}
-QLabel[role=context_menu_header_text] {
-  font-size: 12px;
-  font-weight: bold;
-  margin-left: 3px;
-  color: #32424c;
 }
 
 /************************************
@@ -363,4 +351,11 @@ QToolButton:hover {
 #OriPopupMessage[mode=hint] {
   border: 1px solid #e5c300;
   background: #ffec7c;
+}
+
+/************************************
+             PopupMessage
+************************************/
+QTableView {
+  font-size: $main-font-size;
 }

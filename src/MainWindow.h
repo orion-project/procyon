@@ -11,13 +11,15 @@ class QSplitter;
 class QSettings;
 QT_END_NAMESPACE
 
-class Db;
-class DbTreeWidget;
+class Enot;
+class Entry;
+class TreeWidget;
 class OpenTabsWidget;
 class SpellcheckControl;
 class InfoWidget;
 class MemoTab;
-class MemoItem;
+class Memo;
+class TextMemoTab;
 
 namespace Ori {
 class MruFileList;
@@ -44,15 +46,13 @@ protected:
 
 private:
     QSplitter* _splitter;
-    Db* _db = nullptr;
-    DbTreeWidget* _treeView;
+    Enot* _enot = nullptr;
+    TreeWidget* _treeView;
     QStackedWidget* _tabsView;
     OpenTabsWidget* _openTabsView;
     Ori::MruFileList *_mruList;
     QLabel *_statusMemoCount, *_statusFileName;
-    QAction *_actionCreateTopLevelFolder, *_actionCreateFolder, *_actionRenameFolder, *_actionDeleteFolder;
     QAction *_actionMemoFont, *_actionWordWrap, *_actionMemoExportPdf;
-    QAction *_actionOpenMemo, *_actionCreateMemo, *_actionDeleteMemo;
     QString _lastOpenedDb;
     SpellcheckControl* _spellcheckControl;
     Phl::Control* _highlighterControl;
@@ -63,26 +63,33 @@ private:
     void createStatusBar();
     void loadSession();
     void saveSession();
-    void newDb();
-    void openDb(const QString &fileName);
-    void openDbViaDialog();
-    void dbOpened(Db* db);
-    bool closeDb();
+
+    void newEnot();
+    void openEnot(const QString &fileName);
+    void openEnotViaDialog();
+    bool closeEnot();
+
     void updateCounter();
-    void updateMenuDb();
-    void openMemo();
+
     void chooseMemoFont();
     void toggleWordWrap();
-    void memoCreated(MemoItem* item);
-    void memoRemoved(MemoItem* item);
+
+    void enotOpened(Enot* enot);
+    void itemCreated(Entry* entry);
+    void itemRemoved(Entry* entry);
+
     bool closeAllMemos();
-    void openMemoTab(MemoItem* item);
+    void openMemoTab(Memo* memo);
     void exportToPdf();
-    MemoTab* findMemoTab(MemoItem* item) const;
+
+    MemoTab* findMemoTab(Memo* memo) const;
     MemoTab* currentMemoTab() const;
+    TextMemoTab* currentTextMemoTab() const;
+
     void optionsMenuAboutToShow();
     void spellcheckMenuAboutToShow();
     void highlighterMenuAboutToShow();
+
     void setMemoSpellcheckLang(const QString& lang);
     void setMemoHighlighter(const QString& name);
 };

@@ -41,7 +41,6 @@ public:
     Folder* parent() const { return _parent; }
     QString path() const;
 
-    bool isRoot() const { return !_parent; }
     bool isFolder() const;
     bool isMemo() const;
     Folder* asFolder();
@@ -69,6 +68,12 @@ public:
 
     int childCount() const { return _folders.size() + _memos.size(); }
 
+    bool isRoot() const { return !parent(); }
+    bool isFolder() const = delete;
+    bool isMemo() const = delete;
+    Folder* asFolder() = delete;
+    Memo* asMemo() = delete;
+
 private:
     QList<Folder*> _folders;
     QList<Memo*> _memos;
@@ -91,6 +96,11 @@ public:
     QString station() const { return _station; }
     bool isLoaded() const { return _isLoaded; }
     const QHash<QString, QString>& props();
+
+    bool isFolder() const = delete;
+    bool isMemo() const = delete;
+    Folder* asFolder() = delete;
+    Memo* asMemo() = delete;
 
 private:
     MemoType* _type = nullptr;

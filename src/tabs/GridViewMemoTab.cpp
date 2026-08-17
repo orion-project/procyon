@@ -44,7 +44,7 @@ struct ColumnDef
 class GridViewTableModel : public QAbstractTableModel
 {
 public:
-    GridViewTableModel(QObject *parent, Memo *memo) : QAbstractTableModel(parent)
+    GridViewTableModel(Memo *memo, QObject *parent) : QAbstractTableModel(parent)
     {
         _self = memo;
         _folder = memo->parent();
@@ -180,6 +180,32 @@ private:
 };
 
 //------------------------------------------------------------------------------
+//                            GridViewFilterModel
+//------------------------------------------------------------------------------
+
+class GridViewFilterModel : public QSortFilterProxyModel
+{
+public:
+    GridViewFilterModel(Memo *memo, QObject *parent) : QSortFilterProxyModel(parent)
+    {
+        _folder = memo->parent();
+    }
+
+    bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override
+    {
+        auto memo = _folder->memos().at(sourceRow);
+
+        if (memo->type() == MemoType::gridView())
+            return false;
+
+        return true;
+    }
+
+private:
+    Folder *_folder;
+};
+
+//------------------------------------------------------------------------------
 //                             GridViewMemoTab
 //------------------------------------------------------------------------------
 
@@ -220,18 +246,18 @@ GridViewMemoTab::GridViewMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
 
     auto toolPanel = TabHelpers::makeHeaderPanel({_titleEditor, _toolbar});
 
-    _tableModel = new GridViewTableModel(this, memo);
+    _tableModel = new GridViewTableModel(memo, this);
     connect(_enot, &Enot::entryCreating, _tableModel, &GridViewTableModel::itemCreating);
     connect(_enot, &Enot::entryCreated, _tableModel, &GridViewTableModel::itemCreated);
     connect(_enot, &Enot::entryDeleted, _tableModel, &GridViewTableModel::itemRemoved);
     connect(_enot, &Enot::entryDeleting, _tableModel, &GridViewTableModel::itemRemoving);
     connect(_enot, &Enot::entryDeleted, _tableModel, &GridViewTableModel::itemRemoved);
 
-    _proxyModel = new QSortFilterProxyModel(this);
-    _proxyModel->setSourceModel(_tableModel);
+    _filterModel = new GridViewFilterModel(memo,this);
+    _filterModel->setSourceModel(_tableModel);
 
     _tableView = new QTableView;
-    _tableView->setModel(_proxyModel);
+    _tableView->setModel(_filterModel);
     _tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     _tableView->setSelectionMode(QAbstractItemView::SingleSelection);
     _tableView->verticalHeader()->setVisible(false);
@@ -261,7 +287,7 @@ void GridViewMemoTab::showMemo()
     QString sortOption = config.value("sort").toString();
     int sortColumn = qAbs(sortOption.toInt());
     auto sortOrder = sortOption.startsWith('-') ? Qt::DescendingOrder : Qt::AscendingOrder;
-    _proxyModel->sort(sortColumn, sortOrder);
+    _filterModel->sort(sortColumn, sortOrder);
 
     QStringList propColumns;
     QString columnOption = config.value("columns").toString();
@@ -321,7 +347,7 @@ Entry* GridViewMemoTab::selectedEntry() const
 {
     QModelIndexList selection = _tableView->selectionModel()->selectedRows();
     if (selection.empty()) return nullptr;
-    int row = _proxyModel->mapToSource(selection.at(0)).row();
+    int row = _filterModel->mapToSource(selection.at(0)).row();
     return _memo->parent()->memos().at(row);
 }
 
@@ -382,8 +408,8 @@ void GridViewMemoTab::chooseColumns()
 
 void GridViewMemoTab::saveSortMode()
 {
-    QString value = QString::number(_proxyModel->sortColumn());
-    if (_proxyModel->sortOrder() == Qt::DescendingOrder)
+    QString value = QString::number(_filterModel->sortColumn());
+    if (_filterModel->sortOrder() == Qt::DescendingOrder)
         value = '-' + value;
     Store::memos()->updateOption(_memo->id(), "sort", value);
 }

@@ -33,24 +33,31 @@ public:
     const QString station = "Station";
 
     QString sqlCreate() const override {
-        return "CREATE TABLE IF NOT EXISTS Memo ("
+        return u"CREATE TABLE IF NOT EXISTS Memo ("
                "Id INTEGER PRIMARY KEY, "
-               "Parent REFERENCES Folder(Id) ON DELETE CASCADE, "
-               "Title, Type, Data, Created, Updated, Station)";
+               "Parent INTEGER NOT NULL, "
+               "Title TEXT, "
+               "Type TEXT, "
+               "Data TEXT, "
+               "Created DATETIME DEFAULT CURRENT_TIMESTAMP, "
+               "Updated DATETIME DEFAULT CURRENT_TIMESTAMP, "
+               "Station TEXT,"
+               "FOREIGN KEY (Parent) REFERENCES Folder(Id) ON DELETE CASCADE"
+               ")"_s;
     }
 
     const QString sqlSelectAllNoData =
-        "SELECT Id, Parent, Title, Type, Created, Updated, Station FROM Memo";
+        u"SELECT Id, Parent, Title, Type, Created, Updated, Station FROM Memo"_s;
 
     virtual QString sqlSelectDataById(int id) const {
         return QString("SELECT Data FROM Memo WHERE Id = %1").arg(id);
     }
 
     const QString sqlInsert =
-        "INSERT INTO Memo (Id, Parent, Title, Type, Data, Created, Updated, Station) "
-        "VALUES (:Id, :Parent, :Title, :Type, :Data, :Created, :Updated, :Station)";
+        u"INSERT INTO Memo (Id, Parent, Title, Type, Data, Created, Updated, Station) "
+        "VALUES (:Id, :Parent, :Title, :Type, :Data, :Created, :Updated, :Station)"_s;
 
-    const QString sqlDelete = "DELETE FROM Memo WHERE Id = :Id";
+    const QString sqlDelete = u"DELETE FROM Memo WHERE Id = :Id"_s;
 };
 
 struct MemoOptionsTable
@@ -66,8 +73,11 @@ struct MemoOptionsTable
 
     inline static const auto& sqlCreate =
         u"CREATE TABLE IF NOT EXISTS MemoOptions ("
-        "MemoId REFERENCES Memo(Id) ON DELETE CASCADE, "
-        "Name, Value, UNIQUE(MemoId, Name))"_s;
+        "MemoId INTEGER NOT NULL, "
+        "Name TEXT NOT NULL, "
+        "Value TEXT, "
+        "FOREIGN KEY (MemoId) REFERENCES Memo(Id) ON DELETE CASCADE, "
+        "UNIQUE(MemoId, Name))"_s;
 
     inline static const auto& sqlSelect =
         u"SELECT Name, Value from MemoOptions WHERE MemoId = :MemoId"_s;
@@ -90,8 +100,11 @@ struct MemoPropsTable
 
     inline static const auto& sqlCreate =
         u"CREATE TABLE IF NOT EXISTS MemoProps ("
-       "MemoId REFERENCES Memo(Id) ON DELETE CASCADE, "
-       "Name, Value, UNIQUE(MemoId, Name))"_s;
+        "MemoId INTEGER NOT NULL, "
+        "Name TEXT NOT NULL, "
+        "Value TEXT, "
+        "FOREIGN KEY (MemoId) REFERENCES Memo(Id) ON DELETE CASCADE, "
+        "UNIQUE(MemoId, Name))"_s;
 
     inline static const auto& sqlSelect =
         u"SELECT Name, Value from MemoProps WHERE MemoId = :MemoId"_s;
@@ -114,12 +127,52 @@ struct MemoLinksTable
 {
     inline static const auto& tableName = u"MemoLinks"_s;
 
+    struct C
+    {
+        inline static const auto& id1 = u"Id1"_s;
+        inline static const auto& id2 = u"Id2"_s;
+        inline static const auto& created = u"Created"_s;
+        inline static const auto& station = u"Station"_s;
+    };
+
     inline static const auto& sqlCreate =
         u"CREATE TABLE IF NOT EXISTS MemoLinks ("
-       "Id1 REFERENCES Memo(Id) ON DELETE CASCADE, "
-       "Id2 REFERENCES Memo(Id) ON DELETE CASCADE, "
-       "Created, Station, "
-       "UNIQUE(Id1, Id2))"_s;
+        "Id1 INTEGER NOT NULL, "
+        "Id2 INTEGER NOT NULL, "
+        "Created DATETIME DEFAULT CURRENT_TIMESTAMP, "
+        "Station TEXT, "
+        "PRIMARY KEY(Id1, Id2),"
+        "FOREIGN KEY (Id1) REFERENCES Memo(Id) ON DELETE CASCADE, "
+        "FOREIGN KEY (Id2) REFERENCES Memo(Id) ON DELETE CASCADE)"_s;
+};
+
+struct MemoHistoryTable
+{
+    inline static const auto& tableName = u"MemoHistory"_s;
+
+    inline static const auto& sqlCreate =
+        u"CREATE TABLE IF NOT EXISTS MemoHistory ("
+        "MemoId INTEGER NOT NULL, "
+        "What TEXT, "
+        "Value TEXT, "
+        "Moment DATETIME DEFAULT CURRENT_TIMESTAMP, "
+        "Station TEXT, "
+        "FOREIGN KEY (MemoId) REFERENCES Memo(Id) ON DELETE CASCADE)"_s;
+};
+
+struct MemoSheetsTable
+{
+    inline static const auto& tableName = u"MemoSheets"_s;
+
+    inline static const auto& sqlCreate =
+        u"CREATE TABLE IF NOT EXISTS MemoSheets ("
+        "Id INTEGER PRIMARY KEY, "
+        "MemoId INTEGER NOT NULL, "
+        "Data TEXT, "
+        "Created DATETIME DEFAULT CURRENT_TIMESTAMP, "
+        "Updated DATETIME DEFAULT CURRENT_TIMESTAMP, "
+        "Station TEXT, "
+        "FOREIGN KEY (MemoId) REFERENCES Memo(Id) ON DELETE CASCADE)"_s;
 };
 
 MemoTableDef* memoTable() { static MemoTableDef t; return &t; }
@@ -146,6 +199,8 @@ QString MemoStore::prepare()
     res = maybeAddColumn(table->tableName(), table->station);
     if (!res.isEmpty()) return res;
 
+    res = maybeAddIndex(table->tableName(), table->parent);
+
     {
         using T = MemoOptionsTable;
 
@@ -155,17 +210,24 @@ QString MemoStore::prepare()
         res = maybeAddConstrain(T::tableName, {T::C::memoId, T::C::name});
         if (!res.isEmpty()) return res;
     }
+
+    res = createTable<MemoPropsTable>();
+    if (!res.isEmpty()) return res;
+    
     {
-        using T = MemoPropsTable;
+        using T = MemoLinksTable;
 
         res = createTable<T>();
         if (!res.isEmpty()) return res;
 
-        //res = maybeAddConstrain(T::tableName, {T::C::memoId, T::C::name});
-        //if (!res.isEmpty()) return res;
+        res = maybeAddIndex(T::tableName, T::C::id2);
+        if (!res.isEmpty()) return res;
     }
-    
-    res = createTable<MemoLinksTable>();
+
+    res = createTable<MemoHistoryTable>();
+    if (!res.isEmpty()) return res;
+
+    res = createTable<MemoSheetsTable>();
     if (!res.isEmpty()) return res;
 
     return {};

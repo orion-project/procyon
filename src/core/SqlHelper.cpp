@@ -90,9 +90,17 @@ QString maybeAddColumn(const QString& tableName, const QString& columnName)
 
 QString maybeAddConstrain(const QString& tableName, const QStringList& columns)
 {
-    QString name = QString("%1_%2").arg(tableName, columns.join('_'));
+    QString name = QString("idx_%1_%2").arg(tableName, columns.join('_'));
     QString sql = QString("CREATE UNIQUE INDEX IF NOT EXISTS %1 ON %2 (%3)")
                       .arg(name, tableName, columns.join(','));
+    return AnyQuery(sql).exec().error();
+}
+
+QString maybeAddIndex(const QString& tableName, const QString& columnName)
+{
+    QString name = QString("idx_%1_%2").arg(tableName, columnName);
+    QString sql = QString("CREATE INDEX IF NOT EXISTS %1 ON %2 (%3)")
+                      .arg(name, tableName, columnName);
     return AnyQuery(sql).exec().error();
 }
 

@@ -8,13 +8,22 @@ import socket
 from pathlib import Path
 from typing import Any
 from datetime import datetime
+from functools import partial
 
 PROP_NAMES = ["Category", "Severity", "Priority", "Repeat", "Status", "Solution"]
+DICT_ID_OFFSET = 3
 INLINE_LINK = r"(^|\s)#(\d+)($|\s)"
 STATION_NAME = socket.gethostname()
 CONVERSION_DATE = datetime.now().astimezone().isoformat(timespec="seconds")
 MEMO_TYPE = "issue"
 NEW_MEMOS: dict[int, dict[str, Any]] = {}
+COUNT_MEMOS = 0
+COUNT_PROPS = 0
+COUNT_OPTS = 0
+COUNT_LINKS = 0
+COUNT_LINKS_INLINE = 0
+COUNT_HISTORY = 0
+COUNT_COMMENST = 0
 
 def parse_args() -> argparse.Namespace:
   parser = argparse.ArgumentParser(
@@ -23,8 +32,20 @@ def parse_args() -> argparse.Namespace:
   parser.add_argument("in_path", type=Path, help="Input Adeptus database (*.bugs)")
   parser.add_argument("out_path", type=Path, help="Output Procyon database (*.enot)")
   parser.add_argument("folder_id", type=int, help="Target folder id")
-  parser.add_argument("--verbose", "-v", action="store_true", help="Print addition info")
+  parser.add_argument("-v", "--verbose", action="store_true", help="Print addition info")
   return parser.parse_args()
+
+def replace_inline_link(issue_id: int, memo_id: int, match: re.Match):
+  linked_issue_id = int(match.group(2))
+  linked_memo_id = NEW_MEMOS.get(linked_issue_id, {}).get("id")
+  if not linked_memo_id:
+    print(f"WARN: memo not found for issue {issue_id}, skip")
+    return str(linked_issue_id)
+  if linked_issue_id != linked_memo_id:
+    print(f"In issue {issue_id} (memo {memo_id}): replace {linked_issue_id} --> {linked_memo_id}")
+    global COUNT_LINKS_INLINE
+    COUNT_LINKS_INLINE += 1
+  return str(linked_memo_id)
 
 if __name__ == "__main__":
   args = parse_args()
@@ -111,52 +132,43 @@ if __name__ == "__main__":
       "opts": memo_opts,
     }
 
-
   print("===============================================")
   print("Correcting inline links...")
   for issue_id, memo in NEW_MEMOS.items():
-
-    def replace_inline_link(match: re.Match):
-      linked_issue_id = int(match.group(2))
-      linked_memo_id = NEW_MEMOS.get(linked_issue_id, {}).get("id")
-      if not linked_memo_id:
-        print(f"WARN: memo not found for issue {issue_id}, skip")
-        return str(linked_issue_id)
-      print(f"In issue {issue_id} (memo {memo['id']}): replace {linked_issue_id} --> {linked_memo_id}")
-      return str(linked_memo_id)
-
-    old_data: str = memo["data"]
-    new_data: str = re.sub(INLINE_LINK, replace_inline_link, old_data, flags=re.MULTILINE)
+    memo["data"] = re.sub(INLINE_LINK, partial(replace_inline_link, issue_id, memo["id"]), memo["data"], flags=re.MULTILINE)
 
   print("===============================================")
   print("Writing memos...")
   for issue_id, memo in NEW_MEMOS.items():
-    enot.execute(f"SELECT MemoId FROM MemoOptions WHERE Name = 'adeptus' AND Value LIKE '{issue_id}|%'")
+    enot.execute("SELECT MemoId FROM MemoOptions INNER JOIN Memo on Id = MemoId "
+                 f"WHERE Parent={args.folder_id} AND Name = 'adeptus' AND Value LIKE '{issue_id}|{args.out_path.name}|%'")
     row = enot.fetchone()
-    print(f"FFFFFFF {row}")
     memo_id = row[0] if row else None
     if memo_id:
-      print(f"Issue {issue_id} is already converted into memo {memo_id}, skip")
+      print(f"SKIP: issue {issue_id} is already converted into memo {memo_id}")
       memo["id"] = memo_id
     else:
       memo_id = memo["id"]
       if args.verbose:
-        print(f"Inserting issue {issue_id} as memo {memo_id}...")
+        print(f"NEW: issue {issue_id} as memo {memo_id}")
       enot.execute(f"INSERT INTO Memo " +
         "(Id, Parent, Title, Type, Data, Updated, Created, Station)" +
           "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         (memo_id, args.folder_id, memo["title"], MEMO_TYPE, 
           memo["data"], memo["updated"], memo["created"], STATION_NAME))
+      COUNT_MEMOS += 1
       for name, value in memo["props"].items():
         if args.verbose:
-          print(f"Inserting property {name}...")
+          print(f"NEW: property {name}...")
         enot.execute("INSERT INTO MemoProps (MemoId, Name, Value) VALUES (?, ?, ?)",
           (memo["id"], name, value))
+        COUNT_PROPS += 1
       for name, value in memo["opts"].items():
         if args.verbose:
-          print(f"Inserting option {name}...")
+          print(f"NEW: option {name}...")
         enot.execute("INSERT INTO MemoOptions (MemoId, Name, Value) VALUES (?, ?, ?)",
           (memo["id"], name, value))
+        COUNT_OPTS += 1
       enot_conn.commit()
 
   print("===============================================")
@@ -175,13 +187,78 @@ if __name__ == "__main__":
     enot.execute("SELECT * FROM MemoLinks WHERE (Id1=? AND Id2=?) OR (Id1=? AND Id2=?)",
       (memo_id_1, memo_id_2, memo_id_2, memo_id_1))
     if enot.fetchone():
-      print(f"Link {memo_id_1}-{memo_id_2} already exists, skip")
+      print(f"SKIP: link {memo_id_1}-{memo_id_2} already exists")
       continue
     if args.verbose:
-      print(f"Inserting link {memo_id_1}-{memo_id_2}")
+      print(f"NEW: link {memo_id_1}-{memo_id_2}")
     enot.execute("INSERT INTO MemoLinks (Id1, Id2, Created) VALUES (?, ?, ?)",
       (memo_id_1, memo_id_2, created))
+    COUNT_LINKS += 1
     enot_conn.commit()
+
+  print("===============================================")
+  print("Writing history...")
+  for issue_id, memo in NEW_MEMOS.items():
+    memo_id = memo["id"]
+    has_history = False
+    adeptus.execute("SELECT EventNum, EventPart, ChangedParam, NewValue, Moment FROM History " +
+      f"WHERE Issue={issue_id} AND ChangedParam >= {DICT_ID_OFFSET} ORDER BY EventNum, EventPart")
+    for r in adeptus.fetchall():
+      event_num, event_part, dict_id, value_id, moment = int(r[0]), int(r[1]), int(r[2]), int(r[3]), r[4]
+      prop_idx = dict_id - DICT_ID_OFFSET
+      if prop_idx < 0 or prop_idx >= len(PROP_NAMES):
+        print(f"WARN: invalid dict id {dict_id} for issue {issue_id} (EventNum={event_num}, EventPart={event_part}), skip")
+        continue
+      prop_name = PROP_NAMES[prop_idx]
+      prop_value = all_prop_values.get(prop_name, {}).get(value_id)
+      if not prop_value: prop_value = str(value_id)
+      what_str = "prop:" + prop_name
+      enot.execute("SELECT MemoId FROM MemoHistory WHERE MemoId=? AND What=? AND Value=? AND Moment=?",
+        (memo_id, what_str, prop_value, moment))
+      if enot.fetchone():
+        print(f"SKIP: prop history for issue {issue_id} (memo {memo_id}): {prop_name}={prop_value} already exists")
+        continue
+      if args.verbose:
+        print(f"NEW: prop history for issue {issue_id} (memo {memo_id}): {prop_name}={prop_value}")
+      enot.execute("INSERT INTO MemoHistory (MemoId, What, Value, Moment, Station) VALUES (?, ?, ?, ?, ?)",
+        (memo_id, what_str, prop_value, moment, STATION_NAME))
+      has_history = True
+      COUNT_HISTORY += 1
+    if has_history:
+      enot_conn.commit()
+
+  print("===============================================")
+  print("Writing comments...")
+  for issue_id, memo in NEW_MEMOS.items():
+    memo_id = memo["id"]
+    has_comments = False
+    adeptus.execute("SELECT EventNum, EventPart, Comment, Moment FROM History " +
+      f"WHERE Issue={issue_id} AND ChangedParam < 0 ORDER BY EventNum, EventPart")
+    for r in adeptus.fetchall():
+      event_num, event_part, comment, moment = int(r[0]), int(r[1]), r[2], r[3]
+      enot.execute("SELECT Id FROM MemoSheets WHERE MemoId=? AND Created=?", (memo_id, moment))
+      if enot.fetchone():
+        print(f"SKIP: comment {moment} already exists for issue {issue_id} (memo {memo_id})")
+        continue
+      if args.verbose:
+        print(f"NEW: comment {moment} already exists for issue {issue_id} (memo {memo_id})")
+      comment = re.sub(INLINE_LINK, partial(replace_inline_link, issue_id, memo_id), comment, flags=re.MULTILINE)
+      enot.execute("INSERT INTO MemoSheets (MemoId, Data, Created, Updated, Station) VALUES (?, ?, ?, ?, ?)",
+        (memo_id, comment, moment, moment, STATION_NAME))
+      has_comments = True
+      COUNT_COMMENST += 1
+    if has_comments:
+      enot_conn.commit()
+
+  print("===============================================")
+  print("Done")
+  print(f"  Written memos: {COUNT_MEMOS}")
+  print(f"  Written props: {COUNT_PROPS}")
+  print(f"  Written options: {COUNT_OPTS}")
+  print(f"  Written links: {COUNT_LINKS}")
+  print(f"  Written history: {COUNT_HISTORY}")
+  print(f"  Written comment: {COUNT_COMMENST}")
+  print(f"  Corrected inline links: {COUNT_LINKS_INLINE}")
 
   adeptus_conn.close()
   enot_conn.close()

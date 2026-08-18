@@ -67,7 +67,7 @@ struct MemoOptionsTable
     inline static const auto& sqlCreate =
         u"CREATE TABLE IF NOT EXISTS MemoOptions ("
         "MemoId REFERENCES Memo(Id) ON DELETE CASCADE, "
-        "Name, Value)"_s;
+        "Name, Value, UNIQUE(MemoId, Name))"_s;
 
     inline static const auto& sqlSelect =
         u"SELECT Name, Value from MemoOptions WHERE MemoId = :MemoId"_s;
@@ -91,7 +91,7 @@ struct MemoPropsTable
     inline static const auto& sqlCreate =
         u"CREATE TABLE IF NOT EXISTS MemoProps ("
        "MemoId REFERENCES Memo(Id) ON DELETE CASCADE, "
-       "Name, Value)"_s;
+       "Name, Value, UNIQUE(MemoId, Name))"_s;
 
     inline static const auto& sqlSelect =
         u"SELECT Name, Value from MemoProps WHERE MemoId = :MemoId"_s;
@@ -108,6 +108,18 @@ struct MemoPropsTable
 
     inline static const auto& sqlSelectValues =
         u"SELECT DISTINCT Value from MemoProps WHERE Name = :Name ORDER BY Value"_s;
+};
+
+struct MemoLinksTable
+{
+    inline static const auto& tableName = u"MemoLinks"_s;
+
+    inline static const auto& sqlCreate =
+        u"CREATE TABLE IF NOT EXISTS MemoLinks ("
+       "Id1 REFERENCES Memo(Id) ON DELETE CASCADE, "
+       "Id2 REFERENCES Memo(Id) ON DELETE CASCADE, "
+       "Created, Station, "
+       "UNIQUE(Id1, Id2))"_s;
 };
 
 MemoTableDef* memoTable() { static MemoTableDef t; return &t; }
@@ -152,6 +164,9 @@ QString MemoStore::prepare()
         //res = maybeAddConstrain(T::tableName, {T::C::memoId, T::C::name});
         //if (!res.isEmpty()) return res;
     }
+    
+    res = createTable<MemoLinksTable>();
+    if (!res.isEmpty()) return res;
 
     return {};
 }

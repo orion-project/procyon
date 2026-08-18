@@ -136,6 +136,7 @@ void MemoPropsPanel::addPropViaDlg()
 
     auto widget = Ori::Layouts::LayoutV({
         tr("Name:"), nameEditor,
+        Ori::Layouts::SpaceV(2),
         tr("Value:"), valueEditor,
     }).makeWidgetAuto();
 

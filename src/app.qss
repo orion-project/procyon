@@ -428,31 +428,6 @@ QLineEdit:focus {
 }
 
 /************************************
-             QComboBox
-************************************/
-QComboBox {
-  font-size: $main-font-size;
-  border: $default-border;
-  border-radius: $border-radius;
-  padding: 2px;
-  selection-color: white;
-  selection-background-color: $selection-color;
-}
-QComboBox:focus {
-  border: 1px solid $selection-color;
-}
-QComboBox::drop-down {
-  border: none;
-  width: 20px;
-}
-QComboBox::drop-down:hover {
-  background-color: $hover-color;
-}
-QComboBox::down-arrow {
-  image: url(:/icon/drop_down);
-}
-
-/************************************
              QPushButton
 ************************************/
 /*QPushButton {
@@ -497,6 +472,23 @@ QPushButton:pressed {
   color: $quiter-text-color;
 }
 #filter_panel QComboBox {
+  font-size: $main-font-size;
+  border: $default-border;
+  border-radius: $border-radius;
   padding: 2px 6px;
+  selection-color: white;
+  selection-background-color: $selection-color;
 }
-
+#filter_panel QComboBox:focus {
+  border: 1px solid $selection-color;
+}
+#filter_panel QComboBox::drop-down {
+  border: none;
+  width: 20px;
+}
+#filter_panel QComboBox::drop-down:hover {
+  background-color: $hover-color;
+}
+#filter_panel QComboBox::down-arrow {
+  image: url(:/icon/drop_down);
+}

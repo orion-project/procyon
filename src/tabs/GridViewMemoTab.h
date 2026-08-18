@@ -16,6 +16,7 @@ class Entry;
 class GridFilterPanel;
 class GridViewTableModel;
 class GridViewFilterModel;
+class GridViewItemDelegate;
 
 class GridViewMemoTab : public MemoTab
 {
@@ -36,6 +37,7 @@ private:
     QTableView *_tableView;
     GridViewTableModel *_tableModel;
     GridViewFilterModel *_filterModel;
+    GridViewItemDelegate *_itemDelegate;
     GridFilterPanel *_filterPanel;
     QMenu *_contextMenu, *_toolMenu;
 
@@ -48,13 +50,17 @@ private:
     void showContextMenu(const QPoint& pos);
     void chooseColumns();
     void showFilterPanel();
+    void configurePropFormats();
 
-    Entry* selectedEntry() const;
+    Memo* selectedMemo() const;
+    Memo* memoAtIndex(const QModelIndex& index) const;
 
     void clearFilters();
     void applyFilters();
     void applyColumns(const QStringList& propNames);
     void saveSortMode();
+
+    friend class GridViewItemDelegate;
 };
 
 #endif // GRID_VIEW_MEMO_TAB_H

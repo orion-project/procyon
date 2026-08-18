@@ -12,6 +12,7 @@
 #include <QAbstractTableModel>
 #include <QApplication>
 #include <QCheckBox>
+#include <QComboBox>
 #include <QHeaderView>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -23,7 +24,10 @@
 #include <QToolBar>
 #include <QToolButton>
 #include <QSortFilterProxyModel>
+#include <QStyledItemDelegate>
 #include <QVBoxLayout>
+#include <QGridLayout>
+#include <QGroupBox>
 
 using namespace Qt::StringLiterals;
 
@@ -38,6 +42,29 @@ struct ColumnDef
     std::function<QVariant(Memo*)> value;
     QHeaderView::ResizeMode resizeMode = QHeaderView::ResizeToContents;
 };
+
+struct PropFormat
+{
+    template <typename TValue> struct Format
+    {
+        TValue value;
+        bool fullRow = false;
+    };
+    std::optional<Format<QColor>> backColor;
+    std::optional<Format<QColor>> textColor;
+    std::optional<Format<bool>> fontB;
+    std::optional<Format<bool>> fontI;
+    std::optional<Format<bool>> fontU;
+    std::optional<Format<bool>> fontS;
+
+    bool isEmpty() const
+    {
+        return !backColor && !textColor && !fontB && !fontI && !fontU && !fontS;
+    }
+};
+
+using PropFormats = QHash<QString, QHash<QString, PropFormat>>;
+
 }
 
 //------------------------------------------------------------------------------
@@ -253,6 +280,179 @@ private:
 };
 
 //------------------------------------------------------------------------------
+//                            GridViewItemDelegate
+//------------------------------------------------------------------------------
+
+class GridViewItemDelegate : public QStyledItemDelegate
+{
+public:
+    GridViewItemDelegate(GridViewMemoTab *gridView) : QStyledItemDelegate(gridView), _gridView(gridView)
+    {
+        PropFormat solved;
+        solved.backColor = { .value = QColor(0, 255, 0, 50), .fullRow = true };
+        PropFormat closed;
+        closed.backColor = { .value = QColor(0, 0, 0, 50), .fullRow = true };
+        QHash<QString, PropFormat> statusFormats;
+        statusFormats.insert("Solved", solved);
+        statusFormats.insert("Closed", closed);
+        _propFormats.insert("Status", statusFormats);
+    }
+
+    void initStyleOption(QStyleOptionViewItem *option, const QModelIndex &index) const override
+    {
+        QStyledItemDelegate::initStyleOption(option, index);
+
+        const int curCol = index.column();
+
+        Memo* memo = _gridView->memoAtIndex(index);
+
+        const auto& colDefs = _gridView->_tableModel->columnDefs();
+        const int colCount = colDefs.size();
+        for (int col = 0; col < colCount; col++)
+        {
+            const auto& colDef = colDefs.at(col);
+            if (colDef.kind != ColumnKind::PROP)
+                continue;
+
+            QString propName = colDef.header();
+            if (!_propFormats.contains(propName))
+                continue;
+
+            const auto& propValues = memo->props();
+            if (!propValues.contains(propName))
+                continue;
+
+            const auto& propValue = propValues.value(propName);
+            const auto& valueFormats = _propFormats.value(propName);
+            if (!valueFormats.contains(propValue))
+                continue;
+
+            const auto& fmt = valueFormats.value(propValue);
+            if (fmt.backColor && (fmt.backColor->fullRow || col == curCol))
+                option->backgroundBrush = fmt.backColor->value;
+            if (fmt.textColor && (fmt.textColor->fullRow || col == curCol))
+                option->palette.setBrush(QPalette::Text, fmt.textColor->value);
+            if (fmt.fontB && (fmt.fontB->fullRow || col == curCol))
+                option->font.setBold(true);
+            if (fmt.fontI && (fmt.fontI->fullRow || col == curCol))
+                option->font.setItalic(true);
+            if (fmt.fontU && (fmt.fontU->fullRow || col == curCol))
+                option->font.setUnderline(true);
+            if (fmt.fontS && (fmt.fontS->fullRow || col == curCol))
+                option->font.setStrikeOut(true);
+        }
+    }
+
+    void setPropFormats(const PropFormats& formats) { _propFormats = formats; }
+
+    bool configureFormats()
+    {
+        PropFormats formats = _propFormats;
+
+        struct
+        {
+            QString propName;
+            QString propValue;
+            QComboBox *nameSelector = new QComboBox;
+            QComboBox *valueSelector = new QComboBox;
+            QCheckBox *fontB = new QCheckBox(tr("Bold"));
+            QCheckBox *fontFullB = new QCheckBox(tr("Full row"));
+            QCheckBox *fontI = new QCheckBox(tr("Italic"));
+            QCheckBox *fontFullI = new QCheckBox(tr("Full row"));
+            QCheckBox *fontU = new QCheckBox(tr("Underline"));
+            QCheckBox *fontFullU = new QCheckBox(tr("Full row"));
+            QCheckBox *fontS = new QCheckBox(tr("Strikeout"));
+            QCheckBox *fontFullS = new QCheckBox(tr("Full row"));
+
+            void apply(PropFormats &propFormats)
+            {
+                PropFormat fmt;
+                if (fontB->isChecked())
+                    fmt.fontB = { .value = true, .fullRow = fontFullB->isChecked() };
+                if (fontI->isChecked())
+                    fmt.fontI = { .value = true, .fullRow = fontFullI->isChecked() };
+                if (fontU->isChecked())
+                    fmt.fontU = { .value = true, .fullRow = fontFullU->isChecked() };
+                if (fontS->isChecked())
+                    fmt.fontS = { .value = true, .fullRow = fontFullS->isChecked() };
+                propFormats[propName][propValue] = fmt;
+            }
+
+            void populate(PropFormats &propFormats)
+            {
+                propName = nameSelector->currentText();
+                propValue = valueSelector->currentText();
+                const auto& fmt = propFormats[propName][propValue];
+                fontB->setChecked(fmt.fontB.has_value());
+                fontFullB->setChecked(fmt.fontB && fmt.fontB->fullRow);
+                fontI->setChecked(fmt.fontI.has_value());
+                fontFullI->setChecked(fmt.fontI && fmt.fontI->fullRow);
+                fontU->setChecked(fmt.fontU.has_value());
+                fontFullU->setChecked(fmt.fontU && fmt.fontU->fullRow);
+                fontS->setChecked(fmt.fontS.has_value());
+                fontFullS->setChecked(fmt.fontS && fmt.fontS->fullRow);
+            }
+        } c;
+
+        for (const auto& propName : _gridView->_enot->propNames())
+            c.nameSelector->addItem(propName);
+
+        auto fillPropValues = [this, &c]{
+            auto propName = c.nameSelector->currentText();
+            c.valueSelector->clear();
+            for (const auto& propValue : _gridView->_enot->propValues(propName))
+                c.valueSelector->addItem(propValue);
+        };
+
+        connect(c.nameSelector, &QComboBox::currentIndexChanged, this, fillPropValues);
+        fillPropValues();
+
+        auto fillPropFormats = [this, &c, &formats]{
+            c.apply(formats);
+            c.populate(formats);
+        };
+
+        connect(c.valueSelector, &QComboBox::currentIndexChanged, this, fillPropFormats);
+        c.populate(formats);
+
+        auto fmtGroup = new QGroupBox(tr("Format"));
+        auto fmtLayout = new QGridLayout(fmtGroup);
+        int row = 0;
+        fmtLayout->addWidget(c.fontB, row, 0);
+        fmtLayout->addWidget(c.fontFullB, row, 1);
+        row++;
+        fmtLayout->addWidget(c.fontI, row, 0);
+        fmtLayout->addWidget(c.fontFullI, row, 1);
+        row++;
+        fmtLayout->addWidget(c.fontU, row, 0);
+        fmtLayout->addWidget(c.fontFullU, row, 1);
+        row++;
+        fmtLayout->addWidget(c.fontS, row, 0);
+        fmtLayout->addWidget(c.fontFullS, row, 1);
+
+        auto w = Ori::Layouts::LayoutV({
+            Ori::Layouts::LayoutH({
+                tr("Property:"), c.nameSelector,
+                Ori::Layouts::SpaceH(2),
+                tr("Value:"), c.valueSelector,
+            }).makeGroupBox(tr("Condition")),
+            fmtGroup
+        }).makeWidgetAuto();
+
+        auto dlg = Ori::Dlg::Dialog(w)
+            .withContentToButtonsSpacingFactor(2);
+        if (dlg.exec())
+            return true;
+
+        return false;
+    }
+
+private:
+    PropFormats _propFormats;
+    GridViewMemoTab *_gridView;
+};
+
+//------------------------------------------------------------------------------
 //                             GridViewMemoTab
 //------------------------------------------------------------------------------
 
@@ -265,7 +465,8 @@ GridViewMemoTab::GridViewMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     _toolbar = TabHelpers::makeHeaderToolBar();
 
     _toolMenu = new QMenu(this);
-    _toolMenu->addAction(tr("Show columns..."), this, &Self::chooseColumns);
+    _toolMenu->addAction(tr("Show Properties..."), this, &Self::chooseColumns);
+    _toolMenu->addAction(tr("Property Formats..."), this, &Self::configurePropFormats);
     _toolMenu->addSeparator();
     auto actionFilter = _toolMenu->addAction(tr("Show Filters"), this, &Self::showFilterPanel);
     actionFilter->setShortcut(QKeySequence(Qt::ControlModifier | Qt::Key_F));
@@ -304,8 +505,10 @@ GridViewMemoTab::GridViewMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     connect(_enot, &Enot::entryDeleting, _tableModel, &GridViewTableModel::itemRemoving);
     connect(_enot, &Enot::entryDeleted, _tableModel, &GridViewTableModel::itemRemoved);
 
-    _filterModel = new GridViewFilterModel(memo,this);
+    _filterModel = new GridViewFilterModel(memo, this);
     _filterModel->setSourceModel(_tableModel);
+
+    _itemDelegate = new GridViewItemDelegate(this);
 
     _tableView = new QTableView;
     _tableView->setModel(_filterModel);
@@ -315,6 +518,7 @@ GridViewMemoTab::GridViewMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     _tableView->setContextMenuPolicy(Qt::CustomContextMenu);
     _tableView->addAction(actionOpen);
     _tableView->setSortingEnabled(true);
+    _tableView->setItemDelegate(_itemDelegate);
     connect(_tableView, &QTableView::doubleClicked, this, &Self::openSelectedMemo);
     connect(_tableView, &QTableView::customContextMenuRequested, this, &Self::showContextMenu);
 
@@ -417,18 +621,22 @@ void GridViewMemoTab::createMemo()
     _enot->createMemo(_memo->parent(), memoType);
 }
 
-Entry* GridViewMemoTab::selectedEntry() const
+Memo* GridViewMemoTab::selectedMemo() const
 {
     QModelIndexList selection = _tableView->selectionModel()->selectedRows();
     if (selection.empty()) return nullptr;
-    int row = _filterModel->mapToSource(selection.at(0)).row();
+    return memoAtIndex(selection.at(0));
+}
+
+Memo* GridViewMemoTab::memoAtIndex(const QModelIndex& index) const
+{
+    int row = _filterModel->mapToSource(index).row();
     return _memo->parent()->memos().at(row);
 }
 
 void GridViewMemoTab::showContextMenu(const QPoint& pos)
 {
-    auto entry = selectedEntry();
-    if (entry->isMemo())
+    if (selectedMemo())
         _contextMenu->popup(_tableView->mapToGlobal(pos));
 }
 
@@ -440,9 +648,9 @@ void GridViewMemoTab::openSelectedMemo()
         return;
     }
 
-    auto entry = selectedEntry();
-    if (entry->isMemo())
-        emit memoOpenRequested(entry->asMemo());
+    auto memo = selectedMemo();
+    if (memo)
+        emit memoOpenRequested(memo);
 }
 
 void GridViewMemoTab::applyFilters()
@@ -554,14 +762,11 @@ void GridViewMemoTab::clearFilters()
     Store::memos()->updateOption(_memo->id(), u"filter"_s, QString());
 }
 
-
-
-
-
-
-
-
-
+void GridViewMemoTab::configurePropFormats()
+{
+    if (!_itemDelegate->configureFormats())
+        return;
+}
 
 
 

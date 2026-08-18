@@ -3,6 +3,10 @@
 
 #include <QFrame>
 
+QT_BEGIN_NAMESPACE
+class QLabel;
+QT_END_NAMESPACE
+
 class Enot;
 class MemoPropWidget;
 

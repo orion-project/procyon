@@ -355,26 +355,26 @@ public:
             QString propValue;
             QComboBox *nameSelector = new QComboBox;
             QComboBox *valueSelector = new QComboBox;
-            QCheckBox *fontB = new QCheckBox(tr("Bold"));
-            QCheckBox *fontFullB = new QCheckBox(tr("Full row"));
-            QCheckBox *fontI = new QCheckBox(tr("Italic"));
-            QCheckBox *fontFullI = new QCheckBox(tr("Full row"));
-            QCheckBox *fontU = new QCheckBox(tr("Underline"));
-            QCheckBox *fontFullU = new QCheckBox(tr("Full row"));
-            QCheckBox *fontS = new QCheckBox(tr("Strikeout"));
-            QCheckBox *fontFullS = new QCheckBox(tr("Full row"));
+            QCheckBox *fontB1 = new QCheckBox(tr("Bold"));
+            QCheckBox *fontB0 = new QCheckBox(tr("Full row"));
+            QCheckBox *fontI1 = new QCheckBox(tr("Italic"));
+            QCheckBox *fontI0 = new QCheckBox(tr("Full row"));
+            QCheckBox *fontU1 = new QCheckBox(tr("Underline"));
+            QCheckBox *fontU0 = new QCheckBox(tr("Full row"));
+            QCheckBox *fontS1 = new QCheckBox(tr("Strikeout"));
+            QCheckBox *fontS0 = new QCheckBox(tr("Full row"));
 
             void apply(PropFormats &propFormats)
             {
                 PropFormat fmt;
-                if (fontB->isChecked())
-                    fmt.fontB = { .value = true, .fullRow = fontFullB->isChecked() };
-                if (fontI->isChecked())
-                    fmt.fontI = { .value = true, .fullRow = fontFullI->isChecked() };
-                if (fontU->isChecked())
-                    fmt.fontU = { .value = true, .fullRow = fontFullU->isChecked() };
-                if (fontS->isChecked())
-                    fmt.fontS = { .value = true, .fullRow = fontFullS->isChecked() };
+                if (fontB1->isChecked())
+                    fmt.fontB = { .value = true, .fullRow = fontB0->isChecked() };
+                if (fontI1->isChecked())
+                    fmt.fontI = { .value = true, .fullRow = fontI0->isChecked() };
+                if (fontU1->isChecked())
+                    fmt.fontU = { .value = true, .fullRow = fontU0->isChecked() };
+                if (fontS1->isChecked())
+                    fmt.fontS = { .value = true, .fullRow = fontS0->isChecked() };
                 propFormats[propName][propValue] = fmt;
             }
 
@@ -383,14 +383,14 @@ public:
                 propName = nameSelector->currentText();
                 propValue = valueSelector->currentText();
                 const auto& fmt = propFormats[propName][propValue];
-                fontB->setChecked(fmt.fontB.has_value());
-                fontFullB->setChecked(fmt.fontB && fmt.fontB->fullRow);
-                fontI->setChecked(fmt.fontI.has_value());
-                fontFullI->setChecked(fmt.fontI && fmt.fontI->fullRow);
-                fontU->setChecked(fmt.fontU.has_value());
-                fontFullU->setChecked(fmt.fontU && fmt.fontU->fullRow);
-                fontS->setChecked(fmt.fontS.has_value());
-                fontFullS->setChecked(fmt.fontS && fmt.fontS->fullRow);
+                fontB1->setChecked(fmt.fontB.has_value());
+                fontB0->setChecked(fmt.fontB && fmt.fontB->fullRow);
+                fontI1->setChecked(fmt.fontI.has_value());
+                fontI0->setChecked(fmt.fontI && fmt.fontI->fullRow);
+                fontU1->setChecked(fmt.fontU.has_value());
+                fontU0->setChecked(fmt.fontU && fmt.fontU->fullRow);
+                fontS1->setChecked(fmt.fontS.has_value());
+                fontS0->setChecked(fmt.fontS && fmt.fontS->fullRow);
             }
         } c;
 
@@ -415,28 +415,18 @@ public:
         connect(c.valueSelector, &QComboBox::currentIndexChanged, this, fillPropFormats);
         c.populate(formats);
 
-        auto fmtGroup = new QGroupBox(tr("Format"));
-        auto fmtLayout = new QGridLayout(fmtGroup);
-        int row = 0;
-        fmtLayout->addWidget(c.fontB, row, 0);
-        fmtLayout->addWidget(c.fontFullB, row, 1);
-        row++;
-        fmtLayout->addWidget(c.fontI, row, 0);
-        fmtLayout->addWidget(c.fontFullI, row, 1);
-        row++;
-        fmtLayout->addWidget(c.fontU, row, 0);
-        fmtLayout->addWidget(c.fontFullU, row, 1);
-        row++;
-        fmtLayout->addWidget(c.fontS, row, 0);
-        fmtLayout->addWidget(c.fontFullS, row, 1);
-
         auto w = Ori::Layouts::LayoutV({
             Ori::Layouts::LayoutH({
                 tr("Property:"), c.nameSelector,
                 Ori::Layouts::SpaceH(2),
                 tr("Value:"), c.valueSelector,
             }).makeGroupBox(tr("Condition")),
-            fmtGroup
+            Ori::Layouts::Grid({
+                { c.fontB1, c.fontB0 },
+                { c.fontI1, c.fontI0 },
+                { c.fontU1, c.fontU0 },
+                { c.fontS1, c.fontS0 },
+            }).makeGroupBox(tr("Format")),
         }).makeWidgetAuto();
 
         auto dlg = Ori::Dlg::Dialog(w)

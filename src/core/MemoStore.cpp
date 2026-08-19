@@ -46,18 +46,18 @@ public:
                ")"_s;
     }
 
-    const QString sqlSelectAllNoData =
+    inline static const auto& sqlSelectAllNoData =
         u"SELECT Id, Parent, Title, Type, Created, Updated, Station FROM Memo"_s;
 
     virtual QString sqlSelectDataById(int id) const {
         return QString("SELECT Data FROM Memo WHERE Id = %1").arg(id);
     }
 
-    const QString sqlInsert =
+    inline static const auto& sqlInsert =
         u"INSERT INTO Memo (Id, Parent, Title, Type, Data, Created, Updated, Station) "
         "VALUES (:Id, :Parent, :Title, :Type, :Data, :Created, :Updated, :Station)"_s;
 
-    const QString sqlDelete = u"DELETE FROM Memo WHERE Id = :Id"_s;
+    inline static const auto& sqlDelete = u"DELETE FROM Memo WHERE Id = :Id"_s;
 };
 
 struct MemoOptionsTable

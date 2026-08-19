@@ -7,9 +7,6 @@
 
 namespace SqlHelper {
 
-void addField(QSqlRecord &record, const QString &name, QVariant::Type type, const QVariant &value);
-void addField(QSqlRecord &record, const QString &name, const QVariant &value);
-
 QString errorText(const QSqlQuery &query, bool includeSql = false);
 QString errorText(const QSqlQuery *query, bool includeSql = false);
 QString errorText(const QSqlTableModel &model);
@@ -80,6 +77,17 @@ private:
 class AnyQuery
 {
 public:
+    AnyQuery(AnyQuery& other)
+    {
+        // The query is not meant to be copied (because of QSqlQuery)
+        // this constructor actualy takes reference to a temporary object
+        // in calls like
+        // auto q = AnyQuery().param().param()....exec()
+        _query = std::move(other._query);
+        _error = other._error;
+        _record = other._record;
+    }
+    
     AnyQuery(const QString& sql)
     {
         _error = QStringLiteral("Query is not executed");

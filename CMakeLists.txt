@@ -108,39 +108,40 @@ endif()
 set(PROJECT_SOURCES
     src/app.qrc
     src/main.cpp
-    src/AppSettings.cpp
+    src/AppSettings.cpp src/AppSettings.h
     src/core/Enot.cpp src/core/Enot.h
     src/core/FolderStore.cpp src/core/FolderStore.h
     src/core/MemoStore.cpp src/core/MemoStore.h
     src/core/MemoType.cpp src/core/MemoType.h
     src/core/SettingsStore.cpp src/core/SettingsStore.h
     src/core/SqlHelper.cpp src/core/SqlHelper.h
-    src/editors/MarkdownMemoEditor.cpp
-    src/editors/MemoEditor.cpp
-    src/highlighter/EnotStorage.cpp
-    src/highlighter/PhlManager.cpp
-    src/MainWindow.cpp
-    src/markdown/MarkdownHelper.cpp
-    src/markdown/ori_html.c
+    src/editors/MarkdownMemoEditor.cpp src/editors/MarkdownMemoEditor.h
+    src/editors/MemoEditor.cpp src/editors/MemoEditor.h
+    src/highlighter/EnotStorage.cpp src/highlighter/EnotStorage.h
+    src/highlighter/PhlManager.cpp src/highlighter/PhlManager.h
+    src/MainWindow.cpp src/MainWindow.h
+    src/markdown/MarkdownHelper.cpp src/markdown/MarkdownHelper.h
+    src/markdown/ori_html.c src/markdown/ori_html.h
     src/spellcheck/LangCodeAndNames.cpp
-    src/spellcheck/Spellchecker.cpp
-    src/spellcheck/TextEditSpellcheck.cpp
-    src/tabs/AppSettingsTab.cpp
-    src/tabs/CmdConsoleTab.cpp
-    src/tabs/CssEditorTab.cpp
-    src/tabs/GridViewMemoTab.cpp
-    src/tabs/HelpTab.cpp
-    src/tabs/MemoTab.cpp
-    src/tabs/PhlEditorTab.cpp
-    src/tabs/QssEditorTab.cpp
-    src/tabs/SqlConsoleTab.cpp
-    src/tabs/TextMemoTab.cpp
-    src/tabs/TabHelpers.cpp
-    src/TextEditHelpers.cpp
+    src/spellcheck/Spellchecker.cpp src/spellcheck/Spellchecker.h
+    src/spellcheck/TextEditSpellcheck.cpp src/spellcheck/TextEditSpellcheck.h
+    src/tabs/AppSettingsTab.cpp src/tabs/AppSettingsTab.h
+    src/tabs/CmdConsoleTab.cpp src/tabs/CmdConsoleTab.h
+    src/tabs/CssEditorTab.cpp src/tabs/CssEditorTab.h
+    src/tabs/GridViewMemoTab.cpp src/tabs/GridViewMemoTab.h
+    src/tabs/HelpTab.cpp src/tabs/HelpTab.h
+    src/tabs/IssueMemoTab.cpp src/tabs/IssueMemoTab.h
+    src/tabs/MemoTab.cpp src/tabs/MemoTab.h
+    src/tabs/PhlEditorTab.cpp src/tabs/PhlEditorTab.h
+    src/tabs/QssEditorTab.cpp src/tabs/QssEditorTab.h
+    src/tabs/SqlConsoleTab.cpp src/tabs/SqlConsoleTab.h
+    src/tabs/TextMemoTab.cpp src/tabs/TextMemoTab.h
+    src/tabs/TabHelpers.cpp src/tabs/TabHelpers.h
+    src/TextEditHelpers.cpp src/TextEditHelpers.h
     src/widgets/GridFilterPanel.cpp src/widgets/GridFilterPanel.h
     src/widgets/MemoPropsPanel.cpp src/widgets/MemoPropsPanel.h
-    src/widgets/MemoTextBrowser.cpp
-    src/widgets/MemoTextEdit.cpp
+    src/widgets/MemoTextBrowser.cpp src/widgets/MemoTextBrowser.h
+    src/widgets/MemoTextEdit.cpp src/widgets/MemoTextEdit.h
     src/widgets/OpenTabsWidget.cpp src/widgets/OpenTabsWidget.h
     src/widgets/TreeWidget.cpp src/widgets/TreeWidget.h
 )

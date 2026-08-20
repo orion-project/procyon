@@ -8,6 +8,7 @@
 #include "tabs/PhlEditorTab.h"
 #include "tabs/CssEditorTab.h"
 #include "tabs/MemoTab.h"
+#include "tabs/IssueMemoTab.h"
 #include "tabs/TextMemoTab.h"
 #include "tabs/GridViewMemoTab.h"
 #include "tabs/SqlConsoleTab.h"
@@ -515,6 +516,8 @@ void MainWindow::openMemoTab(Memo* memo)
         tab = new GridViewMemoTab(_enot, memo);
         connect((GridViewMemoTab*)tab, &GridViewMemoTab::memoOpenRequested, this, &MainWindow::openMemoTab);
     }
+    else if (memo->type() == MemoType::issue())
+        tab = new IssueMemoTab(_enot, memo);
 
     if (!tab)
     {

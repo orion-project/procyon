@@ -164,6 +164,12 @@ struct MemoSheetsTable
 {
     inline static const auto& tableName = u"MemoSheets"_s;
 
+    struct C
+    {
+        inline static const auto& memoId = u"MemoId"_s;
+        inline static const auto& data = u"Data"_s;
+    };
+
     inline static const auto& sqlCreate =
         u"CREATE TABLE IF NOT EXISTS MemoSheets ("
         "Id INTEGER PRIMARY KEY, "
@@ -173,6 +179,9 @@ struct MemoSheetsTable
         "Updated DATETIME DEFAULT CURRENT_TIMESTAMP, "
         "Station TEXT, "
         "FOREIGN KEY (MemoId) REFERENCES Memo(Id) ON DELETE CASCADE)"_s;
+
+    inline static const auto& sqlSelect =
+        u"SELECT Data FROM MemoSheets WHERE MemoId = :MemoId"_s;
 };
 
 MemoTableDef* memoTable() { static MemoTableDef t; return &t; }
@@ -459,4 +468,22 @@ QString MemoStore::updateProp(int memoId, const QString& name, const QString& va
         .param(T::C::value, value)
         .exec()
         .error();
+}
+
+QStringList MemoStore::loadSheets(int memoId) const
+{
+    using T = MemoSheetsTable;
+
+    auto q = AnyQuery(T::sqlSelect).param(T::C::memoId, memoId).exec();
+    if (q.isFailed())
+    {
+        // TODO: add protocol
+        qWarning() << "Unable to load sheets for memo" << memoId << q.error();
+        return {};
+    }
+
+    QStringList result;
+    while (q.next())
+        result.append(q.valueStr(T::C::data));
+    return result;
 }

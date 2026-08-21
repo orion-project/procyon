@@ -487,3 +487,43 @@ QPushButton:pressed {
 #filter_panel QComboBox::down-arrow {
   image: url(:/icon/drop_down);
 }
+
+#issue_content_scroller {
+  padding-bottom: 0;
+  padding-top: 0;
+}
+#issue_content_scroller QScrollBar {
+  margin-top: 2px;
+}
+#issue_content_widget {
+  background-color: white;
+}
+QTextBrowser[role=issue_text] {
+  border: $default-border;  
+  border-bottom-left-radius: $border-radius;
+  border-bottom-right-radius: $border-radius;
+  background-color: white;
+  padding: 2px;
+  margin: 6px;
+  margin-top: 0;
+}
+QTextBrowser#issue_summary {
+  border: none;
+  padding: 6px;
+}
+QFrame[role=event_header] {
+  min-height: 30px;
+  border: $default-border;  
+  border-top-left-radius: $border-radius;
+  border-top-right-radius: $border-radius;
+  margin: 6px;
+  margin-bottom: 0;
+  border-bottom: none;
+  background-color: $light-paper-color; 
+}
+QFrame[role=event_header] QLabel {
+  font-size: 15px;
+  margin-left: 6px;
+  font-weight: bold;
+  color: $quiter-text-color;
+}

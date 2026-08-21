@@ -35,6 +35,7 @@ public:
     QStringList loadPropValues(const QString& name) const;
     QString deleteProp(int memoId, const QString& name) const;
     QString updateProp(int memoId, const QString& name, const QString& value) const;
+    QStringList loadSheets(int memoId) const;
 };
 
 namespace Store

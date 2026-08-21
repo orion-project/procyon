@@ -9,6 +9,11 @@ $light-paper-color: #f6f7fa;
 $main-text-color: black;
 $quiter-text-color: #32424c;
 
+QWidget {
+  selection-color: white;
+  selection-background-color: $selection-color;
+}
+
 /************************************
              Main window
 ************************************/
@@ -85,7 +90,6 @@ QMenu::indicator:checked {
   padding-right: 2px;
   padding-top: 2px;
   margin-left: 3px;
-  selection-color: white;
 }
 #tabs_list::item {
   height: 32px;
@@ -111,11 +115,8 @@ QMenu::indicator:checked {
   padding-right: 2px;
   padding-top: 2px;
   margin-right: 3px;
-  selection-color: white;
-  selection-background-color: white;
 }
 #tree_view::item {
-  //height: 24px;
   padding: 3px;
   margin: 0;
   border-radius: $border-radius;
@@ -157,17 +158,11 @@ QMenu::indicator:checked {
   border: $default-border;
   border-radius: $border-radius;
   padding: 2px;
-  selection-color: white;
-  selection-background-color: $selection-color;
 }
-[role=memo_title] {
+#memo_title_editor {
   color: $quiter-text-color;
   font-size: 20px;
   font-weight: bold;
-}
-#memo_title_editor {
-  selection-color: white;
-  selection-background-color: $selection-color;
   background: transparent;
   height: 36px;
   padding-left: 3px;
@@ -182,6 +177,12 @@ QMenu::indicator:checked {
 }
 #memo_header_panel {
   margin-bottom: 4px;
+}
+#memo_header_panel #issue_id {
+  color: $quiter-text-color;
+  font-size: 20px;
+  margin-left: 3px;
+  padding-top: 1px;
 }
 #code_editor {
   font-family: Menlo,Monaco,Consolas,'Courier New',monospace;
@@ -364,8 +365,6 @@ QToolButton::menu-indicator {
 ************************************/
 QTableView {
   font-size: $main-font-size;
-  selection-background-color: $selection-color;
-  selection-color: white;
   gridline-color: LightGray;
 }
 QTableView::item {
@@ -420,8 +419,6 @@ QLineEdit {
   border: $default-border;
   border-radius: $border-radius;
   padding: 2px;
-  selection-color: white;
-  selection-background-color: $selection-color;
 }
 QLineEdit:focus {
   border: 1px solid $selection-color;
@@ -476,8 +473,6 @@ QPushButton:pressed {
   border: $default-border;
   border-radius: $border-radius;
   padding: 2px 6px;
-  selection-color: white;
-  selection-background-color: $selection-color;
 }
 #filter_panel QComboBox:focus {
   border: 1px solid $selection-color;

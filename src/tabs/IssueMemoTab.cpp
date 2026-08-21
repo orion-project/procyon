@@ -15,7 +15,7 @@ typedef IssueMemoTab Self;
 IssueMemoTab::IssueMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
 {
     auto idLabel = new QLabel('#' + QString::number(memo->id()));
-    idLabel->setProperty("role", "memo_title");
+    idLabel->setObjectName("issue_id");
     
     _titleEditor = TabHelpers::makeTitleEditor();
     

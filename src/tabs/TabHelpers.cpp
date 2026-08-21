@@ -21,7 +21,6 @@ QLineEdit* makeTitleEditor(const QString &title)
     auto titleEditor = new QLineEdit;
     titleEditor->setReadOnly(true);
     titleEditor->setObjectName("memo_title_editor");
-    titleEditor->setProperty("role", "memo_title");
     titleEditor->setText(title);
     return titleEditor;
 }

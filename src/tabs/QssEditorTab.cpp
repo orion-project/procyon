@@ -79,7 +79,8 @@ QWidget* QssEditorTab::makePopupMsgTool()
         Ori::Gui::PopupMessage::hint(textEdit->text(), 0);
     });
 
-    return Ori::Gui::groupV("Test Popup Message", {textEdit, buttonError, buttonWarning, buttonAffirm, buttonHint});
+    return Ori::Layouts::LayoutV({textEdit, buttonError, buttonWarning, buttonAffirm, buttonHint})
+        .makeGroupBox("Test Popup Message");
 }
 
 QWidget* QssEditorTab::makeWarningBox()
@@ -95,5 +96,6 @@ QWidget* QssEditorTab::makeWarningBox()
         if (!res.isEmpty()) Ori::Dlg::error(res);
         else Ori::Gui::PopupMessage::affirm("Saved successfully", 1000);
     });
-    return Ori::Gui::groupV("Developer Mode", {label, button});
+    return Ori::Layouts::LayoutV({label, button})
+        .makeGroupBox("Developer Mode");
 }

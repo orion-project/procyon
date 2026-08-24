@@ -486,7 +486,7 @@ QString MemoStore::updateProp(int memoId, const QString& name, const QString& va
         .error();
 }
 
-QList<MemoSheet*> MemoStore::loadSheets(int memoId) const
+QList<MemoSheet> MemoStore::loadSheets(int memoId) const
 {
     using T = MemoSheetsTable;
 
@@ -498,22 +498,21 @@ QList<MemoSheet*> MemoStore::loadSheets(int memoId) const
         return {};
     }
 
-    QList<MemoSheet*> result;
+    QList<MemoSheet> result;
     while (q.next())
     {
-        auto sheet = new MemoSheet;
-        sheet->_id = q.valueInt(T::C::id);
-        sheet->_data = q.valueStr(T::C::data);
-        sheet->_created = q.valueDate(T::C::created);
-        sheet->_updated = q.valueDate(T::C::updated);
-        sheet->_station = q.valueStr(T::C::station);
-
+        MemoSheet sheet;
+        sheet._id = q.valueInt(T::C::id);
+        sheet._data = q.valueStr(T::C::data);
+        sheet._created = q.valueDate(T::C::created);
+        sheet._updated = q.valueDate(T::C::updated);
+        sheet._station = q.valueStr(T::C::station);
         result.append(sheet);
     }
     return result;
 }
 
-QList<MemoEvent*> MemoStore::loadEvents(int memoId) const
+QList<MemoEvent> MemoStore::loadEvents(int memoId) const
 {
     using T = MemoHistoryTable;
 
@@ -525,15 +524,14 @@ QList<MemoEvent*> MemoStore::loadEvents(int memoId) const
         return {};
     }
 
-    QList<MemoEvent*> result;
+    QList<MemoEvent> result;
     while (q.next())
     {
-        auto event = new MemoEvent;
-        event->_what = q.valueStr(T::C::what);
-        event->_value = q.valueStr(T::C::value);
-        event->_moment = q.valueDate(T::C::moment);
-        event->_station = q.valueStr(T::C::station);
-
+        MemoEvent event;
+        event._what = q.valueStr(T::C::what);
+        event._value = q.valueStr(T::C::value);
+        event._moment = q.valueDate(T::C::moment);
+        event._station = q.valueStr(T::C::station);
         result.append(event);
     }
     return result;

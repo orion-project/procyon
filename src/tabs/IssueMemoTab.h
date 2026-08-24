@@ -3,6 +3,8 @@
 
 #include "MemoTab.h"
 
+#include <QDateTime>
+
 QT_BEGIN_NAMESPACE
 class QAction;
 class QLineEdit;
@@ -20,7 +22,6 @@ class IssueMemoTab : public MemoTab
 {
 public:
     explicit IssueMemoTab(Enot* enot, Memo* memo);
-    ~IssueMemoTab() override;
 
     void beginEdit() override;
 
@@ -35,9 +36,7 @@ private:
     QScrollArea *_contentScroller;
     QVBoxLayout *_contentLayout;
     IssueMemoView *_summaryView;
-    QList<IssueMemoView*> _commentViews;
-    QList<MemoSheet*> _comments;
-    QList<MemoEvent*> _events;
+    QSet<QDateTime> _shownEvents;
     QLabel *_labelUpdated;
 
     struct PopupInfo
@@ -49,12 +48,25 @@ private:
     };
     PopupInfo _issueInfo;
 
+    struct CommentData
+    {
+        QString sourceText;
+        QDateTime updated;
+        IssueMemoView* textView;
+        QLabel *labelUpdated;
+        PopupInfo popupInfo;
+    };
+    QHash<int, CommentData> _commentViews;
+
     void showMemo();
+    void showHistory();
     void cancelEdit();
     bool saveEdit();
     void toggleEditMode(bool on);
 
     void updateViewHeights();
+
+    void editComment(int id);
 
     PopupInfo makePopupInfo();
 };

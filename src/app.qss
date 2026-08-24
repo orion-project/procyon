@@ -155,6 +155,7 @@ QMenu::indicator:checked {
              Memo editor
 ************************************/
 [role=memo_editor] {
+  font-size: $main-font-size;
   background-color: white;
   border: $default-border;
   border-radius: $border-radius;
@@ -569,4 +570,12 @@ QLabel[role=isssue_popup_info_name] {
 }
 QLabel[role=issue_popup_info_value] {
   font-size: $main-font-size;
+}
+QPlainTextEdit[role=issue_text_in_dlg] {
+  border: none;
+  padding: 3px;
+}
+QTextBrowser[role=issue_text_in_dlg] {
+  border: none;
+  padding: 3px;
 }

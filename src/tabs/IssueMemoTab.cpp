@@ -7,12 +7,18 @@
 #include "markdown/MarkdownHelper.h"
 #include "widgets/MemoPropsPanel.h"
 
+#include "helpers/OriWidgets.h"
+#include "helpers/OriDialogs.h"
+
 #include <QAction>
+#include <QDialogButtonBox>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMenu>
+#include <QPlainTextEdit>
 #include <QResizeEvent>
 #include <QScrollArea>
+#include <QTabWidget>
 #include <QTextBrowser>
 #include <QTextDocument>
 #include <QToolBar>
@@ -21,6 +27,11 @@
 #include <QWidgetAction>
 
 using namespace Qt::StringLiterals;
+
+static QString dateToStr(const QDateTime& date)
+{
+    return QLocale::system().toString(date, QLocale::ShortFormat);
+}
 
 //------------------------------------------------------------------------------
 //                             IssueMemoTab
@@ -33,14 +44,6 @@ public:
     {
         setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         document()->setDefaultStyleSheet(AppSettings::instance().markdownCss());
-        //setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed));
-    }
-
-protected:
-    void resizeEvent(QResizeEvent *e) override
-    {
-        QTextBrowser::resizeEvent(e);
-        //_label->move(e->size().height() - _label->width(), 0);
     }
 
 private:
@@ -53,8 +56,6 @@ private:
     {
 
     }
-
-    QLabel *_label;
 };
 
 //------------------------------------------------------------------------------
@@ -120,13 +121,8 @@ IssueMemoTab::IssueMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
         _propsPanel->addProp(it.key(), it.value());
 
     showMemo();
+    showHistory();
     toggleEditMode(false);
-}
-
-IssueMemoTab::~IssueMemoTab()
-{
-    qDeleteAll(_comments);
-    qDeleteAll(_events);
 }
 
 IssueMemoTab::PopupInfo IssueMemoTab::makePopupInfo()
@@ -151,8 +147,8 @@ IssueMemoTab::PopupInfo IssueMemoTab::makePopupInfo()
     auto widget = new QWidget(this);
 
     Ori::Layouts::Grid({
-        { created , info.created },
-        { updated , info.updated },
+        { created, info.created },
+        { updated, info.updated },
         { station, info.station }
     }).useFor(widget);
 
@@ -167,26 +163,30 @@ void IssueMemoTab::showMemo()
 {
     _titleEditor->setText(_memo->title());
     _summaryView->setHtml(MarkdownHelper::markdownToHtml(_memo->data()));
-    _labelUpdated->setText(QLocale::system().toString(_memo->updated(), QLocale::ShortFormat));
-    _issueInfo.created->setText(QLocale::system().toString(_memo->created(), QLocale::ShortFormat));
-    _issueInfo.updated->setText(QLocale::system().toString(_memo->updated(), QLocale::ShortFormat));
+    _labelUpdated->setText(dateToStr(_memo->updated()));
+    _issueInfo.created->setText(dateToStr(_memo->created()));
+    _issueInfo.updated->setText(dateToStr(_memo->updated()));
     _issueInfo.station->setText(_memo->station());
+    setWindowTitle(_memo->title());
+}
 
-    _events = Store::memos()->loadEvents(_memo->id());
-    _comments = Store::memos()->loadSheets(_memo->id());
+void IssueMemoTab::showHistory()
+{
+    auto events = Store::memos()->loadEvents(_memo->id());
+    auto comments = Store::memos()->loadSheets(_memo->id());
 
     // Events and comments are store in different tables
     // but should be displayed at the same list orderred by their date
     struct HistoryItem
     {
         QDateTime moment;
-        std::variant<MemoEvent*, MemoSheet*> item;
+        std::variant<MemoEvent, MemoSheet> item;
     };
     QList<HistoryItem> history;
-    for (auto event : std::as_const(_events))
-        history << HistoryItem{ .moment = event->moment(), .item = event };
-    for (auto comment : std::as_const(_comments))
-        history << HistoryItem{ .moment = comment->created(), .item = comment };
+    for (const auto& event : std::as_const(events))
+        history << HistoryItem{ .moment = event.moment(), .item = event };
+    for (const auto& comment : std::as_const(comments))
+        history << HistoryItem{ .moment = comment.created(), .item = comment };
     std::sort(history.begin(), history.end(), [](const HistoryItem& a, const HistoryItem& b){
         return a.moment < b.moment;
     });
@@ -210,7 +210,7 @@ void IssueMemoTab::showMemo()
     };
 
     auto makeDateLabel = [](const QDateTime& date){
-        auto label = new QLabel(QLocale::system().toString(date, QLocale::ShortFormat));
+        auto label = new QLabel(dateToStr(date));
         label->setObjectName("issue_event_date");
         return label;
     };
@@ -224,8 +224,8 @@ void IssueMemoTab::showMemo()
         for (const auto &propName : std::as_const(propNames))
         {
             const auto& change = propsChange->propValues.value(propName);
-            QString oldValue = change.first.isEmpty() ? u"(none)"_s : change.first;
-            QString newValue = change.second.isEmpty() ? u"(none)"_s : change.second;
+            QString oldValue = change.first.isEmpty() ? tr("(none)") : change.first;
+            QString newValue = change.second.isEmpty() ? tr("(none)") : change.second;
             report << u"%1:&nbsp;<b>%2&nbsp;→&nbsp;%3</b>"_s.arg(propName, oldValue, newValue);
         }
 
@@ -244,64 +244,90 @@ void IssueMemoTab::showMemo()
         header->setProperty("role", "issue_event_header");
         header->setProperty("role1", "issue_prop_changes");
         _contentLayout->addWidget(header, 0, Qt::AlignTop);
+        _shownEvents.insert(propsChange->moment);
 
         propsChange.reset();
     };
 
     for (const auto& item : std::as_const(history))
     {
-        if (std::holds_alternative<MemoEvent*>(item.item))
+        if (std::holds_alternative<MemoEvent>(item.item))
         {
-            auto event = std::get<MemoEvent*>(item.item);
-            if (!event->what().startsWith("prop:"_L1))
+            const auto& event = std::get<MemoEvent>(item.item);
+            if (!event.what().startsWith("prop:"_L1))
                 continue;
 
-            QString propName = event->what().split(':').last();
+            QString propName = event.what().split(':').last();
             QString oldValue = propValues.value(propName);
-            QString newValue = event->value();
+            QString newValue = event.value();
             propValues[propName] = newValue;
 
-            if (!propsChange || event->moment() > propsChange->moment)
+            if (_shownEvents.contains(event.moment()))
+                continue;
+
+            if (!propsChange || event.moment() > propsChange->moment)
             {
                 if (propsChange)
                     makePropChangeWidget();
 
                 propsChange = PropChangeItem();
-                propsChange->moment = event->moment();
+                propsChange->moment = event.moment();
             }
 
             propsChange->propValues.insert(propName, qMakePair(oldValue, newValue));
         }
-        else if (std::holds_alternative<MemoSheet*>(item.item))
+        else if (std::holds_alternative<MemoSheet>(item.item))
         {
             makePropChangeWidget();
 
-            auto comment = std::get<MemoSheet*>(item.item);
+            const auto& comment = std::get<MemoSheet>(item.item);
 
-            auto sheetView = new IssueMemoView;
-            sheetView->setProperty("role", "issue_comment");
-            sheetView->setHtml(MarkdownHelper::markdownToHtml(comment->data()));
+            if (_commentViews.contains(comment.id()))
+            {
+                const auto& commentView = _commentViews.value(comment.id());
+                if (comment.updated() > commentView.updated)
+                {
+                    commentView.textView->setHtml(MarkdownHelper::markdownToHtml(comment.data()));
+                    commentView.labelUpdated->setText(dateToStr(comment.updated()));
+                    commentView.popupInfo.updated->setText(dateToStr(comment.updated()));
+                    commentView.popupInfo.station->setText(comment.station());
+                }
+                continue;
+            }
 
-            auto info = makePopupInfo();
-            info.created->setText(QLocale::system().toString(comment->created(), QLocale::ShortFormat));
-            info.updated->setText(QLocale::system().toString(comment->updated(), QLocale::ShortFormat));
-            info.station->setText(comment->station());
+            CommentData commentView;
 
-            auto menu = new QMenu(sheetView);
-            menu->addAction(info.action);
+            commentView.sourceText = comment.data();
+            commentView.updated = comment.updated();
+
+            commentView.textView = new IssueMemoView;
+            commentView.textView->setProperty("role", "issue_comment");
+            commentView.textView->setHtml(MarkdownHelper::markdownToHtml(comment.data()));
+
+            commentView.labelUpdated = makeDateLabel(comment.updated());
+
+            commentView.popupInfo = makePopupInfo();
+            commentView.popupInfo.created->setText(dateToStr(comment.created()));
+            commentView.popupInfo.updated->setText(dateToStr(comment.updated()));
+            commentView.popupInfo.station->setText(comment.station());
+
+            auto menu = new QMenu(commentView.textView);
+            menu->addAction(commentView.popupInfo.action);
+            menu->addSeparator();
+            menu->addAction(tr("Edit"), this, [this, comment]{ editComment(comment.id()); });
 
             auto header = new QFrame;
             Ori::Layouts::LayoutH({
                     makeNumLabel(),
                     Ori::Layouts::Stretch(),
-                    makeDateLabel(comment->updated()),
+                    commentView.labelUpdated,
                     TabHelpers::makeMenuButton(menu),
                 }).setMargin(0).setSpacing(0).useFor(header);
             header->setProperty("role", "issue_event_header");
             _contentLayout->addWidget(header, 0, Qt::AlignTop);
 
-            _contentLayout->addWidget(sheetView, 0, Qt::AlignTop);
-            _commentViews << sheetView;
+            _contentLayout->addWidget(commentView.textView, 0, Qt::AlignTop);
+            _commentViews.insert(comment.id(), commentView);
         }
     }
     makePropChangeWidget();
@@ -309,8 +335,6 @@ void IssueMemoTab::showMemo()
     _contentLayout->addStretch();
 
     QTimer::singleShot(0, this, &Self::updateViewHeights);
-    
-    setWindowTitle(_memo->title());
 }
 
 void IssueMemoTab::beginEdit()
@@ -361,12 +385,44 @@ void IssueMemoTab::updateViewHeights()
 {
     const int maxBordersWidth = 40;
     _summaryView->setFixedHeight(_summaryView->document()->size().height() + maxBordersWidth);
-    for (auto commentView : std::as_const(_commentViews))
-        commentView->setFixedHeight(commentView->document()->size().height() + maxBordersWidth);
+    for (const auto& commentView : std::as_const(_commentViews))
+        commentView.textView->setFixedHeight(commentView.textView->document()->size().height() + maxBordersWidth);
 }
 
 void IssueMemoTab::resizeEvent(QResizeEvent *e)
 {
     MemoTab::resizeEvent(e);
     updateViewHeights();
+}
+
+void IssueMemoTab::editComment(int id)
+{
+    const auto& commentView = _commentViews.value(id);
+
+    auto editor = new QPlainTextEdit;
+    editor->setPlainText(commentView.sourceText);
+    editor->setObjectName("code_editor");
+    editor->setProperty("role", "issue_text_in_dlg");
+
+    auto preview = new QTextBrowser;
+    preview->document()->setDefaultStyleSheet(AppSettings::instance().markdownCss());
+    preview->setProperty("role", "issue_text_in_dlg");
+
+    auto tabs = new QTabWidget;
+    tabs->addTab(editor, tr("Edit"));
+    tabs->addTab(preview, tr("Preview"));
+    connect(tabs, &QTabWidget::currentChanged, this, [editor, preview](int index){
+        if (index == 1)
+            preview->setHtml(MarkdownHelper::markdownToHtml(editor->toPlainText()));
+    });
+
+    auto buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    connect(buttons, &QDialogButtonBox::rejected, this, []{});
+    connect(buttons, &QDialogButtonBox::accepted, this, []{});
+
+    auto wnd = new QWidget(this);
+    Ori::Layouts::LayoutV({tabs, buttons}).useFor(wnd);
+    wnd->setAttribute(Qt::WA_DeleteOnClose);
+    wnd->setWindowFlags(Qt::Tool);
+    wnd->show();
 }

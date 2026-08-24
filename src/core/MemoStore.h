@@ -6,6 +6,7 @@
 #include <QVariant>
 
 class Memo;
+class MemoSheet;
 struct MemoUpdateParam;
 
 struct MemosResult
@@ -35,7 +36,7 @@ public:
     QStringList loadPropValues(const QString& name) const;
     QString deleteProp(int memoId, const QString& name) const;
     QString updateProp(int memoId, const QString& name, const QString& value) const;
-    QStringList loadSheets(int memoId) const;
+    QList<MemoSheet*> loadSheets(int memoId) const;
 };
 
 namespace Store

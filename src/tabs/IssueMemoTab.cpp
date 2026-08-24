@@ -10,12 +10,15 @@
 #include <QAction>
 #include <QLabel>
 #include <QLineEdit>
+#include <QMenu>
 #include <QResizeEvent>
 #include <QScrollArea>
 #include <QTextBrowser>
 #include <QTextDocument>
 #include <QToolBar>
+#include <QToolButton>
 #include <QTimer>
+#include <QWidgetAction>
 
 //------------------------------------------------------------------------------
 //                             IssueMemoTab
@@ -26,7 +29,9 @@ class IssueMemoView : public QTextBrowser
 public:
     explicit IssueMemoView(QWidget *parent = 0) : QTextBrowser()
     {
-        //_label = new QLabel("hello", this);
+        setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        document()->setDefaultStyleSheet(AppSettings::instance().markdownCss());
+        //setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed));
     }
 
 protected:
@@ -76,14 +81,21 @@ IssueMemoTab::IssueMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     
     auto toolPanel = TabHelpers::makeHeaderPanel({idLabel, _titleEditor, _toolbar});
 
-    _propsPanel = new MemoPropsPanel(enot);
-    _propsPanel->setVisible(false);
+    _labelUpdated = new QLabel;
+    _labelUpdated->setObjectName("issue_updated");
+
+    _issueInfo = makePopupInfo();
+
+    auto toolMenu = new QMenu(this);
+    toolMenu->addAction(_issueInfo.action);
+    //toolMenu->addSeparator();
+    //toolMenu->addAction(tr("Add Property..."), this, [this]{ _propsPanel->addPropViaDlg(); });
+
+    _propsPanel = new MemoPropsPanel(enot, {_labelUpdated, TabHelpers::makeMenuButton(toolMenu)});
+    _propsPanel->hideWhenEmpty = false;
 
     _summaryView = new IssueMemoView;
     _summaryView->setObjectName("issue_summary");
-    //_summaryView->setProperty("role", "issue_text");
-    _summaryView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    _summaryView->document()->setDefaultStyleSheet(AppSettings::instance().markdownCss());
 
     auto contentWidget = new QWidget;
     contentWidget->setObjectName("issue_content_widget");
@@ -109,35 +121,88 @@ IssueMemoTab::IssueMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     toggleEditMode(false);
 }
 
+IssueMemoTab::~IssueMemoTab()
+{
+    qDeleteAll(_comments);
+}
+
+IssueMemoTab::PopupInfo IssueMemoTab::makePopupInfo()
+{
+    PopupInfo info;
+
+    auto created = new QLabel(tr("Created:"));
+    created->setProperty("role", "isssue_popup_info_name");
+    info.created = new QLabel;
+    info.created->setProperty("role", "issue_popup_info_value");
+
+    auto updated = new QLabel(tr("Updated:"));
+    updated->setProperty("role", "isssue_popup_info_name");
+    info.updated = new QLabel;
+    info.updated->setProperty("role", "issue_popup_info_value");
+
+    auto station = new QLabel(tr("Station:"));
+    station->setProperty("role", "isssue_popup_info_name");
+    info.station = new QLabel;
+    info.station->setProperty("role", "issue_popup_info_value");
+
+    auto widget = new QWidget(this);
+
+    Ori::Layouts::Grid({
+        { created , info.created },
+        { updated , info.updated },
+        { station, info.station }
+    }).useFor(widget);
+
+    auto action = new QWidgetAction(this);
+    action->setDefaultWidget(widget);
+
+    info.action = action;
+    return info;
+}
+
 void IssueMemoTab::showMemo()
 {
     _titleEditor->setText(_memo->title());
     _summaryView->setHtml(MarkdownHelper::markdownToHtml(_memo->data()));
-    _summaryView->setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed));
+    _labelUpdated->setText(QLocale::system().toString(_memo->updated(), QLocale::ShortFormat));
+    _issueInfo.created->setText(QLocale::system().toString(_memo->created(), QLocale::ShortFormat));
+    _issueInfo.updated->setText(QLocale::system().toString(_memo->updated(), QLocale::ShortFormat));
+    _issueInfo.station->setText(_memo->station());
 
     int num = 1;
-    auto comments = Store::memos()->loadSheets(_memo->id());
-    for (const auto &comment : std::as_const(comments))
+    _comments = Store::memos()->loadSheets(_memo->id());
+    for (auto comment : std::as_const(_comments))
     {
-        auto label = new QLabel(QString::number(num));
+        auto sheetView = new IssueMemoView;
+        sheetView->setProperty("role", "issue_comment");
+        sheetView->setHtml(MarkdownHelper::markdownToHtml(comment->data()));
+
+        auto labelNum = new QLabel(QString::number(num++));
+        labelNum->setObjectName("issue_event_num");
+
+        auto labelDate = new QLabel(QLocale::system().toString(comment->updated(), QLocale::ShortFormat));
+        labelDate->setObjectName("issue_event_date");
+
+        auto info = makePopupInfo();
+        info.created->setText(QLocale::system().toString(comment->created(), QLocale::ShortFormat));
+        info.updated->setText(QLocale::system().toString(comment->updated(), QLocale::ShortFormat));
+        info.station->setText(comment->station());
+
+        auto menu = new QMenu(sheetView);
+        menu->addAction(info.action);
 
         auto header = new QFrame;
         Ori::Layouts::LayoutH({
-            label,
+            labelNum,
             Ori::Layouts::Stretch(),
+            labelDate,
+            TabHelpers::makeMenuButton(menu),
         }).setMargin(0).setSpacing(0).useFor(header);
-        header->setProperty("role", "event_header");
+        header->setProperty("role", "issue_event_header");
         _contentLayout->addWidget(header, 0, Qt::AlignTop);
 
-        auto sheetView = new IssueMemoView;
-        sheetView->setProperty("role", "issue_text");
-        sheetView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        sheetView->document()->setDefaultStyleSheet(AppSettings::instance().markdownCss());
-        sheetView->setHtml(MarkdownHelper::markdownToHtml(comment));
         _contentLayout->addWidget(sheetView, 0, Qt::AlignTop);
         _commentViews << sheetView;
-
-        num++;
     }
 
     _contentLayout->addStretch();

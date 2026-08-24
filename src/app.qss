@@ -8,6 +8,7 @@ $hover-color: #334682b4;
 $light-paper-color: #f6f7fa;
 $main-text-color: black;
 $quiter-text-color: #32424c;
+$silent-text-color: #99a3aa;
 
 QWidget {
   selection-color: white;
@@ -272,10 +273,10 @@ QStatusBar [role=status_panel] {
   margin-top: 2px;
 }
 QStatusBar [role=status_title] {
-  color: #99a3aa;
+  color: $silent-text-color;
 }
 QStatusBar [role=status_value] {
-  color: #32424c;
+  color: $quiter-text-color;
   margin-left: 3px;
 }
 
@@ -382,16 +383,17 @@ QHeaderView {
   background-color: $light-paper-color;
   border: $default-border;
   border-radius: $border-radius;
-  padding: 0 6px;
   margin-bottom: 6px;
+  min-height: 32px;
 }
 QLabel[role=prop_name] {
   font-size: $main-font-size;
+  margin-left: 4px;
 }
 QLabel[role=prop_value] {
   font-size: $main-font-size;
   font-weight: bold;
-  margin-right: 8px;
+  margin-right: 4px;
   padding-top: 6px;
   padding-bottom: 6px;
   padding-right: 6px;
@@ -403,7 +405,7 @@ QLabel[role=prop_editor] {
   color: $selection-color;
   font-size: $main-font-size;
   font-weight: bold;
-  margin-right: 8px;
+  margin-right: 4px;
   padding-top: 6px;
   padding-bottom: 6px;
   padding-right: 6px;
@@ -488,6 +490,10 @@ QPushButton:pressed {
   image: url(:/icon/drop_down);
 }
 
+/************************************
+             IssueMemoTab
+************************************/
+
 #issue_content_scroller {
   padding-bottom: 0;
   padding-top: 0;
@@ -498,7 +504,7 @@ QPushButton:pressed {
 #issue_content_widget {
   background-color: white;
 }
-QTextBrowser[role=issue_text] {
+QTextBrowser[role=issue_comment] {
   border: $default-border;  
   border-bottom-left-radius: $border-radius;
   border-bottom-right-radius: $border-radius;
@@ -519,11 +525,42 @@ QFrame[role=event_header] {
   margin: 6px;
   margin-bottom: 0;
   border-bottom: none;
+  padding: 2px;
   background-color: $light-paper-color; 
 }
 QFrame[role=event_header] QLabel {
-  font-size: 15px;
-  margin-left: 6px;
-  font-weight: bold;
   color: $quiter-text-color;
+  font-size: $main-font-size;
+}
+QFrame[role=event_header] #label_id {
+  margin-left: 4px;
+  font-weight: bold;
+}
+QFrame[role=event_header] QToolButton {
+  min-height: 24px;
+  height: 24px;
+  min-width: 24px;
+  width: 24px;
+  margin-left: 4px;
+}
+#props_panel #issue_updated {
+  color: $quiter-text-color;
+  font-size: $main-font-size;
+  min-width: 100px;
+  width: 100px;
+}
+#props_panel QToolButton {
+  min-height: 24px;
+  height: 24px;
+  min-width: 24px;
+  width: 24px;
+  margin-left: 4px;
+  margin-right: 2px;
+}
+QLabel[role=isssue_popup_info_name] {
+  font-size: $main-font-size;
+  color: $silent-text-color;
+}
+QLabel[role=issue_popup_info_value] {
+  font-size: $main-font-size;
 }

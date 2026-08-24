@@ -115,6 +115,25 @@ private:
 
 //------------------------------------------------------------------------------
 
+class MemoSheet
+{
+public:
+    int id() const { return _id; }
+    QString data() const { return _data; }
+    QDateTime created() const { return _created; }
+    QDateTime updated() const { return _updated; }
+    QString station() const { return _station; }
+
+private:
+    int _id;
+    QString _data, _station;
+    QDateTime _created, _updated;
+
+    friend class MemoStore;
+};
+
+//------------------------------------------------------------------------------
+
 typedef Ori::Result<int> IntResult;
 typedef Ori::Result<Enot*> EnotResult;
 typedef Ori::Result<Memo*> MemoResult;

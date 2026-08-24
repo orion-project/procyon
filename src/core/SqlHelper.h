@@ -121,6 +121,8 @@ public:
     const QSqlRecord& record() const { return _record; }
 
     QString valueStr(QAnyStringView name) const { return _record.value(name).toString(); }
+    int valueInt(QAnyStringView name) const { return _record.value(name).toInt(); }
+    QDateTime valueDate(QAnyStringView name) const { return _record.value(name).toDateTime(); }
 
 private:
     QString _error;

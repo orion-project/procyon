@@ -15,7 +15,7 @@ class MemoPropsPanel : public QFrame
     Q_OBJECT
 
 public:
-    MemoPropsPanel(Enot* enot);
+    MemoPropsPanel(Enot* enot, std::initializer_list<QWidget*> persistentWidgets = {});
 
     void addPropViaDlg();
     void addProp(const QString& name, const QString& value);
@@ -27,6 +27,8 @@ public:
     bool hasValues() const { return _hasValues; }
     QHash<QString, QString> values() const;
 
+    bool hideWhenEmpty = true;
+
 private:
     Enot *_enot;
     QMenu *_menu;
@@ -34,6 +36,7 @@ private:
     bool _hasValues = false;
     QString _activeProp;
     QAction *_actionAddValue, *_actionDeleteProp;
+    QLayout *_propsLayout;
 
     struct ValueView
     {

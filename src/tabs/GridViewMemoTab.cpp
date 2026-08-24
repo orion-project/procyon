@@ -462,11 +462,7 @@ GridViewMemoTab::GridViewMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     actionFilter->setShortcut(QKeySequence(Qt::ControlModifier | Qt::Key_F));
     _toolMenu->addAction(tr("Clear Filters"), this, &Self::clearFilters);
 
-    auto toolMenuButton = new QToolButton;
-    toolMenuButton->setPopupMode(QToolButton::InstantPopup);
-    toolMenuButton->setToolTip(tr("Options"));
-    toolMenuButton->setIcon(QIcon(":/toolbar/menu"));
-    toolMenuButton->setMenu(_toolMenu);
+    auto toolMenuButton = TabHelpers::makeMenuButton(_toolMenu, tr("Options"));
 
     _actionEdit = _toolbar->addAction(QIcon(":/toolbar/edit"), tr("Edit"), this, &Self::beginEdit);
     _actionSave = _toolbar->addAction(QIcon(":/toolbar/apply"), tr("Save"), this, &Self::saveEdit);

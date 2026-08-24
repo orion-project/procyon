@@ -166,8 +166,12 @@ struct MemoSheetsTable
 
     struct C
     {
+        inline static const auto& id = u"Id"_s;
         inline static const auto& memoId = u"MemoId"_s;
         inline static const auto& data = u"Data"_s;
+        inline static const auto& created = u"Created"_s;
+        inline static const auto& updated = u"Updated"_s;
+        inline static const auto& station = u"Station"_s;
     };
 
     inline static const auto& sqlCreate =
@@ -181,7 +185,7 @@ struct MemoSheetsTable
         "FOREIGN KEY (MemoId) REFERENCES Memo(Id) ON DELETE CASCADE)"_s;
 
     inline static const auto& sqlSelect =
-        u"SELECT Data FROM MemoSheets WHERE MemoId = :MemoId"_s;
+        u"SELECT Id, Data, Created, Updated, Station FROM MemoSheets WHERE MemoId = :MemoId"_s;
 };
 
 MemoTableDef* memoTable() { static MemoTableDef t; return &t; }
@@ -470,7 +474,7 @@ QString MemoStore::updateProp(int memoId, const QString& name, const QString& va
         .error();
 }
 
-QStringList MemoStore::loadSheets(int memoId) const
+QList<MemoSheet*> MemoStore::loadSheets(int memoId) const
 {
     using T = MemoSheetsTable;
 
@@ -482,8 +486,17 @@ QStringList MemoStore::loadSheets(int memoId) const
         return {};
     }
 
-    QStringList result;
+    QList<MemoSheet*> result;
     while (q.next())
-        result.append(q.valueStr(T::C::data));
+    {
+        auto sheet = new MemoSheet;
+        sheet->_id = q.valueInt(T::C::id);
+        sheet->_data = q.valueStr(T::C::data);
+        sheet->_created = q.valueDate(T::C::created);
+        sheet->_updated = q.valueDate(T::C::updated);
+        sheet->_station = q.valueStr(T::C::station);
+
+        result.append(sheet);
+    }
     return result;
 }

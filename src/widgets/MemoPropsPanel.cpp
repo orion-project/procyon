@@ -99,11 +99,22 @@ private:
 //                              MemoPropsPanel
 //------------------------------------------------------------------------------
 
-MemoPropsPanel::MemoPropsPanel(Enot* enot) : QFrame(), _enot(enot)
+MemoPropsPanel::MemoPropsPanel(Enot* enot, std::initializer_list<QWidget *> persistentWidgets) : QFrame(), _enot(enot)
 {
     setObjectName("props_panel");
 
-    new Ori::Widgets::FlowLayout(this, 0, 0, 5);
+    auto w = new QWidget;
+    w->setSizePolicy(QSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Preferred));
+    _propsLayout = new Ori::Widgets::FlowLayout(w, 0, 0, 5);
+
+    Ori::Layouts::LayoutH({w}).setMargin(0).setSpacing(0).useFor(this);
+
+    // auto layout = new QHBoxLayout(this);
+    // layout->setContentsMargins(0, 0, 0, 0);
+    // layout->setSpacing(0);
+    // layout->addLayout(_propsLayout);
+    for (auto w : persistentWidgets)
+        layout()->addWidget(w);
 
     _actionAddValue = Ori::Gui::action(tr("Add New Value..."), this, &Self::addNewValue);
     _actionDeleteProp = Ori::Gui::action(tr("Delete Property..."), this, &Self::deleteProp);
@@ -176,7 +187,7 @@ void MemoPropsPanel::addProp(const QString& name, const QString& value)
         _menu->popup(pos);
     });
     _valueViews.insert(name, widget);
-    layout()->addWidget(widget);
+    _propsLayout->addWidget(widget);
     _hasValues = true;
     if (!isVisible())
         show();
@@ -289,6 +300,6 @@ void MemoPropsPanel::deleteProp()
     else
         _removedProps.append(view);
     _valueViews.remove(_activeProp);
-    if (_valueViews.isEmpty())
+    if (hideWhenEmpty && _valueViews.isEmpty())
         hide();
 }

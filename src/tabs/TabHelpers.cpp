@@ -3,6 +3,7 @@
 #include <QFrame>
 #include <QLineEdit>
 #include <QToolBar>
+#include <QToolButton>
 
 namespace TabHelpers
 {
@@ -31,6 +32,16 @@ QFrame* makeHeaderPanel(Ori::Layouts::LayoutItems items)
     toolPanel->setObjectName("memo_header_panel");
     Ori::Layouts::LayoutH(items).setMargin(0).useFor(toolPanel);
     return toolPanel;
+}
+
+QToolButton* makeMenuButton(QMenu *menu, const QString &hint)
+{
+    auto button = new QToolButton;
+    button->setPopupMode(QToolButton::InstantPopup);
+    button->setToolTip(hint);
+    button->setIcon(QIcon(":/toolbar/menu"));
+    button->setMenu(menu);
+    return button;
 }
 
 QString formatInfo(const QString& info)

@@ -150,6 +150,15 @@ struct MemoHistoryTable
 {
     inline static const auto& tableName = u"MemoHistory"_s;
 
+    struct C
+    {
+        inline static const auto& memoId = u"MemoId"_s;
+        inline static const auto& what = u"What"_s;
+        inline static const auto& value = u"Value"_s;
+        inline static const auto& moment = u"Moment"_s;
+        inline static const auto& station = u"Station"_s;
+    };
+
     inline static const auto& sqlCreate =
         u"CREATE TABLE IF NOT EXISTS MemoHistory ("
         "MemoId INTEGER NOT NULL, "
@@ -158,6 +167,9 @@ struct MemoHistoryTable
         "Moment DATETIME DEFAULT CURRENT_TIMESTAMP, "
         "Station TEXT, "
         "FOREIGN KEY (MemoId) REFERENCES Memo(Id) ON DELETE CASCADE)"_s;
+
+    inline static const auto& sqlSelect =
+        u"SELECT What, Value, Moment, Station FROM MemoHistory WHERE MemoId = :MemoId"_s;
 };
 
 struct MemoSheetsTable
@@ -497,6 +509,32 @@ QList<MemoSheet*> MemoStore::loadSheets(int memoId) const
         sheet->_station = q.valueStr(T::C::station);
 
         result.append(sheet);
+    }
+    return result;
+}
+
+QList<MemoEvent*> MemoStore::loadEvents(int memoId) const
+{
+    using T = MemoHistoryTable;
+
+    auto q = AnyQuery(T::sqlSelect).param(T::C::memoId, memoId).exec();
+    if (q.isFailed())
+    {
+        // TODO: add protocol
+        qWarning() << "Unable to load sheets for memo" << memoId << q.error();
+        return {};
+    }
+
+    QList<MemoEvent*> result;
+    while (q.next())
+    {
+        auto event = new MemoEvent;
+        event->_what = q.valueStr(T::C::what);
+        event->_value = q.valueStr(T::C::value);
+        event->_moment = q.valueDate(T::C::moment);
+        event->_station = q.valueStr(T::C::station);
+
+        result.append(event);
     }
     return result;
 }

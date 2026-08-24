@@ -40,7 +40,10 @@ QToolButton* makeMenuButton(QMenu *menu, const QString &hint)
     button->setPopupMode(QToolButton::InstantPopup);
     button->setToolTip(hint);
     button->setIcon(QIcon(":/toolbar/menu"));
-    button->setMenu(menu);
+    if (menu)
+        button->setMenu(menu);
+    else
+        button->setEnabled(false);
     return button;
 }
 

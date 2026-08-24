@@ -11,6 +11,7 @@ class QToolBar;
 class QVBoxLayout;
 QT_END_NAMESPACE
 
+class MemoEvent;
 class MemoSheet;
 class MemoPropsPanel;
 class IssueMemoView;
@@ -36,6 +37,7 @@ private:
     IssueMemoView *_summaryView;
     QList<IssueMemoView*> _commentViews;
     QList<MemoSheet*> _comments;
+    QList<MemoEvent*> _events;
     QLabel *_labelUpdated;
 
     struct PopupInfo

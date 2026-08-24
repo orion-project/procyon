@@ -20,6 +20,8 @@
 #include <QTimer>
 #include <QWidgetAction>
 
+using namespace Qt::StringLiterals;
+
 //------------------------------------------------------------------------------
 //                             IssueMemoTab
 //------------------------------------------------------------------------------
@@ -124,6 +126,7 @@ IssueMemoTab::IssueMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
 IssueMemoTab::~IssueMemoTab()
 {
     qDeleteAll(_comments);
+    qDeleteAll(_events);
 }
 
 IssueMemoTab::PopupInfo IssueMemoTab::makePopupInfo()
@@ -169,41 +172,139 @@ void IssueMemoTab::showMemo()
     _issueInfo.updated->setText(QLocale::system().toString(_memo->updated(), QLocale::ShortFormat));
     _issueInfo.station->setText(_memo->station());
 
-    int num = 1;
+    _events = Store::memos()->loadEvents(_memo->id());
     _comments = Store::memos()->loadSheets(_memo->id());
-    for (auto comment : std::as_const(_comments))
+
+    // Events and comments are store in different tables
+    // but should be displayed at the same list orderred by their date
+    struct HistoryItem
     {
-        auto sheetView = new IssueMemoView;
-        sheetView->setProperty("role", "issue_comment");
-        sheetView->setHtml(MarkdownHelper::markdownToHtml(comment->data()));
+        QDateTime moment;
+        std::variant<MemoEvent*, MemoSheet*> item;
+    };
+    QList<HistoryItem> history;
+    for (auto event : std::as_const(_events))
+        history << HistoryItem{ .moment = event->moment(), .item = event };
+    for (auto comment : std::as_const(_comments))
+        history << HistoryItem{ .moment = comment->created(), .item = comment };
+    std::sort(history.begin(), history.end(), [](const HistoryItem& a, const HistoryItem& b){
+        return a.moment < b.moment;
+    });
 
-        auto labelNum = new QLabel(QString::number(num++));
-        labelNum->setObjectName("issue_event_num");
+    // Property changes are stored in different rows
+    // but should be displayed gropped by date
+    struct PropChangeItem
+    {
+        QDateTime moment;
+        QHash<QString, QPair<QString, QString>> propValues;
+    };
+    std::optional<PropChangeItem> propsChange;
+    QHash<QString, QString> propValues;
 
-        auto labelDate = new QLabel(QLocale::system().toString(comment->updated(), QLocale::ShortFormat));
-        labelDate->setObjectName("issue_event_date");
+    int eventNum = 1;
 
-        auto info = makePopupInfo();
-        info.created->setText(QLocale::system().toString(comment->created(), QLocale::ShortFormat));
-        info.updated->setText(QLocale::system().toString(comment->updated(), QLocale::ShortFormat));
-        info.station->setText(comment->station());
+    auto makeNumLabel = [&eventNum]{
+        auto label = new QLabel(QString::number(eventNum++));
+        label->setObjectName("issue_event_num");
+        return label;
+    };
 
-        auto menu = new QMenu(sheetView);
-        menu->addAction(info.action);
+    auto makeDateLabel = [](const QDateTime& date){
+        auto label = new QLabel(QLocale::system().toString(date, QLocale::ShortFormat));
+        label->setObjectName("issue_event_date");
+        return label;
+    };
+
+    auto makePropChangeWidget = [this, &propsChange, &makeNumLabel, &makeDateLabel](){
+        if (!propsChange) return;
+
+        auto propNames = propsChange->propValues.keys();
+        propNames.sort();
+        QStringList report;
+        for (const auto &propName : std::as_const(propNames))
+        {
+            const auto& change = propsChange->propValues.value(propName);
+            QString oldValue = change.first.isEmpty() ? u"(none)"_s : change.first;
+            QString newValue = change.second.isEmpty() ? u"(none)"_s : change.second;
+            report << u"%1:&nbsp;<b>%2&nbsp;→&nbsp;%3</b>"_s.arg(propName, oldValue, newValue);
+        }
+
+        auto propLabel = new QLabel(report.join(u". "_s));
+        propLabel->setWordWrap(true);
+        propLabel->setObjectName("issue_props_changes");
+        propLabel->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred));
 
         auto header = new QFrame;
         Ori::Layouts::LayoutH({
-            labelNum,
-            Ori::Layouts::Stretch(),
-            labelDate,
-            TabHelpers::makeMenuButton(menu),
-        }).setMargin(0).setSpacing(0).useFor(header);
+                makeNumLabel(),
+                propLabel,
+                makeDateLabel(propsChange->moment),
+                TabHelpers::makeMenuButton(nullptr),
+            }).setMargin(0).setSpacing(0).useFor(header);
         header->setProperty("role", "issue_event_header");
+        header->setProperty("role1", "issue_prop_changes");
         _contentLayout->addWidget(header, 0, Qt::AlignTop);
 
-        _contentLayout->addWidget(sheetView, 0, Qt::AlignTop);
-        _commentViews << sheetView;
+        propsChange.reset();
+    };
+
+    for (const auto& item : std::as_const(history))
+    {
+        if (std::holds_alternative<MemoEvent*>(item.item))
+        {
+            auto event = std::get<MemoEvent*>(item.item);
+            if (!event->what().startsWith("prop:"_L1))
+                continue;
+
+            QString propName = event->what().split(':').last();
+            QString oldValue = propValues.value(propName);
+            QString newValue = event->value();
+            propValues[propName] = newValue;
+
+            if (!propsChange || event->moment() > propsChange->moment)
+            {
+                if (propsChange)
+                    makePropChangeWidget();
+
+                propsChange = PropChangeItem();
+                propsChange->moment = event->moment();
+            }
+
+            propsChange->propValues.insert(propName, qMakePair(oldValue, newValue));
+        }
+        else if (std::holds_alternative<MemoSheet*>(item.item))
+        {
+            makePropChangeWidget();
+
+            auto comment = std::get<MemoSheet*>(item.item);
+
+            auto sheetView = new IssueMemoView;
+            sheetView->setProperty("role", "issue_comment");
+            sheetView->setHtml(MarkdownHelper::markdownToHtml(comment->data()));
+
+            auto info = makePopupInfo();
+            info.created->setText(QLocale::system().toString(comment->created(), QLocale::ShortFormat));
+            info.updated->setText(QLocale::system().toString(comment->updated(), QLocale::ShortFormat));
+            info.station->setText(comment->station());
+
+            auto menu = new QMenu(sheetView);
+            menu->addAction(info.action);
+
+            auto header = new QFrame;
+            Ori::Layouts::LayoutH({
+                    makeNumLabel(),
+                    Ori::Layouts::Stretch(),
+                    makeDateLabel(comment->updated()),
+                    TabHelpers::makeMenuButton(menu),
+                }).setMargin(0).setSpacing(0).useFor(header);
+            header->setProperty("role", "issue_event_header");
+            _contentLayout->addWidget(header, 0, Qt::AlignTop);
+
+            _contentLayout->addWidget(sheetView, 0, Qt::AlignTop);
+            _commentViews << sheetView;
+        }
     }
+    makePropChangeWidget();
 
     _contentLayout->addStretch();
 

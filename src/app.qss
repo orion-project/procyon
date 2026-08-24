@@ -508,6 +508,7 @@ QTextBrowser[role=issue_comment] {
   border: $default-border;  
   border-bottom-left-radius: $border-radius;
   border-bottom-right-radius: $border-radius;
+  border-top: none;
   background-color: white;
   padding: 2px;
   margin: 6px;
@@ -517,26 +518,31 @@ QTextBrowser#issue_summary {
   border: none;
   padding: 6px;
 }
-QFrame[role=event_header] {
+QFrame[role=issue_event_header] {
   min-height: 30px;
   border: $default-border;  
   border-top-left-radius: $border-radius;
   border-top-right-radius: $border-radius;
   margin: 6px;
   margin-bottom: 0;
-  border-bottom: none;
   padding: 2px;
   background-color: $light-paper-color; 
 }
-QFrame[role=event_header] QLabel {
+QFrame[role1=issue_prop_changes] {
+  margin-bottom: 6px;
+  border-bottom-left-radius: $border-radius;
+  border-bottom-right-radius: $border-radius;
+}
+QFrame[role=issue_event_header] QLabel {
   color: $quiter-text-color;
   font-size: $main-font-size;
 }
-QFrame[role=event_header] #label_id {
+QFrame[role=issue_event_header] #issue_event_num {
   margin-left: 4px;
+  margin-right: 6px;
   font-weight: bold;
 }
-QFrame[role=event_header] QToolButton {
+QFrame[role=issue_event_header] QToolButton {
   min-height: 24px;
   height: 24px;
   min-width: 24px;

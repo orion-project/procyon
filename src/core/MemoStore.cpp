@@ -198,6 +198,12 @@ struct MemoSheetsTable
 
     inline static const auto& sqlSelect =
         u"SELECT Id, Data, Created, Updated, Station FROM MemoSheets WHERE MemoId = :MemoId"_s;
+        
+    inline static const auto& sqlInsert =
+        u"INSERT INTO MemoSheets (MemoId, Data, Station) VALUES (:MemoId, :Data, :Station)"_s;
+        
+    inline static const auto& sqlUpdate =
+        u"UPDATE MemoSheets SET Data=:Data, Updated=CURRENT_TIMESTAMP, Station=:Station WHERE Id=:Id"_s;
 };
 
 MemoTableDef* memoTable() { static MemoTableDef t; return &t; }
@@ -210,6 +216,8 @@ MemoTableDef* memoTable() { static MemoTableDef t; return &t; }
 
 QString MemoStore::prepare()
 {
+    _station = QSysInfo::machineHostName();
+
     auto table = memoTable();
 
     QString res = createTable(table);
@@ -512,6 +520,44 @@ QList<MemoSheet> MemoStore::loadSheets(int memoId) const
     return result;
 }
 
+QString MemoStore::addSheet(int memoId, const QString& text) const
+{
+    using T = MemoSheetsTable;
+
+    auto q = AnyQuery(T::sqlInsert)
+        .param(T::C::memoId, memoId)
+        .param(T::C::data, text)
+        .param(T::C::station, _station)
+        .exec();
+    if (q.isFailed())
+    {
+        // TODO: add protocol
+        qWarning() << "Unable to create a sheet for memo" << memoId << q.error();
+        return q.error();
+    }
+
+    return {};
+}
+
+QString MemoStore::updateSheet(int sheetId, const QString& text) const
+{
+    using T = MemoSheetsTable;
+
+    auto q = AnyQuery(T::sqlUpdate)
+        .param(T::C::id, sheetId)
+        .param(T::C::data, text)
+        .param(T::C::station, _station)
+        .exec();
+    if (q.isFailed())
+    {
+        // TODO: add protocol
+        qWarning() << "Unable to update memo sheet" << sheetId << q.error();
+        return q.error();
+    }
+
+    return {};
+}
+
 QList<MemoEvent> MemoStore::loadEvents(int memoId) const
 {
     using T = MemoHistoryTable;
@@ -536,3 +582,4 @@ QList<MemoEvent> MemoStore::loadEvents(int memoId) const
     }
     return result;
 }
+

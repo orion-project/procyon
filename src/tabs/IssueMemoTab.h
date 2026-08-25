@@ -4,9 +4,11 @@
 #include "MemoTab.h"
 
 #include <QDateTime>
+#include <QPointer>
 
 QT_BEGIN_NAMESPACE
 class QAction;
+class QLabel;
 class QLineEdit;
 class QScrollArea;
 class QToolBar;
@@ -17,6 +19,7 @@ class MemoEvent;
 class MemoSheet;
 class MemoPropsPanel;
 class IssueMemoView;
+class IssueTextDlg;
 
 class IssueMemoTab : public MemoTab
 {
@@ -47,6 +50,7 @@ private:
         QLabel *station;
     };
     PopupInfo _issueInfo;
+    QPointer<IssueTextDlg> _commentDlg;
 
     struct CommentData
     {
@@ -66,6 +70,7 @@ private:
 
     void updateViewHeights();
 
+    void addComment();
     void editComment(int id);
 
     PopupInfo makePopupInfo();

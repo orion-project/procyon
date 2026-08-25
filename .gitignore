@@ -8,6 +8,7 @@
 *.so
 *.dll
 *.dylib
+*.pdb
 
 # Qt-es
 /.qmake.cache

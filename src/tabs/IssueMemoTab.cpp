@@ -5,12 +5,15 @@
 #include "core/Enot.h"
 #include "core/MemoStore.h"
 #include "markdown/MarkdownHelper.h"
+#include "widgets/IssueTextEdit.h"
 #include "widgets/MemoPropsPanel.h"
 
-#include "helpers/OriWidgets.h"
 #include "helpers/OriDialogs.h"
+#include "helpers/OriWidgets.h"
+#include "helpers/OriWindows.h"
 
 #include <QAction>
+#include <QApplication>
 #include <QDialogButtonBox>
 #include <QLabel>
 #include <QLineEdit>
@@ -28,13 +31,14 @@
 
 using namespace Qt::StringLiterals;
 
+
 static QString dateToStr(const QDateTime& date)
 {
     return QLocale::system().toString(date, QLocale::ShortFormat);
 }
 
 //------------------------------------------------------------------------------
-//                             IssueMemoTab
+//                             IssueMemoView
 //------------------------------------------------------------------------------
 
 class IssueMemoView : public QTextBrowser
@@ -57,6 +61,120 @@ private:
 
     }
 };
+
+//------------------------------------------------------------------------------
+//                             IssueMemoTab
+//------------------------------------------------------------------------------
+
+class IssueTextDlg : public QWidget
+{
+public:
+    IssueTextDlg(QWidget *parent, const QString& title, const QString& text = {}) : QWidget(parent)
+    {
+        setAttribute(Qt::WA_DeleteOnClose);
+        setWindowFlags(Qt::Tool);
+        setWindowTitle(title);
+    
+        _editor = new IssueTextEdit;
+        _editor->setObjectName("code_editor");
+        _editor->setProperty("role", "issue_text_in_dlg");
+        _editor->setPlainText(text);
+        _editor->document()->setModified(false);
+
+        _preview = new QTextBrowser;
+        _preview->document()->setDefaultStyleSheet(AppSettings::instance().markdownCss());
+        _preview->setProperty("role", "issue_text_in_dlg");
+
+        _tabs = new QTabWidget;
+        _tabs->addTab(_editor, tr("Edit"));
+        _tabs->addTab(_preview, tr("Preview"));
+        connect(_tabs, &QTabWidget::currentChanged, this, &IssueTextDlg::updatePreview);
+
+        // Actions to make hotkeys available
+        addAction(Ori::Gui::action("", this, &IssueTextDlg::cancelDlg, 0, QKeySequence(Qt::Key_Escape, Qt::Key_Escape)));
+        addAction(Ori::Gui::action("", this, &IssueTextDlg::applyDlg, 0, QKeySequence("Ctrl+Return")));
+
+        auto buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+        connect(buttons, &QDialogButtonBox::rejected, this, &IssueTextDlg::cancelDlg);
+        connect(buttons, &QDialogButtonBox::accepted, this, &IssueTextDlg::applyDlg);
+        
+        Ori::Layouts::LayoutV({_tabs, buttons}).useFor(this);
+        
+        restoreGeometry();
+        
+        _editor->setFocus();
+    }
+    
+    ~IssueTextDlg()
+    {
+        __storedGeometry = saveGeometry();
+    }
+    
+    std::function<bool(const QString& text)> onApply;
+    
+protected:
+    void closeEvent(class QCloseEvent* e) override
+    {
+        if (_saved || canClose())
+            e->accept();
+        else
+            e->ignore();
+    }
+
+private:
+    void updatePreview()
+    {
+        if (_tabs->currentIndex() == 1)
+            _preview->setHtml(MarkdownHelper::markdownToHtml(_editor->toPlainText()));
+    }
+    
+    bool canClose() const
+    {
+        if (_editor->document()->isModified())
+            return Ori::Dlg::yes(tr("Text has been changed. Cancel anyway?"));
+        return true;
+    }
+    
+    void cancelDlg()
+    {
+        if (!canClose()) return;
+        _editor->cleanFiles();
+        close();
+    }
+    
+    void applyDlg()
+    {
+        bool canClose = true;
+        if (_editor->document()->isModified() && onApply)
+            canClose = onApply(_editor->toPlainText());
+        
+        if (canClose)
+        {
+            _saved = true;
+            close();
+        }
+    }
+    
+    void restoreGeometry()
+    {
+        if (!__storedGeometry.isEmpty())
+            QWidget::restoreGeometry(__storedGeometry);
+        else
+        {
+            resize(600, 300);
+            Ori::Wnd::moveToScreenCenter(this, qApp->activeWindow());
+        }
+    }
+    
+    IssueTextEdit *_editor;
+    QTextBrowser *_preview;
+    QTabWidget *_tabs;
+    bool _saved = false;
+
+    static QByteArray __storedGeometry;
+};
+
+QByteArray IssueTextDlg::__storedGeometry = {};
 
 //------------------------------------------------------------------------------
 //                             IssueMemoTab
@@ -91,8 +209,8 @@ IssueMemoTab::IssueMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
 
     auto toolMenu = new QMenu(this);
     toolMenu->addAction(_issueInfo.action);
-    //toolMenu->addSeparator();
-    //toolMenu->addAction(tr("Add Property..."), this, [this]{ _propsPanel->addPropViaDlg(); });
+    toolMenu->addSeparator();
+    toolMenu->addAction(tr("Add Comment..."), this, &Self::addComment);
 
     _propsPanel = new MemoPropsPanel(enot, {_labelUpdated, TabHelpers::makeMenuButton(toolMenu)});
     _propsPanel->hideWhenEmpty = false;
@@ -172,6 +290,16 @@ void IssueMemoTab::showMemo()
 
 void IssueMemoTab::showHistory()
 {
+    _contentScroller->setUpdatesEnabled(false);
+    
+    // Remove the last stretch item
+    if (_contentLayout->count() > 0)
+    {
+        auto item = _contentLayout->itemAt(_contentLayout->count()-1);
+        if (dynamic_cast<QSpacerItem*>(item))
+            _contentLayout->removeItem(item);
+    }
+
     auto events = Store::memos()->loadEvents(_memo->id());
     auto comments = Store::memos()->loadSheets(_memo->id());
 
@@ -314,7 +442,7 @@ void IssueMemoTab::showHistory()
             auto menu = new QMenu(commentView.textView);
             menu->addAction(commentView.popupInfo.action);
             menu->addSeparator();
-            menu->addAction(tr("Edit"), this, [this, comment]{ editComment(comment.id()); });
+            menu->addAction(tr("Edit Comment..."), this, [this, comment]{ editComment(comment.id()); });
 
             auto header = new QFrame;
             Ori::Layouts::LayoutH({
@@ -333,6 +461,7 @@ void IssueMemoTab::showHistory()
     makePropChangeWidget();
 
     _contentLayout->addStretch();
+    _contentScroller->setUpdatesEnabled(true);
 
     QTimer::singleShot(0, this, &Self::updateViewHeights);
 }
@@ -384,7 +513,13 @@ void IssueMemoTab::toggleEditMode(bool on)
 void IssueMemoTab::updateViewHeights()
 {
     const int maxBordersWidth = 40;
-    _summaryView->setFixedHeight(_summaryView->document()->size().height() + maxBordersWidth);
+    if (!_memo->data().isEmpty())
+    {
+        _summaryView->setVisible(true);
+        _summaryView->setFixedHeight(_summaryView->document()->size().height() + maxBordersWidth);
+    }
+    else
+        _summaryView->setVisible(false);
     for (const auto& commentView : std::as_const(_commentViews))
         commentView.textView->setFixedHeight(commentView.textView->document()->size().height() + maxBordersWidth);
 }
@@ -395,34 +530,41 @@ void IssueMemoTab::resizeEvent(QResizeEvent *e)
     updateViewHeights();
 }
 
+void IssueMemoTab::addComment()
+{
+    if (!_commentDlg)
+    {
+        _commentDlg = new IssueTextDlg(this, tr("Add Comment For Issue #%1").arg(_memo->id()));
+        _commentDlg->onApply = [this](const QString& text){
+            QString res = Store::memos()->addSheet(_memo->id(), text);
+            if (!res.isEmpty()) {
+                Ori::Dlg::Defer::error(res);
+                return false;
+            }
+            QTimer::singleShot(0, this, &Self::showHistory);
+            return true;
+        };
+    }
+    _commentDlg->show();
+    _commentDlg->activateWindow();
+}
+
 void IssueMemoTab::editComment(int id)
 {
-    const auto& commentView = _commentViews.value(id);
-
-    auto editor = new QPlainTextEdit;
-    editor->setPlainText(commentView.sourceText);
-    editor->setObjectName("code_editor");
-    editor->setProperty("role", "issue_text_in_dlg");
-
-    auto preview = new QTextBrowser;
-    preview->document()->setDefaultStyleSheet(AppSettings::instance().markdownCss());
-    preview->setProperty("role", "issue_text_in_dlg");
-
-    auto tabs = new QTabWidget;
-    tabs->addTab(editor, tr("Edit"));
-    tabs->addTab(preview, tr("Preview"));
-    connect(tabs, &QTabWidget::currentChanged, this, [editor, preview](int index){
-        if (index == 1)
-            preview->setHtml(MarkdownHelper::markdownToHtml(editor->toPlainText()));
-    });
-
-    auto buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-    connect(buttons, &QDialogButtonBox::rejected, this, []{});
-    connect(buttons, &QDialogButtonBox::accepted, this, []{});
-
-    auto wnd = new QWidget(this);
-    Ori::Layouts::LayoutV({tabs, buttons}).useFor(wnd);
-    wnd->setAttribute(Qt::WA_DeleteOnClose);
-    wnd->setWindowFlags(Qt::Tool);
-    wnd->show();
+    if (!_commentDlg)
+    {
+        const auto& commentView = _commentViews.value(id);
+        _commentDlg = new IssueTextDlg(this, tr("Edit Comment For Issue #%1").arg(_memo->id()), commentView.sourceText);
+        _commentDlg->onApply = [this, id](const QString& text){
+            QString res = Store::memos()->updateSheet(id, text);
+            if (!res.isEmpty()) {
+                Ori::Dlg::Defer::error(res);
+                return false;
+            }
+            QTimer::singleShot(0, this, &Self::showHistory);
+            return true;
+        };
+    }
+    _commentDlg->show();
+    _commentDlg->activateWindow();
 }

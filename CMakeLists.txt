@@ -110,6 +110,7 @@ set(PROJECT_SOURCES
     src/main.cpp
     src/AppSettings.cpp src/AppSettings.h
     src/core/Enot.cpp src/core/Enot.h
+    src/core/FileStore.cpp src/core/FileStore.h
     src/core/FolderStore.cpp src/core/FolderStore.h
     src/core/MemoStore.cpp src/core/MemoStore.h
     src/core/MemoType.cpp src/core/MemoType.h
@@ -139,6 +140,7 @@ set(PROJECT_SOURCES
     src/tabs/TabHelpers.cpp src/tabs/TabHelpers.h
     src/TextEditHelpers.cpp src/TextEditHelpers.h
     src/widgets/GridFilterPanel.cpp src/widgets/GridFilterPanel.h
+    src/widgets/IssueTextEdit.cpp src/widgets/IssueTextEdit.h
     src/widgets/MemoPropsPanel.cpp src/widgets/MemoPropsPanel.h
     src/widgets/MemoTextBrowser.cpp src/widgets/MemoTextBrowser.h
     src/widgets/MemoTextEdit.cpp src/widgets/MemoTextEdit.h

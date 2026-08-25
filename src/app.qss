@@ -497,7 +497,7 @@ QPushButton:pressed {
 
 #issue_content_scroller {
   padding-bottom: 0;
-  padding-top: 0;
+  padding-top: 3px;
 }
 #issue_content_scroller QScrollBar {
   margin-top: 2px;

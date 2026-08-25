@@ -38,7 +38,12 @@ public:
     QString deleteProp(int memoId, const QString& name) const;
     QString updateProp(int memoId, const QString& name, const QString& value) const;
     QList<MemoSheet> loadSheets(int memoId) const;
+    QString addSheet(int memoId, const QString& text) const;
+    QString updateSheet(int sheetId, const QString& text) const;
     QList<MemoEvent> loadEvents(int memoId) const;
+    
+private:
+    QString _station;
 };
 
 namespace Store

@@ -461,7 +461,7 @@ GridViewMemoTab::GridViewMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     _toolMenu->addSeparator();
     auto actionFilter = _toolMenu->addAction(QIcon(":/toolbar/filter"), tr("Show Filters"), this, &Self::showFilterPanel);
     actionFilter->setShortcut(QKeySequence(Qt::ControlModifier | Qt::Key_F));
-    _toolMenu->addAction(tr("Clear Filters"), this, &Self::clearFilters);
+    _toolMenu->addAction(QIcon(":/toolbar/trash"), tr("Clear Filters"), this, &Self::clearFilters);
 
     auto toolMenuButton = TabHelpers::makeMenuButton(_toolMenu, tr("Options"));
 
@@ -496,7 +496,7 @@ GridViewMemoTab::GridViewMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     });
 
     _contextMenu = new QMenu;
-    auto actionOpen = _contextMenu->addAction(tr("Open"), Qt::Key_Return, this, &Self::openSelectedMemo);
+    auto actionOpen = _contextMenu->addAction(QIcon(":/toolbar/open"), tr("Open"), Qt::Key_Return, this, &Self::openSelectedMemo);
 
     auto toolPanel = TabHelpers::makeHeaderPanel({_titleEditor, _toolbar});
 

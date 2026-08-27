@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
-<svg width="24" height="24" version="1.0" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
- <path d="m1 1 8 11v10h6v-10l8-11zm6 3h10l-5 6z" fill="#00547f"/>
+<svg width="24" height="24" version="1.0" xmlns="http://www.w3.org/2000/svg">
+ <path d="m1.31 3.55 7.69 8.45v8.68a1.32 1.32 45 0 0 1.32 1.32h3.21a1.48 1.48 135 0 0 1.48-1.48v-8.52l7.69-8.45a1.52 1.52 66.1 0 0-1.13-2.55h-19.1a1.52 1.52 114 0 0-1.13 2.55z" fill="#00547f"/>
 </svg>

@@ -31,9 +31,11 @@
         <file alias="edit">../img/toolbar/pencil_mono.svg</file>
         <file alias="filter">../img/toolbar/filter_mono.svg</file>
         <file alias="update">../img/toolbar/update.svg</file>
-        <file alias="plus">../img/toolbar/plus.svg</file>
+        <file alias="open">../img/toolbar/open_mono.svg</file>
+        <file alias="plus">../img/toolbar/plus_mono.svg</file>
         <file alias="run">../img/toolbar/run_mono.svg</file>
         <file alias="save">../img/toolbar/save_mono.svg</file>
+        <file alias="trash">../img/toolbar/trash_mono.svg</file>
     </qresource>
     <qresource prefix="/style">
         <file alias="about">../img/about.png</file>

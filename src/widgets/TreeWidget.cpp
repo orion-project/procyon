@@ -208,18 +208,18 @@ TreeWidget::TreeWidget() : QWidget()
 {
     _rootMenu = new QMenu(this);
     // TODO: Can't insert memo at the top level because of FK violation
-    //_rootMenu->addAction(tr("New Memo..."), this, &Self::createMemo);
-    _rootMenu->addAction(tr("New Folder..."), this, &Self::createFolder);
+    //_rootMenu->addAction(QIcon(":/icon/memo_plain_text"), tr("New Memo..."), this, &Self::createMemo);
+    _rootMenu->addAction(QIcon(":/icon/folder"), tr("New Folder..."), this, &Self::createFolder);
 
     _folderMenu = new QMenu(this);
-    _folderMenu->addAction(tr("New Memo..."), this, &Self::createMemo);
-    _folderMenu->addAction(tr("New Folder..."), this, &Self::createFolder);
-    _folderMenu->addAction(tr("Rename Folder..."), this, &Self::renameFolder);
-    _folderMenu->addAction(tr("Delete Folder"), this, &Self::deleteFolder);
+    _folderMenu->addAction(QIcon(":/icon/memo_plain_text"), tr("New Memo..."), this, &Self::createMemo);
+    _folderMenu->addAction(QIcon(":/icon/folder"), tr("New Folder..."), this, &Self::createFolder);
+    _folderMenu->addAction(QIcon(":/toolbar/edit"), tr("Rename Folder..."), this, &Self::renameFolder);
+    _folderMenu->addAction(QIcon(":/toolbar/trash"), tr("Delete Folder"), this, &Self::deleteFolder);
 
     _memoMenu = new QMenu(this);
-    _memoMenu->addAction(tr("Open"), this, &Self::openMemo);
-    _memoMenu->addAction(tr("Delete"), this, &Self::deleteMemo);
+    _memoMenu->addAction(QIcon(":/toolbar/open"), tr("Open"), this, &Self::openMemo);
+    _memoMenu->addAction(QIcon(":/toolbar/trash"), tr("Delete"), this, &Self::deleteMemo);
 
     _treeView = new QTreeView;
     _treeView->setObjectName("tree_view");

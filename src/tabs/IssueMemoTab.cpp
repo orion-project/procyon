@@ -134,12 +134,14 @@ public:
             auto existingProps = enot->propNames();
             auto jsonState = Ori::PersistentState::load("issue_memo");
             auto jsonProps = jsonState["recent_props"].toArray();
+            QHash<QString, QString> values;
             for (auto it = jsonProps.cbegin(); it != jsonProps.cend(); it++)
             {
                 QString propName = it->toString();
                 if (existingProps.contains(propName))
-                    _propsPanel->addProp(propName, QString());
+                    values.insert(propName, QString());
             }
+            _propsPanel->setValues(values);
         }
 
         QTimer::singleShot(0, this, [this]{ _propsPanel->setReadOnly(false); });
@@ -566,7 +568,10 @@ void IssueMemoTab::showHistory()
         // This this the first history record
         // No need to show that all properties changed from "(none)" to some value
         if (initialValueCount == propNames.size())
+        {
+            propsChange.reset();
             return;
+        }
 
         auto propLabel = new QLabel(report.join(u". "_s));
         propLabel->setWordWrap(true);

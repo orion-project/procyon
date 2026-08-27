@@ -204,10 +204,11 @@ struct MemoSheetsTable
         u"SELECT Id, Data, Created, Updated, Station FROM MemoSheets WHERE MemoId = :MemoId"_s;
         
     inline static const auto& sqlInsert =
-        u"INSERT INTO MemoSheets (MemoId, Data, Station) VALUES (:MemoId, :Data, :Station)"_s;
+        u"INSERT INTO MemoSheets (MemoId, Data, Created, Updated, Station) "
+        "VALUES (:MemoId, :Data, :Created, :Updated, :Station)"_s;
         
     inline static const auto& sqlUpdate =
-        u"UPDATE MemoSheets SET Data=:Data, Updated=CURRENT_TIMESTAMP, Station=:Station WHERE Id=:Id"_s;
+        u"UPDATE MemoSheets SET Data=:Data, Updated=:Updated, Station=:Station WHERE Id=:Id"_s;
 };
 
 MemoTableDef* memoTable() { static MemoTableDef t; return &t; }
@@ -528,9 +529,13 @@ QString MemoStore::addSheet(int memoId, const QString& text) const
 {
     using T = MemoSheetsTable;
 
+    auto now = QDateTime::currentDateTime();
+
     auto q = AnyQuery(T::sqlInsert)
         .param(T::C::memoId, memoId)
         .param(T::C::data, text)
+        .param(T::C::created, now)
+        .param(T::C::updated, now)
         .param(T::C::station, _station)
         .exec();
     if (q.isFailed())
@@ -550,6 +555,7 @@ QString MemoStore::updateSheet(int sheetId, const QString& text) const
     auto q = AnyQuery(T::sqlUpdate)
         .param(T::C::id, sheetId)
         .param(T::C::data, text)
+        .param(T::C::updated, QDateTime::currentDateTime())
         .param(T::C::station, _station)
         .exec();
     if (q.isFailed())

@@ -39,7 +39,8 @@ private:
     GridViewFilterModel *_filterModel;
     GridViewItemDelegate *_itemDelegate;
     GridFilterPanel *_filterPanel;
-    QMenu *_contextMenu, *_toolMenu;
+    QMenu *_contextMenu, *_toolMenu, *_addMemoMenu;
+    QToolButton *_addMemoButton;
 
     void showMemo();
     void cancelEdit();

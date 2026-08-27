@@ -465,6 +465,21 @@ GridViewMemoTab::GridViewMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
 
     auto toolMenuButton = TabHelpers::makeMenuButton(_toolMenu, tr("Options"));
 
+    _addMemoMenu = new QMenu(this);
+    for (auto memoType : MemoType::all())
+    {
+        // No reason for quick-making grid-views from grid-views
+        if (memoType == MemoType::gridView()) continue;
+
+        auto action = _addMemoMenu->addAction(memoType->icon(), tr("New: %1").arg(memoType->title()));
+        action->setData(memoType->name());
+        connect(action, &QAction::triggered, this, &Self::createMemo);
+    }
+
+    _addMemoButton = new QToolButton;
+    _addMemoButton->setMenu(_addMemoMenu);
+    _addMemoButton->setPopupMode(QToolButton::MenuButtonPopup);
+
     _actionEdit = _toolbar->addAction(QIcon(":/toolbar/edit"), tr("Edit"), this, &Self::beginEdit);
     _actionSave = _toolbar->addAction(QIcon(":/toolbar/apply"), tr("Save"), this, &Self::saveEdit);
     _actionCancel = _toolbar->addAction(QIcon(":/toolbar/cancel"), tr("Cancel"), this, &Self::cancelEdit);
@@ -472,7 +487,7 @@ GridViewMemoTab::GridViewMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     _actionSave->setShortcut(QKeySequence::Save);
     _actionCancel->setShortcut(QKeySequence(Qt::Key_Escape, Qt::Key_Escape));
     _toolbar->addSeparator();
-    _toolbar->addAction(QIcon(":/icon/memo_plain_text"), tr("New Memo"), this, &Self::createMemo);
+    _toolbar->addWidget(_addMemoButton);
     _toolbar->addSeparator();
     _toolbar->addWidget(toolMenuButton);
     _toolbar->addSeparator();
@@ -561,6 +576,17 @@ void GridViewMemoTab::showMemo()
         _filterModel->setFilters(titleFilter, propFilters);
     }
 
+    QString newMemoType = config.value(u"new_memo_type"_s).toString();
+    auto newMemoActions = _addMemoMenu->actions();
+    for (auto action : std::as_const(newMemoActions))
+        if (action->data().toString() == newMemoType)
+        {
+            _addMemoButton->setDefaultAction(action);
+            break;
+        }
+    if (!_addMemoButton->defaultAction() && !newMemoActions.isEmpty())
+        _addMemoButton->setDefaultAction(newMemoActions.first());
+
     setWindowTitle(_memo->title());
 }
 
@@ -602,10 +628,19 @@ void GridViewMemoTab::toggleEditMode(bool on)
 
 void GridViewMemoTab::createMemo()
 {
-    auto memoType = MemoType::selectFromDlg();
+    QAction* action = dynamic_cast<QAction*>(sender());
+    if (!action) return;
+
+    auto memoType = MemoType::findByName(action->data().toString());
     if (!memoType) return;
 
     MemoFactory::createMemo(_enot, _memo->parent(), memoType);
+
+    if (_addMemoButton->defaultAction() != action)
+    {
+        _addMemoButton->setDefaultAction(action);
+        Store::memos()->updateOption(_memo->id(), u"new_memo_type"_s, memoType->name());
+    }
 }
 
 Memo* GridViewMemoTab::selectedMemo() const

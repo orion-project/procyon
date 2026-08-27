@@ -3,6 +3,7 @@ $border-color: silver; /* Default border color */
 $border-radius: 4px; /* Default border radius */
 $default-border: 1px solid silver; /* Default border */
 $selection-color: steelBlue;
+$light-selection-color: LightSteelBlue;
 $main-font-size: 14px;
 $hover-color: #334682b4;
 $light-paper-color: #f6f7fa;
@@ -305,7 +306,21 @@ QToolButton:hover {
 QToolButton::menu-indicator {
   image: none;
 }
-#button_preview {memom
+// button->setPopupMode(QToolButton::MenuButtonPopup)
+QToolButton[popupMode="1"] {
+  padding-right: 16px;
+}
+QToolButton::menu-button {
+  width: 16px;
+  border: none;
+  border-top-right-radius: $border-radius;
+  border-bottom-right-radius: $border-radius;
+}
+QToolButton::menu-button:hover {
+  background-color: $light-selection-color;
+  border: 1px solid $selection-color;
+}
+#button_preview {
   font-size: $main-font-size;
 }
 
@@ -368,6 +383,7 @@ QToolButton::menu-indicator {
 QTableView {
   font-size: $main-font-size;
   gridline-color: LightGray;
+  background-color: white;
 }
 QTableView::item {
   padding: 1px 4px;

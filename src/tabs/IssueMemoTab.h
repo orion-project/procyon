@@ -15,6 +15,7 @@ class QToolBar;
 class QVBoxLayout;
 QT_END_NAMESPACE
 
+class Folder;
 class MemoEvent;
 class MemoSheet;
 class MemoPropsPanel;
@@ -28,6 +29,8 @@ public:
     explicit IssueMemoTab(Enot* enot, Memo* memo);
 
     //void beginEdit() override;
+
+    static void createIssue(Enot* enot, Folder* folder);
 
 protected:
     void resizeEvent(QResizeEvent *e) override;

@@ -2,6 +2,7 @@
 
 #include "core/Enot.h"
 #include "core/MemoType.h"
+#include "widgets/MemoFactory.h"
 
 #include "helpers/OriDialogs.h"
 #include "helpers/OriLayouts.h"
@@ -348,10 +349,11 @@ void TreeWidget::createMemo()
     auto memoType = MemoType::selectFromDlg();
     if (!memoType) return;
 
-    auto res = _enot->createMemo(entry->asFolder(), memoType);
+    auto res = MemoFactory::createMemo(_enot, entry->asFolder(), memoType);
     if (!res.ok()) return;
 
-    selectEntry(res.result());
+    if (res.result())
+        selectEntry(res.result());
 }
 
 void TreeWidget::deleteMemo()

@@ -5,6 +5,7 @@
 #include "core/MemoStore.h"
 #include "core/MemoType.h"
 #include "widgets/GridFilterPanel.h"
+#include "widgets/MemoFactory.h"
 
 #include "helpers/OriDialogs.h"
 #include "helpers/OriLayouts.h"
@@ -604,7 +605,7 @@ void GridViewMemoTab::createMemo()
     auto memoType = MemoType::selectFromDlg();
     if (!memoType) return;
 
-    _enot->createMemo(_memo->parent(), memoType);
+    MemoFactory::createMemo(_enot, _memo->parent(), memoType);
 }
 
 Memo* GridViewMemoTab::selectedMemo() const

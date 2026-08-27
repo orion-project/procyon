@@ -190,7 +190,8 @@ public:
     bool renameFolder(Folder* folder, const QString& title);
     bool deleteFolder(Folder* folder);
 
-    MemoResult createMemo(Folder* folder, MemoType *memoType);
+    MemoResult createMemo(Folder* folder, MemoType *memoType,
+        const std::optional<MemoUpdateParam>& initialData = {});
     bool updateMemo(Memo* memo, MemoUpdateParam update);
     bool deleteMemo(Memo* memo);
     QString loadMemo(Memo* memo);

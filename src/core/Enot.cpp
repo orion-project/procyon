@@ -306,7 +306,8 @@ bool Enot::deleteFolder(Folder* folder)
     return true;
 }
 
-MemoResult Enot::createMemo(Folder* folder, MemoType* memoType)
+MemoResult Enot::createMemo(Folder* folder, MemoType* memoType,
+    const std::optional<MemoUpdateParam> &initialData)
 {
     auto now = QDateTime::currentDateTime();
 
@@ -316,6 +317,13 @@ MemoResult Enot::createMemo(Folder* folder, MemoType* memoType)
     memo->_updated = now;
     memo->_station = _station;
     memo->_type = memoType;
+    if (initialData)
+    {
+        if (initialData->title)
+            memo->_title = initialData->title.value();
+        if (initialData->data)
+            memo->_data = initialData->data.value();
+    }
 
     auto res = Store::memos()->create(memo);
     if (!res.isEmpty())
@@ -323,6 +331,37 @@ MemoResult Enot::createMemo(Folder* folder, MemoType* memoType)
         delete memo;
         emit errorOccurred(res);
         return MemoResult::fail(res);
+    }
+
+    if (initialData && initialData->props)
+    {
+        QStringList errors;
+        for (auto it = initialData->props->cbegin(); it != initialData->props->cend(); it++)
+        {
+            auto name = it.key();
+            auto value = it.value();
+            auto err = Store::memos()->updateProp(memo->id(), name, value);
+            if (!err.isEmpty())
+            {
+                errors << err;
+                continue;
+            }
+
+            MemoEvent event;
+            event._memoId = memo->_id;
+            event._what = u"prop:"_s + name;
+            event._value = value;
+            event._moment = now;
+            event._station = _station;
+            Store::memos()->writeEvent(event);
+        }
+
+        if (!errors.isEmpty())
+        {
+            emit errorOccurred(errors.join('\n'));
+            // Don't return MemoResult::fail() here,
+            // since the memo itself is saved successfully
+        }
     }
 
     emit entryCreating(memo, folder->_memos.size());
@@ -340,7 +379,7 @@ bool Enot::updateMemo(Memo* memo, MemoUpdateParam update)
     if (update.IsEmpty())
         return true;
 
-    auto now = QDateTime::currentDateTime();
+    auto now = update.moment ? update.moment.value() : QDateTime::currentDateTime();
 
     update.moment = now;
     update.station = _station;

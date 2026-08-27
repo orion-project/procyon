@@ -28,6 +28,7 @@ public:
     QHash<QString, QString> values() const;
     void setValues(const QHash<QString, QString>& values);
     bool isModified() const;
+    QStringList propNames() const;
 
     bool hideWhenEmpty = true;
 

@@ -4,6 +4,7 @@
 #include "TabHelpers.h"
 #include "core/Enot.h"
 #include "core/MemoStore.h"
+#include "core/MemoType.h"
 #include "markdown/MarkdownHelper.h"
 #include "widgets/IssueTextEdit.h"
 #include "widgets/MemoPropsPanel.h"
@@ -11,10 +12,13 @@
 #include "helpers/OriDialogs.h"
 #include "helpers/OriWidgets.h"
 #include "helpers/OriWindows.h"
+#include "tools/OriPersistentState.h"
 
 #include <QAction>
 #include <QApplication>
 #include <QDialogButtonBox>
+#include <QJsonObject>
+#include <QJsonArray>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMenu>
@@ -75,7 +79,7 @@ public:
     {
         setAttribute(Qt::WA_DeleteOnClose);
         setWindowFlags(Qt::Tool);
-        setWindowTitle(tr("Edit Issue #%1").arg(memo->id()));
+        setWindowTitle(memo ? tr("Edit Issue #%1").arg(memo->id()) : tr("Create New Issue"));
 
         auto addPropButton = new QToolButton;
         addPropButton->setToolTip(tr("Add Property..."));
@@ -91,12 +95,10 @@ public:
         _title->setWordWrapMode(QTextOption::WrapMode::WordWrap);
         _title->setAcceptDrops(false);
         _title->setTabChangesFocus(true);
-        _title->setPlainText(memo->title());
 
         _summary = new IssueTextEdit;
         _summary->setObjectName("code_editor");
         _summary->setProperty("role", "issue_text_in_tab");
-        _summary->setPlainText(memo->data());
         _summary->document()->setModified(false);
 
         _preview = new QTextBrowser;
@@ -120,10 +122,29 @@ public:
 
         restoreGeometry();
 
-        _propsPanel->setValues(memo->props());
+        if (memo)
+        {
+            _title->setPlainText(memo->title());
+            _summary->setPlainText(memo->data());
+            _propsPanel->setValues(memo->props());
+        }
+        else
+        {
+            _isNewMemo = true;
+            auto existingProps = enot->propNames();
+            auto jsonState = Ori::PersistentState::load("issue_memo");
+            auto jsonProps = jsonState["recent_props"].toArray();
+            for (auto it = jsonProps.cbegin(); it != jsonProps.cend(); it++)
+            {
+                QString propName = it->toString();
+                if (existingProps.contains(propName))
+                    _propsPanel->addProp(propName, QString());
+            }
+        }
+
         QTimer::singleShot(0, this, [this]{ _propsPanel->setReadOnly(false); });
 
-        if (memo->title().isEmpty())
+        if (!memo || memo->title().isEmpty())
             _title->setFocus();
         else
             _summary->setFocus();
@@ -188,6 +209,13 @@ private:
 
     void applyDlg()
     {
+        if (_isNewMemo)
+        {
+            auto jsonState = Ori::PersistentState::load("issue_memo");
+            jsonState["recent_props"] = QJsonArray::fromStringList(_propsPanel->propNames());
+            Ori::PersistentState::save("issue_memo", jsonState);
+        }
+
         bool canClose = true;
         if (isModified() && onApply)
         {
@@ -223,6 +251,7 @@ private:
     QTextBrowser *_preview;
     QTabWidget *_tabs;
     bool _canClose = false;
+    bool _isNewMemo = false;
 
     static QByteArray __storedGeometry;
 };
@@ -715,6 +744,25 @@ void IssueMemoTab::resizeEvent(QResizeEvent *e)
     MemoTab::resizeEvent(e);
     updateSummaryHeight();
     updateCommentHeights();
+}
+
+void IssueMemoTab::createIssue(Enot* enot, Folder* folder)
+{
+    auto dlg = new IssueEditDlg(qApp->activeWindow(), enot, nullptr);
+    dlg->onApply = [dlg, enot, folder](){
+        MemoUpdateParam initialData;
+        initialData.title = dlg->titleText();
+        initialData.data = dlg->summaryText();
+        initialData.props = dlg->memoProps();
+
+        auto res = enot->createMemo(folder, MemoType::issue(), initialData);
+        if (!res.ok())
+            return false;
+
+        return true;
+    };
+    dlg->show();
+    dlg->activateWindow();
 }
 
 void IssueMemoTab::editIssue()

@@ -141,6 +141,7 @@ set(PROJECT_SOURCES
     src/TextEditHelpers.cpp src/TextEditHelpers.h
     src/widgets/GridFilterPanel.cpp src/widgets/GridFilterPanel.h
     src/widgets/IssueTextEdit.cpp src/widgets/IssueTextEdit.h
+    src/widgets/MemoFactory.cpp src/widgets/MemoFactory.h
     src/widgets/MemoPropsPanel.cpp src/widgets/MemoPropsPanel.h
     src/widgets/MemoTextBrowser.cpp src/widgets/MemoTextBrowser.h
     src/widgets/MemoTextEdit.cpp src/widgets/MemoTextEdit.h

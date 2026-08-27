@@ -28,6 +28,7 @@ public:
 
         _readonlyLabel = new QLabel(value);
         _readonlyLabel->setProperty("role", "prop_value");
+        _readonlyLabel->setMinimumWidth(50);
 
         Ori::Layouts::LayoutH({nameLabel, _readonlyLabel}).setMargin(0).setSpacing(0).useFor(this);
     }
@@ -59,6 +60,7 @@ public:
             _editableLabel = new Ori::Widgets::Label;
             _editableLabel->setProperty("role", "prop_editor");
             _editableLabel->setCursor(Qt::PointingHandCursor);
+            _editableLabel->setMinimumWidth(50);
             connect(_editableLabel, &Ori::Widgets::Label::clicked, this, &MemoPropWidget::editableLabelClicked);
             layout()->addWidget(_editableLabel);
         }
@@ -265,8 +267,20 @@ QHash<QString, QString> MemoPropsPanel::values() const
 {
     QHash<QString, QString> res;
     for (auto view : _valueViews)
-        res.insert(view->propName(), view->value());
+    {
+        QString value = view->value();
+        if (!value.isEmpty())
+            res.insert(view->propName(), value);
+    }
     return res;
+}
+
+QStringList MemoPropsPanel::propNames() const
+{
+    QStringList names;
+    for (auto view : _valueViews)
+        names << view->propName();
+    return names;
 }
 
 void MemoPropsPanel::setValues(const QHash<QString, QString>& values)

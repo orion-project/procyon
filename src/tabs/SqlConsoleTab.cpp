@@ -114,7 +114,7 @@ SqlConsoleTab::SqlConsoleTab(QWidget *parent) : QWidget(parent)
     auto titleEditor = TabHelpers::makeTitleEditor(windowTitle());
 
     auto toolbar = new QToolBar;
-    auto actionRun = toolbar->addAction(QIcon(":/toolbar/apply"), tr("Execute (F5)"), [editor, result](){
+    auto actionRun = toolbar->addAction(QIcon(":/toolbar/run"), tr("Execute (F5)"), [editor, result](){
         result->setHtml(runSql(editor->toPlainText()));
     });
     actionRun->setShortcut(Qt::Key_F5);

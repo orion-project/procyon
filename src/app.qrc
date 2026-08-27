@@ -2,15 +2,16 @@
     <qresource prefix="/icon">
         <file alias="edit_mode">../img/icon/pencil_black.svg</file>
         <file alias="drop_down">../img/icon/drop_down.svg</file>
-        <file alias="folder">../img/icon/folder_closed.svg</file>
+        <file alias="folder">../img/icon/folder_closed_mono.svg</file>
         <file alias="folder_open">../img/icon/folder_open.svg</file>
         <file alias="help">../img/icon/help.svg</file>
         <file alias="is_modified">../img/icon/pencil_red.svg</file>
         <file alias="main">../img/icon/main.svg</file>
-        <file alias="memo_adeptus">../img/icon/memo_adeptus.svg</file>
-        <file alias="memo_grid_view">../img/icon/memo_grid_view.svg</file>
-        <file alias="memo_plain_text">../img/icon/memo_plain_text.svg</file>
-        <file alias="memo_markdown">../img/icon/memo_markdown.svg</file>
+        <file alias="main_simple">../img/icon/main_simple_4.svg</file>
+        <file alias="memo_adeptus">../img/icon/memo_adeptus_mono.svg</file>
+        <file alias="memo_grid_view">../img/icon/memo_grid_view_mono.svg</file>
+        <file alias="memo_plain_text">../img/icon/memo_plain_text_mono.svg</file>
+        <file alias="memo_markdown">../img/icon/memo_markdown_mono.svg</file>
         <file alias="memo_rich_text">../img/icon/memo_rich_text.svg</file>
         <file alias="settings">../img/icon/settings.svg</file>
         <file alias="tree_corner">../img/icon/tree_corner.svg</file>
@@ -20,14 +21,19 @@
         <file alias="tree_close">../img/icon/tree_close.svg</file>
     </qresource>
     <qresource prefix="/toolbar">
-        <file alias="apply">../img/toolbar/check_green.svg</file>
-        <file alias="close">../img/toolbar/close.svg</file>
+        <file alias="apply">../img/toolbar/check_green_mono.svg</file>
+        <file alias="brush">../img/toolbar/brush_mono.svg</file>
+        <file alias="close">../img/toolbar/close_mono.svg</file>
+        <file alias="columns">../img/toolbar/columns_mono.svg</file>
         <file alias="menu">../img/toolbar/menu.svg</file>
-        <file alias="cancel">../img/toolbar/revert_red.svg</file>
-        <file alias="edit">../img/toolbar/pencil.svg</file>
+        <file alias="cancel">../img/toolbar/revert_red_mono.svg</file>
+        <file alias="comment">../img/toolbar/comment_mono.svg</file>
+        <file alias="edit">../img/toolbar/pencil_mono.svg</file>
+        <file alias="filter">../img/toolbar/filter_mono.svg</file>
         <file alias="update">../img/toolbar/update.svg</file>
         <file alias="plus">../img/toolbar/plus.svg</file>
-        <file alias="save">../img/toolbar/save.svg</file>
+        <file alias="run">../img/toolbar/run_mono.svg</file>
+        <file alias="save">../img/toolbar/save_mono.svg</file>
     </qresource>
     <qresource prefix="/style">
         <file alias="about">../img/about.png</file>

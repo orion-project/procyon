@@ -46,7 +46,7 @@ QMenu {
 }
 QMenu::item {
   margin: 2px;
-  padding: 3px 25px;
+  padding: 4px 8px;
 }
 QMenu::icon {
   margin-left: 6px;

@@ -1,7 +1,8 @@
-<svg height="16" viewBox="0 0 16 16" width="16" xmlns="http://www.w3.org/2000/svg">
-<g style="fill:#fff;fill-opacity:.35;stroke:#3f5473;stroke-width:3;stroke-linecap:round;stroke-linejoin:round">
-<path d="m3 3h10"/>
-<path d="m3 8h10"/>
-<path d="m3 13h10"/>
-</g>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16" height="16" version="1.1" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+ <g fill="#fff" fill-opacity=".35" stroke="#00547f" stroke-linecap="round" stroke-linejoin="round" stroke-width="3">
+  <path d="m3 3h10"/>
+  <path d="m3 8h10"/>
+  <path d="m3 13h10"/>
+ </g>
 </svg>

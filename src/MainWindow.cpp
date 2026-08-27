@@ -215,16 +215,16 @@ void MainWindow::createMenu()
     if (AppSettings::instance().isDevMode)
     {
         m->addSeparator();
-        m->addAction(tr("Edit Application QSS"), this, [this]{
+        m->addAction(tr("Application QSS"), this, [this]{
             activateOrOpenNewTab<QssEditorTab>(_tabsView, _openTabsView);
         });
-        m->addAction(tr("Edit Markdown CSS"), this, [this]{
+        m->addAction(tr("Markdown CSS"), this, [this]{
             activateOrOpenNewTab<CssEditorTab>(_tabsView, _openTabsView);
         });
-        m->addAction(tr("Open SQL Console"), this, [this]{
+        m->addAction(tr("SQL Console"), this, [this]{
             openNewTab<SqlConsoleTab>(_tabsView, _openTabsView);
         });
-        m->addAction(tr("Open Command Console"), this, [this]{
+        m->addAction(tr("Command Console"), this, [this]{
             openNewTab<CmdConsoleTab>(_tabsView, _openTabsView, _enot);
         });
     }

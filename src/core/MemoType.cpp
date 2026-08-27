@@ -46,7 +46,13 @@ MemoType* MemoType::issue()
 
 const QList<MemoType*>& MemoType::all()
 {
-    static QList<MemoType*> types { plainText(), markdown(), richText(), gridView(), issue() };
+    static QList<MemoType*> types {
+        plainText(),
+        markdown(),
+        //richText(),
+        gridView(),
+        issue()
+    };
     return types;
 }
 
@@ -65,7 +71,7 @@ MemoType* MemoType::selectFromDlg()
     auto tripTypeLayout = new QHBoxLayout();
     tripTypeLayout->setContentsMargins(0, 0, 0, 0);
     tripTypeLayout->setSpacing(12);
-    for (auto memoType : { plainText(), markdown(), gridView(), issue() })
+    for (auto memoType : all())
     {
         auto tile = new Ori::Widgets::SelectableTile;
         tile->setPixmap(memoType->icon().pixmap(48, 48));

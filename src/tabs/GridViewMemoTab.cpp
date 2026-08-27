@@ -456,10 +456,10 @@ GridViewMemoTab::GridViewMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     _toolbar = TabHelpers::makeHeaderToolBar();
 
     _toolMenu = new QMenu(this);
-    _toolMenu->addAction(tr("Show Properties..."), this, &Self::chooseColumns);
-    _toolMenu->addAction(tr("Property Formats..."), this, &Self::configurePropFormats);
+    _toolMenu->addAction(QIcon(":/toolbar/columns"), tr("Show Properties..."), this, &Self::chooseColumns);
+    _toolMenu->addAction(QIcon(":/toolbar/brush"), tr("Property Formats..."), this, &Self::configurePropFormats);
     _toolMenu->addSeparator();
-    auto actionFilter = _toolMenu->addAction(tr("Show Filters"), this, &Self::showFilterPanel);
+    auto actionFilter = _toolMenu->addAction(QIcon(":/toolbar/filter"), tr("Show Filters"), this, &Self::showFilterPanel);
     actionFilter->setShortcut(QKeySequence(Qt::ControlModifier | Qt::Key_F));
     _toolMenu->addAction(tr("Clear Filters"), this, &Self::clearFilters);
 

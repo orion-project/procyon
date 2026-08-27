@@ -409,8 +409,8 @@ IssueMemoTab::IssueMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     auto toolMenu = new QMenu(this);
     toolMenu->addAction(_issueInfo.action);
     toolMenu->addSeparator();
-    toolMenu->addAction(tr("Edit Issue..."), this, &Self::editIssue);
-    toolMenu->addAction(tr("Add Comment..."), this, &Self::addComment);
+    toolMenu->addAction(QIcon(":/toolbar/edit"), tr("Edit Issue..."), this, &Self::editIssue);
+    toolMenu->addAction(QIcon(":/toolbar/comment"), tr("Add Comment..."), this, &Self::addComment);
 
     _propsPanel = new MemoPropsPanel(enot, {_labelUpdated, TabHelpers::makeMenuButton(toolMenu)});
     _propsPanel->hideWhenEmpty = false;
@@ -658,7 +658,7 @@ void IssueMemoTab::showHistory()
             auto menu = new QMenu(commentView.textView);
             menu->addAction(commentView.popupInfo.action);
             menu->addSeparator();
-            menu->addAction(tr("Edit Comment..."), this, [this, comment]{ editComment(comment.id()); });
+            menu->addAction(QIcon(":/toolbar/edit"), tr("Edit Comment..."), this, [this, comment]{ editComment(comment.id()); });
 
             auto header = new QFrame;
             Ori::Layouts::LayoutH({

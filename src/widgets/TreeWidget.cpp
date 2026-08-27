@@ -195,7 +195,7 @@ public:
 
 private:
     Enot* _enot;
-    QIcon _iconRoot = QIcon(":/icon/main");
+    QIcon _iconRoot = QIcon(":/icon/main_simple");
     QIcon _iconFolder = QIcon(":/icon/folder");
     QIcon _iconMemo = QIcon(":/icon/memo_plain_text");
 };

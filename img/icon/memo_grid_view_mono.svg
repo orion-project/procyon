@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" enable-background="new" version="1.1" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <rect id="rect9" width="150" height="150" rx="45" ry="45" fill="#00547f"/>
+ <use id="use14" transform="translate(180)" xlink:href="#rect9"/>
+ <use id="use15" transform="translate(360)" xlink:href="#rect9"/>
+ <use id="use16" transform="translate(0,180)" xlink:href="#rect9"/>
+ <use id="use17" transform="translate(0,180)" xlink:href="#use14"/>
+ <use id="use18" transform="translate(0,180)" xlink:href="#use15"/>
+ <use transform="translate(0,180)" xlink:href="#use16"/>
+ <use transform="translate(0,180)" xlink:href="#use17"/>
+ <use transform="translate(0,180)" xlink:href="#use18"/>
+</svg>

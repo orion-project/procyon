@@ -118,7 +118,7 @@ CmdConsoleTab::CmdConsoleTab(Enot* enot) : QWidget()
     auto titleEditor = TabHelpers::makeTitleEditor(windowTitle());
 
     auto toolbar = new QToolBar;
-    auto actionRun = toolbar->addAction(QIcon(":/toolbar/apply"), tr("Execute (F5)"), [this, editor, result](){
+    auto actionRun = toolbar->addAction(QIcon(":/toolbar/run"), tr("Execute (F5)"), [this, editor, result](){
         QString cmdName = editor->toPlainText().trimmed();
         if (cmdName.isEmpty()) return;
         if (!_impl->cmds.contains(cmdName))

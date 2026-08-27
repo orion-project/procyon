@@ -198,32 +198,63 @@ if __name__ == "__main__":
 
   print("===============================================")
   print("Writing history...")
+
+  def write_prop_history(issue_id: int, memo_id: int, name: str, value: str, moment) -> bool:
+    what = "prop:" + prop_name
+    enot.execute("SELECT MemoId FROM MemoHistory WHERE MemoId=? AND What=? AND Value=? AND Moment=?",
+      (memo_id, what, value, moment))
+    if enot.fetchone():
+      print(f"SKIP: prop history for issue {issue_id} (memo {memo_id}): {name}={value} already exists")
+      return False
+    if args.verbose:
+      print(f"NEW: prop history for issue {issue_id} (memo {memo_id}): {name}={value}")
+    enot.execute("INSERT INTO MemoHistory (MemoId, What, Value, Moment, Station) VALUES (?, ?, ?, ?, ?)",
+      (memo_id, what, value, moment, STATION_NAME))
+    global COUNT_HISTORY
+    COUNT_HISTORY += 1
+    return True
+
+  props_history_start: dict[int, set[str]] = {}
   for issue_id, memo in NEW_MEMOS.items():
     memo_id = memo["id"]
     has_history = False
-    adeptus.execute("SELECT EventNum, EventPart, ChangedParam, NewValue, Moment FROM History " +
+    adeptus.execute("SELECT EventNum, EventPart, ChangedParam, OldValue, NewValue, Moment FROM History " +
       f"WHERE Issue={issue_id} AND ChangedParam >= {DICT_ID_OFFSET} ORDER BY EventNum, EventPart")
+    
     for r in adeptus.fetchall():
-      event_num, event_part, dict_id, value_id, moment = int(r[0]), int(r[1]), int(r[2]), int(r[3]), r[4]
+      event_num, event_part, dict_id, old_value_id, new_value_id, moment = int(r[0]), int(r[1]), int(r[2]), int(r[3]), int(r[4]), r[5]
       prop_idx = dict_id - DICT_ID_OFFSET
       if prop_idx < 0 or prop_idx >= len(PROP_NAMES):
         print(f"WARN: invalid dict id {dict_id} for issue {issue_id} (EventNum={event_num}, EventPart={event_part}), skip")
         continue
       prop_name = PROP_NAMES[prop_idx]
-      prop_value = all_prop_values.get(prop_name, {}).get(value_id)
-      if not prop_value: prop_value = str(value_id)
-      what_str = "prop:" + prop_name
-      enot.execute("SELECT MemoId FROM MemoHistory WHERE MemoId=? AND What=? AND Value=? AND Moment=?",
-        (memo_id, what_str, prop_value, moment))
-      if enot.fetchone():
-        print(f"SKIP: prop history for issue {issue_id} (memo {memo_id}): {prop_name}={prop_value} already exists")
-        continue
-      if args.verbose:
-        print(f"NEW: prop history for issue {issue_id} (memo {memo_id}): {prop_name}={prop_value}")
-      enot.execute("INSERT INTO MemoHistory (MemoId, What, Value, Moment, Station) VALUES (?, ?, ?, ?, ?)",
-        (memo_id, what_str, prop_value, moment, STATION_NAME))
-      has_history = True
+      old_prop_value = all_prop_values.get(prop_name, {}).get(old_value_id, str(old_value_id))
+      new_prop_value = all_prop_values.get(prop_name, {}).get(new_value_id, str(new_value_id))
+      if (memo_id not in props_history_start) or (prop_name not in props_history_start[memo_id]):
+        # Make initial history record for property first values
+        # Adeptus explicitly writes history as oldValue -> newValue
+        # Procyon write only newValue and reads oldValue as the previous record in the table
+        # so we need the first history record to start tracking from
+        if write_prop_history(issue_id, memo_id, prop_name, old_prop_value, memo["created"]):
+          has_history = True
+        if memo_id not in props_history_start:
+          props_history_start[memo_id] = set()
+        props_history_start[memo_id].add(prop_name)
+      if write_prop_history(issue_id, memo_id, prop_name, new_prop_value, moment):
+        has_history = True
       COUNT_HISTORY += 1
+    if has_history:
+      enot_conn.commit()
+
+  print("===============================================")
+  print("Writing initial history...")
+  for issue_id, memo in NEW_MEMOS.items():
+    memo_id = memo["id"]
+    has_history = False
+    for prop_name, start_value in memo["props"].items():
+      if (memo_id not in props_history_start) or (prop_name not in props_history_start[memo_id]):
+        if write_prop_history(issue_id, memo_id, prop_name, start_value, memo["created"]):
+          has_history = True
     if has_history:
       enot_conn.commit()
 

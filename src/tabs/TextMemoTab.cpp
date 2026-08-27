@@ -79,9 +79,7 @@ TextMemoTab::TextMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
 
     Ori::Layouts::LayoutV({toolPanel, _propsPanel, _memoEditor}).setMargin(0).setSpacing(0).useFor(this);
 
-    const auto& props = memo->props();
-    for (auto it = props.cbegin(); it != props.cend(); it++)
-        _propsPanel->addProp(it.key(), it.value());
+    _propsPanel->setValues(memo->props());
 
     showMemo();
     toggleEditMode(false);

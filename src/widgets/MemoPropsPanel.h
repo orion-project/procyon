@@ -39,16 +39,6 @@ private:
     QString _activeProp;
     QAction *_actionAddValue, *_actionDeleteProp;
     QLayout *_propsLayout;
-
-    struct ValueView
-    {
-        QString value;
-        QWidget *contentWidget;
-        QLabel *readonlyLabel;
-        QLabel *editableLabel = nullptr;
-        bool transient = false;
-    };
-
     QHash<QString, MemoPropWidget*> _valueViews;
     QList<MemoPropWidget*> _removedProps;
     QHash<QString, QString> _originalValues;

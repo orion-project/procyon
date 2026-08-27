@@ -403,10 +403,6 @@ IssueMemoTab::IssueMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
 
     Ori::Layouts::LayoutV({toolPanel, _propsPanel, _contentScroller}).setMargin(0).setSpacing(0).useFor(this);
 
-    const auto& props = memo->props();
-    for (auto it = props.cbegin(); it != props.cend(); it++)
-        _propsPanel->addProp(it.key(), it.value());
-
     showMemo();
     showHistory();
     //toggleEditMode(false);
@@ -454,6 +450,7 @@ void IssueMemoTab::showMemo()
     _issueInfo.created->setText(dateToStr(_memo->created()));
     _issueInfo.updated->setText(dateToStr(_memo->updated()));
     _issueInfo.station->setText(_memo->station());
+    _propsPanel->setValues(_memo->props());
     setWindowTitle(_memo->title());
     QTimer::singleShot(0, this, &Self::updateSummaryHeight);
 }
@@ -513,19 +510,34 @@ void IssueMemoTab::showHistory()
         return label;
     };
 
-    auto makePropChangeWidget = [this, &propsChange, &makeNumLabel, &makeDateLabel](){
+    auto makePropChangeWidget = [this, &eventNum, &propsChange, &makeNumLabel, &makeDateLabel](){
         if (!propsChange) return;
 
         auto propNames = propsChange->propValues.keys();
         propNames.sort();
         QStringList report;
+        int initialValueCount = 0;
         for (const auto &propName : std::as_const(propNames))
         {
             const auto& change = propsChange->propValues.value(propName);
-            QString oldValue = change.first.isEmpty() ? tr("(none)") : change.first;
-            QString newValue = change.second.isEmpty() ? tr("(none)") : change.second;
-            report << u"%1:&nbsp;<b>%2&nbsp;→&nbsp;%3</b>"_s.arg(propName, oldValue, newValue);
+            if (change.first.isEmpty() && !change.second.isEmpty() && eventNum == 1)
+            {
+                // This this the first history record
+                // No need to show that all properties changed from "(none)" to some value
+                initialValueCount++;
+            }
+            else
+            {
+                QString oldValue = change.first.isEmpty() ? tr("(none)") : change.first;
+                QString newValue = change.second.isEmpty() ? tr("(none)") : change.second;
+                report << u"%1:&nbsp;<b>%2&nbsp;→&nbsp;%3</b>"_s.arg(propName, oldValue, newValue);
+            }
         }
+
+        // This this the first history record
+        // No need to show that all properties changed from "(none)" to some value
+        if (initialValueCount == propNames.size())
+            return;
 
         auto propLabel = new QLabel(report.join(u". "_s));
         propLabel->setWordWrap(true);

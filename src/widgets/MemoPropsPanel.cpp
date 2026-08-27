@@ -271,11 +271,21 @@ QHash<QString, QString> MemoPropsPanel::values() const
 
 void MemoPropsPanel::setValues(const QHash<QString, QString>& values)
 {
-    // This method is not meant to be called in the middle of the component lifetime
-    // Only after creation for the initial value population
+    setUpdatesEnabled(false);
     _originalValues = values;
-    for (auto it = _originalValues.cbegin(); it != _originalValues.cend(); it++)
-        addProp(it.key(), it.value());
+    for (auto it = _valueViews.cbegin(); it != _valueViews.cend(); it++)
+    {
+        _propsLayout->removeWidget(it.value());
+        it.value()->deleteLater();
+    }
+    _valueViews.clear();
+    _hasValues = false;
+
+    auto names = values.keys();
+    names.sort();
+    for (const auto& name : std::as_const(names))
+        addProp(name, values.value(name));
+    setUpdatesEnabled(true);
 }
 
 bool MemoPropsPanel::isModified() const

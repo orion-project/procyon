@@ -45,6 +45,13 @@ public:
         }
     }
 
+    QString rawValue() const
+    {
+        if (_editableLabel && _editableLabel->isVisible())
+            return _editableLabel->text();
+        return _value;
+    }
+
     void switchToEditable()
     {
         if (!_editableLabel)
@@ -239,7 +246,7 @@ void MemoPropsPanel::setReadOnly(bool on)
 {
     _isReadonly = on;
     setUpdatesEnabled(false);
-    if (on) switchToEditable();
+    if (!on) switchToEditable();
     else switchToReadonly();
     setUpdatesEnabled(true);
 }
@@ -260,6 +267,29 @@ QHash<QString, QString> MemoPropsPanel::values() const
     for (auto view : _valueViews)
         res.insert(view->propName(), view->value());
     return res;
+}
+
+void MemoPropsPanel::setValues(const QHash<QString, QString>& values)
+{
+    // This method is not meant to be called in the middle of the component lifetime
+    // Only after creation for the initial value population
+    _originalValues = values;
+    for (auto it = _originalValues.cbegin(); it != _originalValues.cend(); it++)
+        addProp(it.key(), it.value());
+}
+
+bool MemoPropsPanel::isModified() const
+{
+    for (auto it = _originalValues.cbegin(); it != _originalValues.cend(); it++)
+        if (!_valueViews.contains(it.key()))
+            return true;
+    for (auto it = _valueViews.cbegin(); it != _valueViews.cend(); it++)
+        if (!_originalValues.contains(it.key()))
+            return true;
+    for (auto it = _originalValues.cbegin(); it != _originalValues.cend(); it++)
+        if (it.value() != _valueViews.value(it.key())->rawValue())
+            return true;
+    return false;
 }
 
 void MemoPropsPanel::updateValuesMenu()

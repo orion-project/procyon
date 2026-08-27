@@ -571,11 +571,23 @@ QLabel[role=isssue_popup_info_name] {
 QLabel[role=issue_popup_info_value] {
   font-size: $main-font-size;
 }
-QPlainTextEdit[role=issue_text_in_dlg] {
+QPlainTextEdit[role=issue_text_in_tab] {
   border: none;
   padding: 3px;
 }
-QTextBrowser[role=issue_text_in_dlg] {
+QTextBrowser[role=issue_text_in_tab] {
   border: none;
   padding: 3px;
+}
+QPlainTextEdit[role=issue_title_in_dlg] {
+  windows:font-size: 15px;
+  linux:font-size: 17px;
+  macos:font-size: 14px;
+  background-color: white;
+  border: $default-border;
+  border-radius: $border-radius;
+  padding: 2px;
+  margin-bottom: 6px;
+  min-height: 47px;
+  max-height: 47px;
 }

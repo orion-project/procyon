@@ -12,6 +12,8 @@
 
 #define KEY_UID "UID"
 
+using namespace Qt::StringLiterals;
+
 //------------------------------------------------------------------------------
 //                                Entry
 //------------------------------------------------------------------------------
@@ -338,7 +340,9 @@ bool Enot::updateMemo(Memo* memo, MemoUpdateParam update)
     if (update.IsEmpty())
         return true;
 
-    update.moment = QDateTime::currentDateTime();
+    auto now = QDateTime::currentDateTime();
+
+    update.moment = now;
     update.station = _station;
 
     QString res = Store::memos()->update(memo, update);
@@ -366,23 +370,45 @@ bool Enot::updateMemo(Memo* memo, MemoUpdateParam update)
             {
                 auto err = Store::memos()->deleteProp(memo->id(), name);
                 if (!err.isEmpty())
+                {
                     errors << err;
-                else
-                    memo->_props->remove(name);
+                    continue;
+                }
+
+                memo->_props->remove(name);
+
+                MemoEvent event;
+                event._memoId = memo->_id;
+                event._what = u"prop:"_s + name;
+                event._moment = now;
+                event._station = _station;
+                Store::memos()->writeEvent(event);
             }
         }
 
         for (auto it = update.props->cbegin(); it != update.props->cend(); it++)
         {
             auto name = it.key();
-            auto value = it.value();
-            if (value != memo->_props->value(name))
+            auto newValue = it.value();
+            auto oldValue = memo->_props->value(name);
+            if (newValue != oldValue)
             {
-                auto err = Store::memos()->updateProp(memo->id(), name, value);
+                auto err = Store::memos()->updateProp(memo->id(), name, newValue);
                 if (!err.isEmpty())
+                {
                     errors << err;
-                else
-                    memo->_props->insert(name, value);
+                    continue;
+                }
+
+                memo->_props->insert(name, newValue);
+
+                MemoEvent event;
+                event._memoId = memo->_id;
+                event._what = u"prop:"_s + name;
+                event._value = newValue;
+                event._moment = now;
+                event._station = _station;
+                Store::memos()->writeEvent(event);
             }
         }
 

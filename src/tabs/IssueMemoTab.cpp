@@ -31,6 +31,8 @@
 
 using namespace Qt::StringLiterals;
 
+#define FIXED_TEXT_HEIGHT_EXTRA  40
+
 
 static QString dateToStr(const QDateTime& date)
 {
@@ -63,13 +65,178 @@ private:
 };
 
 //------------------------------------------------------------------------------
-//                             IssueMemoTab
+//                                IssueEditDlg
 //------------------------------------------------------------------------------
 
-class IssueTextDlg : public QWidget
+class IssueEditDlg : public QWidget
 {
 public:
-    IssueTextDlg(QWidget *parent, const QString& title, const QString& text = {}) : QWidget(parent)
+    IssueEditDlg(QWidget *parent, Enot *enot, Memo *memo) : QWidget(parent)
+    {
+        setAttribute(Qt::WA_DeleteOnClose);
+        setWindowFlags(Qt::Tool);
+        setWindowTitle(tr("Edit Issue #%1").arg(memo->id()));
+
+        auto addPropButton = new QToolButton;
+        addPropButton->setToolTip(tr("Add Property..."));
+        addPropButton->setIcon(QIcon(":/toolbar/plus"));
+
+        _propsPanel = new MemoPropsPanel(enot, {addPropButton});
+        _propsPanel->hideWhenEmpty = false;
+
+        connect(addPropButton, &QToolButton::clicked, _propsPanel, &MemoPropsPanel::addPropViaDlg);
+
+        _title = new QPlainTextEdit;
+        _title->setProperty("role", "issue_title_in_dlg");
+        _title->setWordWrapMode(QTextOption::WrapMode::WordWrap);
+        _title->setAcceptDrops(false);
+        _title->setTabChangesFocus(true);
+        _title->setPlainText(memo->title());
+
+        _summary = new IssueTextEdit;
+        _summary->setObjectName("code_editor");
+        _summary->setProperty("role", "issue_text_in_tab");
+        _summary->setPlainText(memo->data());
+        _summary->document()->setModified(false);
+
+        _preview = new QTextBrowser;
+        _preview->document()->setDefaultStyleSheet(AppSettings::instance().markdownCss());
+        _preview->setProperty("role", "issue_text_in_tab");
+
+        _tabs = new QTabWidget;
+        _tabs->addTab(_summary, tr("Edit"));
+        _tabs->addTab(_preview, tr("Preview"));
+        connect(_tabs, &QTabWidget::currentChanged, this, &IssueEditDlg::updatePreview);
+
+        // Actions to make hotkeys available
+        addAction(Ori::Gui::action("", this, &IssueEditDlg::cancelDlg, 0, QKeySequence(Qt::Key_Escape, Qt::Key_Escape)));
+        addAction(Ori::Gui::action("", this, &IssueEditDlg::applyDlg, 0, QKeySequence("Ctrl+Return")));
+
+        auto buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+        connect(buttons, &QDialogButtonBox::rejected, this, &IssueEditDlg::cancelDlg);
+        connect(buttons, &QDialogButtonBox::accepted, this, &IssueEditDlg::applyDlg);
+
+        Ori::Layouts::LayoutV({_propsPanel, _title, _tabs, buttons}).useFor(this);
+
+        restoreGeometry();
+
+        _propsPanel->setValues(memo->props());
+        QTimer::singleShot(0, this, [this]{ _propsPanel->setReadOnly(false); });
+
+        if (memo->title().isEmpty())
+            _title->setFocus();
+        else
+            _summary->setFocus();
+    }
+
+    ~IssueEditDlg()
+    {
+        __storedGeometry = saveGeometry();
+    }
+
+    QString titleText() const
+    {
+        QString text = _title->toPlainText();
+        text.replace('\n', ' ');
+        return text.trimmed();
+    }
+
+    QString summaryText() const
+    {
+        return _summary->toPlainText();
+    }
+
+    std::optional<QHash<QString, QString>> memoProps() const
+    {
+        if (_propsPanel->hasValues() && _propsPanel->isModified())
+            return _propsPanel->values();
+        return {};
+    }
+
+    std::function<bool()> onApply;
+
+protected:
+    void closeEvent(class QCloseEvent* e) override
+    {
+        if (_canClose || canClose())
+            e->accept();
+        else
+            e->ignore();
+    }
+
+private:
+    void updatePreview()
+    {
+        if (_tabs->currentIndex() == 1)
+            _preview->setHtml(MarkdownHelper::markdownToHtml(_summary->toPlainText()));
+    }
+
+    bool canClose() const
+    {
+        if (isModified())
+            return Ori::Dlg::yes(tr("There are unsaved changes. Cancel anyway?"));
+        return true;
+    }
+
+    void cancelDlg()
+    {
+        if (!canClose()) return;
+        _summary->cleanFiles();
+        _canClose = true;
+        close();
+    }
+
+    void applyDlg()
+    {
+        bool canClose = true;
+        if (isModified() && onApply)
+        {
+            _propsPanel->apply();
+            canClose = onApply();
+        }
+        if (canClose)
+        {
+            _canClose = true;
+            close();
+        }
+    }
+
+    void restoreGeometry()
+    {
+        if (!__storedGeometry.isEmpty())
+            QWidget::restoreGeometry(__storedGeometry);
+        else
+        {
+            resize(800, 400);
+            Ori::Wnd::moveToScreenCenter(this, qApp->activeWindow());
+        }
+    }
+
+    bool isModified() const
+    {
+        return _title->document()->isModified() || _summary->document()->isModified() || _propsPanel->isModified();
+    }
+
+    MemoPropsPanel *_propsPanel;
+    QPlainTextEdit *_title;
+    IssueTextEdit *_summary;
+    QTextBrowser *_preview;
+    QTabWidget *_tabs;
+    bool _canClose = false;
+
+    static QByteArray __storedGeometry;
+};
+
+QByteArray IssueEditDlg::__storedGeometry = {};
+
+//------------------------------------------------------------------------------
+//                               IssueCommentDlg
+//------------------------------------------------------------------------------
+
+class IssueCommentDlg : public QWidget
+{
+public:
+    IssueCommentDlg(QWidget *parent, const QString& title, const QString& text = {}) : QWidget(parent)
     {
         setAttribute(Qt::WA_DeleteOnClose);
         setWindowFlags(Qt::Tool);
@@ -77,26 +244,26 @@ public:
     
         _editor = new IssueTextEdit;
         _editor->setObjectName("code_editor");
-        _editor->setProperty("role", "issue_text_in_dlg");
+        _editor->setProperty("role", "issue_text_in_tab");
         _editor->setPlainText(text);
         _editor->document()->setModified(false);
 
         _preview = new QTextBrowser;
         _preview->document()->setDefaultStyleSheet(AppSettings::instance().markdownCss());
-        _preview->setProperty("role", "issue_text_in_dlg");
+        _preview->setProperty("role", "issue_text_in_tab");
 
         _tabs = new QTabWidget;
         _tabs->addTab(_editor, tr("Edit"));
         _tabs->addTab(_preview, tr("Preview"));
-        connect(_tabs, &QTabWidget::currentChanged, this, &IssueTextDlg::updatePreview);
+        connect(_tabs, &QTabWidget::currentChanged, this, &IssueCommentDlg::updatePreview);
 
         // Actions to make hotkeys available
-        addAction(Ori::Gui::action("", this, &IssueTextDlg::cancelDlg, 0, QKeySequence(Qt::Key_Escape, Qt::Key_Escape)));
-        addAction(Ori::Gui::action("", this, &IssueTextDlg::applyDlg, 0, QKeySequence("Ctrl+Return")));
+        addAction(Ori::Gui::action("", this, &IssueCommentDlg::cancelDlg, 0, QKeySequence(Qt::Key_Escape, Qt::Key_Escape)));
+        addAction(Ori::Gui::action("", this, &IssueCommentDlg::applyDlg, 0, QKeySequence("Ctrl+Return")));
 
         auto buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-        connect(buttons, &QDialogButtonBox::rejected, this, &IssueTextDlg::cancelDlg);
-        connect(buttons, &QDialogButtonBox::accepted, this, &IssueTextDlg::applyDlg);
+        connect(buttons, &QDialogButtonBox::rejected, this, &IssueCommentDlg::cancelDlg);
+        connect(buttons, &QDialogButtonBox::accepted, this, &IssueCommentDlg::applyDlg);
         
         Ori::Layouts::LayoutV({_tabs, buttons}).useFor(this);
         
@@ -105,17 +272,17 @@ public:
         _editor->setFocus();
     }
     
-    ~IssueTextDlg()
+    ~IssueCommentDlg()
     {
         __storedGeometry = saveGeometry();
     }
-    
+
     std::function<bool(const QString& text)> onApply;
     
 protected:
     void closeEvent(class QCloseEvent* e) override
     {
-        if (_saved || canClose())
+        if (_canClose || canClose())
             e->accept();
         else
             e->ignore();
@@ -139,6 +306,7 @@ private:
     {
         if (!canClose()) return;
         _editor->cleanFiles();
+        _canClose = true;
         close();
     }
     
@@ -150,7 +318,7 @@ private:
         
         if (canClose)
         {
-            _saved = true;
+            _canClose = true;
             close();
         }
     }
@@ -161,7 +329,7 @@ private:
             QWidget::restoreGeometry(__storedGeometry);
         else
         {
-            resize(600, 300);
+            resize(800, 400);
             Ori::Wnd::moveToScreenCenter(this, qApp->activeWindow());
         }
     }
@@ -169,12 +337,12 @@ private:
     IssueTextEdit *_editor;
     QTextBrowser *_preview;
     QTabWidget *_tabs;
-    bool _saved = false;
+    bool _canClose = false;
 
     static QByteArray __storedGeometry;
 };
 
-QByteArray IssueTextDlg::__storedGeometry = {};
+QByteArray IssueCommentDlg::__storedGeometry = {};
 
 //------------------------------------------------------------------------------
 //                             IssueMemoTab
@@ -191,12 +359,12 @@ IssueMemoTab::IssueMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     
     _toolbar = TabHelpers::makeHeaderToolBar();
 
-    _actionEdit = _toolbar->addAction(QIcon(":/toolbar/edit"), tr("Edit"), this, &Self::beginEdit);
-    _actionSave = _toolbar->addAction(QIcon(":/toolbar/apply"), tr("Save"), this, &Self::saveEdit);
-    _actionCancel = _toolbar->addAction(QIcon(":/toolbar/cancel"), tr("Cancel"), this, &Self::cancelEdit);
-    _actionEdit->setShortcut(QKeySequence(Qt::Key_Return, Qt::Key_Return));
-    _actionSave->setShortcut(QKeySequence::Save);
-    _actionCancel->setShortcut(QKeySequence(Qt::Key_Escape, Qt::Key_Escape));
+    // _actionEdit = _toolbar->addAction(QIcon(":/toolbar/edit"), tr("Edit"), this, &Self::beginEdit);
+    // _actionSave = _toolbar->addAction(QIcon(":/toolbar/apply"), tr("Save"), this, &Self::saveEdit);
+    // _actionCancel = _toolbar->addAction(QIcon(":/toolbar/cancel"), tr("Cancel"), this, &Self::cancelEdit);
+    // _actionEdit->setShortcut(QKeySequence(Qt::Key_Return, Qt::Key_Return));
+    // _actionSave->setShortcut(QKeySequence::Save);
+    // _actionCancel->setShortcut(QKeySequence(Qt::Key_Escape, Qt::Key_Escape));
     _toolbar->addSeparator();
     _toolbar->addAction(QIcon(":/toolbar/close"), tr("Close Tab"), [this](){ deleteLater(); });
     
@@ -210,6 +378,7 @@ IssueMemoTab::IssueMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     auto toolMenu = new QMenu(this);
     toolMenu->addAction(_issueInfo.action);
     toolMenu->addSeparator();
+    toolMenu->addAction(tr("Edit Issue..."), this, &Self::editIssue);
     toolMenu->addAction(tr("Add Comment..."), this, &Self::addComment);
 
     _propsPanel = new MemoPropsPanel(enot, {_labelUpdated, TabHelpers::makeMenuButton(toolMenu)});
@@ -240,7 +409,7 @@ IssueMemoTab::IssueMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
 
     showMemo();
     showHistory();
-    toggleEditMode(false);
+    //toggleEditMode(false);
 }
 
 IssueMemoTab::PopupInfo IssueMemoTab::makePopupInfo()
@@ -286,6 +455,7 @@ void IssueMemoTab::showMemo()
     _issueInfo.updated->setText(dateToStr(_memo->updated()));
     _issueInfo.station->setText(_memo->station());
     setWindowTitle(_memo->title());
+    QTimer::singleShot(0, this, &Self::updateSummaryHeight);
 }
 
 void IssueMemoTab::showHistory()
@@ -463,9 +633,9 @@ void IssueMemoTab::showHistory()
     _contentLayout->addStretch();
     _contentScroller->setUpdatesEnabled(true);
 
-    QTimer::singleShot(0, this, &Self::updateViewHeights);
+    QTimer::singleShot(0, this, &Self::updateCommentHeights);
 }
-
+/*
 void IssueMemoTab::beginEdit()
 {
     toggleEditMode(true);
@@ -509,32 +679,65 @@ void IssueMemoTab::toggleEditMode(bool on)
 
     TabHelpers::setTitleEditorReadOnly(_titleEditor, !on);
 }
+*/
 
-void IssueMemoTab::updateViewHeights()
+void IssueMemoTab::updateSummaryHeight()
 {
-    const int maxBordersWidth = 40;
     if (!_memo->data().isEmpty())
     {
         _summaryView->setVisible(true);
-        _summaryView->setFixedHeight(_summaryView->document()->size().height() + maxBordersWidth);
+        _summaryView->setFixedHeight(_summaryView->document()->size().height() + FIXED_TEXT_HEIGHT_EXTRA);
     }
     else
         _summaryView->setVisible(false);
+}
+
+void IssueMemoTab::updateCommentHeights()
+{
     for (const auto& commentView : std::as_const(_commentViews))
-        commentView.textView->setFixedHeight(commentView.textView->document()->size().height() + maxBordersWidth);
+        commentView.textView->setFixedHeight(commentView.textView->document()->size().height() + FIXED_TEXT_HEIGHT_EXTRA);
 }
 
 void IssueMemoTab::resizeEvent(QResizeEvent *e)
 {
     MemoTab::resizeEvent(e);
-    updateViewHeights();
+    updateSummaryHeight();
+    updateCommentHeights();
+}
+
+void IssueMemoTab::editIssue()
+{
+    if (!_editDlg)
+    {
+        _editDlg = new IssueEditDlg(this, _enot, _memo);
+        _editDlg->onApply = [this](){
+            MemoUpdateParam update;
+            QString newTitle = _editDlg->titleText();
+            if (newTitle != _memo->title())
+                update.title = newTitle;
+            QString newSummary = _editDlg->summaryText();
+            if (newSummary != _memo->data())
+                update.data = newSummary;
+            update.props = _editDlg->memoProps();
+
+            auto ok = _enot->updateMemo(_memo, update);
+            if (!ok) return false;
+
+            QTimer::singleShot(0, this, &Self::showMemo);
+            if (update.props)
+                QTimer::singleShot(0, this, &Self::showHistory);
+            return true;
+        };
+    }
+    _editDlg->show();
+    _editDlg->activateWindow();
 }
 
 void IssueMemoTab::addComment()
 {
     if (!_commentDlg)
     {
-        _commentDlg = new IssueTextDlg(this, tr("Add Comment For Issue #%1").arg(_memo->id()));
+        _commentDlg = new IssueCommentDlg(this, tr("Add Comment For Issue #%1").arg(_memo->id()));
         _commentDlg->onApply = [this](const QString& text){
             QString res = Store::memos()->addSheet(_memo->id(), text);
             if (!res.isEmpty()) {
@@ -554,7 +757,7 @@ void IssueMemoTab::editComment(int id)
     if (!_commentDlg)
     {
         const auto& commentView = _commentViews.value(id);
-        _commentDlg = new IssueTextDlg(this, tr("Edit Comment For Issue #%1").arg(_memo->id()), commentView.sourceText);
+        _commentDlg = new IssueCommentDlg(this, tr("Edit Comment For Issue #%1").arg(_memo->id()), commentView.sourceText);
         _commentDlg->onApply = [this, id](const QString& text){
             QString res = Store::memos()->updateSheet(id, text);
             if (!res.isEmpty()) {

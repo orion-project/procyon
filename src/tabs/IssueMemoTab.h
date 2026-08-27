@@ -19,14 +19,15 @@ class MemoEvent;
 class MemoSheet;
 class MemoPropsPanel;
 class IssueMemoView;
-class IssueTextDlg;
+class IssueEditDlg;
+class IssueCommentDlg;
 
 class IssueMemoTab : public MemoTab
 {
 public:
     explicit IssueMemoTab(Enot* enot, Memo* memo);
 
-    void beginEdit() override;
+    //void beginEdit() override;
 
 protected:
     void resizeEvent(QResizeEvent *e) override;
@@ -35,7 +36,7 @@ private:
     MemoPropsPanel* _propsPanel;
     QLineEdit* _titleEditor;
     QToolBar* _toolbar;
-    QAction *_actionEdit, *_actionSave, *_actionCancel;
+    //QAction *_actionEdit, *_actionSave, *_actionCancel;
     QScrollArea *_contentScroller;
     QVBoxLayout *_contentLayout;
     IssueMemoView *_summaryView;
@@ -50,7 +51,8 @@ private:
         QLabel *station;
     };
     PopupInfo _issueInfo;
-    QPointer<IssueTextDlg> _commentDlg;
+    QPointer<IssueEditDlg> _editDlg;
+    QPointer<IssueCommentDlg> _commentDlg;
 
     struct CommentData
     {
@@ -64,12 +66,14 @@ private:
 
     void showMemo();
     void showHistory();
-    void cancelEdit();
-    bool saveEdit();
-    void toggleEditMode(bool on);
+    // void cancelEdit();
+    // bool saveEdit();
+    // void toggleEditMode(bool on);
 
-    void updateViewHeights();
+    void updateSummaryHeight();
+    void updateCommentHeights();
 
+    void editIssue();
     void addComment();
     void editComment(int id);
 

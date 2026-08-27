@@ -253,7 +253,7 @@ void TextMemoTab::toggleEditMode(bool on)
 {
     _isEditMode = on;
 
-    _propsPanel->setReadOnly(on);
+    _propsPanel->setReadOnly(!on);
 
     _actionSave->setVisible(on);
     _actionCancel->setVisible(on);

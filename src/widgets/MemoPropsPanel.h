@@ -26,6 +26,8 @@ public:
 
     bool hasValues() const { return _hasValues; }
     QHash<QString, QString> values() const;
+    void setValues(const QHash<QString, QString>& values);
+    bool isModified() const;
 
     bool hideWhenEmpty = true;
 
@@ -49,6 +51,7 @@ private:
 
     QHash<QString, MemoPropWidget*> _valueViews;
     QList<MemoPropWidget*> _removedProps;
+    QHash<QString, QString> _originalValues;
 
     void switchToEditable();
     void switchToReadonly();

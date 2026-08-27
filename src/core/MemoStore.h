@@ -41,6 +41,7 @@ public:
     QString addSheet(int memoId, const QString& text) const;
     QString updateSheet(int sheetId, const QString& text) const;
     QList<MemoEvent> loadEvents(int memoId) const;
+    void writeEvent(const MemoEvent& event) const;
     
 private:
     QString _station;

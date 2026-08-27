@@ -170,6 +170,10 @@ struct MemoHistoryTable
 
     inline static const auto& sqlSelect =
         u"SELECT What, Value, Moment, Station FROM MemoHistory WHERE MemoId = :MemoId"_s;
+
+    inline static const auto& sqlInsert =
+        u"INSERT INTO MemoHistory (MemoId, What, Value, Moment, Station)"
+        "VALUES (:MemoId, :What, :Value, :Moment, :Station)"_s;
 };
 
 struct MemoSheetsTable
@@ -566,7 +570,7 @@ QList<MemoEvent> MemoStore::loadEvents(int memoId) const
     if (q.isFailed())
     {
         // TODO: add protocol
-        qWarning() << "Unable to load sheets for memo" << memoId << q.error();
+        qWarning() << "Unable to load events for memo" << memoId << q.error();
         return {};
     }
 
@@ -574,6 +578,7 @@ QList<MemoEvent> MemoStore::loadEvents(int memoId) const
     while (q.next())
     {
         MemoEvent event;
+        event._memoId = memoId;
         event._what = q.valueStr(T::C::what);
         event._value = q.valueStr(T::C::value);
         event._moment = q.valueDate(T::C::moment);
@@ -581,5 +586,23 @@ QList<MemoEvent> MemoStore::loadEvents(int memoId) const
         result.append(event);
     }
     return result;
+}
+
+void MemoStore::writeEvent(const MemoEvent& event) const
+{
+    using T = MemoHistoryTable;
+
+    auto q = AnyQuery(T::sqlInsert)
+        .param(T::C::memoId, event.memoId())
+        .param(T::C::what, event.what())
+        .param(T::C::value, event.value())
+        .param(T::C::moment, event.moment())
+        .param(T::C::station, event.station())
+        .exec();
+    if (q.isFailed())
+    {
+        // TODO: add protocol
+        qWarning() << "Unable to write event for memo" << event.memoId() << q.error();
+    }
 }
 

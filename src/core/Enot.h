@@ -137,15 +137,18 @@ private:
 class MemoEvent
 {
 public:
+    int memoId() const { return _memoId; }
     QString what() const { return _what; }
     QString value() const { return _value; }
     QDateTime moment() const { return _moment; }
     QString station() const { return _station; }
 
 private:
+    int _memoId;
     QString _what, _value, _station;
     QDateTime _moment;
 
+    friend class Enot;
     friend class MemoStore;
 };
 

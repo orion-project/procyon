@@ -42,13 +42,17 @@ PlainTextMemoTab::PlainTextMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     connect(_highlighterMenu, &QMenu::aboutToShow, this, &Self::showSelectedHighlighter);
     connect(_spellcheckMenu, &QMenu::aboutToShow, this, &Self::showSelectedSpellcheckLang);
     Phl::fillMenu(_highlighterMenu, [this](const QString& name){
-        _enot->updateMemoOption(_memo->id(), MemoOptions::HIGHLIGHTER, name);
-        setHighlighterName(name);
+        if (name != highlighterName())
+            setHighlighterName(name);
+        else setHighlighterName({});
+        _enot->updateMemoOption(_memo->id(), MemoOptions::HIGHLIGHTER, highlighterName());
     });
     Ori::Spellcheck::fillMenu(_spellcheckMenu, [this](const QString& lang){
-        _enot->updateMemoOption(_memo->id(), MemoOptions::SPELLCHECK, lang);
-        _spellcheck->setLang(lang);
-        _spellcheckLang = lang;
+        if (lang != _spellcheckLang)
+            _spellcheckLang = lang;
+        else _spellcheckLang.clear();
+        _spellcheck->setLang(_spellcheckLang);
+        _enot->updateMemoOption(_memo->id(), MemoOptions::SPELLCHECK, _spellcheckLang);
     });
     connect(toolMenu, &QMenu::aboutToShow, this, [this, actionWordWrap, actionAddProp]{
         actionWordWrap->setChecked(_textEditor->wordWrap());
@@ -230,10 +234,15 @@ void PlainTextMemoTab::setHighlighterName(const QString& name)
 
 void PlainTextMemoTab::showSelectedHighlighter()
 {
-    QString name = _highlighter ? _highlighter->objectName() : QString();
+    QString name = highlighterName();
     auto actions = _highlighterMenu->actions();
     for (auto action : std::as_const(actions))
         action->setChecked(action->data().toString() == name);
+}
+
+QString PlainTextMemoTab::highlighterName() const
+{
+    return _highlighter ? _highlighter->objectName() : QString();
 }
 
 void PlainTextMemoTab::showSelectedSpellcheckLang()

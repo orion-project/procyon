@@ -47,6 +47,7 @@ private:
     void chooseFont();
     void toggleWordWrap();
     void setHighlighterName(const QString& name);
+    QString highlighterName() const;
     void showSelectedHighlighter();
     void showSelectedSpellcheckLang();
 };

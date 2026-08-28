@@ -240,8 +240,7 @@ void MemoPropsPanel::switchToReadonly()
         _valueViews.remove(name);
     }
 
-    if (!_valueViews.isEmpty() && !isVisible())
-        show();
+    setVisible(!_valueViews.isEmpty());
 }
 
 void MemoPropsPanel::setReadOnly(bool on)

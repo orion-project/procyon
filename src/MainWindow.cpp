@@ -7,7 +7,6 @@
 #include "tabs/HelpTab.h"
 #include "tabs/PhlEditorTab.h"
 #include "tabs/CssEditorTab.h"
-#include "tabs/MemoTab.h"
 #include "tabs/IssueMemoTab.h"
 #include "tabs/PlainTextMemoTab.h"
 #include "tabs/TextMemoTab.h"
@@ -31,8 +30,6 @@
 #include <QDebug>
 #include <QFileDialog>
 #include <QFileInfo>
-#include <QFontDialog>
-#include <QFrame>
 #include <QIcon>
 #include <QLabel>
 #include <QMenuBar>
@@ -141,11 +138,6 @@ MainWindow::MainWindow() : QMainWindow()
 #endif
     setCentralWidget(_splitter);
 
-#ifdef ENABLE_SPELLCHECK
-    _spellcheckControl = new SpellcheckControl(this);
-    connect(_spellcheckControl, &SpellcheckControl::langSelected, this, &MainWindow::setMemoSpellcheckLang);
-#endif
-
     createMenu();
     createStatusBar();
 }
@@ -174,19 +166,6 @@ void MainWindow::createMenu()
     */
     auto actionExit = m->addAction(tr("Exit"), QKeySequence::Quit, this, &MainWindow::close);
     new Ori::Widgets::MruMenuPart(_mruList, m, actionExit, this);
-
-    m = menuBar()->addMenu(tr("Memo"));
-    connect(m, &QMenu::aboutToShow, this, &MainWindow::memoMenuAboutToShow);
-
-    _actionMemoFont = m->addAction(tr("Choose Font..."), this, &MainWindow::chooseMemoFont);
-
-    _actionWordWrap = m->addAction(tr("Word Wrap"), this, &MainWindow::toggleWordWrap);
-    _actionWordWrap->setCheckable(true);
-
-    _actionAddMemoProp = m->addAction(tr("Add Property..."), this, &MainWindow::addMemoProp);
-
-    m->addSeparator();
-    _actionMemoExportPdf = m->addAction(tr("Export to PDF..."), this, &MainWindow::exportToPdf);
 
     m = menuBar()->addMenu(tr("Tools"));
 
@@ -250,9 +229,7 @@ void MainWindow::createStatusBar()
     statusBar()->addWidget(makeStatusPanel(tr("Notebook:"), _statusFileName));
 
     auto versionLabel = new Ori::Widgets::Label(qApp->applicationVersion());
-    connect(versionLabel, &Ori::Widgets::Label::doubleClicked, this, []{
-        HelpTab::showAbout();
-    });
+    connect(versionLabel, &Ori::Widgets::Label::doubleClicked, this, []{ HelpTab::showAbout(); });
     statusBar()->addPermanentWidget(versionLabel);
 }
 
@@ -536,41 +513,6 @@ MemoTab* MainWindow::currentMemoTab() const
     return dynamic_cast<MemoTab*>(_tabsView->currentWidget());
 }
 
-TextMemoTab* MainWindow::currentTextMemoTab() const
-{
-    return dynamic_cast<TextMemoTab*>(_tabsView->currentWidget());
-}
-
-void MainWindow::exportToPdf()
-{
-    auto memoPage = currentTextMemoTab();
-    if (!memoPage) return;
-
-    memoPage->exportToPdf();
-}
-
-void MainWindow::chooseMemoFont()
-{
-    auto memoPage = currentTextMemoTab();
-    if (!memoPage) return;
-
-    bool ok;
-    QFont font = QFontDialog::getFont(&ok, memoPage->memoFont(),
-        qApp->activeWindow(), tr("Select Memo Font"),
-        QFontDialog::ScalableFonts | QFontDialog::NonScalableFonts |
-        QFontDialog::MonospacedFonts | QFontDialog::ProportionalFonts);
-    if (ok)
-        memoPage->setMemoFont(font);
-}
-
-void MainWindow::toggleWordWrap()
-{
-    auto memoPage = currentTextMemoTab();
-    if (!memoPage) return;
-
-    memoPage->setWordWrap(!memoPage->wordWrap());
-}
-
 void MainWindow::itemCreated(Entry* entry)
 {
     auto memo = entry->asMemo();
@@ -593,25 +535,4 @@ void MainWindow::itemRemoved(Entry* entry)
 
     auto tab = findMemoTab(memo);
     if (tab) tab->deleteLater();
-}
-
-void MainWindow::memoMenuAboutToShow()
-{
-    auto memoPage = currentTextMemoTab();
-
-    _actionMemoExportPdf->setEnabled(memoPage);
-
-    _actionMemoFont->setEnabled(memoPage);
-
-    _actionWordWrap->setEnabled(memoPage);
-    _actionWordWrap->setChecked(memoPage && memoPage->wordWrap());
-
-    _actionAddMemoProp->setEnabled(memoPage && memoPage->canHaveProps() && !memoPage->isReadOnly());
-}
-
-void MainWindow::addMemoProp()
-{
-    auto memoPage = currentTextMemoTab();
-    if (memoPage && memoPage->canHaveProps())
-        memoPage->addMemoProp();
 }

@@ -18,7 +18,6 @@ class OpenTabsWidget;
 class InfoWidget;
 class MemoTab;
 class Memo;
-class TextMemoTab;
 
 namespace Ori {
 class MruFileList;
@@ -47,7 +46,6 @@ private:
     OpenTabsWidget* _openTabsView;
     Ori::MruFileList *_mruList;
     QLabel *_statusMemoCount, *_statusFileName;
-    QAction *_actionMemoFont, *_actionWordWrap, *_actionMemoExportPdf, *_actionAddMemoProp;
     QString _lastOpenedDb;
 
     void createMenu();
@@ -62,23 +60,15 @@ private:
 
     void updateCounter();
 
-    void chooseMemoFont();
-    void toggleWordWrap();
-    void addMemoProp();
-
     void enotOpened(Enot* enot);
     void itemCreated(Entry* entry);
     void itemRemoved(Entry* entry);
 
     bool closeAllMemos();
     void openMemoTab(Memo* memo);
-    void exportToPdf();
 
     MemoTab* findMemoTab(Memo* memo) const;
     MemoTab* currentMemoTab() const;
-    TextMemoTab* currentTextMemoTab() const;
-
-    void memoMenuAboutToShow();
 };
 
 #endif // MAIN_WINDOW_H

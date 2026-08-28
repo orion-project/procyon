@@ -6,7 +6,9 @@
 QT_BEGIN_NAMESPACE
 class QAction;
 class QLineEdit;
+class QMenu;
 class QStackedLayout;
+class QSyntaxHighlighter;
 QT_END_NAMESPACE
 
 class MemoTextEdit;
@@ -30,6 +32,8 @@ private:
     QLineEdit *_titleEditor;
     MemoTextEdit *_textEditor;
     MemoPropsPanel* _propsPanel;
+    QMenu *_highlighterMenu;
+    QSyntaxHighlighter* _highlighter = nullptr;
 
     void showMemo();
     void toggleEditMode(bool on);
@@ -37,6 +41,8 @@ private:
     bool saveEdit();
     void chooseFont();
     void toggleWordWrap();
+    void setHighlighterName(const QString& name);
+    void showSelectedHighlighter();
 };
 
 #endif // PLAIN_TEXT_MEMO_TAB_H

@@ -3,9 +3,10 @@
 #include "EnotStorage.h"
 
 #include "helpers/OriDialogs.h"
+#include "helpers/OriLayouts.h"
+#include "helpers/OriWidgets.h"
 #include "widgets/OriPopupMessage.h"
 
-#include <QActionGroup>
 #include <QApplication>
 #include <QDebug>
 #include <QDir>
@@ -13,16 +14,16 @@
 #include <QListWidget>
 #include <QMenu>
 #include <QPlainTextEdit>
+#include <QPointer>
 #include <QPushButton>
-#include <QRegularExpression>
 #include <QTextDocument>
-#include <QBoxLayout>
+#include <QTextEdit>
 
 using namespace Ori::Highlighter;
 
 namespace Phl {
 
-QSharedPointer<Spec> createSpec(const Meta& meta, bool withRawData)
+SpecPtr createSpec(const Meta& meta, bool withRawData)
 {
     auto spec = meta.storage->loadSpec(meta, withRawData);
     if (!spec) return QSharedPointer<Spec>();
@@ -41,8 +42,25 @@ struct SpecCache
     QMap<QString, QSharedPointer<Spec>> loadedSpecs;
     QSharedPointer<SpecStorage> customStorage;
 
-    QSharedPointer<Spec> getSpec(QString name)
+    void reset()
     {
+        allMetas.clear();
+        loadedSpecs.clear();
+        customStorage.reset();
+        _loaded = false;
+    }
+
+    const auto& getAllMetas()
+    {
+        if (!_loaded) load();
+
+        return allMetas;
+    }
+
+    SpecPtr getSpec(QString name)
+    {
+        if (!_loaded) load();
+
         if (!allMetas.contains(name))
         {
             qWarning() << "Highlighters::SpecCache: unknown name" << name;
@@ -62,6 +80,51 @@ struct SpecCache
         }
         return loadedSpecs[name];
     }
+
+private:
+    bool _loaded = false;
+
+    void load()
+    {
+        QVector<QSharedPointer<SpecStorage>> storages = {
+            //QSharedPointer<SpecStorage>(new FileStorage(getHighlightersDir())),
+            QSharedPointer<SpecStorage>(new QrcStorage({
+                QStringLiteral(":/syntax/css"),
+                QStringLiteral(":/syntax/ohl"),
+                QStringLiteral(":/syntax/procyon"),
+                QStringLiteral(":/syntax/python"),
+                QStringLiteral(":/syntax/qss"),
+                QStringLiteral(":/syntax/sql"),
+            })),
+            QSharedPointer<SpecStorage>(new EnotHighlighterStorage()),
+        };
+
+        allMetas.clear();
+        loadedSpecs.clear();
+        for (const auto& storage : storages)
+        {
+            // The first writable storage becomes a default storage
+            // for new highlighters, this is enough for now
+            if (!storage->readOnly() && !customStorage)
+                customStorage = storage;
+
+            for (auto& meta : storage->loadMetas())
+            {
+                if (allMetas.contains(meta.name))
+                {
+                    const auto& existedMeta = allMetas[meta.name];
+                    qWarning() << "Highlighter is already registered" << existedMeta.name << existedMeta.source
+                               << (existedMeta.storage ? existedMeta.storage->name() : QString("null-storage"));
+                    continue;
+                }
+                meta.storage = storage;
+                allMetas[meta.name] = meta;
+                qDebug() << "Highlighter registered" << meta.name << meta.source << meta.storage->name();
+            }
+        }
+
+        _loaded = true;
+    }
 };
 
 static SpecCache& specCache()
@@ -70,7 +133,7 @@ static SpecCache& specCache()
     return cache;
 }
 
-QSharedPointer<Spec> getSpec(const QString& name)
+SpecPtr getSpec(const QString& name)
 {
     return specCache().getSpec(name);
 }
@@ -98,297 +161,207 @@ QPair<bool, bool> checkDuplicates(const Meta& meta)
     return {name, title};
 }
 
+// static QString getHighlightersDir()
+// {
+//     QDir dir(qApp->applicationDirPath() + "/syntax");
+//     #ifdef Q_OS_MAC
+//         if (!dir.exists())
+//         {
+//             // Look near the application bundle, it is for development mode
+//             dir = QDir(qApp->applicationDirPath() % "/../../../syntax");
+//         }
+//     #endif
+//     return dir.absolutePath();
+// }
+
 //------------------------------------------------------------------------------
-//                                 Highlighter
+//                                 ManagerDlg
 //------------------------------------------------------------------------------
 
-QSyntaxHighlighter* createHighlighter(QPlainTextEdit* editor, const QString& name)
+class ManagerDlg : public QWidget
 {
-    auto hl = getSpec(name);
-    return hl ? new Highlighter(editor->document(), hl) : nullptr;
-}
-
-//------------------------------------------------------------------------------
-//                                 Control
-//------------------------------------------------------------------------------
-
-static QString getHighlightersDir()
-{
-    QDir dir(qApp->applicationDirPath() + "/syntax");
-    #ifdef Q_OS_MAC
-        if (!dir.exists())
-        {
-            // Look near the application bundle, it is for development mode
-            dir = QDir(qApp->applicationDirPath() % "/../../../syntax");
-        }
-    #endif
-    return dir.absolutePath();
-}
-
-Control::Control(QMenu *menu, QObject *parent) : QObject(parent), _menu(menu)
-{
-}
-
-void Control::loadMetas()
-{
-    if (_managerDlg)
-        _managerDlg->close();
-
-    QVector<QSharedPointer<SpecStorage>> storages = {
-        //QSharedPointer<SpecStorage>(new FileStorage(getHighlightersDir())),
-        QSharedPointer<SpecStorage>(new QrcStorage({
-            QStringLiteral(":/syntax/css"),
-            QStringLiteral(":/syntax/ohl"),
-            QStringLiteral(":/syntax/procyon"),
-            QStringLiteral(":/syntax/python"),
-            QStringLiteral(":/syntax/qss"),
-            QStringLiteral(":/syntax/sql"),
-        })),
-        QSharedPointer<SpecStorage>(new EnotHighlighterStorage()),
-    };
-
-    auto& cache = specCache();
-    cache.allMetas.clear();
-    cache.loadedSpecs.clear();
-    for (const auto& storage : storages)
+public:
+    ManagerDlg(SpecEditRequest onEdit) : QWidget(qApp->activeWindow()), _onEdit(onEdit)
     {
-        // The first writable storage becomes a default storage
-        // for new highlighters, this is enough for now
-        if (!storage->readOnly() && !cache.customStorage)
-            cache.customStorage = storage;
+        setAttribute(Qt::WA_DeleteOnClose);
+        setWindowFlags(Qt::Dialog | Qt::WindowStaysOnTopHint);
 
-        for (auto& meta : storage->loadMetas())
+        _specList = new QListWidget;
+        _specList->setObjectName("tabs_list");
+        auto it = specCache().allMetas.constBegin();
+        while (it != specCache().allMetas.constEnd())
         {
-            if (cache.allMetas.contains(meta.name))
-            {
-                const auto& existedMeta = cache.allMetas[meta.name];
-                qWarning() << "Highlighter is already registered" << existedMeta.name << existedMeta.source
-                           << (existedMeta.storage ? existedMeta.storage->name() : QString("null-storage"));
-                continue;
-            }
-            meta.storage = storage;
-            cache.allMetas[meta.name] = meta;
-            qDebug() << "Highlighter registered" << meta.name << meta.source << meta.storage->name();
+            const auto& meta = it.value();
+            QString title = meta.displayTitle();
+            if (!meta.storage)
+                title += tr(" (invalid, no storage)");
+            else if (meta.storage->readOnly())
+                title += tr(" (built-in, read only)");
+            auto item = new QListWidgetItem(title, _specList);
+            item->setData(Qt::UserRole, meta.name);
+            it++;
         }
+
+        Ori::Layouts::LayoutH({
+            _specList,
+            Ori::Layouts::LayoutV({
+                Ori::Gui::button(tr("Edit"), this, &ManagerDlg::editHighlighter),
+                Ori::Gui::button(tr("New Empty"), this, &ManagerDlg::createHighlighterEmpty),
+                Ori::Gui::button(tr("New As Copy"), this, &ManagerDlg::createHighlighterCopy),
+                Ori::Layouts::Stretch(),
+                Ori::Layouts::Space(100),
+                Ori::Gui::button(tr("Delete"), this, &ManagerDlg::deleteHighlighter),
+                Ori::Layouts::Space(100),
+                Ori::Layouts::Stretch(),
+                Ori::Gui::button(tr("Close"), this, &ManagerDlg::close),
+            })
+        }).setMargins(7, 10, 10, 10).useFor(this);
     }
 
-    makeMenu();
-}
+private:
+    QListWidget *_specList;
+    SpecEditRequest _onEdit;
 
-void Control::makeMenu()
-{
-    if (_actionGroup) delete _actionGroup;
-
-    _actionGroup = new QActionGroup(this);
-    connect(_actionGroup, &QActionGroup::triggered, this, &Control::actionGroupTriggered);
-
-    auto actionNone = new QAction(tr("None"), this);
-    actionNone->setCheckable(true);
-    _actionGroup->addAction(actionNone);
-
-    const auto& allMetas = specCache().allMetas;
-    auto it = allMetas.constBegin();
-    while (it != allMetas.constEnd())
+    QString selectedSpecName() const
     {
-        const auto& meta = it.value();
-        auto actionDict = new QAction(meta.displayTitle(), _actionGroup);
-        actionDict->setCheckable(true);
-        actionDict->setData(meta.name);
-        it++;
+        auto item = _specList->currentItem();
+        return item ? item->data(Qt::UserRole).toString() : QString();
     }
 
-    _menu->clear();
-    _menu->addActions(_actionGroup->actions());
-}
-
-void Control::showCurrent(const QString& name)
-{
-    if (!_actionGroup) return;
-    for (const auto& action : _actionGroup->actions())
-        if (action->data().toString() == name)
-        {
-            action->setChecked(true);
-            break;
-        }
-}
-
-void Control::setEnabled(bool on)
-{
-    _actionGroup->setEnabled(on);
-}
-
-void Control::actionGroupTriggered(QAction* action)
-{
-    emit selected(action->data().toString());
-}
-
-void Control::showManager()
-{
-    // We store dlg pointer only to be able to close it when another db loaded
-    _managerDlg = new ManagerDlg(this);
-    connect(_managerDlg, &QObject::destroyed, this, [this]{ _managerDlg = nullptr; });
-    _managerDlg->show();
-    _managerDlg->activateWindow();
-}
-
-//------------------------------------------------------------------------------
-//                                 Control
-//------------------------------------------------------------------------------
-
-ManagerDlg::ManagerDlg(Control *parent) : QWidget(), _parent(parent)
-{
-    setAttribute(Qt::WA_DeleteOnClose);
-    setWindowFlags(Qt::Dialog | Qt::WindowStaysOnTopHint);
-
-    _specList = new QListWidget;
-    _specList->setObjectName("tabs_list");
-    auto it = specCache().allMetas.constBegin();
-    while (it != specCache().allMetas.constEnd())
+    void editHighlighter()
     {
-        const auto& meta = it.value();
-        QString title = meta.displayTitle();
+        auto& cache = specCache();
+        auto name = selectedSpecName();
+        if (name.isEmpty())
+            return Ori::Dlg::info(tr("No highlighter is selected"));
+
+        const auto& meta = cache.allMetas[name];
         if (!meta.storage)
-            title += " (invalid, no storage)";
-        else if (meta.storage->readOnly())
-            title += " (built-in, read only)";
-        auto item = new QListWidgetItem(title, _specList);
-        item->setData(Qt::UserRole, meta.name);
-        it++;
+            return Ori::Dlg::warning(tr("Hihghlighter storage is not set"));
+
+        if (!meta.storage->readOnly())
+        {
+            // reload spec with code and sample text
+            auto fullSpec = createSpec(meta, true);
+            if (!fullSpec)
+                return Ori::Dlg::error("Failed to load highlighter");
+            _onEdit(fullSpec);
+            close();
+            return;
+        }
+
+        if (Ori::Dlg::yes(tr("Highlighter \"%1\" is built-in and can not be edited. "
+                             "Do you want to create a new highlighter on its base instead?"
+                             ).arg(meta.displayTitle())))
+        {
+            newHighlighterWithBase(meta);
+            close();
+        }
     }
 
-    auto buttonEdit = new QPushButton(tr("Edit"));
-    connect(buttonEdit, &QPushButton::clicked, this, &ManagerDlg::editHighlighter);
-
-    auto buttonNewEmpty = new QPushButton(tr("New Empty"));
-    connect(buttonNewEmpty, &QPushButton::clicked, this, &ManagerDlg::createHighlighterEmpty);
-
-    auto buttonNewCopy = new QPushButton(tr("New As Copy"));
-    connect(buttonNewCopy, &QPushButton::clicked, this, &ManagerDlg::createHighlighterCopy);
-
-    auto buttonDelete = new QPushButton(tr("Delete"));
-    connect(buttonDelete, &QPushButton::clicked, this, &ManagerDlg::deleteHighlighter);
-
-    auto buttonClose = new QPushButton(tr("Close"));
-    connect(buttonClose, &QPushButton::clicked, this, &ManagerDlg::close);
-
-    auto layoutButtons = new QVBoxLayout;
-    layoutButtons->addWidget(buttonEdit);
-    layoutButtons->addWidget(buttonNewEmpty);
-    layoutButtons->addWidget(buttonNewCopy);
-    layoutButtons->addSpacing(50);
-    layoutButtons->addWidget(buttonDelete);
-    layoutButtons->addSpacing(50);
-    layoutButtons->addStretch();
-    layoutButtons->addWidget(buttonClose);
-
-    auto layout = new QHBoxLayout(this);
-    layout->addWidget(_specList);
-    layout->addLayout(layoutButtons);
-    layout->setContentsMargins(7, 10, 10, 10);
-}
-
-QString ManagerDlg::selectedSpecName() const
-{
-    auto item = _specList->currentItem();
-    return item ? item->data(Qt::UserRole).toString() : QString();
-}
-
-void ManagerDlg::editHighlighter()
-{
-    auto& cache = specCache();
-    auto name = selectedSpecName();
-    if (name.isEmpty())
-        return Ori::Dlg::info(tr("No highlighter is selected"));
-
-    const auto& meta = cache.allMetas[name];
-    if (!meta.storage)
-        return Ori::Dlg::warning(tr("Hihghlighter storage is not set"));
-
-    if (!meta.storage->readOnly())
+    void createHighlighterEmpty()
     {
-        // reload spec with code and sample text
-        auto fullSpec = createSpec(meta, true);
-        if (!fullSpec)
-            return Ori::Dlg::error("Failed to load highlighter");
-        emit _parent->editorRequested(fullSpec);
+        auto& cache = specCache();
+        QSharedPointer<Spec> spec(new Spec);
+        spec->meta.storage = cache.customStorage;
+        _onEdit(spec);
         close();
-        return;
     }
 
-    if (Ori::Dlg::yes(tr("Highlighter \"%1\" is built-in and can not be edited. "
-                         "Do you want to create a new highlighter on its base instead?"
-                         ).arg(meta.displayTitle())))
+    void createHighlighterCopy()
     {
+        auto& cache = specCache();
+        auto name = selectedSpecName();
+        if (name.isEmpty())
+            return Ori::Dlg::info(tr("No highlighter is selected"));
+
+        const auto& meta = cache.allMetas[name];
+        if (!meta.storage)
+            return Ori::Dlg::warning(tr("Hihghlighter storage is not set"));
+
         newHighlighterWithBase(meta);
         close();
     }
-}
 
-void ManagerDlg::createHighlighterEmpty()
-{
-    auto& cache = specCache();
-    QSharedPointer<Spec> spec(new Spec);
-    spec->meta.storage = cache.customStorage;
-    emit _parent->editorRequested(spec);
-    close();
-}
-
-void ManagerDlg::createHighlighterCopy()
-{
-    auto& cache = specCache();
-    auto name = selectedSpecName();
-    if (name.isEmpty())
-        return Ori::Dlg::info(tr("No highlighter is selected"));
-
-    const auto& meta = cache.allMetas[name];
-    if (!meta.storage)
-        return Ori::Dlg::warning(tr("Hihghlighter storage is not set"));
-
-    newHighlighterWithBase(meta);
-    close();
-}
-
-void ManagerDlg::newHighlighterWithBase(const Meta &meta)
-{
-    auto spec = createSpec(meta, true);
-    if (!spec)
+    void deleteHighlighter()
     {
-        Ori::Dlg::error("Failed to load base highlighter");
-        spec.reset(new Spec());
+        auto& cache = specCache();
+        auto name = selectedSpecName();
+        if (name.isEmpty())
+            return Ori::Dlg::info(tr("No highlighter is selected"));
+
+        const auto& meta = cache.allMetas[name];
+        if (!meta.storage)
+            return Ori::Dlg::warning(tr("Hihghlighter storage is not set"));
+
+        if (meta.storage->readOnly())
+            return Ori::Dlg::info(tr("Highlighter \"%1\" is built-in and can not be deleted").arg(meta.displayTitle()));
+
+        if (!Ori::Dlg::yes(tr("Delete highlighter \"%1\"?").arg(meta.displayTitle())))
+            return;
+
+        auto res = meta.storage->deleteSpec(meta);
+        if (!res.isEmpty())
+            Ori::Dlg::error(tr("There is an error during highlighter deletion\n\n%1").arg(res));
+
+        Ori::Gui::PopupMessage::affirm(tr("Highlighter successfully deleted\n\n"
+            "Application is required to be restarted to reflect changes"));
+
+        delete _specList->currentItem();
+        _specList->setCurrentItem(_specList->item(0));
     }
-    spec->meta.name = "";
-    spec->meta.source = "";
-    spec->meta.title = "";
-    spec->meta.storage = specCache().customStorage;
-    emit _parent->editorRequested(spec);
+
+    void newHighlighterWithBase(const Ori::Highlighter::Meta& meta)
+    {
+        auto spec = createSpec(meta, true);
+        if (!spec)
+        {
+            Ori::Dlg::error("Failed to load base highlighter");
+            spec.reset(new Spec());
+        }
+        spec->meta.name = "";
+        spec->meta.source = "";
+        spec->meta.title = "";
+        spec->meta.storage = specCache().customStorage;
+        _onEdit(spec);
+    }
+};
+
+// We store dlg pointer only to be able to close it when another db loaded
+QPointer<ManagerDlg> __managerDlg = {};
+
+void showManagerDlg(SpecEditRequest onEdit)
+{
+    if (!__managerDlg)
+        __managerDlg = new ManagerDlg(onEdit);
+    __managerDlg->show();
+    __managerDlg->activateWindow();
 }
 
-void ManagerDlg::deleteHighlighter()
+void fillMenu(QMenu *menu, std::function<void(const QString&)> onSelect)
 {
-    auto& cache = specCache();
-    auto name = selectedSpecName();
-    if (name.isEmpty())
-        return Ori::Dlg::info(tr("No highlighter is selected"));
+    menu->clear();
+    const auto& metas = specCache().getAllMetas();
+    for (auto it = metas.cbegin(); it != metas.cend(); it++)
+    {
+        const auto& meta = it.value();
+        QString highlighterName = meta.name;
+        auto action = menu->addAction(meta.displayTitle(),
+            [onSelect, highlighterName]{ onSelect(highlighterName); });
+        action->setCheckable(true);
+        action->setData(meta.name);
+    }
+}
 
-    const auto& meta = cache.allMetas[name];
-    if (!meta.storage)
-        return Ori::Dlg::warning(tr("Hihghlighter storage is not set"));
+QSyntaxHighlighter* createHighlighter(QPlainTextEdit *editor, const QString& name);
+QSyntaxHighlighter* createHighlighter(QTextEdit *editor, const QString& name);
 
-    if (meta.storage->readOnly())
-        return Ori::Dlg::info(tr("Highlighter \"%1\" is built-in and can not be deleted").arg(meta.displayTitle()));
+void reset()
+{
+    if (__managerDlg)
+        __managerDlg->deleteLater();
 
-    if (!Ori::Dlg::yes(tr("Delete highlighter \"%1\"?").arg(meta.displayTitle())))
-        return;
-
-    auto res = meta.storage->deleteSpec(meta);
-    if (!res.isEmpty())
-        Ori::Dlg::error(tr("There is an error during highlighter deletion\n\n%1").arg(res));
-
-    Ori::Gui::PopupMessage::affirm(tr("Highlighter successfully deleted\n\n"
-        "Application is required to be restarted to reflect changes"));
-
-    delete _specList->currentItem();
-    _specList->setCurrentItem(_specList->item(0));
+    specCache().reset();
 }
 
 } // namespace Phl

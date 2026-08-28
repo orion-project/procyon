@@ -151,13 +151,6 @@ MainWindow::MainWindow() : QMainWindow()
 #endif
 
     createMenu();
-
-    _highlighterControl = new Phl::Control(_highlighterMenu, this);
-    connect(_highlighterControl, &Phl::Control::selected, this, &MainWindow::setMemoHighlighter);
-    connect(_highlighterControl, &Phl::Control::editorRequested, this, [this](const QSharedPointer<Ori::Highlighter::Spec>& spec){
-        activateOrOpenHighlighEditorTab(_tabsView, _openTabsView, spec);
-    });
-
     createStatusBar();
 }
 
@@ -198,9 +191,6 @@ void MainWindow::createMenu()
     }
 #endif
 
-    _highlighterMenu = m->addMenu(tr("Highlighter"));
-    connect(_highlighterMenu, &QMenu::aboutToShow, this, &MainWindow::highlighterMenuAboutToShow);
-
     _actionMemoFont = m->addAction(tr("Choose Font..."), this, &MainWindow::chooseMemoFont);
 
     _actionWordWrap = m->addAction(tr("Word Wrap"), this, &MainWindow::toggleWordWrap);
@@ -230,7 +220,11 @@ void MainWindow::createMenu()
         });
     }
 
-    m->addAction(tr("Highlighter Manager..."), this, [this]{ _highlighterControl->showManager(); });
+    m->addAction(tr("Highlighter Manager..."), this, [this]{
+        Phl::showManagerDlg([this](Phl::SpecPtr spec){
+            activateOrOpenHighlighEditorTab(_tabsView, _openTabsView, spec);
+        });
+    });
 
     m = menuBar()->addMenu(tr("Help"));
     /* TODO
@@ -418,7 +412,7 @@ void MainWindow::enotOpened(Enot* enot)
     _mruList->append(filePath);
     _statusFileName->setText(QDir::toNativeSeparators(filePath));
     _lastOpenedDb = filePath;
-    _highlighterControl->loadMetas();
+    Phl::reset();
     updateCounter();
     loadSession();
 
@@ -621,8 +615,6 @@ void MainWindow::memoMenuAboutToShow()
     if (_spellcheckMenu)
         _spellcheckMenu->setEnabled(memoPage && !memoPage->isReadOnly());
 
-    _highlighterMenu->setEnabled(memoPage && memoPage->memo()->type() == MemoType::plainText());
-
     _actionMemoExportPdf->setEnabled(memoPage);
 
     _actionMemoFont->setEnabled(memoPage);
@@ -642,25 +634,10 @@ void MainWindow::spellcheckMenuAboutToShow()
 #endif
 }
 
-void MainWindow::highlighterMenuAboutToShow()
-{
-    QString currentHighlighter;
-    auto memoPage = currentTextMemoTab();
-    if (memoPage)
-        currentHighlighter = memoPage->highlighter();
-    _highlighterControl->showCurrent(currentHighlighter);
-}
-
 void MainWindow::setMemoSpellcheckLang(const QString& lang)
 {
     auto memoPage = currentTextMemoTab();
     if (memoPage) memoPage->setSpellcheckLang(lang);
-}
-
-void MainWindow::setMemoHighlighter(const QString& name)
-{
-    auto memoPage = currentTextMemoTab();
-    if (memoPage) memoPage->setHighlighter(name);
 }
 
 void MainWindow::addMemoProp()

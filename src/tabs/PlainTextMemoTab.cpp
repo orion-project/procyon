@@ -4,6 +4,7 @@
 #include "TextEditHelpers.h"
 #include "core/Enot.h"
 #include "core/MemoStore.h"
+#include "highlighter/PhlManager.h"
 #include "tabs/TabHelpers.h"
 #include "widgets/MemoPropsPanel.h"
 #include "widgets/MemoTextEdit.h"
@@ -32,9 +33,15 @@ PlainTextMemoTab::PlainTextMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     actionWordWrap->setCheckable(true);
     auto actionAddProp = toolMenu->addAction(tr("Add Property..."), this, [this]{ _propsPanel->addPropViaDlg(); });
     toolMenu->addAction(tr("Export to PDF..."), this, [this]{ TextEditHelpers::exportToPdfDlg(_textEditor); });
+    _highlighterMenu = toolMenu->addMenu(tr("Highlighter"));
     connect(toolMenu, &QMenu::aboutToShow, this, [this, actionWordWrap, actionAddProp]{
         actionWordWrap->setChecked(_textEditor->wordWrap());
         actionAddProp->setEnabled(!isReadOnly());
+    });
+    connect(_highlighterMenu, &QMenu::aboutToShow, this, &Self::showSelectedHighlighter);
+    Phl::fillMenu(_highlighterMenu, [this](const QString& name){
+        _enot->updateMemoOption(_memo->id(), MemoOptions::HIGHLIGHTER, name);
+        setHighlighterName(name);
     });
 
     _actionEdit = toolbar->addAction(QIcon(":/toolbar/edit"), tr("Edit"), this, &Self::beginEdit);
@@ -172,16 +179,13 @@ void PlainTextMemoTab::loadSettings()
     // if (options.contains(MemoOptions::SPELLCHECK))
     //     _memoEditor->setSpellcheckLang(options[MemoOptions::SPELLCHECK].toString());
 
-    // if (options.contains(MemoOptions::HIGHLIGHTER))
-    // {
-    //     auto editor = dynamic_cast<TextMemoEditor*>(_memoEditor);
-    //     if (editor) editor->setHighlighterName(options[MemoOptions::HIGHLIGHTER].toString());
-    // }
+    if (options.contains(MemoOptions::HIGHLIGHTER))
+        setHighlighterName(options[MemoOptions::HIGHLIGHTER].toString());
 }
 
 bool PlainTextMemoTab::canClose()
 {
-    return isModified() && TextEditHelpers::canClose(_titleEditor, [this]{ return saveEdit(); });
+    return !isModified() || TextEditHelpers::canClose(_titleEditor, [this]{ return saveEdit(); });
 }
 
 void PlainTextMemoTab::chooseFont()
@@ -194,4 +198,32 @@ void PlainTextMemoTab::toggleWordWrap()
 {
     _textEditor->setWordWrap(!_textEditor->wordWrap());
     _enot->updateMemoOption(_memo->id(), MemoOptions::WORD_WRAP, _textEditor->wordWrap());
+}
+
+void PlainTextMemoTab::setHighlighterName(const QString& name)
+{
+    if (!_highlighter && name.isEmpty()) return;
+    if (_highlighter && _highlighter->objectName() == name) return;
+
+    bool wasModified = _textEditor->isModified();
+    _textEditor->setUndoRedoEnabled(false);
+
+    if (_highlighter)
+    {
+        delete _highlighter;
+        _highlighter = nullptr;
+    }
+
+    _highlighter = Phl::createHighlighter(_textEditor, name);
+
+    _textEditor->setUndoRedoEnabled(true);
+    _textEditor->setModified(wasModified);
+}
+
+void PlainTextMemoTab::showSelectedHighlighter()
+{
+    QString name = _highlighter ? _highlighter->objectName() : QString();
+    auto actions = _highlighterMenu->actions();
+    for (auto action : std::as_const(actions))
+        action->setChecked(action->data().toString() == name);
 }

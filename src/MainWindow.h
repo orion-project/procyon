@@ -25,10 +25,6 @@ namespace Ori {
 class MruFileList;
 } // namespace Ori
 
-namespace Phl {
-class Control;
-} // namespace Highlighter
-
 
 class MainWindow : public QMainWindow
 {
@@ -55,9 +51,7 @@ private:
     QAction *_actionMemoFont, *_actionWordWrap, *_actionMemoExportPdf, *_actionAddMemoProp;
     QString _lastOpenedDb;
     SpellcheckControl* _spellcheckControl;
-    Phl::Control* _highlighterControl;
     QMenu *_spellcheckMenu = nullptr;
-    QMenu *_highlighterMenu;
 
     void createMenu();
     void createStatusBar();
@@ -89,10 +83,8 @@ private:
 
     void memoMenuAboutToShow();
     void spellcheckMenuAboutToShow();
-    void highlighterMenuAboutToShow();
 
     void setMemoSpellcheckLang(const QString& lang);
-    void setMemoHighlighter(const QString& name);
 };
 
 #endif // MAIN_WINDOW_H

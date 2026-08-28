@@ -19,23 +19,6 @@
 namespace {
 const int PREVIEW_BUTTON_WIDTH = 100;
 
-namespace MemoOptions {
-const QString FONT =
-#if defined (Q_OS_WIN)
-    "fontWin"
-#elif defined (Q_OS_LINUX)
-    "fontLinux"
-#elif defined (Q_OS_MAC)
-    "fontMacos"
-#else
-    "font"
-#endif
-    ;
-const QString WORD_WRAP = "wordWrap";
-const QString SPELLCHECK = "spellcheck";
-const QString HIGHLIGHTER = "highlighter";
-};
-
 void updateOption(Memo* memo, const QString& name, const QVariant& value)
 {
     QString res = Store::memos()->updateOption(memo->id(), name, value);

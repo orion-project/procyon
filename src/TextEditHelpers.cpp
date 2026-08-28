@@ -1,6 +1,12 @@
 #include "TextEditHelpers.h"
 
+#include "helpers/OriDialogs.h"
+
+#include <QApplication>
+#include <QFontDialog>
+#include <QMessageBox>
 #include <QTextBlock>
+#include <QStyle>
 #include <QPrinter>
 
 //------------------------------------------------------------------------------
@@ -68,5 +74,50 @@ void exportToPdf(QTextDocument* doc, const QString& fileName)
     doc->print(&printer);
 }
 
+void exportToPdfDlg(QTextEdit *editor)
+{
+    QString fileName = Ori::Dlg::getSaveFileName(
+        qApp->tr("Export memo as PDF"),
+        qApp->tr("PDF documents (*.pdf);;All files (*.*)"), "pdf");
+    if (fileName.isEmpty()) return;
+
+    exportToPdf(editor->document(), fileName);
+}
+
+bool chooseFontDlg(QTextEdit *editor)
+{
+    bool ok;
+    QFont font = QFontDialog::getFont(&ok, editor->font(),
+        qApp->activeWindow(), qApp->tr("Memo Font"),
+        QFontDialog::ScalableFonts | QFontDialog::NonScalableFonts |
+        QFontDialog::MonospacedFonts | QFontDialog::ProportionalFonts);
+    if (!ok)
+        return false;
+
+    editor->setFont(font);
+    return true;
+}
+
+void adjustDocumentWidth(QTextEdit *editor)
+{
+    auto sb = 1.5 * qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
+    editor->document()->setTextWidth(editor->width() - sb);
+}
+
+bool canClose(QLineEdit *titleEditor, std::function<bool()> save)
+{
+    QString memoTitle = titleEditor->text().trimmed();
+    if (memoTitle.isEmpty())
+        memoTitle = qApp->tr("(untitled memo)");
+
+    int res = Ori::Dlg::yesNoCancel(qApp->tr("<b>%1</b><br/><br/>"
+                                       "This memo has been changed. "
+                                       "Save changes before closing?")
+                                        .arg(memoTitle));
+    if (res == QMessageBox::Cancel) return false;
+    if (res == QMessageBox::No) return true;
+
+    return save();
+}
 
 } // namespace TextEditHelpers

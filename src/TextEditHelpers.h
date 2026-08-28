@@ -4,6 +4,7 @@
 #include <QTextEdit>
 
 QT_BEGIN_NAMESPACE
+class QLineEdit;
 class QTextDocument;
 QT_END_NAMESPACE
 
@@ -58,6 +59,10 @@ namespace TextEditHelpers
 {
 QString hyperlinkAt(const QTextCursor& cursor);
 void exportToPdf(QTextDocument* doc, const QString& fileName);
+void exportToPdfDlg(QTextEdit *editor);
+bool chooseFontDlg(QTextEdit *editor);
+void adjustDocumentWidth(QTextEdit *editor);
+bool canClose(QLineEdit *titleEditor, std::function<bool()> save);
 }
 
 #endif // TEXT_EDIT_HELPERS_H

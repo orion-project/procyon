@@ -13,6 +13,11 @@ public:
     bool wordWrap() const;
     void setWordWrap(bool on);
 
+    bool isModified() const;
+    void setModified(bool on);
+
+    void setReadOnly(bool on);
+
 protected:
     void mousePressEvent(QMouseEvent *e) override;
     void mouseReleaseEvent(QMouseEvent *e) override;

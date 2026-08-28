@@ -9,6 +9,7 @@
 #include "tabs/CssEditorTab.h"
 #include "tabs/MemoTab.h"
 #include "tabs/IssueMemoTab.h"
+#include "tabs/PlainTextMemoTab.h"
 #include "tabs/TextMemoTab.h"
 #include "tabs/GridViewMemoTab.h"
 #include "tabs/SqlConsoleTab.h"
@@ -508,7 +509,7 @@ void MainWindow::openMemoTab(Memo* memo)
     MemoTab* tab = nullptr;
 
     if (memo->type() == MemoType::plainText())
-        tab = new TextMemoTab(_enot, memo);
+        tab = new PlainTextMemoTab(_enot, memo);
     else if (memo->type() == MemoType::markdown())
         tab = new TextMemoTab(_enot, memo);
     else if (memo->type() == MemoType::gridView())

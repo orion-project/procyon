@@ -593,3 +593,10 @@ void Enot::addPossiblePropValue(const QString& name, const QString& value)
         values.sort();
     }
 }
+
+void Enot::updateMemoOption(int memoId, const QString& name, const QVariant& value)
+{
+    QString res = Store::memos()->updateOption(memoId, name, value);
+    if (!res.isEmpty())
+        emit errorOccurred(res);
+}

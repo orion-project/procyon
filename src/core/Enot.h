@@ -200,6 +200,8 @@ public:
     QStringList propValues(const QString& name);
     void addPossiblePropValue(const QString& name, const QString& value);
 
+    void updateMemoOption(int memoId, const QString &name, const QVariant& value);
+
 signals:
     void entryCreating(Entry*, int);
     void entryCreated(Entry*);
@@ -221,6 +223,27 @@ private:
 
     void fillFolderIdsFlat(Folder* root, QVector<int>& ids);
     void fillMemoIdsFlat(Folder* root, QVector<int>& ids);
+};
+
+//------------------------------------------------------------------------------
+
+class MemoOptions
+{
+public:
+inline static const auto& FONT =
+#if defined (Q_OS_WIN)
+    QStringLiteral("fontWin")
+#elif defined (Q_OS_LINUX)
+    QStringLiteral("fontLinux")
+#elif defined (Q_OS_MAC)
+    QStringLiteral("fontMacos")
+#else
+    QStringLiteral("font")
+#endif
+    ;
+inline static const auto& WORD_WRAP = QStringLiteral("wordWrap");
+inline static const auto& SPELLCHECK = QStringLiteral("spellcheck");
+inline static const auto& HIGHLIGHTER = QStringLiteral("highlighter");
 };
 
 #endif // ENOT_H

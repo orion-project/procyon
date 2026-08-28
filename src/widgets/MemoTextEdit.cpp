@@ -77,3 +77,22 @@ void MemoTextEdit::setWordWrap(bool on)
 {
     setWordWrapMode(on ? QTextOption::WrapAtWordBoundaryOrAnywhere : QTextOption::NoWrap);
 }
+
+bool MemoTextEdit::isModified() const
+{
+    return document()->isModified();
+}
+
+void MemoTextEdit::setModified(bool on)
+{
+    document()->setModified(on);
+}
+
+void MemoTextEdit::setReadOnly(bool on)
+{
+    QTextEdit::setReadOnly(on);
+    Qt::TextInteractionFlags flags = Qt::LinksAccessibleByMouse |
+        Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard;
+    if (!on) flags |= Qt::TextEditable;
+    setTextInteractionFlags(flags);
+}

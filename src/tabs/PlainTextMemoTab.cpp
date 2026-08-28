@@ -9,6 +9,8 @@
 #include "widgets/MemoPropsPanel.h"
 #include "widgets/MemoTextEdit.h"
 
+#include "tools/OriSpellcheck.h"
+
 #include <QLineEdit>
 #include <QMenu>
 #include <QTimer>
@@ -22,6 +24,8 @@ PlainTextMemoTab::PlainTextMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     _textEditor = new MemoTextEdit;
     connect(_textEditor, &MemoTextEdit::undoAvailable, this, &PlainTextMemoTab::onModified);
 
+    _spellcheck = new Ori::Spellcheck(_textEditor);
+
     _titleEditor = TabHelpers::makeTitleEditor();
     connect(_titleEditor, &QLineEdit::textEdited, [this]{ emit onModified(true); });
 
@@ -34,14 +38,22 @@ PlainTextMemoTab::PlainTextMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     auto actionAddProp = toolMenu->addAction(tr("Add Property..."), this, [this]{ _propsPanel->addPropViaDlg(); });
     toolMenu->addAction(tr("Export to PDF..."), this, [this]{ TextEditHelpers::exportToPdfDlg(_textEditor); });
     _highlighterMenu = toolMenu->addMenu(tr("Highlighter"));
-    connect(toolMenu, &QMenu::aboutToShow, this, [this, actionWordWrap, actionAddProp]{
-        actionWordWrap->setChecked(_textEditor->wordWrap());
-        actionAddProp->setEnabled(!isReadOnly());
-    });
+    _spellcheckMenu = toolMenu->addMenu(tr("Spellcheck"));
     connect(_highlighterMenu, &QMenu::aboutToShow, this, &Self::showSelectedHighlighter);
+    connect(_spellcheckMenu, &QMenu::aboutToShow, this, &Self::showSelectedSpellcheckLang);
     Phl::fillMenu(_highlighterMenu, [this](const QString& name){
         _enot->updateMemoOption(_memo->id(), MemoOptions::HIGHLIGHTER, name);
         setHighlighterName(name);
+    });
+    Ori::Spellcheck::fillMenu(_spellcheckMenu, [this](const QString& lang){
+        _enot->updateMemoOption(_memo->id(), MemoOptions::SPELLCHECK, lang);
+        _spellcheck->setLang(lang);
+        _spellcheckLang = lang;
+    });
+    connect(toolMenu, &QMenu::aboutToShow, this, [this, actionWordWrap, actionAddProp]{
+        actionWordWrap->setChecked(_textEditor->wordWrap());
+        actionAddProp->setEnabled(!isReadOnly());
+        _spellcheckMenu->setEnabled(!isReadOnly());
     });
 
     _actionEdit = toolbar->addAction(QIcon(":/toolbar/edit"), tr("Edit"), this, &Self::beginEdit);
@@ -107,6 +119,8 @@ void PlainTextMemoTab::toggleEditMode(bool on)
     _actionSave->setVisible(on);
     _actionCancel->setVisible(on);
     _actionEdit->setVisible(!on);
+
+    _spellcheck->setLang(on ? _spellcheckLang : QString());
 }
 
 void PlainTextMemoTab::beginEdit()
@@ -121,8 +135,6 @@ void PlainTextMemoTab::beginEdit()
     else
         _textEditor->setFocus();
 
-    // TODO toggleSpellcheck(true);
-
     emit onReadOnly(false);
 }
 
@@ -131,8 +143,6 @@ void PlainTextMemoTab::cancelEdit()
     toggleEditMode(false);
 
     showMemo();
-
-    // TODO: toggleSpellcheck(false);
 
     emit onReadOnly(true);
 }
@@ -158,8 +168,6 @@ bool PlainTextMemoTab::saveEdit()
     setWindowTitle(_memo->title());
     toggleEditMode(false);
 
-    // TODO: toggleSpellcheck(false);
-
     emit onReadOnly(true);
     return true;
 }
@@ -176,8 +184,8 @@ void PlainTextMemoTab::loadSettings()
     _textEditor->setWordWrap(options.contains(MemoOptions::WORD_WRAP)
         ? options[MemoOptions::WORD_WRAP].toBool() : AppSettings::instance().memoWordWrap);
 
-    // if (options.contains(MemoOptions::SPELLCHECK))
-    //     _memoEditor->setSpellcheckLang(options[MemoOptions::SPELLCHECK].toString());
+    if (options.contains(MemoOptions::SPELLCHECK))
+        _spellcheckLang = options[MemoOptions::SPELLCHECK].toString();
 
     if (options.contains(MemoOptions::HIGHLIGHTER))
         setHighlighterName(options[MemoOptions::HIGHLIGHTER].toString());
@@ -226,4 +234,11 @@ void PlainTextMemoTab::showSelectedHighlighter()
     auto actions = _highlighterMenu->actions();
     for (auto action : std::as_const(actions))
         action->setChecked(action->data().toString() == name);
+}
+
+void PlainTextMemoTab::showSelectedSpellcheckLang()
+{
+    auto actions = _spellcheckMenu->actions();
+    for (auto action : std::as_const(actions))
+        action->setChecked(action->data().toString() == _spellcheckLang);
 }

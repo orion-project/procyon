@@ -15,7 +15,6 @@ class Enot;
 class Entry;
 class TreeWidget;
 class OpenTabsWidget;
-class SpellcheckControl;
 class InfoWidget;
 class MemoTab;
 class Memo;
@@ -50,8 +49,6 @@ private:
     QLabel *_statusMemoCount, *_statusFileName;
     QAction *_actionMemoFont, *_actionWordWrap, *_actionMemoExportPdf, *_actionAddMemoProp;
     QString _lastOpenedDb;
-    SpellcheckControl* _spellcheckControl;
-    QMenu *_spellcheckMenu = nullptr;
 
     void createMenu();
     void createStatusBar();
@@ -82,9 +79,6 @@ private:
     TextMemoTab* currentTextMemoTab() const;
 
     void memoMenuAboutToShow();
-    void spellcheckMenuAboutToShow();
-
-    void setMemoSpellcheckLang(const QString& lang);
 };
 
 #endif // MAIN_WINDOW_H

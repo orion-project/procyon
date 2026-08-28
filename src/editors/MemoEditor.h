@@ -72,7 +72,6 @@ protected:
     explicit TextMemoEditor(Memo* memo, bool createEditor);
 
     MemoTextEdit* _editor = nullptr;
-    TextEditSpellcheck* _spellcheck = nullptr;
     QString _spellcheckLang;
     QSyntaxHighlighter* _highlighter = nullptr;
 

@@ -18,10 +18,6 @@
 #include "widgets/OpenTabsWidget.h"
 #include "widgets/TreeWidget.h"
 
-#ifdef ENABLE_SPELLCHECK
-#include "spellcheck/Spellchecker.h"
-#endif
-
 #include "helpers/OriDialogs.h"
 #include "helpers/OriLayouts.h"
 #include "helpers/OriWindows.h"
@@ -181,15 +177,6 @@ void MainWindow::createMenu()
 
     m = menuBar()->addMenu(tr("Memo"));
     connect(m, &QMenu::aboutToShow, this, &MainWindow::memoMenuAboutToShow);
-
-#ifdef ENABLE_SPELLCHECK
-    _spellcheckMenu = _spellcheckControl->makeMenu(this);
-    if (_spellcheckMenu)
-    {
-        connect(_spellcheckMenu, &QMenu::aboutToShow, this, &MainWindow::spellcheckMenuAboutToShow);
-        m->addMenu(_spellcheckMenu);
-    }
-#endif
 
     _actionMemoFont = m->addAction(tr("Choose Font..."), this, &MainWindow::chooseMemoFont);
 
@@ -612,9 +599,6 @@ void MainWindow::memoMenuAboutToShow()
 {
     auto memoPage = currentTextMemoTab();
 
-    if (_spellcheckMenu)
-        _spellcheckMenu->setEnabled(memoPage && !memoPage->isReadOnly());
-
     _actionMemoExportPdf->setEnabled(memoPage);
 
     _actionMemoFont->setEnabled(memoPage);
@@ -623,21 +607,6 @@ void MainWindow::memoMenuAboutToShow()
     _actionWordWrap->setChecked(memoPage && memoPage->wordWrap());
 
     _actionAddMemoProp->setEnabled(memoPage && memoPage->canHaveProps() && !memoPage->isReadOnly());
-}
-
-void MainWindow::spellcheckMenuAboutToShow()
-{
-#ifdef ENABLE_SPELLCHECK
-    auto memoPage = currentTextMemoTab();
-    if (memoPage)
-        _spellcheckControl->showCurrentLang(memoPage->spellcheckLang());
-#endif
-}
-
-void MainWindow::setMemoSpellcheckLang(const QString& lang)
-{
-    auto memoPage = currentTextMemoTab();
-    if (memoPage) memoPage->setSpellcheckLang(lang);
 }
 
 void MainWindow::addMemoProp()

@@ -123,9 +123,6 @@ set(PROJECT_SOURCES
     src/MainWindow.cpp src/MainWindow.h
     src/markdown/MarkdownHelper.cpp src/markdown/MarkdownHelper.h
     src/markdown/ori_html.c src/markdown/ori_html.h
-    src/spellcheck/LangCodeAndNames.cpp
-    src/spellcheck/Spellchecker.cpp src/spellcheck/Spellchecker.h
-    src/spellcheck/TextEditSpellcheck.cpp src/spellcheck/TextEditSpellcheck.h
     src/tabs/AppSettingsTab.cpp src/tabs/AppSettingsTab.h
     src/tabs/CmdConsoleTab.cpp src/tabs/CmdConsoleTab.h
     src/tabs/CssEditorTab.cpp src/tabs/CssEditorTab.h
@@ -162,6 +159,7 @@ if(APPLE)
     set_source_files_properties(img/icon/main.icns PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
 endif()
 
+set(ORI_WITH_SPELLCHECK ON)
 add_subdirectory(orion)
 set(LIB_RESOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/orion/resources.qrc
@@ -277,7 +275,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
-    ENABLE_SPELLCHECK
     QT_DEPRECATED_WARNINGS
     QT_USE_QSTRINGBUILDER
     APP_VER="${APP_VER_FULL}"

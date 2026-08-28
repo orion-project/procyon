@@ -13,6 +13,9 @@ QT_END_NAMESPACE
 
 class MemoTextEdit;
 class MemoPropsPanel;
+namespace Ori {
+class Spellcheck;
+}
 
 class PlainTextMemoTab : public MemoTab
 {
@@ -32,8 +35,10 @@ private:
     QLineEdit *_titleEditor;
     MemoTextEdit *_textEditor;
     MemoPropsPanel* _propsPanel;
-    QMenu *_highlighterMenu;
+    QMenu *_highlighterMenu, *_spellcheckMenu;
     QSyntaxHighlighter* _highlighter = nullptr;
+    Ori::Spellcheck* _spellcheck;
+    QString _spellcheckLang;
 
     void showMemo();
     void toggleEditMode(bool on);
@@ -43,6 +48,7 @@ private:
     void toggleWordWrap();
     void setHighlighterName(const QString& name);
     void showSelectedHighlighter();
+    void showSelectedSpellcheckLang();
 };
 
 #endif // PLAIN_TEXT_MEMO_TAB_H

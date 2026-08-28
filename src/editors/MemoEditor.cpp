@@ -3,8 +3,6 @@
 #include "TextEditHelpers.h"
 #include "core/Enot.h"
 #include "highlighter/PhlManager.h"
-#include "spellcheck/TextEditSpellcheck.h"
-#include "spellcheck/Spellchecker.h"
 #include "widgets/MemoTextEdit.h"
 
 #include "helpers/OriLayouts.h"

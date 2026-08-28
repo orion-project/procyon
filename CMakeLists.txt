@@ -130,6 +130,7 @@ set(PROJECT_SOURCES
     src/tabs/HelpTab.cpp src/tabs/HelpTab.h
     src/tabs/IssueMemoTab.cpp src/tabs/IssueMemoTab.h
     src/tabs/MemoTab.cpp src/tabs/MemoTab.h
+    src/tabs/MarkdownMemoTab.cpp src/tabs/MarkdownMemoTab.h
     src/tabs/PlainTextMemoTab.cpp src/tabs/PlainTextMemoTab.h
     src/tabs/PhlEditorTab.cpp src/tabs/PhlEditorTab.h
     src/tabs/QssEditorTab.cpp src/tabs/QssEditorTab.h

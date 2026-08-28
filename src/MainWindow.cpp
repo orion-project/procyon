@@ -4,16 +4,16 @@
 #include "core/Enot.h"
 #include "core/MemoType.h"
 #include "highlighter/PhlManager.h"
-#include "tabs/HelpTab.h"
-#include "tabs/PhlEditorTab.h"
-#include "tabs/CssEditorTab.h"
-#include "tabs/IssueMemoTab.h"
-#include "tabs/PlainTextMemoTab.h"
-#include "tabs/TextMemoTab.h"
-#include "tabs/GridViewMemoTab.h"
-#include "tabs/SqlConsoleTab.h"
-#include "tabs/QssEditorTab.h"
 #include "tabs/CmdConsoleTab.h"
+#include "tabs/CssEditorTab.h"
+#include "tabs/GridViewMemoTab.h"
+#include "tabs/HelpTab.h"
+#include "tabs/IssueMemoTab.h"
+#include "tabs/MarkdownMemoTab.h"
+#include "tabs/PhlEditorTab.h"
+#include "tabs/PlainTextMemoTab.h"
+#include "tabs/QssEditorTab.h"
+#include "tabs/SqlConsoleTab.h"
 #include "widgets/OpenTabsWidget.h"
 #include "widgets/TreeWidget.h"
 
@@ -469,7 +469,7 @@ void MainWindow::openMemoTab(Memo* memo)
     if (memo->type() == MemoType::plainText())
         tab = new PlainTextMemoTab(_enot, memo);
     else if (memo->type() == MemoType::markdown())
-        tab = new TextMemoTab(_enot, memo);
+        tab = new MarkdownMemoTab(_enot, memo);
     else if (memo->type() == MemoType::gridView())
     {
         tab = new GridViewMemoTab(_enot, memo);

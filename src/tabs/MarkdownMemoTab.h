@@ -1,5 +1,5 @@
-#ifndef PLAIN_TEXT_MEMO_TAB_H
-#define PLAIN_TEXT_MEMO_TAB_H
+#ifndef MARKDOWN_MEMO_TAB_H
+#define MARKDOWN_MEMO_TAB_H
 
 #include "MemoTab.h"
 
@@ -7,23 +7,23 @@ QT_BEGIN_NAMESPACE
 class QAction;
 class QLineEdit;
 class QMenu;
-class QSyntaxHighlighter;
+class QStackedLayout;
 QT_END_NAMESPACE
 
 class MemoTextEdit;
+class MemoTextBrowser;
 class MemoPropsPanel;
 namespace Ori {
 class Spellcheck;
 }
 
-class PlainTextMemoTab : public MemoTab
+class MarkdownMemoTab : public MemoTab
 {
     Q_OBJECT
 
 public:
-    explicit PlainTextMemoTab(Enot* enot, Memo* memo);
+    explicit MarkdownMemoTab(Enot* enot, Memo* memo);
 
-    void loadSettings() override;
     bool canClose() override;
     void beginEdit() override;
     bool isReadOnly() const override;
@@ -32,10 +32,11 @@ public:
 private:
     QAction *_actionEdit, *_actionSave, *_actionCancel;
     QLineEdit *_titleEditor;
-    MemoTextEdit *_textEditor;
+    MemoTextEdit *_textEditor = nullptr;
+    MemoTextBrowser *_textView;
+    QStackedLayout *_tabs;
     MemoPropsPanel* _propsPanel;
-    QMenu *_highlighterMenu, *_spellcheckMenu;
-    QSyntaxHighlighter* _highlighter = nullptr;
+    QMenu *_spellcheckMenu;
     Ori::Spellcheck* _spellcheck;
     QString _spellcheckLang;
 
@@ -45,10 +46,7 @@ private:
     bool saveEdit();
     void chooseFont();
     void toggleWordWrap();
-    void setHighlighterName(const QString& name);
-    QString highlighterName() const;
-    void showSelectedHighlighter();
     void showSelectedSpellcheckLang();
 };
 
-#endif // PLAIN_TEXT_MEMO_TAB_H
+#endif // MARKDOWN_MEMO_TAB_H

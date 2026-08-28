@@ -1,12 +1,13 @@
-#include "PlainTextMemoTab.h"
+#include "MarkdownMemoTab.h"
 
 #include "AppSettings.h"
 #include "TextEditHelpers.h"
 #include "core/Enot.h"
 #include "core/MemoStore.h"
-#include "highlighter/PhlManager.h"
+#include "markdown/MarkdownHelper.h"
 #include "tabs/TabHelpers.h"
 #include "widgets/MemoPropsPanel.h"
+#include "widgets/MemoTextBrowser.h"
 #include "widgets/MemoTextEdit.h"
 
 #include "tools/OriSpellcheck.h"
@@ -16,13 +17,15 @@
 #include <QTimer>
 #include <QToolBar>
 #include <QToolButton>
+#include <QStackedLayout>
 
-typedef PlainTextMemoTab Self;
+typedef MarkdownMemoTab Self;
 
-PlainTextMemoTab::PlainTextMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
+MarkdownMemoTab::MarkdownMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
 {
-    _textEditor = new MemoTextEdit;
-    connect(_textEditor, &MemoTextEdit::undoAvailable, this, &Self::onModified);
+    _textView = new MemoTextBrowser;
+    _textView->document()->setDefaultStyleSheet(AppSettings::instance().markdownCss());
+    _textView->document()->setDocumentMargin(10);
 
     _spellcheck = new Ori::Spellcheck(_textEditor);
 
@@ -32,21 +35,13 @@ PlainTextMemoTab::PlainTextMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     auto toolbar = TabHelpers::makeHeaderToolBar();
 
     auto toolMenu = new QMenu(this);
-    toolMenu->addAction(tr("Choose Font..."), this, &Self::chooseFont);
+    auto actionFont = toolMenu->addAction(tr("Choose Font..."), this, &Self::chooseFont);
     auto actionWordWrap = toolMenu->addAction(tr("Word Wrap..."), this, &Self::toggleWordWrap);
     actionWordWrap->setCheckable(true);
     auto actionAddProp = toolMenu->addAction(tr("Add Property..."), this, [this]{ _propsPanel->addPropViaDlg(); });
     toolMenu->addAction(tr("Export to PDF..."), this, [this]{ TextEditHelpers::exportToPdfDlg(_textEditor); });
-    _highlighterMenu = toolMenu->addMenu(tr("Highlighter"));
     _spellcheckMenu = toolMenu->addMenu(tr("Spellcheck"));
-    connect(_highlighterMenu, &QMenu::aboutToShow, this, &Self::showSelectedHighlighter);
     connect(_spellcheckMenu, &QMenu::aboutToShow, this, &Self::showSelectedSpellcheckLang);
-    Phl::fillMenu(_highlighterMenu, [this](const QString& name){
-        if (name != highlighterName())
-            setHighlighterName(name);
-        else setHighlighterName({});
-        _enot->updateMemoOption(_memo->id(), MemoOptions::HIGHLIGHTER, highlighterName());
-    });
     Ori::Spellcheck::fillMenu(_spellcheckMenu, [this](const QString& lang){
         if (lang != _spellcheckLang)
             _spellcheckLang = lang;
@@ -54,10 +49,13 @@ PlainTextMemoTab::PlainTextMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
         _spellcheck->setLang(_spellcheckLang);
         _enot->updateMemoOption(_memo->id(), MemoOptions::SPELLCHECK, _spellcheckLang);
     });
-    connect(toolMenu, &QMenu::aboutToShow, this, [this, actionWordWrap, actionAddProp]{
+    connect(toolMenu, &QMenu::aboutToShow, this, [this, actionWordWrap, actionAddProp, actionFont]{
+        bool isEditMode = !isReadOnly();
+        actionFont->setEnabled(isEditMode);
         actionWordWrap->setChecked(_textEditor->wordWrap());
-        actionAddProp->setEnabled(!isReadOnly());
-        _spellcheckMenu->setEnabled(!isReadOnly());
+        actionWordWrap->setEnabled(isEditMode);
+        actionAddProp->setEnabled(isEditMode);
+        _spellcheckMenu->setEnabled(isEditMode);
     });
 
     _actionEdit = toolbar->addAction(QIcon(":/toolbar/edit"), tr("Edit"), this, &Self::beginEdit);
@@ -78,9 +76,14 @@ PlainTextMemoTab::PlainTextMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     _propsPanel = new MemoPropsPanel(enot);
     _propsPanel->setVisible(false);
 
-    Ori::Layouts::LayoutV({toolPanel, _propsPanel, _textEditor}).setMargin(0).setSpacing(0).useFor(this);
+    _tabs = new QStackedLayout;
+
+    Ori::Layouts::LayoutV({toolPanel, _propsPanel, _tabs}).setMargin(0).setSpacing(0).useFor(this);
 
     _propsPanel->setValues(memo->props());
+
+    _tabs->addWidget(_textView);
+    _tabs->setCurrentWidget(_textView);
 
     showMemo();
     toggleEditMode(false);
@@ -93,31 +96,31 @@ PlainTextMemoTab::PlainTextMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     });
 }
 
-void PlainTextMemoTab::showMemo()
+void MarkdownMemoTab::showMemo()
 {
     _titleEditor->setText(_memo->title());
     _titleEditor->setModified(false);
 
-    _textEditor->setPlainText(_memo->data());
+    _textView->setHtml(MarkdownHelper::markdownToHtml(_memo->data()));
     _textEditor->setModified(false);
 
     setWindowTitle(_memo->title());
 }
 
-bool PlainTextMemoTab::isModified() const
+bool MarkdownMemoTab::isModified() const
 {
     return _textEditor->isModified() || _titleEditor->isModified();
 }
 
-bool PlainTextMemoTab::isReadOnly() const
+bool MarkdownMemoTab::isReadOnly() const
 {
     return _textEditor->isReadOnly();
 }
 
-void PlainTextMemoTab::toggleEditMode(bool on)
+void MarkdownMemoTab::toggleEditMode(bool on)
 {
     TabHelpers::setTitleEditorReadOnly(_titleEditor, !on);
-    _textEditor->setReadOnly(!on);
+    _tabs->setCurrentIndex(on ? 0 : 1);
     _propsPanel->setReadOnly(!on);
 
     _actionSave->setVisible(on);
@@ -127,8 +130,32 @@ void PlainTextMemoTab::toggleEditMode(bool on)
     _spellcheck->setLang(on ? _spellcheckLang : QString());
 }
 
-void PlainTextMemoTab::beginEdit()
+void MarkdownMemoTab::beginEdit()
 {
+    if (!_textEditor)
+    {
+        _textEditor = new MemoTextEdit;
+        connect(_textEditor, &MemoTextEdit::undoAvailable, this, &Self::onModified);
+
+        auto options = Store::memos()->selectOptions(_memo->id());
+
+        auto memoFont = AppSettings::instance().memoFont;
+        if (options.contains(MemoOptions::FONT))
+            memoFont.fromString(options[MemoOptions::FONT].toString());
+        _textEditor->setFont(memoFont);
+
+        _textEditor->setWordWrap(options.contains(MemoOptions::WORD_WRAP)
+            ? options[MemoOptions::WORD_WRAP].toBool() : AppSettings::instance().memoWordWrap);
+
+        if (options.contains(MemoOptions::SPELLCHECK))
+            _spellcheckLang = options[MemoOptions::SPELLCHECK].toString();
+
+        _tabs->addWidget(_textEditor);
+    }
+
+    _textEditor->setPlainText(_memo->data());
+    _textEditor->setModified(false);
+
     toggleEditMode(true);
 
     if (_memo->data().isEmpty())
@@ -142,7 +169,7 @@ void PlainTextMemoTab::beginEdit()
     emit onReadOnly(false);
 }
 
-void PlainTextMemoTab::cancelEdit()
+void MarkdownMemoTab::cancelEdit()
 {
     toggleEditMode(false);
 
@@ -151,7 +178,7 @@ void PlainTextMemoTab::cancelEdit()
     emit onReadOnly(true);
 }
 
-bool PlainTextMemoTab::saveEdit()
+bool MarkdownMemoTab::saveEdit()
 {
     _propsPanel->apply();
 
@@ -176,76 +203,24 @@ bool PlainTextMemoTab::saveEdit()
     return true;
 }
 
-void PlainTextMemoTab::loadSettings()
-{
-    auto options = Store::memos()->selectOptions(_memo->id());
-
-    auto memoFont = AppSettings::instance().memoFont;
-    if (options.contains(MemoOptions::FONT))
-        memoFont.fromString(options[MemoOptions::FONT].toString());
-    _textEditor->setFont(memoFont);
-
-    _textEditor->setWordWrap(options.contains(MemoOptions::WORD_WRAP)
-        ? options[MemoOptions::WORD_WRAP].toBool() : AppSettings::instance().memoWordWrap);
-
-    if (options.contains(MemoOptions::SPELLCHECK))
-        _spellcheckLang = options[MemoOptions::SPELLCHECK].toString();
-
-    if (options.contains(MemoOptions::HIGHLIGHTER))
-        setHighlighterName(options[MemoOptions::HIGHLIGHTER].toString());
-}
-
-bool PlainTextMemoTab::canClose()
+bool MarkdownMemoTab::canClose()
 {
     return !isModified() || TextEditHelpers::canClose(_titleEditor, [this]{ return saveEdit(); });
 }
 
-void PlainTextMemoTab::chooseFont()
+void MarkdownMemoTab::chooseFont()
 {
     if (TextEditHelpers::chooseFontDlg(_textEditor))
         _enot->updateMemoOption(_memo->id(), MemoOptions::FONT, _textEditor->font().toString());
 }
 
-void PlainTextMemoTab::toggleWordWrap()
+void MarkdownMemoTab::toggleWordWrap()
 {
     _textEditor->setWordWrap(!_textEditor->wordWrap());
     _enot->updateMemoOption(_memo->id(), MemoOptions::WORD_WRAP, _textEditor->wordWrap());
 }
 
-void PlainTextMemoTab::setHighlighterName(const QString& name)
-{
-    if (!_highlighter && name.isEmpty()) return;
-    if (_highlighter && _highlighter->objectName() == name) return;
-
-    bool wasModified = _textEditor->isModified();
-    _textEditor->setUndoRedoEnabled(false);
-
-    if (_highlighter)
-    {
-        delete _highlighter;
-        _highlighter = nullptr;
-    }
-
-    _highlighter = Phl::createHighlighter(_textEditor, name);
-
-    _textEditor->setUndoRedoEnabled(true);
-    _textEditor->setModified(wasModified);
-}
-
-void PlainTextMemoTab::showSelectedHighlighter()
-{
-    QString name = highlighterName();
-    auto actions = _highlighterMenu->actions();
-    for (auto action : std::as_const(actions))
-        action->setChecked(action->data().toString() == name);
-}
-
-QString PlainTextMemoTab::highlighterName() const
-{
-    return _highlighter ? _highlighter->objectName() : QString();
-}
-
-void PlainTextMemoTab::showSelectedSpellcheckLang()
+void MarkdownMemoTab::showSelectedSpellcheckLang()
 {
     auto actions = _spellcheckMenu->actions();
     for (auto action : std::as_const(actions))

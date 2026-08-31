@@ -16,6 +16,16 @@
 #define USE_XHTML(opt) (opt->flags & HOEDOWN_HTML_USE_XHTML)
 #define UNUSED(x) (void)x;
 
+render_augments_ori __render_augments = {
+    .context = NULL,
+    .correct_file_path = NULL,
+};
+
+void set_render_augments_ori(render_augments_ori value)
+{
+    __render_augments = value;
+}
+
 typedef enum hoedown_html_flags {
     HOEDOWN_HTML_SKIP_HTML = (1 << 0),
     HOEDOWN_HTML_ESCAPE = (1 << 1),
@@ -363,8 +373,19 @@ static int rndr_image(hoedown_buffer *ob, const hoedown_buffer *link, const hoed
 	if (!link || !link->size) return 0;
 
 	HOEDOWN_BUFPUTSL(ob, "<img src=\"");
-	escape_href(ob, link->data, link->size);
-	HOEDOWN_BUFPUTSL(ob, "\" alt=\"");
+
+    if (__render_augments.correct_file_path)
+    {
+        uint8_t *out_data;
+        size_t out_size;
+        __render_augments.correct_file_path(
+            __render_augments.context, link->data, link->size, &out_data, &out_size);
+        escape_href(ob, out_data, out_size);
+    }
+    else
+        escape_href(ob, link->data, link->size);
+
+    HOEDOWN_BUFPUTSL(ob, "\" alt=\"");
 
 	if (alt && alt->size)
 		escape_html(ob, alt->data, alt->size);

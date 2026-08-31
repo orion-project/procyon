@@ -116,8 +116,6 @@ set(PROJECT_SOURCES
     src/core/MemoType.cpp src/core/MemoType.h
     src/core/SettingsStore.cpp src/core/SettingsStore.h
     src/core/SqlHelper.cpp src/core/SqlHelper.h
-    src/editors/MarkdownMemoEditor.cpp src/editors/MarkdownMemoEditor.h
-    src/editors/MemoEditor.cpp src/editors/MemoEditor.h
     src/highlighter/EnotStorage.cpp src/highlighter/EnotStorage.h
     src/highlighter/PhlManager.cpp src/highlighter/PhlManager.h
     src/MainWindow.cpp src/MainWindow.h
@@ -135,7 +133,6 @@ set(PROJECT_SOURCES
     src/tabs/PhlEditorTab.cpp src/tabs/PhlEditorTab.h
     src/tabs/QssEditorTab.cpp src/tabs/QssEditorTab.h
     src/tabs/SqlConsoleTab.cpp src/tabs/SqlConsoleTab.h
-    src/tabs/TextMemoTab.cpp src/tabs/TextMemoTab.h
     src/tabs/TabHelpers.cpp src/tabs/TabHelpers.h
     src/TextEditHelpers.cpp src/TextEditHelpers.h
     src/widgets/GridFilterPanel.cpp src/widgets/GridFilterPanel.h

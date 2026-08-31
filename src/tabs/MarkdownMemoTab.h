@@ -31,16 +31,18 @@ public:
 
 private:
     QAction *_actionEdit, *_actionSave, *_actionCancel;
+    QAction *_actionModeEdit, *_actionModePreview, *_actionModeSeparator, *_actionModeToggle;
     QLineEdit *_titleEditor;
     MemoTextEdit *_textEditor = nullptr;
     MemoTextBrowser *_textView;
     QStackedLayout *_tabs;
     MemoPropsPanel* _propsPanel;
     QMenu *_spellcheckMenu;
-    Ori::Spellcheck* _spellcheck;
+    Ori::Spellcheck* _spellcheck = nullptr;
     QString _spellcheckLang;
 
     void showMemo();
+    void togglePreview();
     void toggleEditMode(bool on);
     void cancelEdit();
     bool saveEdit();

@@ -303,6 +303,10 @@ QToolButton {
 QToolButton:hover {
   background: $selection-color;
 }
+QToolButton:checked {
+  border: 1px solid $selection-color;
+  background: $hover-color;
+}
 QToolButton::menu-indicator {
   image: none;
 }

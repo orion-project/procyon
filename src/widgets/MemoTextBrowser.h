@@ -10,6 +10,8 @@ class MemoTextBrowser : public QTextBrowser
 public:
     explicit MemoTextBrowser(QWidget *parent = nullptr);
 
+    void setText(const QString& text);
+
 protected:
     bool event(QEvent *event) override;
 };

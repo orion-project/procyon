@@ -5,8 +5,8 @@
 #include "core/Enot.h"
 #include "core/MemoStore.h"
 #include "core/MemoType.h"
-#include "markdown/MarkdownHelper.h"
-#include "widgets/IssueTextEdit.h"
+#include "widgets/MemoTextEdit.h"
+#include "widgets/MemoTextBrowser.h"
 #include "widgets/MemoPropsPanel.h"
 
 #include "helpers/OriDialogs.h"
@@ -44,27 +44,21 @@ static QString dateToStr(const QDateTime& date)
 }
 
 //------------------------------------------------------------------------------
-//                             IssueMemoView
+//                             IssueTextBrowser
 //------------------------------------------------------------------------------
 
-class IssueMemoView : public QTextBrowser
+class IssueTextBrowser : public MemoTextBrowser
 {
 public:
-    explicit IssueMemoView(QWidget *parent = 0) : QTextBrowser()
+    explicit IssueTextBrowser(QWidget *parent = 0) : MemoTextBrowser()
     {
-        setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        document()->setDefaultStyleSheet(AppSettings::instance().markdownCss());
     }
 
-private:
-    void linkClicked(const QUrl&)
+    void setText(const QString& text) = delete;
+
+    void setIssueText(const QString& text)
     {
-
-    }
-
-    void linkHovered(const QUrl&)
-    {
-
+        MemoTextBrowser::setText(text);
     }
 };
 
@@ -96,12 +90,12 @@ public:
         _title->setAcceptDrops(false);
         _title->setTabChangesFocus(true);
 
-        _summary = new IssueTextEdit;
+        _summary = new MemoTextEdit;
         _summary->setObjectName("code_editor");
         _summary->setProperty("role", "issue_text_in_tab");
         _summary->document()->setModified(false);
 
-        _preview = new QTextBrowser;
+        _preview = new IssueTextBrowser;
         _preview->document()->setDefaultStyleSheet(AppSettings::instance().markdownCss());
         _preview->setProperty("role", "issue_text_in_tab");
 
@@ -120,7 +114,7 @@ public:
 
         Ori::Layouts::LayoutV({_propsPanel, _title, _tabs, buttons}).useFor(this);
 
-        restoreGeometry();
+        Ori::PersistentState::restoreWindowGeometry("IssueEditDlg", this, {800, 400});
 
         if (memo)
         {
@@ -154,7 +148,7 @@ public:
 
     ~IssueEditDlg()
     {
-        __storedGeometry = saveGeometry();
+        Ori::PersistentState::storeWindowGeometry("IssueEditDlg", this);
     }
 
     QString titleText() const
@@ -191,7 +185,7 @@ private:
     void updatePreview()
     {
         if (_tabs->currentIndex() == 1)
-            _preview->setHtml(MarkdownHelper::markdownToHtml(_summary->toPlainText()));
+            _preview->setIssueText(_summary->toPlainText());
     }
 
     bool canClose() const
@@ -231,17 +225,6 @@ private:
         }
     }
 
-    void restoreGeometry()
-    {
-        if (!__storedGeometry.isEmpty())
-            QWidget::restoreGeometry(__storedGeometry);
-        else
-        {
-            resize(800, 400);
-            Ori::Wnd::moveToScreenCenter(this, qApp->activeWindow());
-        }
-    }
-
     bool isModified() const
     {
         return _title->document()->isModified() || _summary->document()->isModified() || _propsPanel->isModified();
@@ -249,16 +232,12 @@ private:
 
     MemoPropsPanel *_propsPanel;
     QPlainTextEdit *_title;
-    IssueTextEdit *_summary;
-    QTextBrowser *_preview;
+    MemoTextEdit *_summary;
+    IssueTextBrowser *_preview;
     QTabWidget *_tabs;
     bool _canClose = false;
     bool _isNewMemo = false;
-
-    static QByteArray __storedGeometry;
 };
-
-QByteArray IssueEditDlg::__storedGeometry = {};
 
 //------------------------------------------------------------------------------
 //                               IssueCommentDlg
@@ -273,13 +252,13 @@ public:
         setWindowFlags(Qt::Tool);
         setWindowTitle(title);
     
-        _editor = new IssueTextEdit;
+        _editor = new MemoTextEdit;
         _editor->setObjectName("code_editor");
         _editor->setProperty("role", "issue_text_in_tab");
         _editor->setPlainText(text);
         _editor->document()->setModified(false);
 
-        _preview = new QTextBrowser;
+        _preview = new IssueTextBrowser;
         _preview->document()->setDefaultStyleSheet(AppSettings::instance().markdownCss());
         _preview->setProperty("role", "issue_text_in_tab");
 
@@ -298,14 +277,14 @@ public:
         
         Ori::Layouts::LayoutV({_tabs, buttons}).useFor(this);
         
-        restoreGeometry();
+        Ori::PersistentState::restoreWindowGeometry("IssueCommentDlg", this, {800, 400});
         
         _editor->setFocus();
     }
     
     ~IssueCommentDlg()
     {
-        __storedGeometry = saveGeometry();
+        Ori::PersistentState::storeWindowGeometry("IssueCommentDlg", this);
     }
 
     std::function<bool(const QString& text)> onApply;
@@ -323,7 +302,7 @@ private:
     void updatePreview()
     {
         if (_tabs->currentIndex() == 1)
-            _preview->setHtml(MarkdownHelper::markdownToHtml(_editor->toPlainText()));
+            _preview->setIssueText(_editor->toPlainText());
     }
     
     bool canClose() const
@@ -354,26 +333,11 @@ private:
         }
     }
     
-    void restoreGeometry()
-    {
-        if (!__storedGeometry.isEmpty())
-            QWidget::restoreGeometry(__storedGeometry);
-        else
-        {
-            resize(800, 400);
-            Ori::Wnd::moveToScreenCenter(this, qApp->activeWindow());
-        }
-    }
-    
-    IssueTextEdit *_editor;
-    QTextBrowser *_preview;
+    MemoTextEdit *_editor;
+    IssueTextBrowser *_preview;
     QTabWidget *_tabs;
     bool _canClose = false;
-
-    static QByteArray __storedGeometry;
 };
-
-QByteArray IssueCommentDlg::__storedGeometry = {};
 
 //------------------------------------------------------------------------------
 //                             IssueMemoTab
@@ -389,13 +353,6 @@ IssueMemoTab::IssueMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     _titleEditor = TabHelpers::makeTitleEditor();
     
     _toolbar = TabHelpers::makeHeaderToolBar();
-
-    // _actionEdit = _toolbar->addAction(QIcon(":/toolbar/edit"), tr("Edit"), this, &Self::beginEdit);
-    // _actionSave = _toolbar->addAction(QIcon(":/toolbar/apply"), tr("Save"), this, &Self::saveEdit);
-    // _actionCancel = _toolbar->addAction(QIcon(":/toolbar/cancel"), tr("Cancel"), this, &Self::cancelEdit);
-    // _actionEdit->setShortcut(QKeySequence(Qt::Key_Return, Qt::Key_Return));
-    // _actionSave->setShortcut(QKeySequence::Save);
-    // _actionCancel->setShortcut(QKeySequence(Qt::Key_Escape, Qt::Key_Escape));
     _toolbar->addSeparator();
     _toolbar->addAction(QIcon(":/toolbar/close"), tr("Close Tab"), [this](){ deleteLater(); });
     
@@ -415,7 +372,7 @@ IssueMemoTab::IssueMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     _propsPanel = new MemoPropsPanel(enot, {_labelUpdated, TabHelpers::makeMenuButton(toolMenu)});
     _propsPanel->hideWhenEmpty = false;
 
-    _summaryView = new IssueMemoView;
+    _summaryView = new IssueTextBrowser;
     _summaryView->setObjectName("issue_summary");
 
     auto contentWidget = new QWidget;
@@ -476,7 +433,7 @@ IssueMemoTab::PopupInfo IssueMemoTab::makePopupInfo()
 void IssueMemoTab::showMemo()
 {
     _titleEditor->setText(_memo->title());
-    _summaryView->setHtml(MarkdownHelper::markdownToHtml(_memo->data()));
+    _summaryView->setIssueText(_memo->data());
     _labelUpdated->setText(dateToStr(_memo->updated()));
     _issueInfo.created->setText(dateToStr(_memo->created()));
     _issueInfo.updated->setText(dateToStr(_memo->updated()));
@@ -631,7 +588,7 @@ void IssueMemoTab::showHistory()
                 const auto& commentView = _commentViews.value(comment.id());
                 if (comment.updated() > commentView.updated)
                 {
-                    commentView.textView->setHtml(MarkdownHelper::markdownToHtml(comment.data()));
+                    commentView.textView->setIssueText(comment.data());
                     commentView.labelUpdated->setText(dateToStr(comment.updated()));
                     commentView.popupInfo.updated->setText(dateToStr(comment.updated()));
                     commentView.popupInfo.station->setText(comment.station());
@@ -644,9 +601,9 @@ void IssueMemoTab::showHistory()
             commentView.sourceText = comment.data();
             commentView.updated = comment.updated();
 
-            commentView.textView = new IssueMemoView;
+            commentView.textView = new IssueTextBrowser;
             commentView.textView->setProperty("role", "issue_comment");
-            commentView.textView->setHtml(MarkdownHelper::markdownToHtml(comment.data()));
+            commentView.textView->setIssueText(comment.data());
 
             commentView.labelUpdated = makeDateLabel(comment.updated());
 
@@ -681,51 +638,6 @@ void IssueMemoTab::showHistory()
 
     QTimer::singleShot(0, this, &Self::updateCommentHeights);
 }
-/*
-void IssueMemoTab::beginEdit()
-{
-    toggleEditMode(true);
-
-    _titleEditor->setFocus();
-    _titleEditor->selectAll();
-}
-
-void IssueMemoTab::cancelEdit()
-{
-    toggleEditMode(false);
-    _titleEditor->setText(_memo->title());
-}
-
-bool IssueMemoTab::saveEdit()
-{
-    _propsPanel->apply();
-
-    MemoUpdateParam update;
-    QString newTitle = _titleEditor->text().trimmed();
-    if (newTitle != _memo->title())
-        update.title = newTitle;
-    if (_propsPanel->hasValues())
-        update.props = _propsPanel->values();
-
-    auto ok = _enot->updateMemo(_memo, update);
-    if (!ok) return false;
-
-    setWindowTitle(_memo->title());
-    toggleEditMode(false);
-    return true;
-}
-
-void IssueMemoTab::toggleEditMode(bool on)
-{
-    _propsPanel->setReadOnly(on);
-
-    _actionSave->setVisible(on);
-    _actionCancel->setVisible(on);
-    _actionEdit->setVisible(!on);
-
-    TabHelpers::setTitleEditorReadOnly(_titleEditor, !on);
-}
-*/
 
 void IssueMemoTab::updateSummaryHeight()
 {

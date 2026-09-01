@@ -1,9 +1,8 @@
 #include "HelpTab.h"
 
 #include "TabHelpers.h"
-#include "../AppSettings.h"
-#include "../markdown/MarkdownHelper.h"
-#include "../widgets/MemoTextBrowser.h"
+#include "AppSettings.h"
+#include "widgets/MemoTextBrowser.h"
 
 #include "helpers/OriLayouts.h"
 #include "widgets/OriLabels.h"
@@ -41,7 +40,7 @@ HelpTab::HelpTab(QWidget *parent) : QWidget(parent)
     auto browser = new MemoTextBrowser;
     browser->document()->setDefaultStyleSheet(AppSettings::instance().markdownCss());
     browser->document()->setDocumentMargin(10);
-    browser->setHtml(MarkdownHelper::markdownToHtml(loadTextFromResource(":/docs/help")));
+    browser->setText(loadTextFromResource(":/docs/help"));
 
     auto titleEditor = TabHelpers::makeTitleEditor(windowTitle());
 

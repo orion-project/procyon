@@ -105,7 +105,6 @@ set(PROJECT_SOURCES
     src/highlighter/EnotStorage.cpp src/highlighter/EnotStorage.h
     src/highlighter/PhlManager.cpp src/highlighter/PhlManager.h
     src/MainWindow.cpp src/MainWindow.h
-    src/markdown/MarkdownHelper.cpp src/markdown/MarkdownHelper.h
     src/markdown/ori_html.c src/markdown/ori_html.h
     src/tabs/AppSettingsTab.cpp src/tabs/AppSettingsTab.h
     src/tabs/CmdConsoleTab.cpp src/tabs/CmdConsoleTab.h
@@ -122,7 +121,6 @@ set(PROJECT_SOURCES
     src/tabs/TabHelpers.cpp src/tabs/TabHelpers.h
     src/TextEditHelpers.cpp src/TextEditHelpers.h
     src/widgets/GridFilterPanel.cpp src/widgets/GridFilterPanel.h
-    src/widgets/IssueTextEdit.cpp src/widgets/IssueTextEdit.h
     src/widgets/MemoFactory.cpp src/widgets/MemoFactory.h
     src/widgets/MemoPropsPanel.cpp src/widgets/MemoPropsPanel.h
     src/widgets/MemoTextBrowser.cpp src/widgets/MemoTextBrowser.h
@@ -155,8 +153,13 @@ orion_add_resources(${PROJECT_NAME})
 set_target_properties(${PROJECT_NAME} PROPERTIES
     AUTOMOC ON
     CXX_EXTENSIONS OFF
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIG>"
+    #RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIG>"
 )
+if(NOT USE_VCPKG_QT)
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
+    )
+endif()
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
 # Copy hunspell dictionaries beside the built executable.

@@ -19,7 +19,8 @@ class Folder;
 class MemoEvent;
 class MemoSheet;
 class MemoPropsPanel;
-class IssueMemoView;
+class MemoTextEdit;
+class IssueTextBrowser;
 class IssueEditDlg;
 class IssueCommentDlg;
 
@@ -27,8 +28,6 @@ class IssueMemoTab : public MemoTab
 {
 public:
     explicit IssueMemoTab(Enot* enot, Memo* memo);
-
-    //void beginEdit() override;
 
     static void createIssue(Enot* enot, Folder* folder);
 
@@ -39,10 +38,9 @@ private:
     MemoPropsPanel* _propsPanel;
     QLineEdit* _titleEditor;
     QToolBar* _toolbar;
-    //QAction *_actionEdit, *_actionSave, *_actionCancel;
     QScrollArea *_contentScroller;
     QVBoxLayout *_contentLayout;
-    IssueMemoView *_summaryView;
+    IssueTextBrowser *_summaryView;
     QSet<QDateTime> _shownEvents;
     QLabel *_labelUpdated;
 
@@ -61,7 +59,7 @@ private:
     {
         QString sourceText;
         QDateTime updated;
-        IssueMemoView* textView;
+        IssueTextBrowser* textView;
         QLabel *labelUpdated;
         PopupInfo popupInfo;
     };

@@ -591,7 +591,7 @@ QLabel[role=isssue_popup_info_name] {
 QLabel[role=issue_popup_info_value] {
   font-size: $main-font-size;
 }
-QPlainTextEdit[role=issue_text_in_tab] {
+QTextEdit[role=issue_text_in_tab] {
   border: none;
   padding: 3px;
 }

@@ -12,8 +12,14 @@ public:
 
     void setText(const QString& text);
 
+signals:
+    void memoOpenRequested(int id);
+
 protected:
     bool event(QEvent *event) override;
+
+private:
+    void linkClicked(const QUrl& url);
 };
 
 #endif // MEMO_TEXT_BROWSER_H

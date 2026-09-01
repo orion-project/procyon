@@ -235,7 +235,20 @@ static int rndr_link(hoedown_buffer *ob, const hoedown_buffer *content, const ho
 	HOEDOWN_BUFPUTSL(ob, "<a href=\"");
 
 	if (link && link->size)
-		escape_href(ob, link->data, link->size);
+    {
+        if (__render_augments.correct_file_path)
+        {
+            uint8_t *out_data;
+            size_t out_size;
+            if (__render_augments.correct_file_path(
+                __render_augments.context, link->data, link->size, &out_data, &out_size))
+                escape_href(ob, out_data, out_size);
+            else
+                escape_href(ob, link->data, link->size);
+        }
+        else
+            escape_href(ob, link->data, link->size);
+    }
 
 	if (title && title->size) {
 		HOEDOWN_BUFPUTSL(ob, "\" title=\"");
@@ -378,9 +391,11 @@ static int rndr_image(hoedown_buffer *ob, const hoedown_buffer *link, const hoed
     {
         uint8_t *out_data;
         size_t out_size;
-        __render_augments.correct_file_path(
-            __render_augments.context, link->data, link->size, &out_data, &out_size);
-        escape_href(ob, out_data, out_size);
+        if (__render_augments.correct_file_path(
+            __render_augments.context, link->data, link->size, &out_data, &out_size))
+            escape_href(ob, out_data, out_size);
+        else
+            escape_href(ob, link->data, link->size);
     }
     else
         escape_href(ob, link->data, link->size);
@@ -566,7 +581,7 @@ static int rndr_math(hoedown_buffer *ob, const hoedown_buffer *text, int display
 	return 1;
 }
 
-hoedown_renderer * hoedown_html_renderer_new_ori(hoedown_html_flags render_flags)
+hoedown_renderer * hoedown_html_renderer_new_ori(/*hoedown_html_flags render_flags*/)
 {
 	static const hoedown_renderer cb_default = {
 		NULL,
@@ -625,8 +640,8 @@ hoedown_renderer * hoedown_html_renderer_new_ori(hoedown_html_flags render_flags
 	renderer = hoedown_malloc(sizeof(hoedown_renderer));
 	memcpy(renderer, &cb_default, sizeof(hoedown_renderer));
 
-	if (render_flags & HOEDOWN_HTML_SKIP_HTML || render_flags & HOEDOWN_HTML_ESCAPE)
-		renderer->blockhtml = NULL;
+    //if (render_flags & HOEDOWN_HTML_SKIP_HTML || render_flags & HOEDOWN_HTML_ESCAPE)
+    //	renderer->blockhtml = NULL;
 
 	renderer->opaque = state;
 	return renderer;

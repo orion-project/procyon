@@ -4,21 +4,28 @@
 
 #include "ori_html.h"
 
-namespace MarkdownHelper {
-
-void correct_file_path(void *context, const uint8_t *in_data, size_t in_size,
-                       uint8_t **out_data, size_t *out_size)
+static int correct_file_path(void *context,
+    const uint8_t *in_data, size_t in_size, uint8_t **out_data, size_t *out_size)
 {
-    QString fn = QString::fromUtf8((const char*)in_data, in_size);
-    QFileInfo fi = Store::files()->attachedFile(fn);
-    QByteArray fp = fi.absoluteFilePath().toUtf8();
+    QString fileName = QString::fromUtf8((const char*)in_data, in_size);
+    if (fileName.startsWith(MarkdownHelper::fileScheme))
+        return 0;
+    if (fileName.startsWith(MarkdownHelper::enotScheme))
+        return 0;
+    QString filePath;
+    if (fileName.contains('/') || fileName.contains('\\'))
+        filePath = QFileInfo(fileName).absoluteFilePath();
+    else
+        filePath = Store::files()->attachedFile(fileName).absoluteFilePath();
+    auto fp = (MarkdownHelper::fileScheme + filePath).toUtf8();
     auto storage = reinterpret_cast<QList<QByteArray>*>(context);
     storage->append(fp);
     *out_data = (uint8_t*)fp.constData();
     *out_size = fp.size();
+    return 1;
 }
 
-QString markdownToHtml(const QString& markdown)
+QString MarkdownHelper::markdownToHtml(const QString& markdown)
 {
     auto markdownBytes = markdown.toUtf8();
 
@@ -46,5 +53,3 @@ QString markdownToHtml(const QString& markdown)
 
     return html;
 }
-
-} // namespace MarkdownHelper

@@ -24,6 +24,7 @@ signals:
     bool onAboutToBeClosed();
     void onReadOnly(bool readOnly);
     void onModified(bool modified);
+    void memoOpenRequested(int memoId);
 
 protected:
     Enot* _enot;

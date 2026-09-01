@@ -672,7 +672,7 @@ void GridViewMemoTab::openSelectedMemo()
 
     auto memo = selectedMemo();
     if (memo)
-        emit memoOpenRequested(memo);
+        emit memoOpenRequested(memo->id());
 }
 
 void GridViewMemoTab::applyFilters()

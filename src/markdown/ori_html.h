@@ -15,7 +15,7 @@ extern "C" {
 
 typedef struct {
     void *context;
-    void (*correct_file_path)(void *context,
+    int (*correct_file_path)(void *context,
         const uint8_t *in_data, size_t in_size,
         uint8_t **out_data, size_t *out_size);
 } render_augments_ori;

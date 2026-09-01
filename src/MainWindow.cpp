@@ -24,6 +24,7 @@
 #include "tools/OriSettings.h"
 #include "widgets/OriMruMenu.h"
 #include "widgets/OriLabels.h"
+#include "widgets/OriPopupMessage.h"
 
 #include <QApplication>
 #include <QCloseEvent>
@@ -140,6 +141,8 @@ MainWindow::MainWindow() : QMainWindow()
 
     createMenu();
     createStatusBar();
+
+    Ori::Gui::PopupMessage::setTarget(this);
 }
 
 MainWindow::~MainWindow()
@@ -471,10 +474,7 @@ void MainWindow::openMemoTab(Memo* memo)
     else if (memo->type() == MemoType::markdown())
         tab = new MarkdownMemoTab(_enot, memo);
     else if (memo->type() == MemoType::gridView())
-    {
         tab = new GridViewMemoTab(_enot, memo);
-        connect((GridViewMemoTab*)tab, &GridViewMemoTab::memoOpenRequested, this, &MainWindow::openMemoTab);
-    }
     else if (memo->type() == MemoType::issue())
         tab = new IssueMemoTab(_enot, memo);
 
@@ -483,6 +483,12 @@ void MainWindow::openMemoTab(Memo* memo)
         qWarning() << "Unknown how to open the memo of type" << memo->type()->name();
         return;
     }
+
+    connect(tab, &MemoTab::memoOpenRequested, this, [this](int memoId){
+        if (auto memo = _enot->findMemoById(memoId); memo)
+            emit openMemoTab(memo);
+        else qWarning() << "Memo not found with id" << memoId;
+    });
 
     _tabsView->addWidget(tab);
     _tabsView->setCurrentWidget(tab);

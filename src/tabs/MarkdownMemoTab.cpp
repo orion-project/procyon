@@ -28,6 +28,7 @@ typedef MarkdownMemoTab Self;
 MarkdownMemoTab::MarkdownMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
 {
     _textView = new MemoTextBrowser;
+    connect(_textView, &MemoTextBrowser::memoOpenRequested, this, &Self::memoOpenRequested);
 
     _titleEditor = TabHelpers::makeTitleEditor();
     connect(_titleEditor, &QLineEdit::textEdited, [this]{ emit onModified(true); });

@@ -150,7 +150,7 @@ void MemoTextEdit::pasteImage(const QImage& img)
         imgPreview
     }).setMargin(0).makeWidget();
 
-    if (Ori::Dlg::Dialog(w, true).withTitle(tr("Add Image to Database")).withContentToButtonsSpacingFactor(2).exec())
+    if (Ori::Dlg::Dialog(w, true).withTitle(tr("Add Image")).withContentToButtonsSpacingFactor(2).exec())
     {
         if (!ensureFilesDir())
             return;
@@ -160,6 +160,7 @@ void MemoTextEdit::pasteImage(const QImage& img)
             Ori::Dlg::error(tr("Failed to save image %1: %2").arg(fi.absoluteFilePath(), writer.errorString()));
             return;
         }
+        qDebug() << "Created" << fi.absoluteFilePath();
         _generatedFiles.append(fi.absoluteFilePath());
         textCursor().insertText(QString("![](%1)").arg(fi.fileName()));
     }
@@ -216,7 +217,7 @@ void MemoTextEdit::pasteFile(const QMimeData* source)
     form->addRow(tr("<b>Display as:</b>"), new QLabel(src.fileName()));
     form->addRow(tr("<b>File size:</b>"), new QLabel(tr("%1 bytes").arg(src.size())));
 
-    if (Ori::Dlg::Dialog(w, true).withTitle(tr("Add File to Database")).withContentToButtonsSpacingFactor(2).exec())
+    if (Ori::Dlg::Dialog(w, true).withTitle(tr("Add File")).withContentToButtonsSpacingFactor(2).exec())
     {
         if (!ensureFilesDir())
             return;
@@ -233,7 +234,7 @@ void MemoTextEdit::pasteFile(const QMimeData* source)
         }
         qDebug() << "Created" << dst.absoluteFilePath();
         _generatedFiles.append(dst.absoluteFilePath());
-        textCursor().insertText(QString("![%1](%2)").arg(src.fileName(), dst.fileName()));
+        textCursor().insertText(QString("[%1](%2)").arg(src.fileName(), dst.fileName()));
     }
 }
 

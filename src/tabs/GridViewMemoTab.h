@@ -27,9 +27,6 @@ public:
 
     void beginEdit() override;
 
-signals:
-    void memoOpenRequested(Memo* item);
-
 private:
     QLineEdit* _titleEditor;
     QToolBar* _toolbar;

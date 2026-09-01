@@ -3,10 +3,15 @@
 
 #include <QString>
 
-namespace MarkdownHelper {
+class MarkdownHelper
+{
+public:
 
-QString markdownToHtml(const QString& markdown);
+static QString markdownToHtml(const QString& markdown);
 
-} // namespace MarkdownHelper
+static inline const auto httpScheme = QStringLiteral("http");
+static inline const auto fileScheme = QStringLiteral("file:");
+static inline const auto enotScheme = QStringLiteral("enot:");
+};
 
 #endif // MARKDOWN_HELPER_H

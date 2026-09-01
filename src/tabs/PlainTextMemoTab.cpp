@@ -9,6 +9,7 @@
 #include "widgets/MemoPropsPanel.h"
 #include "widgets/MemoTextEdit.h"
 
+#include "helpers/OriWidgets.h"
 #include "tools/OriSpellcheck.h"
 
 #include <QLineEdit>
@@ -21,15 +22,16 @@ typedef PlainTextMemoTab Self;
 
 PlainTextMemoTab::PlainTextMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
 {
+#define A_ Ori::Gui::action
+
     _textEditor = new MemoTextEdit;
+    _textEditor->setIsPlainText(true);
     connect(_textEditor, &MemoTextEdit::undoAvailable, this, &Self::onModified);
 
     _spellcheck = new Ori::Spellcheck(_textEditor);
 
     _titleEditor = TabHelpers::makeTitleEditor();
     connect(_titleEditor, &QLineEdit::textEdited, [this]{ emit onModified(true); });
-
-    auto toolbar = TabHelpers::makeHeaderToolBar();
 
     auto toolMenu = new QMenu(this);
     toolMenu->addAction(tr("Choose Font..."), this, &Self::chooseFont);
@@ -60,15 +62,12 @@ PlainTextMemoTab::PlainTextMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
         _spellcheckMenu->setEnabled(!isReadOnly());
     });
 
-    _actionEdit = toolbar->addAction(QIcon(":/toolbar/edit"), tr("Edit"), this, &Self::beginEdit);
-    _actionSave = toolbar->addAction(QIcon(":/toolbar/apply"), tr("Save"), this, &Self::saveEdit);
-    _actionCancel = toolbar->addAction(QIcon(":/toolbar/cancel"), tr("Cancel"), this, &Self::cancelEdit);
-    _actionEdit->setShortcut(QKeySequence(Qt::Key_Return, Qt::Key_Return));
-    _actionSave->setShortcut(QKeySequence::Save);
-    _actionCancel->setShortcut(QKeySequence(Qt::Key_Escape, Qt::Key_Escape));
-    toolbar->addSeparator();
-    toolbar->addWidget(TabHelpers::makeMenuButton(toolMenu, tr("Options")));
-    toolbar->addSeparator();
+    auto toolbar = TabHelpers::makeHeaderToolBar();
+    _actionEdit = A_(tr("Edit"), this, &Self::beginEdit, ":/toolbar/edit", QKeySequence(Qt::Key_Return, Qt::Key_Return));
+    _actionSave = A_(tr("Save"), this, &Self::saveEdit, ":/toolbar/apply", QKeySequence::Save);
+    _actionCancel = A_(tr("Cancel"), this, &Self::cancelEdit, ":/toolbar/cancel", QKeySequence(Qt::Key_Escape, Qt::Key_Escape));
+    Ori::Gui::populate(toolbar, {_actionEdit, _actionSave, _actionCancel, 0,
+        TabHelpers::makeMenuButton(toolMenu, tr("Options")), 0});
     toolbar->addAction(QIcon(":/toolbar/close"), tr("Close Tab"), [this](){
         if (canClose()) deleteLater();
     });
@@ -91,6 +90,8 @@ PlainTextMemoTab::PlainTextMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
         if (_memo->title().isEmpty())
             _titleEditor->setFocus();
     });
+
+#undef A_
 }
 
 void PlainTextMemoTab::showMemo()

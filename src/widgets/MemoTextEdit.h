@@ -10,6 +10,9 @@ class MemoTextEdit : public QTextEdit
 public:
     explicit MemoTextEdit(QWidget* parent = nullptr);
 
+    bool isPlainText() const { return _isPlainText; }
+    void setIsPlainText(bool on);
+
     bool wordWrap() const;
     void setWordWrap(bool on);
 
@@ -19,6 +22,7 @@ public:
     void setReadOnly(bool on);
 
     QString cleanFiles();
+
 
 protected:
     void mousePressEvent(QMouseEvent *e) override;
@@ -31,6 +35,7 @@ protected:
 private:
     QString _clickedHref;
     QStringList _generatedFiles;
+    bool _isPlainText = false;
 
     QString hyperlinkAt(const QPoint& pos) const;
 

@@ -31,8 +31,18 @@ MemoTextEdit::MemoTextEdit(QWidget* parent) : QTextEdit(parent)
     setAcceptDrops(true);
 }
 
+void MemoTextEdit::setIsPlainText(bool on)
+{
+    _isPlainText = on;
+
+    setAcceptDrops(!on);
+}
+
 bool MemoTextEdit::canInsertFromMimeData(const QMimeData* source) const
 {
+    if (_isPlainText)
+        return QTextEdit::canInsertFromMimeData(source);
+
     return source->hasImage() || source->hasUrls() || QTextEdit::canInsertFromMimeData(source);
 }
 
@@ -240,6 +250,12 @@ void MemoTextEdit::pasteFile(const QMimeData* source)
 
 void MemoTextEdit::insertFromMimeData(const QMimeData* source)
 {
+    if (_isPlainText)
+    {
+        QTextEdit::insertFromMimeData(source);
+        return;
+    }
+
     if (source->hasImage())
     {
         auto img = qvariant_cast<QImage>(source->imageData());
@@ -251,11 +267,18 @@ void MemoTextEdit::insertFromMimeData(const QMimeData* source)
         pasteFile(source);
         return;
     }
+
     QTextEdit::insertFromMimeData(source);
 }
 
 void MemoTextEdit::dropEvent(QDropEvent *event)
 {
+    if (_isPlainText)
+    {
+        QTextEdit::dropEvent(event);
+        return;
+    }
+
     insertFromMimeData(event->mimeData());
 }
 

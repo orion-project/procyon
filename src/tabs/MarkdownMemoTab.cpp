@@ -22,18 +22,16 @@
 
 typedef MarkdownMemoTab Self;
 
+MarkdownMemoTab::MarkdownMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
+{
 #define A_ Ori::Gui::action
 #define CA_ Ori::Gui::checkableAction
 
-MarkdownMemoTab::MarkdownMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
-{
     _textView = new MemoTextBrowser;
     connect(_textView, &MemoTextBrowser::memoOpenRequested, this, &Self::memoOpenRequested);
 
     _titleEditor = TabHelpers::makeTitleEditor();
     connect(_titleEditor, &QLineEdit::textEdited, [this]{ emit onModified(true); });
-
-    auto toolbar = TabHelpers::makeHeaderToolBar();
 
     auto toolMenu = new QMenu(this);
     auto actionFont = toolMenu->addAction(tr("Choose Font..."), this, &Self::chooseFont);
@@ -52,6 +50,7 @@ MarkdownMemoTab::MarkdownMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
         _spellcheckMenu->setEnabled(isEditMode);
     });
 
+    auto toolbar = TabHelpers::makeHeaderToolBar();
     _actionEdit = A_(tr("Edit"), this, &Self::beginEdit, ":/toolbar/edit", QKeySequence(Qt::Key_Return, Qt::Key_Return));
     _actionSave = A_(tr("Save"), this, &Self::saveEdit, ":/toolbar/apply", QKeySequence::Save);
     _actionCancel = A_(tr("Cancel"), this, &Self::cancelEdit, ":/toolbar/cancel", QKeySequence(Qt::Key_Escape, Qt::Key_Escape));
@@ -100,6 +99,9 @@ MarkdownMemoTab::MarkdownMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     toggleEditMode(false);
 
     _textView->setFocus();
+
+#undef A_
+#undef CA_
 }
 
 void MarkdownMemoTab::showMemo()

@@ -40,21 +40,7 @@ if (WIN32)
     configure_file(version/version.rc.in ${CMAKE_CURRENT_BINARY_DIR}/version.rc @ONLY)
 endif()
 
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-if(NOT USE_VCPKG_QT)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "$<1:${CMAKE_CURRENT_SOURCE_DIR}/bin>")
-endif()
-
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Network PrintSupport Sql Svg Widgets)
-
-# [hunspell](http://hunspell.github.io/) used for spell checking.
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-find_package(Hunspell REQUIRED)
 
 # [hoedown](https://github.com/hoedown/hoedown) renders Markdown memos to HTML.
 # Its source is fetched and built through the project's local vcpkg overlay port.
@@ -159,15 +145,19 @@ endif()
 
 set(ORI_WITH_SPELLCHECK ON)
 add_subdirectory(orion)
-set(LIB_RESOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/orion/resources.qrc
-)
 
 qt_add_executable(${PROJECT_NAME}
     MANUAL_FINALIZATION
     ${PROJECT_SOURCES}
-    ${LIB_RESOURCES}
 )
+orion_add_resources(${PROJECT_NAME})
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    AUTOMOC ON
+    CXX_EXTENSIONS OFF
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIG>"
+)
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
 # Copy hunspell dictionaries beside the built executable.
 if(PREPARE_DICTIONARIES)
@@ -256,7 +246,7 @@ if(WIN32 AND USE_VCPKG_QT)
 endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-    orion
+    Ori::orion
     hoedown::hoedown
     Qt6::Core
     Qt6::Gui

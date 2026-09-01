@@ -257,7 +257,6 @@ endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     orion
-    Hunspell::Hunspell
     hoedown::hoedown
     Qt6::Core
     Qt6::Gui

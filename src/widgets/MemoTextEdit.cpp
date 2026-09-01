@@ -231,6 +231,7 @@ void MemoTextEdit::pasteFile(const QMimeData* source)
             Ori::Dlg::error(tr("Failed to save file %1: %2").arg(dst.absoluteFilePath(), srcFile.errorString()));
             return;
         }
+        qDebug() << "Created" << dst.absoluteFilePath();
         _generatedFiles.append(dst.absoluteFilePath());
         textCursor().insertText(QString("![%1](%2)").arg(src.fileName(), dst.fileName()));
     }
@@ -268,7 +269,7 @@ QString MemoTextEdit::cleanFiles()
             report.append(fn + ": " + f.errorString());
             qWarning() << "Deleting" << fn << f.errorString();
         }
-        //else qDebug() << "Deleted" << fn;
+        else qDebug() << "Deleted" << fn;
     }
     return report.join('\n');
 }

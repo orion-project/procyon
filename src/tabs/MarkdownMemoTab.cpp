@@ -216,6 +216,8 @@ void MarkdownMemoTab::beginEdit()
 
 void MarkdownMemoTab::cancelEdit()
 {
+    _textEditor->cleanFiles();
+
     toggleEditMode(false);
 
     showMemo();

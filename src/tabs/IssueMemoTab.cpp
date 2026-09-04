@@ -16,6 +16,7 @@
 
 #include <QAction>
 #include <QApplication>
+#include <QClipboard>
 #include <QDialogButtonBox>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -93,6 +94,7 @@ public:
         _summary = new MemoTextEdit;
         _summary->setObjectName("code_editor");
         _summary->setProperty("role", "issue_text_in_tab");
+        _summary->setWordWrap(true);
         _summary->document()->setModified(false);
 
         _preview = new IssueTextBrowser;
@@ -112,7 +114,7 @@ public:
         connect(buttons, &QDialogButtonBox::rejected, this, &IssueEditDlg::cancelDlg);
         connect(buttons, &QDialogButtonBox::accepted, this, &IssueEditDlg::applyDlg);
 
-        Ori::Layouts::LayoutV({_propsPanel, _title, _tabs, buttons}).useFor(this);
+        Ori::Layouts::LayoutV({_propsPanel, tr("Title"), _title, tr("Summary"), _tabs, buttons}).useFor(this);
 
         Ori::PersistentState::restoreWindowGeometry("IssueEditDlg", this, {800, 400});
 
@@ -255,6 +257,7 @@ public:
         _editor = new MemoTextEdit;
         _editor->setObjectName("code_editor");
         _editor->setProperty("role", "issue_text_in_tab");
+        _editor->setWordWrap(true);
         _editor->setPlainText(text);
         _editor->document()->setModified(false);
 
@@ -361,13 +364,14 @@ IssueMemoTab::IssueMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     _labelUpdated = new QLabel;
     _labelUpdated->setObjectName("issue_updated");
 
-    _issueInfo = makePopupInfo();
+    _issueInfo = makePopupInfo(_memo->id());
 
     auto toolMenu = new QMenu(this);
     toolMenu->addAction(_issueInfo.action);
     toolMenu->addSeparator();
     toolMenu->addAction(QIcon(":/toolbar/edit"), tr("Edit Issue..."), this, &Self::editIssue);
     toolMenu->addAction(QIcon(":/toolbar/comment"), tr("Add Comment..."), this, &Self::addComment);
+    toolMenu->addAction(QIcon(":/toolbar/copy"), tr("Copy Summary"), this, &Self::copySummary);
 
     _propsPanel = new MemoPropsPanel(enot, {_labelUpdated, TabHelpers::makeMenuButton(toolMenu)});
     _propsPanel->hideWhenEmpty = false;
@@ -396,9 +400,14 @@ IssueMemoTab::IssueMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     //toggleEditMode(false);
 }
 
-IssueMemoTab::PopupInfo IssueMemoTab::makePopupInfo()
+IssueMemoTab::PopupInfo IssueMemoTab::makePopupInfo(int id)
 {
     PopupInfo info;
+
+    // auto idName = new QLabel(tr("Id:"));
+    // idName->setProperty("role", "isssue_popup_info_name");
+    // auto idValue = new QLabel(QString::number(id));
+    // idValue->setProperty("role", "issue_popup_info_value");
 
     auto created = new QLabel(tr("Created:"));
     created->setProperty("role", "isssue_popup_info_name");
@@ -418,6 +427,7 @@ IssueMemoTab::PopupInfo IssueMemoTab::makePopupInfo()
     auto widget = new QWidget(this);
 
     Ori::Layouts::Grid({
+        //{ idName, idValue },
         { created, info.created },
         { updated, info.updated },
         { station, info.station }
@@ -484,11 +494,12 @@ void IssueMemoTab::showHistory()
     std::optional<PropChangeItem> propsChange;
     QHash<QString, QString> propValues;
 
-    int eventNum = 1;
-
-    auto makeNumLabel = [&eventNum]{
-        auto label = new QLabel(QString::number(eventNum++));
+    auto makeNumLabel = [this](int id = 0){
+        auto label = new QLabel();
         label->setObjectName("issue_event_num");
+        if (id > 0)
+            label->setToolTip(tr("Comment #%1").arg(id));
+        _eventNumLabels << label;
         return label;
     };
 
@@ -498,8 +509,9 @@ void IssueMemoTab::showHistory()
         return label;
     };
 
-    auto makePropChangeWidget = [this, &eventNum, &propsChange, &makeNumLabel, &makeDateLabel](){
-        if (!propsChange) return;
+    auto makePropChangeWidget = [this, &propsChange, &makeNumLabel, &makeDateLabel](){
+        if (!propsChange)
+            return;
 
         auto propNames = propsChange->propValues.keys();
         propNames.sort();
@@ -508,7 +520,7 @@ void IssueMemoTab::showHistory()
         for (const auto &propName : std::as_const(propNames))
         {
             const auto& change = propsChange->propValues.value(propName);
-            if (change.first.isEmpty() && !change.second.isEmpty() && eventNum == 1)
+            if (change.first.isEmpty() && !change.second.isEmpty())
             {
                 // This this the first history record
                 // No need to show that all properties changed from "(none)" to some value
@@ -607,7 +619,7 @@ void IssueMemoTab::showHistory()
 
             commentView.labelUpdated = makeDateLabel(comment.updated());
 
-            commentView.popupInfo = makePopupInfo();
+            commentView.popupInfo = makePopupInfo(comment.id());
             commentView.popupInfo.created->setText(dateToStr(comment.created()));
             commentView.popupInfo.updated->setText(dateToStr(comment.updated()));
             commentView.popupInfo.station->setText(comment.station());
@@ -615,11 +627,16 @@ void IssueMemoTab::showHistory()
             auto menu = new QMenu(commentView.textView);
             menu->addAction(commentView.popupInfo.action);
             menu->addSeparator();
-            menu->addAction(QIcon(":/toolbar/edit"), tr("Edit Comment..."), this, [this, comment]{ editComment(comment.id()); });
+            menu->addAction(QIcon(":/toolbar/edit"), tr("Edit Comment..."), this, [this, comment]{
+                editComment(comment.id());
+            });
+            menu->addAction(QIcon(":/toolbar/copy"), tr("Copy Comment"), this, [this, comment]{
+                qApp->clipboard()->setText(comment.data());
+            });
 
             auto header = new QFrame;
             Ori::Layouts::LayoutH({
-                    makeNumLabel(),
+                    makeNumLabel(comment.id()),
                     Ori::Layouts::Stretch(),
                     commentView.labelUpdated,
                     TabHelpers::makeMenuButton(menu),
@@ -632,6 +649,9 @@ void IssueMemoTab::showHistory()
         }
     }
     makePropChangeWidget();
+
+    for (int i = 0; i < _eventNumLabels.size(); i++)
+        _eventNumLabels.at(i)->setText(QString::number(i+1));
 
     _contentLayout->addStretch();
     _contentScroller->setUpdatesEnabled(true);
@@ -747,4 +767,9 @@ void IssueMemoTab::editComment(int id)
     }
     _commentDlg->show();
     _commentDlg->activateWindow();
+}
+
+void IssueMemoTab::copySummary()
+{
+    qApp->clipboard()->setText(_memo->data());
 }

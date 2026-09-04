@@ -43,6 +43,7 @@ private:
     IssueTextBrowser *_summaryView;
     QSet<QDateTime> _shownEvents;
     QLabel *_labelUpdated;
+    QList<QLabel*> _eventNumLabels;
 
     struct PopupInfo
     {
@@ -77,8 +78,9 @@ private:
     void editIssue();
     void addComment();
     void editComment(int id);
+    void copySummary();
 
-    PopupInfo makePopupInfo();
+    PopupInfo makePopupInfo(int id);
 };
 
 #endif // ISSUE_MEMO_TAB_H

@@ -23,14 +23,15 @@ public:
     MemoPropWidget(const QString& name, const QString& value, std::function<void(const QString&, const QPoint&)> clickHandler)
         : QWidget(), _name(name), _value(value), _clickHandler(clickHandler)
     {
-        auto nameLabel = new QLabel(name + ":");
-        nameLabel->setProperty("role", "prop_name");
+        _nameLabel = new Ori::Widgets::Label(name + ":");
+        _nameLabel->setProperty("role", "prop_name");
+        connect(_nameLabel, &Ori::Widgets::Label::clicked, this, &MemoPropWidget::nameLabelClicked);
 
         _readonlyLabel = new QLabel(value);
         _readonlyLabel->setProperty("role", "prop_value");
         _readonlyLabel->setMinimumWidth(50);
 
-        Ori::Layouts::LayoutH({nameLabel, _readonlyLabel}).setMargin(0).setSpacing(0).useFor(this);
+        Ori::Layouts::LayoutH({_nameLabel, _readonlyLabel}).setMargin(0).setSpacing(0).useFor(this);
     }
 
     QString value() const { return _value; }
@@ -67,6 +68,7 @@ public:
         _editableLabel->setText(_value);
         _readonlyLabel->setVisible(false);
         _editableLabel->setVisible(true);
+        _nameLabel->setCursor(Qt::PointingHandCursor);
     }
 
     void switchToReadOnly()
@@ -75,6 +77,7 @@ public:
             _editableLabel->setVisible(false);
         _readonlyLabel->setText(_value);
         _readonlyLabel->setVisible(true);
+        _nameLabel->setCursor(Qt::ArrowCursor);
     }
 
     void apply()
@@ -94,9 +97,16 @@ public:
 private:
     QString _name, _value;
     QLabel *_readonlyLabel;
+    Ori::Widgets::Label *_nameLabel;
     Ori::Widgets::Label *_editableLabel = nullptr;
     bool _transient = false;
     std::function<void(const QString&, const QPoint&)> _clickHandler;
+
+    void nameLabelClicked()
+    {
+        if (_editableLabel && _editableLabel->isVisible())
+            editableLabelClicked();
+    }
 
     void editableLabelClicked()
     {
@@ -125,8 +135,8 @@ MemoPropsPanel::MemoPropsPanel(Enot* enot, std::initializer_list<QWidget *> pers
     for (auto w : persistentWidgets)
         layout()->addWidget(w);
 
-    _actionAddValue = Ori::Gui::action(tr("Add New Value..."), this, &Self::addNewValue);
-    _actionDeleteProp = Ori::Gui::action(tr("Delete Property..."), this, &Self::deleteProp);
+    _actionAddValue = Ori::Gui::action(tr("Add New Value..."), this, &Self::addNewValue, ":/toolbar/plus");
+    _actionDeleteProp = Ori::Gui::action(tr("Delete Property..."), this, &Self::deleteProp, ":/toolbar/trash");
 
     _menu = new QMenu(this);
     connect(_menu, &QMenu::aboutToShow, this, &Self::updateValuesMenu);

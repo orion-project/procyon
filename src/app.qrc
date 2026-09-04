@@ -25,6 +25,7 @@
         <file alias="brush">../img/toolbar/brush_mono.svg</file>
         <file alias="close">../img/toolbar/close_mono.svg</file>
         <file alias="columns">../img/toolbar/columns_mono.svg</file>
+        <file alias="copy">../img/toolbar/copy_mono.svg</file>
         <file alias="eye">../img/toolbar/eye_mono.svg</file>
         <file alias="markdown">../img/toolbar/markdown_mono.svg</file>
         <file alias="menu">../img/toolbar/menu.svg</file>

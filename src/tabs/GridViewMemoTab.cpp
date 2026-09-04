@@ -9,6 +9,7 @@
 
 #include "helpers/OriDialogs.h"
 #include "helpers/OriLayouts.h"
+#include "widgets/OriColorSelectors.h"
 
 #include <QAbstractTableModel>
 #include <QApplication>
@@ -364,6 +365,12 @@ public:
             QCheckBox *fontU0 = new QCheckBox(tr("Full row"));
             QCheckBox *fontS1 = new QCheckBox(tr("Strikeout"));
             QCheckBox *fontS0 = new QCheckBox(tr("Full row"));
+            QCheckBox *colorB1 = new QCheckBox(tr("Back color"));
+            QCheckBox *colorB0 = new QCheckBox(tr("Full row"));
+            QCheckBox *colorT1 = new QCheckBox(tr("Text color"));
+            QCheckBox *colorT0 = new QCheckBox(tr("Full row"));
+            Ori::Widgets::ColorButton *colorB = new Ori::Widgets::ColorButton;
+            Ori::Widgets::ColorButton *colorT = new Ori::Widgets::ColorButton;
 
             void apply(PropFormats &propFormats)
             {
@@ -376,6 +383,10 @@ public:
                     fmt.fontU = { .value = true, .fullRow = fontU0->isChecked() };
                 if (fontS1->isChecked())
                     fmt.fontS = { .value = true, .fullRow = fontS0->isChecked() };
+                if (colorB1->isChecked())
+                    fmt.backColor = { .value = colorB->selectedColor(), .fullRow = colorB0->isChecked() };
+                if (colorT1->isChecked())
+                    fmt.textColor = { .value = colorT->selectedColor(), .fullRow = colorT0->isChecked() };
                 propFormats[propName][propValue] = fmt;
             }
 
@@ -392,6 +403,10 @@ public:
                 fontU0->setChecked(fmt.fontU && fmt.fontU->fullRow);
                 fontS1->setChecked(fmt.fontS.has_value());
                 fontS0->setChecked(fmt.fontS && fmt.fontS->fullRow);
+                colorB1->setChecked(fmt.backColor.has_value());
+                colorB1->setChecked(fmt.backColor && fmt.backColor->fullRow);
+                colorT1->setChecked(fmt.textColor.has_value());
+                colorT1->setChecked(fmt.textColor && fmt.textColor->fullRow);
             }
         } c;
 
@@ -408,6 +423,9 @@ public:
         connect(c.nameSelector, &QComboBox::currentIndexChanged, this, fillPropValues);
         fillPropValues();
 
+        c.colorB->drawIconFrame = false;
+        c.colorT->drawIconFrame = false;
+
         auto fillPropFormats = [this, &c, &formats]{
             c.apply(formats);
             c.populate(formats);
@@ -423,15 +441,27 @@ public:
                 tr("Value:"), c.valueSelector,
             }).makeGroupBox(tr("Condition")),
             Ori::Layouts::Grid({
-                { c.fontB1, c.fontB0 },
-                { c.fontI1, c.fontI0 },
-                { c.fontU1, c.fontU0 },
-                { c.fontS1, c.fontS0 },
+                { c.fontB1, new QLabel(), c.fontB0 },
+                { c.fontI1, new QLabel(), c.fontI0 },
+                { c.fontU1, new QLabel(), c.fontU0 },
+                { c.fontS1, new QLabel(), c.fontS0 },
+                { c.colorB1, c.colorB, c.colorB0 },
+                { c.colorT1, c.colorT, c.colorT0 },
             }).makeGroupBox(tr("Format")),
         }).makeWidgetAuto();
 
         auto dlg = Ori::Dlg::Dialog(w)
-            .withContentToButtonsSpacingFactor(2);
+            .withContentToButtonsSpacingFactor(2)
+            .withOnDlgShown([&c]{
+                const int h = c.colorB1->height();
+                const int w = 70;
+                c.colorB->setFixedSize({w, h});
+                c.colorT->setFixedSize({w, h});
+                c.colorB->setIconSize({w-8, h-8});
+                c.colorT->setIconSize({w-8, h-8});
+                c.colorB->setIconRect({0, 0, w-8, h-8});
+                c.colorT->setIconRect({0, 0, w-8, h-8});
+            });
         if (dlg.exec())
             return true;
 

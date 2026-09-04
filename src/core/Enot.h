@@ -201,6 +201,7 @@ public:
     void addPossiblePropValue(const QString& name, const QString& value);
 
     void updateMemoOption(int memoId, const QString &name, const QVariant& value);
+    void updateMemoProps(Memo* memo, const QHash<QString, QString>& props, const QDateTime& moment);
 
 signals:
     void entryCreating(Entry*, int);

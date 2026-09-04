@@ -350,12 +350,23 @@ typedef IssueMemoTab Self;
 
 IssueMemoTab::IssueMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
 {
+#define A_ Ori::Gui::action
+
     auto idLabel = new QLabel('#' + QString::number(memo->id()));
     idLabel->setObjectName("issue_id");
     
     _titleEditor = TabHelpers::makeTitleEditor();
     
+    // TODO: make them optional
+    _actionSolveIssue = A_(tr("Solve Issue"), this, &Self::solveIssue, ":/toolbar/apply");
+    _actionCloseIssue = A_(tr("Close Issue"), this, &Self::closeIssue, ":/toolbar/stop");
+    _actionReopenIssue = A_(tr("Reopen Issue"), this, &Self::reopenIssue, ":/toolbar/restore");
+
     _toolbar = TabHelpers::makeHeaderToolBar();
+    _toolbar->addSeparator();
+    _toolbar->addAction(_actionSolveIssue);
+    _toolbar->addAction(_actionCloseIssue);
+    _toolbar->addAction(_actionReopenIssue);
     _toolbar->addSeparator();
     _toolbar->addAction(QIcon(":/toolbar/close"), tr("Close Tab"), [this](){ deleteLater(); });
     
@@ -370,8 +381,12 @@ IssueMemoTab::IssueMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     toolMenu->addAction(_issueInfo.action);
     toolMenu->addSeparator();
     toolMenu->addAction(QIcon(":/toolbar/edit"), tr("Edit Issue..."), this, &Self::editIssue);
-    toolMenu->addAction(QIcon(":/toolbar/comment"), tr("Add Comment..."), this, &Self::addComment);
+    toolMenu->addAction(QIcon(":/toolbar/comment"), tr("Add Comment..."), this, &Self::commentIssue);
     toolMenu->addAction(QIcon(":/toolbar/copy"), tr("Copy Summary"), this, &Self::copySummary);
+    toolMenu->addSeparator();
+    toolMenu->addAction(_actionSolveIssue);
+    toolMenu->addAction(_actionCloseIssue);
+    toolMenu->addAction(_actionReopenIssue);
 
     _propsPanel = new MemoPropsPanel(enot, {_labelUpdated, TabHelpers::makeMenuButton(toolMenu)});
     _propsPanel->hideWhenEmpty = false;
@@ -398,6 +413,8 @@ IssueMemoTab::IssueMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     showMemo();
     showHistory();
     //toggleEditMode(false);
+
+#undef A_
 }
 
 IssueMemoTab::PopupInfo IssueMemoTab::makePopupInfo(int id)
@@ -449,6 +466,24 @@ void IssueMemoTab::showMemo()
     _issueInfo.updated->setText(dateToStr(_memo->updated()));
     _issueInfo.station->setText(_memo->station());
     _propsPanel->setValues(_memo->props());
+    if (_actionSolveIssue)
+    {
+        bool on = canSolveIssue();
+        _actionSolveIssue->setVisible(on);
+        _actionSolveIssue->setEnabled(on);
+    }
+    if (_actionCloseIssue)
+    {
+        bool on = canCloseIssue();
+        _actionCloseIssue->setVisible(on);
+        _actionCloseIssue->setEnabled(on);
+    }
+    if (_actionReopenIssue)
+    {
+        bool on = canReopenIssue();
+        _actionReopenIssue->setVisible(on);
+        _actionReopenIssue->setEnabled(on);
+    }
     setWindowTitle(_memo->title());
     QTimer::singleShot(0, this, &Self::updateSummaryHeight);
 }
@@ -730,18 +765,45 @@ void IssueMemoTab::editIssue()
     _editDlg->activateWindow();
 }
 
-void IssueMemoTab::addComment()
+void IssueMemoTab::addComment(const QString &newStatus)
 {
     if (!_commentDlg)
     {
-        _commentDlg = new IssueCommentDlg(this, tr("Add Comment For Issue #%1").arg(_memo->id()));
-        _commentDlg->onApply = [this](const QString& text){
-            QString res = Store::memos()->addSheet(_memo->id(), text);
-            if (!res.isEmpty()) {
-                Ori::Dlg::Defer::error(res);
-                return false;
+        QString title;
+        if (newStatus == propStatusSolved)
+            title = tr("Solve Issue #%1");
+        else if (newStatus == propStatusClosed)
+            title = tr("Close Issue #%1");
+        else if (newStatus == propStatusOpened)
+            title = tr("Reopen Issue #%1");
+        else
+            title = tr("Add Comment For Issue #%1");
+        _commentDlg = new IssueCommentDlg(this, title.arg(_memo->id()));
+        _commentDlg->onApply = [this, newStatus](const QString& text){
+            bool propsChanged = false;
+            bool historyChanged = false;
+            auto now = QDateTime::currentDateTime();
+            if (!text.isEmpty())
+            {
+                QString res = Store::memos()->addSheet(_memo->id(), text, now);
+                if (!res.isEmpty()) {
+                    Ori::Dlg::Defer::error(res);
+                    return false;
+                }
+                historyChanged = true;
             }
-            QTimer::singleShot(0, this, &Self::showHistory);
+            if (!newStatus.isEmpty())
+            {
+                QHash<QString, QString> props = _memo->props();
+                props[propStatus] = newStatus;
+                _enot->updateMemoProps(_memo, props, now);
+                historyChanged = true;
+                propsChanged = true;
+            }
+            if (historyChanged)
+                QTimer::singleShot(0, this, &Self::showHistory);
+            if (propsChanged)
+                QTimer::singleShot(0, this, &Self::showMemo);
             return true;
         };
     }
@@ -772,4 +834,19 @@ void IssueMemoTab::editComment(int id)
 void IssueMemoTab::copySummary()
 {
     qApp->clipboard()->setText(_memo->data());
+}
+
+bool IssueMemoTab::canSolveIssue() const
+{
+    return _memo->props().value(propStatus) == propStatusOpened;
+}
+
+bool IssueMemoTab::canCloseIssue() const
+{
+    return _memo->props().value(propStatus) == propStatusSolved;
+}
+
+bool IssueMemoTab::canReopenIssue() const
+{
+    return _memo->props().value(propStatus) == propStatusClosed;
 }

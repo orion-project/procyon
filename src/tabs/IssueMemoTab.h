@@ -44,6 +44,9 @@ private:
     QSet<QDateTime> _shownEvents;
     QLabel *_labelUpdated;
     QList<QLabel*> _eventNumLabels;
+    QAction *_actionSolveIssue = nullptr;
+    QAction *_actionCloseIssue = nullptr;
+    QAction *_actionReopenIssue = nullptr;
 
     struct PopupInfo
     {
@@ -68,17 +71,28 @@ private:
 
     void showMemo();
     void showHistory();
-    // void cancelEdit();
-    // bool saveEdit();
-    // void toggleEditMode(bool on);
 
     void updateSummaryHeight();
     void updateCommentHeights();
 
+    // TODO: make configurable or scriptable
+    static inline const auto& propStatus = QStringLiteral("Status");
+    static inline const auto& propStatusOpened = QStringLiteral("Opened");
+    static inline const auto& propStatusSolved = QStringLiteral("Solved");
+    static inline const auto& propStatusClosed = QStringLiteral("Closed");
+
     void editIssue();
-    void addComment();
+    void addComment(const QString& newStatus = {});
+    void commentIssue() { addComment(); }
+    void solveIssue() { addComment(propStatusSolved); }
+    void closeIssue() { addComment(propStatusClosed); }
+    void reopenIssue() { addComment(propStatusOpened); }
     void editComment(int id);
     void copySummary();
+
+    bool canSolveIssue() const;
+    bool canCloseIssue() const;
+    bool canReopenIssue() const;
 
     PopupInfo makePopupInfo(int id);
 };

@@ -399,70 +399,69 @@ bool Enot::updateMemo(Memo* memo, MemoUpdateParam update)
     memo->_station = *update.station;
 
     if (update.props)
-    {
-        QStringList errors;
-
-        auto names = memo->props().keys();
-        for (const auto& name : std::as_const(names))
-        {
-            if (!update.props->contains(name))
-            {
-                auto err = Store::memos()->deleteProp(memo->id(), name);
-                if (!err.isEmpty())
-                {
-                    errors << err;
-                    continue;
-                }
-
-                memo->_props->remove(name);
-
-                MemoEvent event;
-                event._memoId = memo->_id;
-                event._what = u"prop:"_s + name;
-                event._moment = now;
-                event._station = _station;
-                Store::memos()->writeEvent(event);
-            }
-        }
-
-        for (auto it = update.props->cbegin(); it != update.props->cend(); it++)
-        {
-            auto name = it.key();
-            auto newValue = it.value();
-            auto oldValue = memo->_props->value(name);
-            if (newValue != oldValue)
-            {
-                auto err = Store::memos()->updateProp(memo->id(), name, newValue);
-                if (!err.isEmpty())
-                {
-                    errors << err;
-                    continue;
-                }
-
-                memo->_props->insert(name, newValue);
-
-                MemoEvent event;
-                event._memoId = memo->_id;
-                event._what = u"prop:"_s + name;
-                event._value = newValue;
-                event._moment = now;
-                event._station = _station;
-                Store::memos()->writeEvent(event);
-            }
-        }
-
-        if (!errors.isEmpty())
-        {
-            emit errorOccurred(errors.join('\n'));
-            // Don't return false here,
-            // since the memo itself is saved successfully
-        }
-    }
+        updateMemoProps(memo, *update.props, now);
 
     emit entryUpdated(memo);
 
     // TODO sort memos after renaming
     return true;
+}
+
+void Enot::updateMemoProps(Memo* memo, const QHash<QString, QString>& props, const QDateTime& moment)
+{
+    QStringList errors;
+
+    auto names = memo->props().keys();
+    for (const auto& name : std::as_const(names))
+    {
+        if (!props.contains(name))
+        {
+            auto err = Store::memos()->deleteProp(memo->id(), name);
+            if (!err.isEmpty())
+            {
+                errors << err;
+                continue;
+            }
+
+            memo->_props->remove(name);
+
+            MemoEvent event;
+            event._memoId = memo->_id;
+            event._what = u"prop:"_s + name;
+            event._moment = moment;
+            event._station = _station;
+            Store::memos()->writeEvent(event);
+        }
+    }
+
+    for (auto it = props.cbegin(); it != props.cend(); it++)
+    {
+        auto name = it.key();
+        auto newValue = it.value();
+        auto oldValue = memo->_props->value(name);
+        if (newValue != oldValue)
+        {
+            auto err = Store::memos()->updateProp(memo->id(), name, newValue);
+            if (!err.isEmpty())
+            {
+                errors << err;
+                continue;
+            }
+
+            memo->_props->insert(name, newValue);
+
+            MemoEvent event;
+            event._memoId = memo->_id;
+            event._what = u"prop:"_s + name;
+            event._value = newValue;
+            event._moment = moment;
+            event._station = _station;
+            Store::memos()->writeEvent(event);
+        }
+    }
+
+    if (!errors.isEmpty())
+        emit errorOccurred(errors.join('\n'));
 }
 
 QString Enot::loadMemo(Memo* memo)

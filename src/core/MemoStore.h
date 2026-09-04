@@ -1,6 +1,7 @@
 #ifndef MEMO_STORE_H
 #define MEMO_STORE_H
 
+#include <QDateTime>
 #include <QString>
 #include <QHash>
 #include <QVariant>
@@ -38,7 +39,7 @@ public:
     QString deleteProp(int memoId, const QString& name) const;
     QString updateProp(int memoId, const QString& name, const QString& value) const;
     QList<MemoSheet> loadSheets(int memoId) const;
-    QString addSheet(int memoId, const QString& text) const;
+    QString addSheet(int memoId, const QString& text, std::optional<QDateTime> moment = {}) const;
     QString updateSheet(int sheetId, const QString& text) const;
     QList<MemoEvent> loadEvents(int memoId) const;
     void writeEvent(const MemoEvent& event) const;

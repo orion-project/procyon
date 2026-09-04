@@ -525,11 +525,11 @@ QList<MemoSheet> MemoStore::loadSheets(int memoId) const
     return result;
 }
 
-QString MemoStore::addSheet(int memoId, const QString& text) const
+QString MemoStore::addSheet(int memoId, const QString& text, std::optional<QDateTime> moment) const
 {
     using T = MemoSheetsTable;
 
-    auto now = QDateTime::currentDateTime();
+    QDateTime now = moment.has_value() ? moment.value() : QDateTime::currentDateTime();
 
     auto q = AnyQuery(T::sqlInsert)
         .param(T::C::memoId, memoId)

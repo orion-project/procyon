@@ -632,9 +632,10 @@ void IssueMemoTab::showHistory()
 
             if (_commentViews.contains(comment.id()))
             {
-                const auto& commentView = _commentViews.value(comment.id());
+                auto& commentView = _commentViews[comment.id()];
                 if (comment.updated() > commentView.updated)
                 {
+                    commentView.sourceText = comment.data();
                     commentView.textView->setIssueText(comment.data());
                     commentView.labelUpdated->setText(dateToStr(comment.updated()));
                     commentView.popupInfo.updated->setText(dateToStr(comment.updated()));

@@ -7,15 +7,10 @@
 #include "widgets/GridFilterPanel.h"
 #include "widgets/MemoFactory.h"
 
-#include "helpers/OriDialogs.h"
 #include "helpers/OriLayouts.h"
-#include "widgets/OriColorSelectors.h"
 
-#include <QAbstractTableModel>
 #include <QApplication>
-#include <QCheckBox>
-#include <QComboBox>
-#include <QHeaderView>
+#include <QSortFilterProxyModel>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -25,453 +20,14 @@
 #include <QTableView>
 #include <QToolBar>
 #include <QToolButton>
-#include <QSortFilterProxyModel>
-#include <QStyledItemDelegate>
 #include <QVBoxLayout>
 #include <QGridLayout>
-#include <QGroupBox>
 
 using namespace Qt::StringLiterals;
 
-namespace {
-
-enum class ColumnKind { NONE, ID, PROP };
-
-struct ColumnDef
-{
-    ColumnKind kind = ColumnKind::NONE;
-    std::function<QString()> header;
-    std::function<QVariant(Memo*)> value;
-    QHeaderView::ResizeMode resizeMode = QHeaderView::ResizeToContents;
-};
-
-struct PropFormat
-{
-    template <typename TValue> struct Format
-    {
-        TValue value;
-        bool fullRow = false;
-    };
-    std::optional<Format<QColor>> backColor;
-    std::optional<Format<QColor>> textColor;
-    std::optional<Format<bool>> fontB;
-    std::optional<Format<bool>> fontI;
-    std::optional<Format<bool>> fontU;
-    std::optional<Format<bool>> fontS;
-
-    bool isEmpty() const
-    {
-        return !backColor && !textColor && !fontB && !fontI && !fontU && !fontS;
-    }
-};
-
-using PropFormats = QHash<QString, QHash<QString, PropFormat>>;
-
-}
-
-//------------------------------------------------------------------------------
-//                            GridViewTableModel
-//------------------------------------------------------------------------------
-
-class GridViewTableModel : public QAbstractTableModel
-{
-public:
-    GridViewTableModel(Memo *memo, QObject *parent) : QAbstractTableModel(parent)
-    {
-        _self = memo;
-        _folder = memo->parent();
-    }
-
-    int rowCount(const QModelIndex&) const override
-    {
-        return _folder->memos().size();
-    }
-
-    int columnCount(const QModelIndex&) const override
-    {
-        return _columnDefs.size();
-    }
-
-    QVariant headerData(int section, Qt::Orientation orientation, int role) const override
-    {
-        if (role == Qt::DisplayRole)
-        {
-            switch (orientation)
-            {
-            case Qt::Vertical:
-                return section + 1;
-            case Qt::Horizontal:
-                return _columnDefs.at(section).header();
-            }
-        }
-        return QVariant();
-    }
-
-    QVariant data(const QModelIndex &index, int role) const override
-    {
-        if (!index.isValid()) return QVariant();
-
-        const auto& memo = _folder->memos().at(index.row());
-        const auto& column = _columnDefs.at(index.column());
-
-        if (role == Qt::DecorationRole)
-        {
-            if (column.kind == ColumnKind::ID)
-                return memo->type()->icon();
-        }
-        else if (role == Qt::ToolTipRole)
-        {
-            if (column.kind == ColumnKind::ID)
-                return memo->type()->title();
-        }
-        else if (role == Qt::DisplayRole)
-        {
-            return column.value(memo);
-        }
-
-        return QVariant();
-    }
-
-    void itemCreating(Entry* entry, int index)
-    {
-        if (entry->isMemo() && entry->parent() == _folder)
-        {
-            _isRowCountChanging = true;
-            beginInsertRows(QModelIndex(), index, index);
-        }
-    }
-
-    void itemCreated(Entry* entry)
-    {
-        if (_isRowCountChanging)
-        {
-            _isRowCountChanging = false;
-            endInsertRows();
-        }
-    }
-
-    void itemRemoving(Entry* entry)
-    {
-        if (entry->isMemo() && entry->parent() == _folder)
-        {
-            _isRowCountChanging = true;
-            int index = _folder->memos().indexOf(entry);
-            beginRemoveRows(QModelIndex(), index, index);
-        }
-    }
-
-    void itemRemoved(Entry* entry)
-    {
-        if (_isRowCountChanging)
-        {
-            _isRowCountChanging = false;
-            endRemoveRows();
-        }
-    }
-
-    QStringList propColumns() const
-    {
-        QStringList columns;
-        for (const auto& colDef : _columnDefs)
-            if (colDef.kind == ColumnKind::PROP)
-                columns << colDef.header();
-        return columns;
-    }
-
-    void setPropColumns(const QStringList& propNames)
-    {
-        _columnDefs.clear();
-        _columnDefs << ColumnDef {
-            .kind = ColumnKind::ID,
-            .header = []{ return qApp->tr("ID"); },
-            .value = [](Memo* memo){ return memo->id(); },
-        };
-        _columnDefs << ColumnDef {
-            .header = []{ return qApp->tr("Title"); },
-            .value = [](Memo* memo){ return memo->title(); },
-            .resizeMode = QHeaderView::Stretch
-        };
-        for (const auto& propName : propNames)
-        {
-            _columnDefs << ColumnDef {
-                .kind = ColumnKind::PROP,
-                .header = [propName]{ return propName; },
-                .value = [propName](Memo* memo){ return memo->props().value(propName); },
-            };
-        }
-        _columnDefs << ColumnDef {
-            .header = []{ return qApp->tr("Updated"); },
-            .value = [](Memo* memo){ return memo->updated(); },
-        };
-    }
-
-    void reset()
-    {
-        beginResetModel();
-        endResetModel();
-    }
-
-    const QList<ColumnDef>& columnDefs() const { return _columnDefs; }
-
-private:
-    Memo *_self;
-    Folder *_folder;
-    bool _isRowCountChanging = false;
-    QList<ColumnDef> _columnDefs;
-};
-
-//------------------------------------------------------------------------------
-//                            GridViewFilterModel
-//------------------------------------------------------------------------------
-
-class GridViewFilterModel : public QSortFilterProxyModel
-{
-public:
-    GridViewFilterModel(Memo *memo, QObject *parent) : QSortFilterProxyModel(parent)
-    {
-        _folder = memo->parent();
-    }
-
-    bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override
-    {
-        auto memo = _folder->memos().at(sourceRow);
-
-        if (memo->type() == MemoType::gridView())
-            return false;
-
-        if (!_titleFilter.isEmpty())
-            if (!memo->title().contains(_titleFilter, Qt::CaseInsensitive))
-                return false;
-
-        if (!_propsFilters.isEmpty())
-        {
-            const auto& memoProps = memo->props();
-            for (const auto& filter : std::as_const(_propsFilters))
-            {
-                if (filter.second.isEmpty())
-                    continue;
-                if (!memoProps.contains(filter.first))
-                    return false;
-                if (memoProps.value(filter.first) != filter.second)
-                    return false;
-            }
-        }
-
-        return true;
-    }
-
-    void setFilters(const QString& title, const QList<QPair<QString, QString>>& props)
-    {
-        beginResetModel();
-        _titleFilter = title;
-        _propsFilters = props;
-        endResetModel();
-    }
-
-    void setPropFilters(const QList<QPair<QString, QString>>& props)
-    {
-        beginResetModel();
-        _propsFilters = props;
-        endResetModel();
-    }
-
-private:
-    Folder *_folder;
-    QString _titleFilter;
-    QList<QPair<QString, QString>> _propsFilters;
-};
-
-//------------------------------------------------------------------------------
-//                            GridViewItemDelegate
-//------------------------------------------------------------------------------
-
-class GridViewItemDelegate : public QStyledItemDelegate
-{
-public:
-    GridViewItemDelegate(GridViewMemoTab *gridView) : QStyledItemDelegate(gridView), _gridView(gridView)
-    {
-        PropFormat solved;
-        solved.backColor = { .value = QColor(0, 255, 0, 50), .fullRow = true };
-        PropFormat closed;
-        closed.backColor = { .value = QColor(0, 0, 0, 50), .fullRow = true };
-        QHash<QString, PropFormat> statusFormats;
-        statusFormats.insert("Solved", solved);
-        statusFormats.insert("Closed", closed);
-        _propFormats.insert("Status", statusFormats);
-    }
-
-    void initStyleOption(QStyleOptionViewItem *option, const QModelIndex &index) const override
-    {
-        QStyledItemDelegate::initStyleOption(option, index);
-
-        const int curCol = index.column();
-
-        Memo* memo = _gridView->memoAtIndex(index);
-
-        const auto& colDefs = _gridView->_tableModel->columnDefs();
-        const int colCount = colDefs.size();
-        for (int col = 0; col < colCount; col++)
-        {
-            const auto& colDef = colDefs.at(col);
-            if (colDef.kind != ColumnKind::PROP)
-                continue;
-
-            QString propName = colDef.header();
-            if (!_propFormats.contains(propName))
-                continue;
-
-            const auto& propValues = memo->props();
-            if (!propValues.contains(propName))
-                continue;
-
-            const auto& propValue = propValues.value(propName);
-            const auto& valueFormats = _propFormats.value(propName);
-            if (!valueFormats.contains(propValue))
-                continue;
-
-            const auto& fmt = valueFormats.value(propValue);
-            if (fmt.backColor && (fmt.backColor->fullRow || col == curCol))
-                option->backgroundBrush = fmt.backColor->value;
-            if (fmt.textColor && (fmt.textColor->fullRow || col == curCol))
-                option->palette.setBrush(QPalette::Text, fmt.textColor->value);
-            if (fmt.fontB && (fmt.fontB->fullRow || col == curCol))
-                option->font.setBold(true);
-            if (fmt.fontI && (fmt.fontI->fullRow || col == curCol))
-                option->font.setItalic(true);
-            if (fmt.fontU && (fmt.fontU->fullRow || col == curCol))
-                option->font.setUnderline(true);
-            if (fmt.fontS && (fmt.fontS->fullRow || col == curCol))
-                option->font.setStrikeOut(true);
-        }
-    }
-
-    void setPropFormats(const PropFormats& formats) { _propFormats = formats; }
-
-    bool configureFormats()
-    {
-        PropFormats formats = _propFormats;
-
-        struct
-        {
-            QString propName;
-            QString propValue;
-            QComboBox *nameSelector = new QComboBox;
-            QComboBox *valueSelector = new QComboBox;
-            QCheckBox *fontB1 = new QCheckBox(tr("Bold"));
-            QCheckBox *fontB0 = new QCheckBox(tr("Full row"));
-            QCheckBox *fontI1 = new QCheckBox(tr("Italic"));
-            QCheckBox *fontI0 = new QCheckBox(tr("Full row"));
-            QCheckBox *fontU1 = new QCheckBox(tr("Underline"));
-            QCheckBox *fontU0 = new QCheckBox(tr("Full row"));
-            QCheckBox *fontS1 = new QCheckBox(tr("Strikeout"));
-            QCheckBox *fontS0 = new QCheckBox(tr("Full row"));
-            QCheckBox *colorB1 = new QCheckBox(tr("Back color"));
-            QCheckBox *colorB0 = new QCheckBox(tr("Full row"));
-            QCheckBox *colorT1 = new QCheckBox(tr("Text color"));
-            QCheckBox *colorT0 = new QCheckBox(tr("Full row"));
-            Ori::Widgets::ColorButton *colorB = new Ori::Widgets::ColorButton;
-            Ori::Widgets::ColorButton *colorT = new Ori::Widgets::ColorButton;
-
-            void apply(PropFormats &propFormats)
-            {
-                PropFormat fmt;
-                if (fontB1->isChecked())
-                    fmt.fontB = { .value = true, .fullRow = fontB0->isChecked() };
-                if (fontI1->isChecked())
-                    fmt.fontI = { .value = true, .fullRow = fontI0->isChecked() };
-                if (fontU1->isChecked())
-                    fmt.fontU = { .value = true, .fullRow = fontU0->isChecked() };
-                if (fontS1->isChecked())
-                    fmt.fontS = { .value = true, .fullRow = fontS0->isChecked() };
-                if (colorB1->isChecked())
-                    fmt.backColor = { .value = colorB->selectedColor(), .fullRow = colorB0->isChecked() };
-                if (colorT1->isChecked())
-                    fmt.textColor = { .value = colorT->selectedColor(), .fullRow = colorT0->isChecked() };
-                propFormats[propName][propValue] = fmt;
-            }
-
-            void populate(PropFormats &propFormats)
-            {
-                propName = nameSelector->currentText();
-                propValue = valueSelector->currentText();
-                const auto& fmt = propFormats[propName][propValue];
-                fontB1->setChecked(fmt.fontB.has_value());
-                fontB0->setChecked(fmt.fontB && fmt.fontB->fullRow);
-                fontI1->setChecked(fmt.fontI.has_value());
-                fontI0->setChecked(fmt.fontI && fmt.fontI->fullRow);
-                fontU1->setChecked(fmt.fontU.has_value());
-                fontU0->setChecked(fmt.fontU && fmt.fontU->fullRow);
-                fontS1->setChecked(fmt.fontS.has_value());
-                fontS0->setChecked(fmt.fontS && fmt.fontS->fullRow);
-                colorB1->setChecked(fmt.backColor.has_value());
-                colorB1->setChecked(fmt.backColor && fmt.backColor->fullRow);
-                colorT1->setChecked(fmt.textColor.has_value());
-                colorT1->setChecked(fmt.textColor && fmt.textColor->fullRow);
-            }
-        } c;
-
-        for (const auto& propName : _gridView->_enot->propNames())
-            c.nameSelector->addItem(propName);
-
-        auto fillPropValues = [this, &c]{
-            auto propName = c.nameSelector->currentText();
-            c.valueSelector->clear();
-            for (const auto& propValue : _gridView->_enot->propValues(propName))
-                c.valueSelector->addItem(propValue);
-        };
-
-        connect(c.nameSelector, &QComboBox::currentIndexChanged, this, fillPropValues);
-        fillPropValues();
-
-        c.colorB->drawIconFrame = false;
-        c.colorT->drawIconFrame = false;
-
-        auto fillPropFormats = [this, &c, &formats]{
-            c.apply(formats);
-            c.populate(formats);
-        };
-
-        connect(c.valueSelector, &QComboBox::currentIndexChanged, this, fillPropFormats);
-        c.populate(formats);
-
-        auto w = Ori::Layouts::LayoutV({
-            Ori::Layouts::LayoutH({
-                tr("Property:"), c.nameSelector,
-                Ori::Layouts::SpaceH(2),
-                tr("Value:"), c.valueSelector,
-            }).makeGroupBox(tr("Condition")),
-            Ori::Layouts::Grid({
-                { c.fontB1, new QLabel(), c.fontB0 },
-                { c.fontI1, new QLabel(), c.fontI0 },
-                { c.fontU1, new QLabel(), c.fontU0 },
-                { c.fontS1, new QLabel(), c.fontS0 },
-                { c.colorB1, c.colorB, c.colorB0 },
-                { c.colorT1, c.colorT, c.colorT0 },
-            }).makeGroupBox(tr("Format")),
-        }).makeWidgetAuto();
-
-        auto dlg = Ori::Dlg::Dialog(w)
-            .withContentToButtonsSpacingFactor(2)
-            .withOnDlgShown([&c]{
-                const int h = c.colorB1->height();
-                const int w = 70;
-                c.colorB->setFixedSize({w, h});
-                c.colorT->setFixedSize({w, h});
-                c.colorB->setIconSize({w-8, h-8});
-                c.colorT->setIconSize({w-8, h-8});
-                c.colorB->setIconRect({0, 0, w-8, h-8});
-                c.colorT->setIconRect({0, 0, w-8, h-8});
-            });
-        if (dlg.exec())
-            return true;
-
-        return false;
-    }
-
-private:
-    PropFormats _propFormats;
-    GridViewMemoTab *_gridView;
-};
+#include "GridViewTableModel.inl"
+#include "GridViewFilterModel.inl"
+#include "GridViewItemDelegate.inl"
 
 //------------------------------------------------------------------------------
 //                             GridViewMemoTab
@@ -540,7 +96,11 @@ GridViewMemoTab::GridViewMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     _filterModel = new GridViewFilterModel(memo, this);
     _filterModel->setSourceModel(_tableModel);
 
-    _itemDelegate = new GridViewItemDelegate(this);
+    _itemDelegate = new GridViewItemDelegate(_enot, this);
+    _itemDelegate->memoAtIndex = [this](const QModelIndex& index){ return memoAtIndex(index); };
+    // NB: Below, provide the return value explicitly, otherwise constness get lost 
+    // and the lambda returns a references to some local copy of the list, and the app can crash
+    _itemDelegate->columnDefs = [this]()->const QList<ColumnDef>&{ return _tableModel->columnDefs(); };
 
     _tableView = new QTableView;
     _tableView->setModel(_filterModel);
@@ -616,6 +176,8 @@ void GridViewMemoTab::showMemo()
         }
     if (!_addMemoButton->defaultAction() && !newMemoActions.isEmpty())
         _addMemoButton->setDefaultAction(newMemoActions.first());
+        
+    _itemDelegate->loadPropFormats(config.value(u"prop_formats"_s).toString());
 
     setWindowTitle(_memo->title());
 }
@@ -818,6 +380,8 @@ void GridViewMemoTab::configurePropFormats()
 {
     if (!_itemDelegate->configureFormats())
         return;
+    _enot->updateMemoOption(_memo->id(), u"prop_formats"_s, _itemDelegate->propFormatsStr());
+    _tableView->repaint();
 }
 
 

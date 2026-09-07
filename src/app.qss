@@ -206,7 +206,6 @@ QMenu::indicator:checked {
 QAbstractScrollArea::corner {
   border: none;
 }
-
 QScrollBar:vertical {
   background-color: white;
   width: 10px;
@@ -228,11 +227,10 @@ QScrollBar::add-line:vertical {
 QScrollBar::sub-line:vertical {
   height: 0;
 }
-
 QScrollBar:horizontal {
   background-color: white;
   height: 10px;
-  margin-top: 2px;
+  margin-bottom: 2px;
 }
 QScrollBar::handle:horizontal {
   border: $default-border;

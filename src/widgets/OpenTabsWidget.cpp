@@ -17,6 +17,10 @@ QImage makeMarker(const QString& path)
     return QImage(path).scaled(QSize(24, 24), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 }
 
+//------------------------------------------------------------------------------
+//                             OpenTabItemDelegate
+//------------------------------------------------------------------------------
+
 class OpenTabItemDelegate : public QStyledItemDelegate
 {
 public:
@@ -50,17 +54,24 @@ public:
         }
     }
 };
-}
+
+} // namespace
+
+//------------------------------------------------------------------------------
+//                               OpenTabsWidget
+//------------------------------------------------------------------------------
 
 OpenTabsWidget::OpenTabsWidget() : QWidget()
 {
     _tabsList = new QListWidget;
     _tabsList->setObjectName("tabs_list");
+    _tabsList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    _tabsList->setTextElideMode(Qt::ElideRight);
     connect(_tabsList, &QListWidget::currentItemChanged, this, &OpenTabsWidget::currentItemChanged);
 
-    auto oldItemDelegate = _tabsList->itemDelegate();
-    _tabsList->setItemDelegate(new OpenTabItemDelegate(this));
-    if (oldItemDelegate) oldItemDelegate->deleteLater();
+    // auto oldItemDelegate = _tabsList->itemDelegate();
+    // _tabsList->setItemDelegate(new OpenTabItemDelegate(this));
+    // if (oldItemDelegate) oldItemDelegate->deleteLater();
 
     Ori::Layouts::LayoutV({_tabsList}).setMargin(0).setSpacing(0).useFor(this);
 }
@@ -77,7 +88,6 @@ void OpenTabsWidget::addOpenedTab(QWidget* tab)
     item->setText(tab->windowTitle());
     item->setIcon(tab->windowIcon());
     item->setData(Qt::UserRole, QVariant::fromValue(tab));
-
 
     connect(tab, &QWidget::destroyed, this, &OpenTabsWidget::tabDestroyed);
     connect(tab, &QWidget::windowTitleChanged, this, &OpenTabsWidget::tabTitleChanged);
@@ -162,7 +172,15 @@ void OpenTabsWidget::tabModified(bool)
 {
     auto tab = qobject_cast<MemoTab*>(sender());
     if (!tab || !_tabsMap.contains(tab)) return;
+
     // QTextEdit::isModified() is not set yet when the signal is raised, have to defer
-    QTimer::singleShot(0, [this, tab]{ updateTooltip(_tabsMap[tab], tab); });
-    _tabsList->update();
+    QTimer::singleShot(0, [this, tab]{
+        if (tab->isModified())
+            _tabsMap[tab]->setText(QStringLiteral("(*) ") + tab->memo()->title());
+        else _tabsMap[tab]->setText(tab->memo()->title());
+
+        updateTooltip(_tabsMap[tab], tab);
+    });
+
+    //_tabsList->update();
 }

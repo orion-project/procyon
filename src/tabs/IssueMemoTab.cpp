@@ -326,7 +326,7 @@ private:
     void applyDlg()
     {
         bool canClose = true;
-        if (_editor->document()->isModified() && onApply)
+        if (onApply)
             canClose = onApply(_editor->toPlainText());
         
         if (canClose)
@@ -819,6 +819,8 @@ void IssueMemoTab::editComment(int id)
         const auto& commentView = _commentViews.value(id);
         _commentDlg = new IssueCommentDlg(this, tr("Edit Comment For Issue #%1").arg(_memo->id()), commentView.sourceText);
         _commentDlg->onApply = [this, id](const QString& text){
+            if (text == _memo->data())
+                return true;
             QString res = Store::memos()->updateSheet(id, text);
             if (!res.isEmpty()) {
                 Ori::Dlg::Defer::error(res);

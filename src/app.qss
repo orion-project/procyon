@@ -88,9 +88,7 @@ QMenu::indicator:checked {
   background-color: white;
   border: $default-border;
   border-radius: $border-radius;
-  padding-left: 2px;
-  padding-right: 2px;
-  padding-top: 2px;
+  padding: 2px;
   margin-left: 3px;
 }
 #tabs_list::item {
@@ -208,7 +206,7 @@ QAbstractScrollArea::corner {
 }
 QScrollBar:vertical {
   background-color: white;
-  width: 10px;
+  width: 12px;
   margin-left: 2px;
   margin-bottom: 2px;
 }
@@ -230,7 +228,6 @@ QScrollBar::sub-line:vertical {
 QScrollBar:horizontal {
   background-color: white;
   height: 10px;
-  margin-bottom: 2px;
 }
 QScrollBar::handle:horizontal {
   border: $default-border;
@@ -592,10 +589,12 @@ QLabel[role=issue_popup_info_value] {
 QTextEdit[role=issue_text_in_tab] {
   border: none;
   padding: 3px;
+  padding-right: 1px;
 }
 QTextBrowser[role=issue_text_in_tab] {
   border: none;
   padding: 3px;
+  padding-right: 1px;
 }
 QPlainTextEdit[role=issue_title_in_dlg] {
   windows:font-size: 15px;

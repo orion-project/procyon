@@ -89,6 +89,10 @@ MemoTextBrowser::MemoTextBrowser(QWidget *parent) : QTextBrowser(parent)
     setProperty("role", "memo_editor");
     setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
     document()->setDefaultStyleSheet(AppSettings::instance().markdownCss());
+    // Setting text margins via QTextBrowser's QSS shifts scroll bars
+    // It also doesn't understand neither HTML or BODY paddings/margins in CSS
+    // So don it in code
+    document()->setDocumentMargin(10);
     connect(this, &QTextBrowser::anchorClicked, this, &MemoTextBrowser::linkClicked);
 }
 

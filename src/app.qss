@@ -88,11 +88,14 @@ QMenu::indicator:checked {
   background-color: white;
   border: $default-border;
   border-radius: $border-radius;
-  padding: 2px;
   margin-left: 3px;
 }
 #tabs_list::item {
-  height: 32px;
+  height: 36px;
+  margin-left: 2px;
+  margin-right: 2px;
+  margin-top: 2px;
+  padding-left: 2px;
 }
 #tabs_list::item:hover {
   background-color: $hover-color;
@@ -111,14 +114,14 @@ QMenu::indicator:checked {
   background-color: white;
   border: $default-border;
   border-radius: $border-radius;
-  padding-left: 2px;
-  padding-right: 2px;
-  padding-top: 2px;
   margin-right: 3px;
+  padding-left: $border-radius;
 }
 #tree_view::item {
   padding: 3px;
-  margin: 0;
+  margin-left: 2px;
+  margin-right: 2px;
+  margin-top: 2px;
   border-radius: $border-radius;
 }
 #tree_view::item:hover {
@@ -158,7 +161,7 @@ QMenu::indicator:checked {
   background-color: white;
   border: $default-border;
   border-radius: $border-radius;
-  padding: 2px;
+  padding-left: $border-radius;
 }
 #memo_title_editor {
   color: $quiter-text-color;
@@ -204,19 +207,28 @@ QMenu::indicator:checked {
 QAbstractScrollArea::corner {
   border: none;
 }
-QScrollBar:vertical {
+QScrollBar {
+  margin: 2px;
   background-color: white;
-  width: 12px;
-  margin-left: 2px;
-  margin-bottom: 2px;
 }
-QScrollBar::handle:vertical {
+QScrollBar:vertical {
+  width: 14px;
+}
+QScrollBar:horizontal {
+  height: 14px;
+}
+QScrollBar::handle {
   border: $default-border;
   border-radius: $border-radius;
   background-color: $light-paper-color;
+}
+QScrollBar::handle:vertical {
   min-height: 20px;
 }
-QScrollBar::handle:vertical:hover {
+QScrollBar::handle:horizontal {
+  min-width: 20px;
+}
+QScrollBar::handle:hover {
   background-color: $base-color;
 }
 QScrollBar::add-line:vertical {
@@ -224,19 +236,6 @@ QScrollBar::add-line:vertical {
 }
 QScrollBar::sub-line:vertical {
   height: 0;
-}
-QScrollBar:horizontal {
-  background-color: white;
-  height: 10px;
-}
-QScrollBar::handle:horizontal {
-  border: $default-border;
-  border-radius: $border-radius;
-  background-color: #f6f7fa;
-  min-width: 20px;
-}
-QScrollBar::handle:horizontal:hover {
-  background-color: $base-color;
 }
 QScrollBar::add-line:horizontal {
   width: 0;
@@ -510,13 +509,6 @@ QPushButton:pressed {
              IssueMemoTab
 ************************************/
 
-#issue_content_scroller {
-  padding-bottom: 0;
-  padding-top: 3px;
-}
-#issue_content_scroller QScrollBar {
-  margin-top: 2px;
-}
 #issue_content_widget {
   background-color: white;
 }
@@ -526,7 +518,6 @@ QTextBrowser[role=issue_comment] {
   border-bottom-right-radius: $border-radius;
   border-top: none;
   background-color: white;
-  padding: 2px;
   margin: 6px;
   margin-top: 0;
 }
@@ -588,13 +579,9 @@ QLabel[role=issue_popup_info_value] {
 }
 QTextEdit[role=issue_text_in_tab] {
   border: none;
-  padding: 3px;
-  padding-right: 1px;
 }
 QTextBrowser[role=issue_text_in_tab] {
   border: none;
-  padding: 3px;
-  padding-right: 1px;
 }
 QPlainTextEdit[role=issue_title_in_dlg] {
   windows:font-size: 15px;

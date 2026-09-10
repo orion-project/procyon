@@ -699,11 +699,16 @@ void IssueMemoTab::updateSummaryHeight()
 {
     if (!_memo->data().isEmpty())
     {
-        _summaryView->setVisible(true);
         _summaryView->setFixedHeight(_summaryView->document()->size().height() + FIXED_TEXT_HEIGHT_EXTRA);
+        _summaryView->setEnabled(true);
     }
     else
-        _summaryView->setVisible(false);
+    {
+        // Make margin above the first comment block
+        // to have even margins around all comments blocks when there is no summary block
+        _summaryView->setFixedHeight(4);
+        _summaryView->setEnabled(false);
+    }
 }
 
 void IssueMemoTab::updateCommentHeights()

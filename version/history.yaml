@@ -1,0 +1,44 @@
+- version: 1.0.1
+  date: ?
+  changes:
+  - On Windows switch to msvc + vcpkg
+  - Switch to Qt 6.10+
+  - Add memo properties
+  - New memo type - Grid view for current folder
+  - New memo type - Issue with comments
+  - New flat mono icon design
+  - Redesign menu structure
+
+- version: 1.0.0
+  date: skip
+  changes:
+  - Added command console dev tool
+  - SQL console shows available table names
+
+- version: 0.11.0
+  date: 2021-10-21
+  changes:
+  - Switched to Qt 6.2
+  - Export memo to PDF
+  - Highlighter manager dialog and Highlighter editor tab
+  - Generic highlighters stored in custom text format
+  - CSS, QSS, SQL built-in syntax highlighters
+  - Can create custom highlighters stored in database
+  - Fix for restoring of expanded folders
+  - QSS editor can save style file (dev feature)
+
+- version: 0.10.0
+  date: 2019-10-04
+  changes:
+  - New memo type - Markdown
+  - New rules for Procyon syntax highlighter - inline code, inline font styles
+  - Store memo info in database - creation and modification date
+  - Store memo options in database - font, word wrap, spellcheck, highlighter
+
+- version: 0.9.0
+  date: 2019-08-21
+  changes:
+  - The first public version
+  - Only plain-text memo type
+  - Spellcheck via hunspell
+  - Procyon and Python syntax highlighters

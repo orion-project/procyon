@@ -12,7 +12,12 @@ from functools import partial
 
 PROP_NAMES = ["Category", "Severity", "Priority", "Repeat", "Status", "Solution"]
 DICT_ID_OFFSET = 3
-INLINE_LINK = r"(^|\s)#(\d+)($|\s)"
+INLINE_FILE_LINK = r"!\[(.+)\]\((.+)\)"
+INLINE_ISSUE_LINK = r"(^|\s)#(\d+)($|\s)"
+ADEPTUS_TAG_LINK = r"\[\[(Bug:)\s*(\d+)\]\]"
+ADEPTUS_TAG_IMG = r"\[\[Img:\s*(.+)\]\]"
+ADEPTUS_TAG_IMAGE = r"\[\[Image:\s*(.+)\]\]"
+ADEPTUS_TAG_FILE = r"\[\[File:\s*(.+)\]\]"
 STATION_NAME = socket.gethostname()
 CONVERSION_DATE = datetime.now().astimezone().isoformat(timespec="seconds")
 MEMO_TYPE = "issue"
@@ -21,9 +26,11 @@ COUNT_MEMOS = 0
 COUNT_PROPS = 0
 COUNT_OPTS = 0
 COUNT_LINKS = 0
-COUNT_LINKS_INLINE = 0
 COUNT_HISTORY = 0
 COUNT_COMMENST = 0
+COUNT_ISSUE_LINKS = 0
+COUNT_IMAGE_LINKS = 0
+COUNT_FILE_LINKS = 0
 
 def parse_args() -> argparse.Namespace:
   parser = argparse.ArgumentParser(
@@ -32,20 +39,58 @@ def parse_args() -> argparse.Namespace:
   parser.add_argument("in_path", type=Path, help="Input Adeptus database (*.bugs)")
   parser.add_argument("out_path", type=Path, help="Output Procyon database (*.enot)")
   parser.add_argument("folder_id", type=int, help="Target folder id")
+  parser.add_argument("--id", type=int, help="Particular id to process single issue")
   parser.add_argument("-v", "--verbose", action="store_true", help="Print addition info")
   return parser.parse_args()
 
-def replace_inline_link(issue_id: int, memo_id: int, match: re.Match):
+def replace_issue_link(issue_id: int, memo_id: int, match: re.Match):
   linked_issue_id = int(match.group(2))
   linked_memo_id = NEW_MEMOS.get(linked_issue_id, {}).get("id")
   if not linked_memo_id:
     print(f"WARN: memo not found for issue {issue_id}, skip")
-    return str(linked_issue_id)
+    return f"#{linked_issue_id}"
   if linked_issue_id != linked_memo_id:
     print(f"In issue {issue_id} (memo {memo_id}): replace {linked_issue_id} --> {linked_memo_id}")
-    global COUNT_LINKS_INLINE
-    COUNT_LINKS_INLINE += 1
-  return str(linked_memo_id)
+    global COUNT_ISSUE_LINKS
+    COUNT_ISSUE_LINKS += 1
+  return f"#{linked_memo_id}"
+
+def replace_file_link(issue_id: int, memo_id, match: re.Match):
+  link_title = match.group(1) 
+  file_name = match.group(2)
+  if file_name.casefold().endswith((".png", ".jpg", ".jpeg")):
+    print(f"In issue {issue_id} (memo {memo_id}): convert image link {file_name}")
+    global COUNT_IMAGE_LINKS
+    COUNT_IMAGE_LINKS +=1
+    return f"![{link_title}]({file_name})"
+  else:
+    print(f"In issue {issue_id} (memo {memo_id}): convert file link {file_name}")
+    global COUNT_FILE_LINKS
+    COUNT_FILE_LINKS +=1
+    return f"[{link_title}]({file_name})"
+
+def replace_image_tag(issue_id: int, memo_id, match: re.Match):
+  file_name = match.group(1)
+  print(f"In issue {issue_id} (memo {memo_id}): convert image link {file_name}")
+  global COUNT_IMAGE_LINKS
+  COUNT_IMAGE_LINKS +=1
+  return f"![{file_name}]({file_name})"
+
+def replace_file_tag(issue_id: int, memo_id, match: re.Match):
+  file_name = match.group(1)
+  print(f"In issue {issue_id} (memo {memo_id}): convert file link {file_name}")
+  global COUNT_FILE_LINKS
+  COUNT_FILE_LINKS +=1
+  return f"[{file_name}]({file_name})"
+
+def convert_issue_text(text: str, issue_id: int, memo_id) -> str:
+  text = re.sub(INLINE_FILE_LINK, partial(replace_file_link, issue_id, memo_id), text, flags=re.MULTILINE)
+  text = re.sub(INLINE_ISSUE_LINK, partial(replace_issue_link, issue_id, memo_id), text, flags=re.MULTILINE)
+  text = re.sub(ADEPTUS_TAG_LINK, partial(replace_issue_link, issue_id, memo_id), text, flags=re.MULTILINE)
+  text = re.sub(ADEPTUS_TAG_IMG, partial(replace_image_tag, issue_id, memo_id), text, flags=re.MULTILINE)
+  text = re.sub(ADEPTUS_TAG_IMAGE, partial(replace_image_tag, issue_id, memo_id), text, flags=re.MULTILINE)
+  text = re.sub(ADEPTUS_TAG_FILE, partial(replace_file_tag, issue_id, memo_id), text, flags=re.MULTILINE)
+  return text
 
 if __name__ == "__main__":
   args = parse_args()
@@ -132,14 +177,14 @@ if __name__ == "__main__":
       "opts": memo_opts,
     }
 
-  print("===============================================")
-  print("Correcting inline links...")
-  for issue_id, memo in NEW_MEMOS.items():
-    memo["data"] = re.sub(INLINE_LINK, partial(replace_inline_link, issue_id, memo["id"]), memo["data"], flags=re.MULTILINE)
+  def should_skip(issue_id):
+    return args.id is not None and args.id != issue_id
 
   print("===============================================")
   print("Writing memos...")
   for issue_id, memo in NEW_MEMOS.items():
+    if should_skip(issue_id):
+      continue
     enot.execute("SELECT MemoId FROM MemoOptions INNER JOIN Memo on Id = MemoId "
                  f"WHERE Parent={args.folder_id} AND Name = 'adeptus' AND Value LIKE '{issue_id}|{args.out_path.name}|%'")
     row = enot.fetchone()
@@ -151,6 +196,7 @@ if __name__ == "__main__":
       memo_id = memo["id"]
       if args.verbose:
         print(f"NEW: issue {issue_id} as memo {memo_id}")
+      memo["data"] = convert_issue_text(memo["data"], issue_id, memo["id"])
       enot.execute(f"INSERT INTO Memo " +
         "(Id, Parent, Title, Type, Data, Updated, Created, Station)" +
           "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -216,6 +262,8 @@ if __name__ == "__main__":
 
   props_history_start: dict[int, set[str]] = {}
   for issue_id, memo in NEW_MEMOS.items():
+    if should_skip(issue_id):
+      continue
     memo_id = memo["id"]
     has_history = False
     adeptus.execute("SELECT EventNum, EventPart, ChangedParam, OldValue, NewValue, Moment FROM History " +
@@ -249,6 +297,8 @@ if __name__ == "__main__":
   print("===============================================")
   print("Writing initial history...")
   for issue_id, memo in NEW_MEMOS.items():
+    if should_skip(issue_id):
+      continue
     memo_id = memo["id"]
     has_history = False
     for prop_name, start_value in memo["props"].items():
@@ -261,6 +311,8 @@ if __name__ == "__main__":
   print("===============================================")
   print("Writing comments...")
   for issue_id, memo in NEW_MEMOS.items():
+    if should_skip(issue_id):
+      continue
     memo_id = memo["id"]
     has_comments = False
     adeptus.execute("SELECT EventNum, EventPart, Comment, Moment FROM History " +
@@ -273,7 +325,7 @@ if __name__ == "__main__":
         continue
       if args.verbose:
         print(f"NEW: comment {moment} already exists for issue {issue_id} (memo {memo_id})")
-      comment = re.sub(INLINE_LINK, partial(replace_inline_link, issue_id, memo_id), comment, flags=re.MULTILINE)
+      comment = convert_issue_text(comment, issue_id, memo_id)
       enot.execute("INSERT INTO MemoSheets (MemoId, Data, Created, Updated, Station) VALUES (?, ?, ?, ?, ?)",
         (memo_id, comment, moment, moment, STATION_NAME))
       has_comments = True
@@ -289,7 +341,9 @@ if __name__ == "__main__":
   print(f"  Written links: {COUNT_LINKS}")
   print(f"  Written history: {COUNT_HISTORY}")
   print(f"  Written comment: {COUNT_COMMENST}")
-  print(f"  Corrected inline links: {COUNT_LINKS_INLINE}")
+  print(f"  Corrected issue links: {COUNT_ISSUE_LINKS}")
+  print(f"  Converted image links: {COUNT_IMAGE_LINKS}")
+  print(f"  Converted file links: {COUNT_FILE_LINKS}")
 
   adeptus_conn.close()
   enot_conn.close()

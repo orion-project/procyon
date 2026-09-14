@@ -59,7 +59,38 @@ public:
 
     void setIssueText(const QString& text)
     {
-        MemoTextBrowser::setText(text);
+        bool ok;
+        int offset = 0;
+        QString s = text;
+        do { s = processIssueNum(s, offset, ok); } while (ok);
+        MemoTextBrowser::setText(s);
+    }
+
+private:
+    static QString processIssueNum(const QString& s, int& offset, bool& ok)
+    {
+        ok = false;
+        int startPos = s.indexOf('#', offset, Qt::CaseInsensitive);
+        if (startPos < 0) return s;
+
+        ok = true;
+        startPos++;
+        int endPos = startPos;
+        while (s[endPos].isDigit() && endPos < s.size())
+            endPos++;
+        if (endPos > startPos && (endPos == s.size() || s[endPos].isSpace() || s[endPos].isPunct()))
+        {
+            QString numStr = s.sliced(startPos, endPos-startPos);
+            QString link = QStringLiteral("[#%1](enot:%1)").arg(numStr);
+            offset = startPos-1 + link.size();
+
+            auto strBegin = QStringView(s).first(startPos-1);
+            auto strEnd = QStringView(s).sliced(endPos);
+            return strBegin % link % strEnd;
+        }
+
+        offset = endPos;
+        return s;
     }
 };
 
@@ -393,6 +424,7 @@ IssueMemoTab::IssueMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
 
     _summaryView = new IssueTextBrowser;
     _summaryView->setObjectName("issue_summary");
+    connect(_summaryView, &IssueTextBrowser::memoOpenRequested, this, &Self::memoOpenRequested);
 
     auto contentWidget = new QWidget;
     contentWidget->setObjectName("issue_content_widget");
@@ -652,6 +684,7 @@ void IssueMemoTab::showHistory()
             commentView.textView = new IssueTextBrowser;
             commentView.textView->setProperty("role", "issue_comment");
             commentView.textView->setIssueText(comment.data());
+            connect(commentView.textView, &IssueTextBrowser::memoOpenRequested, this, &Self::memoOpenRequested);
 
             commentView.labelUpdated = makeDateLabel(comment.updated());
 

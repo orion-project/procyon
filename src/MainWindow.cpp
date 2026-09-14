@@ -487,7 +487,12 @@ void MainWindow::openMemoTab(Memo* memo)
     connect(tab, &MemoTab::memoOpenRequested, this, [this](int memoId){
         if (auto memo = _enot->findMemoById(memoId); memo)
             emit openMemoTab(memo);
-        else qWarning() << "Memo not found with id" << memoId;
+        else
+        {
+            QString msg = tr("Memo not found with id %1").arg(memoId);
+            Ori::Gui::PopupMessage::warning(msg);
+            qWarning() << msg;
+        }
     });
 
     _tabsView->addWidget(tab);

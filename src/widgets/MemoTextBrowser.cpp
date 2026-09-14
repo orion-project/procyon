@@ -134,10 +134,14 @@ bool MemoTextBrowser::event(QEvent *event)
 
 static void downloadFile(const QString& filePath)
 {
-    if (!QFile::exists(filePath))
+    QFileInfo fileInfo(filePath);
+
+    if (!fileInfo.exists())
         return Ori::Dlg::warning(qApp->tr("File not found:\n%1").arg(filePath));
 
-    auto targetFile = QFileDialog::getSaveFileName(qApp->activeWindow(), qApp->tr("Export Attached File"));
+    // Windows native dialog doesn't show file extension in the suggested initial file name, so use Qt dialog
+    auto targetFile = QFileDialog::getSaveFileName(qApp->activeWindow(), qApp->tr("Export Attached File"),
+        fileInfo.fileName(), qApp->tr("All files (*.*)"), nullptr, QFileDialog::DontUseNativeDialog);
     if (targetFile.isEmpty()) return;
 
     if (QFile::exists(targetFile) && !QFile::remove(targetFile))

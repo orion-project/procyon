@@ -381,22 +381,25 @@ bool Enot::updateMemo(Memo* memo, MemoUpdateParam update)
 
     auto now = update.moment ? update.moment.value() : QDateTime::currentDateTime();
 
-    update.moment = now;
-    update.station = _station;
-
-    QString res = Store::memos()->update(memo, update);
-    if (!res.isEmpty())
+    if (update.title || update.data)
     {
-        emit errorOccurred(res);
-        return false;
-    }
+        update.moment = now;
+        update.station = _station;
 
-    if (update.title)
-        memo->_title = *update.title;
-    if (update.data)
-        memo->_data = *update.data;
-    memo->_updated = *update.moment;
-    memo->_station = *update.station;
+        QString res = Store::memos()->update(memo, update);
+        if (!res.isEmpty())
+        {
+            emit errorOccurred(res);
+            return false;
+        }
+
+        if (update.title)
+            memo->_title = *update.title;
+        if (update.data)
+            memo->_data = *update.data;
+        memo->_updated = *update.moment;
+        memo->_station = *update.station;
+    }
 
     if (update.props)
         updateMemoProps(memo, *update.props, now);

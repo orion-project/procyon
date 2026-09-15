@@ -13,6 +13,8 @@
 #include "helpers/OriWidgets.h"
 #include "helpers/OriWindows.h"
 #include "tools/OriPersistentState.h"
+#include "widgets/OriLabels.h"
+#include "widgets/OriPopupMessage.h"
 
 #include <QAction>
 #include <QApplication>
@@ -382,6 +384,8 @@ typedef IssueMemoTab Self;
 IssueMemoTab::IssueMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
 {
 #define A_ Ori::Gui::action
+    connect(_enot, &Enot::memoLinkCreated, this, &Self::memoLinkCreated);
+    connect(_enot, &Enot::memoLinkDeleted, this, &Self::memoLinkDeleted);
 
     auto idLabel = new QLabel('#' + QString::number(memo->id()));
     idLabel->setObjectName("issue_id");
@@ -412,14 +416,15 @@ IssueMemoTab::IssueMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     toolMenu->addAction(_issueInfo.action);
     toolMenu->addSeparator();
     toolMenu->addAction(QIcon(":/toolbar/edit"), tr("Edit Issue..."), this, &Self::editIssue);
-    toolMenu->addAction(QIcon(":/toolbar/comment"), tr("Add Comment..."), this, &Self::commentIssue);
     toolMenu->addAction(QIcon(":/toolbar/copy"), tr("Copy Summary"), this, &Self::copySummary);
+    toolMenu->addAction(QIcon(":/toolbar/comment"), tr("Add Comment..."), this, &Self::commentIssue);
+    toolMenu->addAction(QIcon(":/toolbar/link"), tr("Add Relation..."), this, &Self::addRelation);
     toolMenu->addSeparator();
     toolMenu->addAction(_actionSolveIssue);
     toolMenu->addAction(_actionCloseIssue);
     toolMenu->addAction(_actionReopenIssue);
 
-    _propsPanel = new MemoPropsPanel(enot, {_labelUpdated, TabHelpers::makeMenuButton(toolMenu)});
+    _propsPanel = new MemoPropsPanel(enot, {_labelUpdated, TabHelpers::makeMenuButton(toolMenu, {}, "issue_block_button")});
     _propsPanel->hideWhenEmpty = false;
 
     _summaryView = new IssueTextBrowser;
@@ -443,10 +448,15 @@ IssueMemoTab::IssueMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     Ori::Layouts::LayoutV({toolPanel, _propsPanel, _contentScroller}).setMargin(0).setSpacing(0).useFor(this);
 
     showMemo();
+    showLinks();
     showHistory();
-    //toggleEditMode(false);
 
 #undef A_
+}
+
+QString IssueMemoTab::tabTitle() const
+{
+    return QStringLiteral("[#%1] %2").arg(_memo->id()).arg(_memo->title());
 }
 
 IssueMemoTab::PopupInfo IssueMemoTab::makePopupInfo(int id)
@@ -520,6 +530,97 @@ void IssueMemoTab::showMemo()
     QTimer::singleShot(0, this, &Self::updateSummaryHeight);
 }
 
+void IssueMemoTab::hideLinks()
+{
+    if (_linksData.blockBody)
+    {
+        _linksData.blockHeader->hide();
+        _linksData.blockBody->hide();
+    }
+}
+
+void IssueMemoTab::showLinks()
+{
+    auto links = Store::memos()->loadLinks(_memo->id());
+
+    if (links.isEmpty())
+    {
+        hideLinks();
+        return;
+    }
+
+    if (!_linksData.blockBody)
+    {
+        auto label = new QLabel(tr("Related Issues"));
+        label->setObjectName("issue_block_title");
+
+        auto menu = new QMenu(this);
+        menu->addAction(QIcon(":/toolbar/plus"), tr("Add Relation"), this, &Self::addRelation);
+        // TODO: show all
+        // TODO: show only opened
+
+        int index = _contentLayout->indexOf(_summaryView);
+
+        auto header = new QFrame;
+            Ori::Layouts::LayoutH({
+                    label,
+                    TabHelpers::makeMenuButton(menu, {}, "issue_block_button"),
+                }).setMargin(0).setSpacing(0).useFor(header);
+        header->setProperty("role", "issue_block_header");
+        _contentLayout->insertWidget(index + 1, header);
+
+        auto body = new QFrame;
+        body->setProperty("role", "issue_block_body");
+        _contentLayout->insertWidget(index + 2, body);
+
+        Ori::Layouts::LayoutV({}).setMargin(0).setSpacing(0).useFor(body);
+
+        _linksData.blockHeader = header;
+        _linksData.blockBody = body;
+    }
+    else
+    {
+        _linksData.blockHeader->show();
+        _linksData.blockBody->show();
+    }
+
+    for (const auto& link : std::as_const(links))
+    {
+        int otherId = link.memoId();
+
+        if (_linksData.linkRows.contains(otherId))
+            continue;
+
+        auto labelId = new QLabel('#' + QString::number(otherId));
+        labelId->setObjectName("id");
+
+        auto linkedMemo = _enot->findMemoById(otherId);
+        auto labelTitle = new Ori::Widgets::Label(linkedMemo ? linkedMemo->title() : tr("(issue not found)"));
+        labelTitle->setObjectName("title");
+        labelTitle->setCursor(Qt::PointingHandCursor);
+        connect(labelTitle, &Ori::Widgets::Label::clicked, this, [this, otherId]{ emit memoOpenRequested(otherId); });
+
+        auto labelDate = new QLabel(dateToStr(link.created()));
+        labelDate->setObjectName("date");
+
+        auto button = new QToolButton;
+        button->setToolTip(tr("Delete relation #%1").arg(otherId));
+        button->setIcon(QIcon(":/toolbar/trash"));
+        button->setProperty("role", "issue_block_button");
+        connect(button, &QToolButton::clicked, this, [this, otherId]{
+            if (Ori::Dlg::yes(tr("Delete relation [#%1 - #%2]?").arg(_memo->id()).arg(otherId)))
+                _enot->deleteMemoLink(_memo->id(), otherId);
+        });
+
+        auto row = new QFrame;
+        row->setProperty("role", "related_issue");
+        Ori::Layouts::LayoutH({ labelId, labelTitle, Ori::Layouts::Stretch(), labelDate, button }).setMargin(0).setSpacing(0).useFor(row);
+
+        _linksData.blockBody->layout()->addWidget(row);
+        _linksData.linkRows.insert(otherId, row);
+    }
+}
+
 void IssueMemoTab::showHistory()
 {
     _contentScroller->setUpdatesEnabled(false);
@@ -563,7 +664,7 @@ void IssueMemoTab::showHistory()
 
     auto makeNumLabel = [this](int id = 0){
         auto label = new QLabel();
-        label->setObjectName("issue_event_num");
+        label->setObjectName("issue_block_title");
         if (id > 0)
             label->setToolTip(tr("Comment #%1").arg(id));
         _eventNumLabels << label;
@@ -619,9 +720,9 @@ void IssueMemoTab::showHistory()
                 makeNumLabel(),
                 propLabel,
                 makeDateLabel(propsChange->moment),
-                TabHelpers::makeMenuButton(nullptr),
+                TabHelpers::makeMenuButton(nullptr, {}, "issue_block_button"),
             }).setMargin(0).setSpacing(0).useFor(header);
-        header->setProperty("role", "issue_event_header");
+        header->setProperty("role", "issue_block_header");
         header->setProperty("role1", "issue_prop_changes");
         _contentLayout->addWidget(header, 0, Qt::AlignTop);
         _shownEvents.insert(propsChange->moment);
@@ -682,7 +783,7 @@ void IssueMemoTab::showHistory()
             commentView.updated = comment.updated();
 
             commentView.textView = new IssueTextBrowser;
-            commentView.textView->setProperty("role", "issue_comment");
+            commentView.textView->setProperty("role", "issue_block_body");
             commentView.textView->setIssueText(comment.data());
             connect(commentView.textView, &IssueTextBrowser::memoOpenRequested, this, &Self::memoOpenRequested);
 
@@ -708,9 +809,9 @@ void IssueMemoTab::showHistory()
                     makeNumLabel(comment.id()),
                     Ori::Layouts::Stretch(),
                     commentView.labelUpdated,
-                    TabHelpers::makeMenuButton(menu),
+                    TabHelpers::makeMenuButton(menu, {}, "issue_block_button"),
                 }).setMargin(0).setSpacing(0).useFor(header);
-            header->setProperty("role", "issue_event_header");
+            header->setProperty("role", "issue_block_header");
             _contentLayout->addWidget(header, 0, Qt::AlignTop);
 
             _contentLayout->addWidget(commentView.textView, 0, Qt::AlignTop);
@@ -890,4 +991,38 @@ bool IssueMemoTab::canCloseIssue() const
 bool IssueMemoTab::canReopenIssue() const
 {
     return _memo->props().value(propStatus) == propStatusClosed;
+}
+
+void IssueMemoTab::addRelation()
+{
+    QString idStr = Ori::Dlg::inputText(tr("Add relation for #%1.\nRelated issue identifier:").arg(_memo->id()), {}).trimmed();
+    if (idStr.isEmpty())
+        return;
+    int otherId = idStr.toInt();
+    if (otherId == _memo->id())
+        return Ori::Gui::PopupMessage::warning(tr("Unable to add relation to itself"));
+    if (!_enot->findMemoById(otherId))
+        return Ori::Gui::PopupMessage::warning(tr("Issue #%1 not found").arg(otherId));
+    if (_linksData.linkRows.contains(otherId))
+        return Ori::Gui::PopupMessage::warning(tr("Relation with issue #%1 already exists").arg(otherId));
+    _enot->createMemoLink(_memo->id(), otherId);
+}
+
+void IssueMemoTab::memoLinkCreated(int id1, int id2)
+{
+    if (id1 == _memo->id() || id2 == _memo->id())
+        showLinks();
+}
+
+void IssueMemoTab::memoLinkDeleted(int id1, int id2)
+{
+    int otherId = 0;
+    if (id1 == _memo->id()) otherId = id2;
+    else if (id2 == _memo->id()) otherId = id1;
+    if (!_linksData.linkRows.contains(otherId))
+        return;
+    _linksData.linkRows[otherId]->deleteLater();
+    _linksData.linkRows.remove(otherId);
+    if (_linksData.linkRows.isEmpty())
+        hideLinks();
 }

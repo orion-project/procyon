@@ -15,7 +15,7 @@ namespace TabHelpers
 QToolBar* makeHeaderToolBar();
 QLineEdit* makeTitleEditor(const QString& title = QString());
 QFrame* makeHeaderPanel(Ori::Layouts::LayoutItems items);
-QToolButton* makeMenuButton(QMenu* menu, const QString& hint = QString());
+QToolButton* makeMenuButton(QMenu* menu, const QString& hint = QString(), const char* role = nullptr);
 
 QString formatInfo(const QString& info);
 QString formatError(const QString& msg);

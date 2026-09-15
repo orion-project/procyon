@@ -31,6 +31,7 @@
         <file alias="edit">../img/toolbar/pencil_mono.svg</file>
         <file alias="eye">../img/toolbar/eye_mono.svg</file>
         <file alias="filter">../img/toolbar/filter_mono.svg</file>
+        <file alias="link">../img/toolbar/link_mono.svg</file>
         <file alias="markdown">../img/toolbar/markdown_mono.svg</file>
         <file alias="menu">../img/toolbar/menu.svg</file>
         <file alias="open">../img/toolbar/open_mono.svg</file>

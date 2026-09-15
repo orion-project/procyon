@@ -7,3 +7,8 @@ MemoTab::MemoTab(Enot *enot, Memo *memo) : QWidget(), _enot(enot), _memo(memo)
 {
     setWindowIcon(_memo->type()->icon());
 }
+
+QString MemoTab::tabTitle() const
+{
+    return _memo->title();
+}

@@ -33,7 +33,7 @@ private:
     void currentItemChanged(QListWidgetItem*, QListWidgetItem*);
     void tabReadOnlyToggled(bool);
     void tabModified(bool);
-    void updateTooltip(QListWidgetItem*, MemoTab*);
+    void updateTooltip(QListWidgetItem*, MemoTab* memoTab);
 };
 
 #endif // OPENED_TABS_WIDGET_H

@@ -602,3 +602,25 @@ void Enot::updateMemoOption(int memoId, const QString& name, const QVariant& val
     if (!res.isEmpty())
         emit errorOccurred(res);
 }
+
+void Enot::createMemoLink(int id1, int id2)
+{
+    auto err = Store::memos()->createLink(id1, id2);
+    if (!err.isEmpty())
+    {
+        emit errorOccurred(err);
+        return;
+    }
+    emit memoLinkCreated(id1, id2);
+}
+
+void Enot::deleteMemoLink(int id1, int id2)
+{
+    auto err = Store::memos()->deleteLink(id1, id2);
+    if (!err.isEmpty())
+    {
+        emit errorOccurred(err);
+        return;
+    }
+    emit memoLinkDeleted(id1, id2);
+}

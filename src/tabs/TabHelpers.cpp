@@ -34,7 +34,7 @@ QFrame* makeHeaderPanel(Ori::Layouts::LayoutItems items)
     return toolPanel;
 }
 
-QToolButton* makeMenuButton(QMenu *menu, const QString &hint)
+QToolButton* makeMenuButton(QMenu *menu, const QString &hint, const char* role)
 {
     auto button = new QToolButton;
     button->setPopupMode(QToolButton::InstantPopup);
@@ -44,6 +44,8 @@ QToolButton* makeMenuButton(QMenu *menu, const QString &hint)
         button->setMenu(menu);
     else
         button->setEnabled(false);
+    if (role)
+        button->setProperty("role", role);
     return button;
 }
 

@@ -154,6 +154,24 @@ private:
 
 //------------------------------------------------------------------------------
 
+class MemoLink
+{
+public:
+    int memoId() const { return _memoId; }
+    QDateTime created() const { return _created; }
+    QString station() const { return _station; }
+
+private:
+    int _memoId;
+    QString _station;
+    QDateTime _created;
+
+    friend class Enot;
+    friend class MemoStore;
+};
+
+//------------------------------------------------------------------------------
+
 typedef Ori::Result<int> IntResult;
 typedef Ori::Result<Enot*> EnotResult;
 typedef Ori::Result<Memo*> MemoResult;
@@ -203,6 +221,9 @@ public:
     void updateMemoOption(int memoId, const QString &name, const QVariant& value);
     void updateMemoProps(Memo* memo, const QHash<QString, QString>& props, const QDateTime& moment);
 
+    void createMemoLink(int id1, int id2);
+    void deleteMemoLink(int id1, int id2);
+
 signals:
     void entryCreating(Entry*, int);
     void entryCreated(Entry*);
@@ -210,6 +231,8 @@ signals:
     void entryDeleting(Entry*);
     void entryDeleted(Entry*);
     void errorOccurred(const QString& error);
+    void memoLinkCreated(int id1, int id2);
+    void memoLinkDeleted(int id1, int id2);
 
 private:
     QString _fileName;

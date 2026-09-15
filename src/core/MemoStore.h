@@ -9,6 +9,7 @@
 class Memo;
 class MemoEvent;
 class MemoSheet;
+class MemoLink;
 struct MemoUpdateParam;
 
 struct MemosResult
@@ -43,6 +44,9 @@ public:
     QString updateSheet(int sheetId, const QString& text) const;
     QList<MemoEvent> loadEvents(int memoId) const;
     void writeEvent(const MemoEvent& event) const;
+    QList<MemoLink> loadLinks(int memoId) const;
+    QString createLink(int id1, int id2) const;
+    QString deleteLink(int id1, int id2) const;
     
 private:
     QString _station;

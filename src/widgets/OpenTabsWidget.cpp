@@ -12,6 +12,7 @@
 #include <QTimer>
 
 namespace {
+/*
 QImage makeMarker(const QString& path)
 {
     return QImage(path).scaled(QSize(24, 24), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
@@ -54,7 +55,7 @@ public:
         }
     }
 };
-
+*/
 } // namespace
 
 //------------------------------------------------------------------------------
@@ -84,8 +85,10 @@ void OpenTabsWidget::addOpenedTab(QWidget* tab)
         return;
     }
 
+    auto memoTab = qobject_cast<MemoTab*>(tab);
+
     auto item = new QListWidgetItem(_tabsList);
-    item->setText(tab->windowTitle());
+    item->setText(memoTab ? memoTab->tabTitle() : tab->windowTitle());
     item->setIcon(tab->windowIcon());
     item->setData(Qt::UserRole, QVariant::fromValue(tab));
 
@@ -129,17 +132,17 @@ void OpenTabsWidget::currentItemChanged(QListWidgetItem *current, QListWidgetIte
     emit onActivateTab(tab);
 }
 
-void OpenTabsWidget::updateTooltip(QListWidgetItem *item, MemoTab *memoPage)
+void OpenTabsWidget::updateTooltip(QListWidgetItem *item, MemoTab *memoTab)
 {
-    auto memo = memoPage->memo();
+    auto memo = memoTab->memo();
     QString tooltip;
     QTextStream stream(&tooltip);
-    stream << QStringLiteral("<p style='white-space:pre'>/%1/<b>%2</b>").arg(memo->path(), memo->title());
-    if (!memoPage->isReadOnly())
+    stream << QStringLiteral("<p style='white-space:pre'>/%1/<b>%2</b>").arg(memo->path(), memoTab->tabTitle());
+    if (!memoTab->isReadOnly())
     {
         stream << QStringLiteral("<br><span style='color:gray'>(");
         stream << tr("edit mode");
-        if (memoPage->isModified())
+        if (memoTab->isModified())
             stream << tr(", modified");
         stream << QStringLiteral(")</span>");
     }
@@ -150,7 +153,8 @@ void OpenTabsWidget::tabTitleChanged(const QString& title)
 {
     auto tab = qobject_cast<QWidget*>(sender());
     if (!tab || !_tabsMap.contains(tab)) return;
-    _tabsMap[tab]->setText(title);
+    auto memoTab = qobject_cast<MemoTab*>(tab);
+    _tabsMap[tab]->setText(memoTab ? memoTab->tabTitle() : title);
 }
 
 void OpenTabsWidget::tabIconChanged(const QIcon& icon)
@@ -176,8 +180,8 @@ void OpenTabsWidget::tabModified(bool)
     // QTextEdit::isModified() is not set yet when the signal is raised, have to defer
     QTimer::singleShot(0, [this, tab]{
         if (tab->isModified())
-            _tabsMap[tab]->setText(QStringLiteral("(*) ") + tab->memo()->title());
-        else _tabsMap[tab]->setText(tab->memo()->title());
+            _tabsMap[tab]->setText(QStringLiteral("(*) ") + tab->tabTitle());
+        else _tabsMap[tab]->setText(tab->tabTitle());
 
         updateTooltip(_tabsMap[tab], tab);
     });

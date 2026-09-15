@@ -4,6 +4,7 @@ $border-radius: 4px; /* Default border radius */
 $default-border: 1px solid silver; /* Default border */
 $selection-color: steelBlue;
 $light-selection-color: LightSteelBlue;
+$link-color: #0366d6;
 $main-font-size: 14px;
 $hover-color: #334682b4;
 $light-paper-color: #f6f7fa;
@@ -512,7 +513,7 @@ QPushButton:pressed {
 #issue_content_widget {
   background-color: white;
 }
-QTextBrowser[role=issue_comment] {
+[role=issue_block_body] {
   border: $default-border;  
   border-bottom-left-radius: $border-radius;
   border-bottom-right-radius: $border-radius;
@@ -525,14 +526,13 @@ QTextBrowser#issue_summary {
   border: none;
   padding: 6px;
 }
-QFrame[role=issue_event_header] {
-  min-height: 30px;
+QFrame[role=issue_block_header] {
+  min-height: 32px;
   border: $default-border;  
   border-top-left-radius: $border-radius;
   border-top-right-radius: $border-radius;
   margin: 6px;
   margin-bottom: 0;
-  padding: 2px;
   background-color: $light-paper-color; 
 }
 QFrame[role1=issue_prop_changes] {
@@ -540,35 +540,28 @@ QFrame[role1=issue_prop_changes] {
   border-bottom-left-radius: $border-radius;
   border-bottom-right-radius: $border-radius;
 }
-QFrame[role=issue_event_header] QLabel {
+QFrame[role=issue_block_header] QLabel {
   color: $quiter-text-color;
   font-size: $main-font-size;
 }
-QFrame[role=issue_event_header] #issue_event_num {
+QFrame[role=issue_block_header] #issue_block_title {
   margin-left: 4px;
   margin-right: 6px;
   font-weight: bold;
 }
-QFrame[role=issue_event_header] QToolButton {
-  min-height: 24px;
-  height: 24px;
-  min-width: 24px;
-  width: 24px;
-  margin-left: 4px;
-}
-#props_panel #issue_updated {
-  color: $quiter-text-color;
-  font-size: $main-font-size;
-  min-width: 100px;
-  width: 100px;
-}
-#props_panel QToolButton {
+QToolButton[role=issue_block_button] {
   min-height: 24px;
   height: 24px;
   min-width: 24px;
   width: 24px;
   margin-left: 4px;
   margin-right: 2px;
+}
+#props_panel #issue_updated {
+  color: $quiter-text-color;
+  font-size: $main-font-size;
+  min-width: 100px;
+  width: 100px;
 }
 QLabel[role=isssue_popup_info_name] {
   font-size: $main-font-size;
@@ -594,4 +587,20 @@ QPlainTextEdit[role=issue_title_in_dlg] {
   margin-bottom: 6px;
   min-height: 47px;
   max-height: 47px;
+}
+QFrame[role=related_issue] {
+  margin: 2px 0;
+}
+QFrame[role=related_issue] #id {
+  font-size: $main-font-size;
+  margin-left: 6px;
+  margin-right: 4px;
+}
+QFrame[role=related_issue] #title {
+  font-size: $main-font-size;
+  color: $link-color;
+}
+QFrame[role=related_issue] #date {
+  font-size: $main-font-size;
+  color: $quiter-text-color;
 }

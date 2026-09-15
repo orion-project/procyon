@@ -131,6 +131,7 @@ struct MemoLinksTable
     {
         inline static const auto& id1 = u"Id1"_s;
         inline static const auto& id2 = u"Id2"_s;
+        inline static const auto& memoId = u"MemoId"_s;
         inline static const auto& created = u"Created"_s;
         inline static const auto& station = u"Station"_s;
     };
@@ -144,6 +145,15 @@ struct MemoLinksTable
         "PRIMARY KEY(Id1, Id2),"
         "FOREIGN KEY (Id1) REFERENCES Memo(Id) ON DELETE CASCADE, "
         "FOREIGN KEY (Id2) REFERENCES Memo(Id) ON DELETE CASCADE)"_s;
+
+    inline static const auto& sqlSelect =
+        u"SELECT Id1, Id2, Created, Station FROM MemoLinks WHERE Id1 = :MemoId OR Id2 = :MemoId"_s;
+
+    inline static const auto& sqlInsert =
+        u"INSERT INTO MemoLinks (Id1, Id2, Created, Station) VALUES (:Id1, :Id2, :Created, :Station)"_s;
+
+    inline static const auto& sqlDelete =
+        u"DELETE FROM MemoLinks WHERE (Id1 = :Id1 AND Id2 = :Id2) OR (Id1 = :Id2 AND Id2 = :Id1)"_s;
 };
 
 struct MemoHistoryTable
@@ -431,7 +441,6 @@ QHash<QString, QString> MemoStore::loadProps(int memoId) const
     auto q = AnyQuery(T::sqlSelect).param(T::C::memoId, memoId).exec();
     if (q.isFailed())
     {
-        // TODO: add protocol
         qWarning() << "Unable to load props for memo" << memoId << q.error();
         return {};
     }
@@ -449,7 +458,6 @@ QStringList MemoStore::loadPropNames() const
     auto q = AnyQuery(T::sqlSelectNames).exec();
     if (q.isFailed())
     {
-        // TODO: add protocol
         qWarning() << "Unable to load memo props names" << q.error();
         return {};
     }
@@ -467,7 +475,6 @@ QStringList MemoStore::loadPropValues(const QString& name) const
     auto q = AnyQuery(T::sqlSelectValues).param(T::C::name, name).exec();
     if (q.isFailed())
     {
-        // TODO: add protocol
         qWarning() << "Unable to load values for prop" << name << q.error();
         return {};
     }
@@ -506,7 +513,6 @@ QList<MemoSheet> MemoStore::loadSheets(int memoId) const
     auto q = AnyQuery(T::sqlSelect).param(T::C::memoId, memoId).exec();
     if (q.isFailed())
     {
-        // TODO: add protocol
         qWarning() << "Unable to load sheets for memo" << memoId << q.error();
         return {};
     }
@@ -540,7 +546,6 @@ QString MemoStore::addSheet(int memoId, const QString& text, std::optional<QDate
         .exec();
     if (q.isFailed())
     {
-        // TODO: add protocol
         qWarning() << "Unable to create a sheet for memo" << memoId << q.error();
         return q.error();
     }
@@ -560,7 +565,6 @@ QString MemoStore::updateSheet(int sheetId, const QString& text) const
         .exec();
     if (q.isFailed())
     {
-        // TODO: add protocol
         qWarning() << "Unable to update memo sheet" << sheetId << q.error();
         return q.error();
     }
@@ -575,7 +579,6 @@ QList<MemoEvent> MemoStore::loadEvents(int memoId) const
     auto q = AnyQuery(T::sqlSelect).param(T::C::memoId, memoId).exec();
     if (q.isFailed())
     {
-        // TODO: add protocol
         qWarning() << "Unable to load events for memo" << memoId << q.error();
         return {};
     }
@@ -607,8 +610,70 @@ void MemoStore::writeEvent(const MemoEvent& event) const
         .exec();
     if (q.isFailed())
     {
-        // TODO: add protocol
         qWarning() << "Unable to write event for memo" << event.memoId() << q.error();
     }
 }
 
+QList<MemoLink> MemoStore::loadLinks(int memoId) const
+{
+    using T = MemoLinksTable;
+
+    auto q = AnyQuery(T::sqlSelect).param(T::C::memoId, memoId).exec();
+    if (q.isFailed())
+    {
+        qWarning() << "Unable to load links for memo" << memoId << q.error();
+        return {};
+    }
+
+    QList<MemoLink> result;
+    while (q.next())
+    {
+        int id1 = q.valueInt(T::C::id1);
+        int id2 = q.valueInt(T::C::id2);
+
+        MemoLink link;
+        link._memoId = memoId == id1 ? id2 : id1;
+        link._created = q.valueDate(T::C::created);
+        link._station = q.valueStr(T::C::station);
+        result.append(link);
+    }
+    return result;
+}
+
+QString MemoStore::createLink(int id1, int id2) const
+{
+    using T = MemoLinksTable;
+
+    auto now = QDateTime::currentDateTime();
+
+    auto q = AnyQuery(T::sqlInsert)
+        .param(T::C::id1, id1)
+        .param(T::C::id2, id2)
+        .param(T::C::created, now)
+        .param(T::C::station, _station)
+        .exec();
+    if (q.isFailed())
+    {
+        qWarning() << "Unable to link memos" << id1 << id2 << q.error();
+        return q.error();
+    }
+
+    return {};
+}
+
+QString MemoStore::deleteLink(int id1, int id2) const
+{
+    using T = MemoLinksTable;
+
+    auto q = AnyQuery(T::sqlDelete)
+        .param(T::C::id1, id1)
+        .param(T::C::id2, id2)
+        .exec();
+    if (q.isFailed())
+    {
+        qWarning() << "Unable to unlink memos" << id1 << id2 << q.error();
+        return q.error();
+    }
+
+    return {};
+}

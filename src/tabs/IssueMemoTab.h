@@ -31,6 +31,8 @@ public:
 
     static void createIssue(Enot* enot, Folder* folder);
 
+    QString tabTitle() const override;
+
 protected:
     void resizeEvent(QResizeEvent *e) override;
 
@@ -69,7 +71,17 @@ private:
     };
     QHash<int, CommentData> _commentViews;
 
+    struct LinksData
+    {
+        QWidget* blockHeader = nullptr;
+        QWidget* blockBody = nullptr;
+        QHash<int, QWidget*> linkRows;
+    };
+    LinksData _linksData;
+
     void showMemo();
+    void showLinks();
+    void hideLinks();
     void showHistory();
 
     void updateSummaryHeight();
@@ -89,10 +101,14 @@ private:
     void reopenIssue() { addComment(propStatusOpened); }
     void editComment(int id);
     void copySummary();
+    void addRelation();
 
     bool canSolveIssue() const;
     bool canCloseIssue() const;
     bool canReopenIssue() const;
+
+    void memoLinkCreated(int id1, int id2);
+    void memoLinkDeleted(int id1, int id2);
 
     PopupInfo makePopupInfo(int id);
 };

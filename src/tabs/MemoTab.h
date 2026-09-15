@@ -19,6 +19,7 @@ public:
     virtual bool isReadOnly() const { return true; }
     virtual bool isModified() const { return false; }
     virtual void beginEdit() {}
+    virtual QString tabTitle() const;
 
 signals:
     bool onAboutToBeClosed();

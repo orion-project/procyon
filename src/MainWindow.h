@@ -21,6 +21,9 @@ class Memo;
 
 namespace Ori {
 class MruFileList;
+namespace Widgets {
+class Label;
+}
 } // namespace Ori
 
 
@@ -45,10 +48,9 @@ private:
     QStackedWidget* _tabsView;
     OpenTabsWidget* _openTabsView;
     Ori::MruFileList *_mruList;
-    QLabel *_statusMemoCount, *_statusFileName;
+    Ori::Widgets::Label *_statusMemoCount, *_statusFileName;
     QString _lastOpenedDb;
 
-    void createMenu();
     void createStatusBar();
     void loadSession();
     void saveSession();

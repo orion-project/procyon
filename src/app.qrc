@@ -35,6 +35,7 @@
         <file alias="link">../img/toolbar/link_mono.svg</file>
         <file alias="markdown">../img/toolbar/markdown_mono.svg</file>
         <file alias="menu">../img/toolbar/menu.svg</file>
+        <file alias="new">../img/toolbar/new_mono.svg</file>
         <file alias="open">../img/toolbar/open_mono.svg</file>
         <file alias="plus">../img/toolbar/plus_mono.svg</file>
         <file alias="run">../img/toolbar/run_mono.svg</file>

@@ -116,6 +116,8 @@ MainWindow::MainWindow() : QMainWindow()
     Ori::Wnd::setWindowIcon(this, ":/icon/main");
 
     _mruList = new Ori::MruFileList(this);
+    _mruList->actionClearAll()->setIcon(QIcon(":/toolbar/trash"));
+    _mruList->actionClearInvalids()->setIcon(QIcon(":/toolbar/close"));
     connect(_mruList, &Ori::MruFileList::clicked, this, &MainWindow::openEnot);
 
     _tabsView = new QStackedWidget;
@@ -140,7 +142,6 @@ MainWindow::MainWindow() : QMainWindow()
 #endif
     setCentralWidget(_splitter);
 
-    createMenu();
     createStatusBar();
 
     Ori::Gui::PopupMessage::setTarget(this);
@@ -152,31 +153,13 @@ MainWindow::~MainWindow()
         delete _enot;
 }
 
-void MainWindow::createMenu()
-{
-    QMenu* m;
-
-    menuBar()->setNativeMenuBar(AppSettings::instance().useNativeMenuBar);
-
-    m = menuBar()->addMenu(tr("File"));
-    m->addAction(tr("New..."), this, &MainWindow::newEnot);
-    m->addAction(tr("Open..."), QKeySequence::Open, this, &MainWindow::openEnotViaDialog);
-    m->addSeparator();
-    auto actionExit = m->addAction(tr("Exit"), QKeySequence::Quit, this, &MainWindow::close);
-    new Ori::Widgets::MruMenuPart(_mruList, m, actionExit, this);
-
-    m = menuBar()->addMenu(tr("Help"));
-    m->addAction(tr("Visit Homepage"), this, []{ HelpTab::visitHomePage(); });
-    m->addAction(tr("Send Bug Report"), this, []{ HelpTab::sendBugReport(); });
-}
-
 namespace  {
-QWidget* makeStatusPanel(const QString& title, QLabel*& labelValue)
+QWidget* makeStatusPanel(const QString& title, Ori::Widgets::Label*& labelValue)
 {
     auto labelTitle = new QLabel(title);
     labelTitle->setProperty("role", "status_title");
 
-    labelValue = new QLabel;
+    labelValue = new Ori::Widgets::Label;
     labelValue->setProperty("role", "status_value");
 
     auto panel = new QFrame;
@@ -188,9 +171,17 @@ QWidget* makeStatusPanel(const QString& title, QLabel*& labelValue)
 
 void MainWindow::createStatusBar()
 {
+    QMenu* menuFile = new QMenu(this);
+    auto actionOpen = menuFile->addAction(QIcon(":/icon/folder"), tr("Open Notebook..."), QKeySequence::Open, this, &MainWindow::openEnotViaDialog);
+    menuFile->addAction(QIcon(":/toolbar/new"), tr("New Notebook..."), this, &MainWindow::newEnot);
+    new Ori::Widgets::MruMenuPart(_mruList, menuFile, actionOpen, this);
+
     if (AppSettings::instance().isDevMode)
     {
-        auto menu = new QMenu(this);
+        menuFile->addSeparator();
+
+        auto menu = menuFile->addMenu(tr("Tools"));
+        menu->setIcon(QIcon(":/toolbar/gear"));
         menu->addAction(tr("Application QSS"), this, [this]{
             activateOrOpenNewTab<QssEditorTab>(_tabsView, _openTabsView);
         });
@@ -204,19 +195,27 @@ void MainWindow::createStatusBar()
             openNewTab<CmdConsoleTab>(_tabsView, _openTabsView, _enot);
         });
 
-        auto button = new QToolButton;
-        button->setIcon(QIcon(":/toolbar/gear"));
-        button->setPopupMode(QToolButton::InstantPopup);
-        button->setMenu(menu);
+        // auto button = new QToolButton;
+        // button->setIcon(QIcon(":/toolbar/gear"));
+        // button->setPopupMode(QToolButton::InstantPopup);
+        // button->setMenu(menu);
 
-        statusBar()->addWidget(button);
+        // statusBar()->addWidget(button);
     }
+
+    addAction(actionOpen);
 
     statusBar()->addWidget(makeStatusPanel(tr("Memos:"), _statusMemoCount));
     statusBar()->addWidget(makeStatusPanel(tr("Notebook:"), _statusFileName));
 
+    _statusFileName->setCursor(Qt::PointingHandCursor);
+    connect(_statusFileName, &Ori::Widgets::Label::clicked, this, [this, menuFile]{
+        menuFile->popup(_statusFileName->mapToGlobal(QPoint(_statusFileName->width(), 0)));
+    });
+
     auto versionLabel = new Ori::Widgets::Label(qApp->applicationVersion());
-    connect(versionLabel, &Ori::Widgets::Label::doubleClicked, this, []{ HelpTab::showAbout(); });
+    versionLabel->setCursor(Qt::PointingHandCursor);
+    connect(versionLabel, &Ori::Widgets::Label::clicked, this, []{ HelpTab::showAbout(); });
     statusBar()->addPermanentWidget(versionLabel);
 }
 
@@ -382,7 +381,7 @@ bool MainWindow::closeEnot()
         _enot = nullptr;
     }
     setWindowTitle(qApp->applicationName());
-    _statusFileName->setText(tr("(n/a)"));
+    _statusFileName->setText(tr("(none)"));
     _statusMemoCount->setText(tr("(none)"));
    return true;
 }

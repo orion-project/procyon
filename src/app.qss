@@ -90,6 +90,7 @@ QMenu::indicator:checked {
   border: $default-border;
   border-radius: $border-radius;
   margin-left: 3px;
+  margin-top: 4px;
 }
 #tabs_list::item {
   height: 36px;
@@ -116,6 +117,7 @@ QMenu::indicator:checked {
   border: $default-border;
   border-radius: $border-radius;
   margin-right: 3px;
+  margin-top: 4px;
   padding-left: $border-radius;
 }
 #tree_view::item {
@@ -182,6 +184,7 @@ QMenu::indicator:checked {
 }
 #memo_header_panel {
   margin-bottom: 4px;
+  margin-top: 4px;
 }
 #memo_header_panel #issue_id {
   color: $quiter-text-color;
@@ -261,7 +264,7 @@ QToolTip {
              Status bar
 ************************************/
 QStatusBar QLabel {
-  font-size: 12px;
+  font-size: $main-font-size;
 }
 QStatusBar [role=status_panel] {
   margin-left: 3px;
@@ -275,6 +278,12 @@ QStatusBar [role=status_title] {
 QStatusBar [role=status_value] {
   color: $quiter-text-color;
   margin-left: 3px;
+}
+QStatusBar QToolButton {
+  min-height: 24px;
+  height: 24px;
+  min-width: 24px;
+  width: 24px;
 }
 
 /************************************

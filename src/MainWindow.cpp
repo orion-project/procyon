@@ -38,6 +38,7 @@
 #include <QStatusBar>
 #include <QStackedWidget>
 #include <QTimer>
+#include <QToolButton>
 
 namespace {
 template <typename TTab>
@@ -161,53 +162,12 @@ void MainWindow::createMenu()
     m->addAction(tr("New..."), this, &MainWindow::newEnot);
     m->addAction(tr("Open..."), QKeySequence::Open, this, &MainWindow::openEnotViaDialog);
     m->addSeparator();
-    /* TODO
-    m->addAction(tr("Application Settings"), this, [this]{
-        activateOrOpenNewTab<AppSettingsTab>(_tabsView, _openTabsView);
-    });
-    m->addSeparator();
-    */
     auto actionExit = m->addAction(tr("Exit"), QKeySequence::Quit, this, &MainWindow::close);
     new Ori::Widgets::MruMenuPart(_mruList, m, actionExit, this);
 
-    m = menuBar()->addMenu(tr("Tools"));
-
-    if (AppSettings::instance().isDevMode)
-    {
-        m->addSeparator();
-        m->addAction(tr("Application QSS"), this, [this]{
-            activateOrOpenNewTab<QssEditorTab>(_tabsView, _openTabsView);
-        });
-        m->addAction(tr("Markdown CSS"), this, [this]{
-            activateOrOpenNewTab<CssEditorTab>(_tabsView, _openTabsView);
-        });
-        m->addAction(tr("SQL Console"), this, [this]{
-            openNewTab<SqlConsoleTab>(_tabsView, _openTabsView);
-        });
-        m->addAction(tr("Command Console"), this, [this]{
-            openNewTab<CmdConsoleTab>(_tabsView, _openTabsView, _enot);
-        });
-    }
-
-    m->addAction(tr("Highlighter Manager..."), this, [this]{
-        Phl::showManagerDlg([this](Phl::SpecPtr spec){
-            activateOrOpenHighlighEditorTab(_tabsView, _openTabsView, spec);
-        });
-    });
-
     m = menuBar()->addMenu(tr("Help"));
-    /* TODO
-    m->addAction(tr("Show Help"), [this]{
-        activateOrOpenNewTab<HelpTab>(_tabsView, _openTabsView);
-    });
-    m->addSeparator();
-    */
     m->addAction(tr("Visit Homepage"), this, []{ HelpTab::visitHomePage(); });
     m->addAction(tr("Send Bug Report"), this, []{ HelpTab::sendBugReport(); });
-#ifndef Q_OS_MAC
-    m->addSeparator(); // "About" item will be extracted to the system menu, se we don't need the separator
-#endif
-    m->addAction(tr("About %1...").arg(qApp->applicationName()), this, []{ HelpTab::showAbout(); });
 }
 
 namespace  {
@@ -228,6 +188,30 @@ QWidget* makeStatusPanel(const QString& title, QLabel*& labelValue)
 
 void MainWindow::createStatusBar()
 {
+    if (AppSettings::instance().isDevMode)
+    {
+        auto menu = new QMenu(this);
+        menu->addAction(tr("Application QSS"), this, [this]{
+            activateOrOpenNewTab<QssEditorTab>(_tabsView, _openTabsView);
+        });
+        menu->addAction(tr("Markdown CSS"), this, [this]{
+            activateOrOpenNewTab<CssEditorTab>(_tabsView, _openTabsView);
+        });
+        menu->addAction(tr("SQL Console"), this, [this]{
+            openNewTab<SqlConsoleTab>(_tabsView, _openTabsView);
+        });
+        menu->addAction(tr("Command Console"), this, [this]{
+            openNewTab<CmdConsoleTab>(_tabsView, _openTabsView, _enot);
+        });
+
+        auto button = new QToolButton;
+        button->setIcon(QIcon(":/toolbar/gear"));
+        button->setPopupMode(QToolButton::InstantPopup);
+        button->setMenu(menu);
+
+        statusBar()->addWidget(button);
+    }
+
     statusBar()->addWidget(makeStatusPanel(tr("Memos:"), _statusMemoCount));
     statusBar()->addWidget(makeStatusPanel(tr("Notebook:"), _statusFileName));
 
@@ -470,7 +454,15 @@ void MainWindow::openMemoTab(Memo* memo)
     MemoTab* tab = nullptr;
 
     if (memo->type() == MemoType::plainText())
-        tab = new PlainTextMemoTab(_enot, memo);
+    {
+        auto plainTextMemoTab = new PlainTextMemoTab(_enot, memo);
+        connect(plainTextMemoTab, &PlainTextMemoTab::highlighterManagerRequested, this, [this]{
+            Phl::showManagerDlg([this](Phl::SpecPtr spec){
+                activateOrOpenHighlighEditorTab(_tabsView, _openTabsView, spec);
+            });
+        });
+        tab = plainTextMemoTab;
+    }
     else if (memo->type() == MemoType::markdown())
         tab = new MarkdownMemoTab(_enot, memo);
     else if (memo->type() == MemoType::gridView())

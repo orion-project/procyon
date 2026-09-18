@@ -29,6 +29,9 @@ public:
     bool isReadOnly() const override;
     bool isModified() const override;
 
+signals:
+    void highlighterManagerRequested();
+
 private:
     QAction *_actionEdit, *_actionSave, *_actionCancel;
     QLineEdit *_titleEditor;

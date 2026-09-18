@@ -40,6 +40,7 @@ PlainTextMemoTab::PlainTextMemoTab(Enot* enot, Memo* memo) : MemoTab(enot, memo)
     auto actionAddProp = toolMenu->addAction(tr("Add Property..."), this, [this]{ _propsPanel->addPropViaDlg(); });
     toolMenu->addAction(tr("Export to PDF..."), this, [this]{ TextEditHelpers::exportToPdfDlg(_textEditor); });
     _highlighterMenu = toolMenu->addMenu(tr("Highlighter"));
+    toolMenu->addAction(tr("Highlighter Manager..."), this, &Self::highlighterManagerRequested);
     _spellcheckMenu = toolMenu->addMenu(tr("Spellcheck"));
     connect(_highlighterMenu, &QMenu::aboutToShow, this, &Self::showSelectedHighlighter);
     connect(_spellcheckMenu, &QMenu::aboutToShow, this, &Self::showSelectedSpellcheckLang);

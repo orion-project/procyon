@@ -1,5 +1,5 @@
 - version: 1.0.1
-  date: ?
+  date: 2026-09-18
   changes:
   - On Windows switch to msvc + vcpkg
   - Switch to Qt 6.10+
